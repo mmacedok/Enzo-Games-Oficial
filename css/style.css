@@ -1386,6 +1386,7 @@ body.theme-degustador :is(input, textarea, [contenteditable="true"]) { cursor: t
         repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.04) 0 2px, transparent 2px 6px),
         var(--paper);
 }
+.comic-fly img.is-landscape { object-fit: contain; background: #111; }
 .comic-fly-flash { position: absolute; inset: 0; background: var(--orange-deep); opacity: 0; pointer-events: none; }
 .is-flying-source { visibility: hidden; }
 
@@ -1424,3 +1425,20 @@ body.enter-from-comic .reader-viewport { animation: reader-enter 0.6s cubic-bezi
 }
 .flappy-canvas:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
 body.flappy-open { overflow: hidden; }
+
+/* Estante no tema do Degustador: luz roxa, lombadas pretas e roxas, detalhes MP5K */
+.theme-degustador .bookcase {
+    background:
+        radial-gradient(ellipse at 50% -10%, rgba(170, 90, 255, 0.35), transparent 60%),
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.25) 0 3px, transparent 3px 150px),
+        linear-gradient(#2a1238, #140818);
+    border-color: var(--purple);
+    box-shadow: 6px 6px 0 var(--purple), inset 0 0 60px rgba(0, 0, 0, 0.8);
+}
+.theme-degustador .book-spine { background: linear-gradient(90deg, #1a0a26, #4b1f7a 45%, #22102f); }
+.theme-degustador .book-spine span { color: var(--mp5k); }
+.theme-degustador .book-back { background: #2a1238; }
+.theme-degustador .book-badge.is-new { background: var(--mp5k); }
+.theme-degustador .book-caption small { color: var(--mp5k); }
+.theme-degustador .shelf-label { background: linear-gradient(#c9a6ff, #8a2be2); color: #fff; }
+.theme-degustador .comic-fly-flash { background: var(--purple-deep); }

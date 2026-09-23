@@ -84,6 +84,8 @@
         const page = element('div', 'comic-fly-page', book);
         const pageImg = element('img', '', page);
         pageImg.alt = '';
+        // Página deitada (comum no Degustador): mostra inteira em vez de recortar.
+        pageImg.onload = () => pageImg.classList.toggle('is-landscape', pageImg.naturalWidth > pageImg.naturalHeight);
         if (pageSrc) pageImg.src = pageSrc;
 
         const cover = element('div', 'comic-fly-cover', book);

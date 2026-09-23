@@ -32,7 +32,9 @@ const toAssetPath = (...parts) => ['assets', ...parts].join('/');
 
 /** Lê a capa de uma pasta "Capa" e devolve o caminho relativo (ou null). */
 function findCover(...assetParts) {
-    const files = listImages(path.join(ASSETS_DIR, ...assetParts));
+    // Capa real sempre vence a provisória gerada por tools/capas-provisorias.js.
+    const files = listImages(path.join(ASSETS_DIR, ...assetParts))
+        .sort((a, b) => /provisoria/i.test(a) - /provisoria/i.test(b));
     return files.length ? toAssetPath(...assetParts, files[0]) : null;
 }
 
@@ -104,8 +106,9 @@ function scanSpinOffs() {
             );
             if (pages.length === 0) continue;
 
-            chapters.push({ order: number, id: `${number}`, title: `Capítulo ${number}`, pages });
-            cover = cover || findCover('Spin Offs', entry.name, inner.name, 'Capa');
+            const chapterCover = findCover('Spin Offs', entry.name, inner.name, 'Capa');
+            chapters.push({ order: number, id: `${number}`, title: `Capítulo ${number}`, cover: chapterCover, pages });
+            cover = cover || chapterCover;
         }
 
         if (chapters.length === 0) continue;
@@ -118,7 +121,7 @@ function scanSpinOffs() {
                 title: entry.name,
                 cover: cover || 'assets/cover-placeholder.svg',
                 description: '',
-                chapters: chapters.map(({ id, title, pages }) => ({ id, title, pages })),
+                chapters: chapters.map(({ id, title, cover: chapterCover, pages }) => ({ id, title, ...(chapterCover ? { cover: chapterCover } : {}), pages })),
             },
         });
     }
@@ -171,7 +174,8 @@ function build() {
             description: custom.description ?? comic.description,
             order: custom.order ?? scanned.find(entry => entry.comic === comic).order,
             featured: custom.featured === undefined ? true : Boolean(custom.featured),
-            chapters: comic.chapters,
+            // Título/descrição por capítulo: manifest "chapters": { "2": { "title": ..., "description": ... } }
+            chapters: comic.chapters.map((chapter) => ({ ...chapter, ...(custom.chapters?.[chapter.id] || {}) })),
         };
     });
 

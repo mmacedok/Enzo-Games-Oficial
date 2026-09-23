@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260923i">
+    <link rel="stylesheet" href="css/style.css?v=20260923j">
     <link rel="stylesheet" href="css/images.generated.css?v=1">
 </head>
 <body class="theme-degustador">
@@ -30,31 +30,21 @@
     </header>
 
     <main class="container">
-        <section class="hero" data-keeper aria-label="Lançamento do spin-off">
-            <div class="hero-banner" data-nav="reader.html?comic=degustador&chapter=1" role="link" tabindex="0" aria-label="Ler Degustador da Noite, capítulo 1">
-                <div class="hero-bg" style="background-image: url('assets/web/a309be8920407819-640.webp'); background-position: center 25%;"></div>
-                <div class="hero-content">
-                    <div class="hero-cover-wrapper">
-                        <img data-original="assets/Spin Offs/Degustador da noite/Capitulo 1/Capa/CAPA DEGUSTADORR Cap1.png" src="assets/web/a309be8920407819-640.webp" srcset="assets/web/a309be8920407819-640.webp 640w, assets/web/a309be8920407819-941.webp 941w" sizes="(max-width: 600px) 90vw, 420px" width="941" height="1672" alt="Capa de Degustador da Noite, capítulo 1" class="hero-cover">
-                    </div>
-                    <div class="hero-text">
-                        <span class="hero-kicker">Lançamento · Capítulo 1</span>
-                        <h2>Dia 01</h2>
-                        <p>Fantasia malfeita de Batman, gorro do Teemo e uma MP5K laranja. A cidade dorme; o Degustador, não.</p>
-                        <span class="btn">Ler lançamento</span>
-                    </div>
-                </div>
+        <!-- Destaque da edição mais recente (js/main.js) -->
+        <section class="hero" id="hero-comic" aria-label="Edição mais recente"></section>
+
+        <section class="section" id="edicoes" aria-labelledby="edicoes-title">
+            <h2 class="section-title" id="edicoes-title">Todas as edições</h2>
+            <div class="bookcase" id="comic-shelf" data-colecao="degustador">
+                <div class="loading">Carregando edições...</div>
             </div>
         </section>
     </main>
 
     <script src="js/images.generated.js?v=1"></script>
     <script src="js/site.js?v=3"></script>
-    <script>
-        // O banner inteiro é o link; Enter/Espaço também abrem.
-        document.querySelector('.hero-banner').addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); }
-        });
-    </script>
+    <script src="js/shelf.js?v=4"></script>
+    <script src="js/comic-open.js?v=3"></script>
+    <script src="js/main.js?v=23"></script>
 </body>
 </html>
