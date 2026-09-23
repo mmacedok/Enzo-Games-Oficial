@@ -1,7 +1,7 @@
 # Enzo Games Site
 
-Leitor de HQs do Enzo Games + galeria de personagens. (O mini-game Flappy Enzo foi removido
-para ser refeito do zero; as artes dele continuam em `assets/flappy/` e na pasta `Floppy enzo`.)
+Leitor de HQs do Enzo Games + galeria de personagens + o easter egg **Flappy Enzo**
+(clique no logo da home).
 
 - **Home** (`index.html`) — destaque do último capítulo e estante 3D com a série principal.
 - **Leitor** (`reader.html?comic=<id>&chapter=<id>`) — leitura vertical com zoom, censura por senha e easter eggs.
@@ -134,3 +134,16 @@ do CSS (`--book-w`, `--shelf-gap`).
 Páginas deitadas (mais largas que altas) ganham no leitor o botão **Ampliar**,
 que abre a página em tela cheia com rolagem lateral — essencial no celular.
 Mesmo assim, prefira gerar páginas no formato vertical 9:16.
+
+## Flappy Enzo (easter egg)
+
+Clicar no logo "ENZO GAMES" da home abre o jogo numa janela em tela cheia
+(Fechar ou Esc saem). Os scripts só são baixados no primeiro clique.
+
+- `js/flappy-core.js`: regras puras (física, talheres, colisão, pontos).
+  O contrato está em `test/flappy-core.test.js`; valores em `CONFIG`.
+- `js/flappy.js`: janela, desenho no canvas (360×640 lógico), controles, recorde
+  (`localStorage`).
+- Artes: originais em `assets/flappy/originais/`; recortes em `assets/flappy/game/`,
+  gerados por `node tools/prepare-flappy-assets.js` (rode de novo se trocar um original).
+- Plano e decisões: `docs/PLANO-JOGO.md`.

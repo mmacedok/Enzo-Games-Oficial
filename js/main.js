@@ -228,7 +228,7 @@
 
     let jogoCarregando = null;
     function abrirJogo() {
-        jogoCarregando ??= carregarScript('js/flappy-core.js?v=1').then(() => carregarScript('js/flappy.js?v=1'));
+        jogoCarregando ??= carregarScript('js/flappy-core.js?v=1').then(() => carregarScript('js/flappy.js?v=2'));
         jogoCarregando
             .then(() => window.FlappyEnzo.abrir())
             .catch((error) => { console.error('[jogo]', error); jogoCarregando = null; });

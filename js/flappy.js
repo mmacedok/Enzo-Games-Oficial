@@ -207,7 +207,7 @@
         const w = ENZO_LARGURA;
         const h = img ? img.naturalHeight * (w / img.naturalWidth) : w;
         // Bico para cima ao subir; vai apontando para baixo conforme cai.
-        let angulo = jogo.vy < 0 ? -0.42 : Math.min(1.2, -0.42 + (jogo.vy / CONFIG.quedaMax) * 1.6);
+        let angulo = jogo.vy < 0 ? -0.35 : Math.min(0.55, -0.35 + (jogo.vy / CONFIG.quedaMax) * 1.1);
         let y = jogo.y;
         if (jogo.fase === 'pronto') { angulo = Math.sin(visual.tempo * 3) * 0.08; y += Math.sin(visual.tempo * 4) * 6; }
         // Esticadinha logo após o toque (no lugar de quadros de asa).
