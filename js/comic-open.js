@@ -44,7 +44,21 @@
     // Voltar pelo navegador (cache de página) não pode deixar a animação na tela.
     addEventListener('pageshow', (event) => { if (event.persisted) cleanup(); });
 
-    async function fly({ source, coverSrc, pageSrc }) {
+    /**
+     * Com a aba escondida o navegador congela as animações; sem este limite o
+     * leitor só abriria quando a pessoa voltasse para a aba.
+     */
+    function fly(options) {
+        const limit = new Promise((resolve) => setTimeout(resolve, 3000));
+        // A marca só é gravada se a animação começou: sem ela o leitor abre na capa.
+        const started = animate(options);
+        return Promise.race([started, limit]).then(() => {
+            if (!running) return;
+            try { sessionStorage.setItem(ENTER_FLAG, '1'); } catch { /* modo privado: só perde a entrada suave */ }
+        });
+    }
+
+    async function animate({ source, coverSrc, pageSrc }) {
         if (running) return new Promise(() => {}); // clique duplo: ignora
         if (!source || reducedMotion() || typeof Element.prototype.animate !== 'function') return;
         running = true;
@@ -113,8 +127,6 @@
             { duration: 520, fill: 'forwards', easing: 'cubic-bezier(0.6, 0, 0.9, 0.4)' },
         );
         await flash.animate([{ opacity: 0 }, { opacity: 0, offset: 0.45 }, { opacity: 1 }], { duration: 520, fill: 'forwards' }).finished;
-
-        try { sessionStorage.setItem(ENTER_FLAG, '1'); } catch { /* modo privado: só perde a entrada suave */ }
     }
 
     window.EnzoOpen = { fly, preload, largeImageUrl, ENTER_FLAG };

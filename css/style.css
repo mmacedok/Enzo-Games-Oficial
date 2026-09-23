@@ -888,7 +888,7 @@ a { color: var(--orange-light); text-decoration: none; }
     margin: 0 auto 16px;
     container-type: inline-size;
 }
-.page-wrapper.cover-wrapper { width: 70%; max-width: 480px; margin-bottom: 26px; }
+.page-wrapper.cover-wrapper { margin-bottom: 26px; }
 
 .webtoon-image {
     display: block;
@@ -1260,7 +1260,6 @@ body.theme-degustador :is(input, textarea, [contenteditable="true"]) { cursor: t
     .island-left .island-select { flex: 1; width: 0; max-width: none; }
     .island-right { margin-left: auto; }
     .reader-viewport { padding-inline: 8px; }
-    .page-wrapper.cover-wrapper { width: 85%; }
     .webtoon-image { border-width: 2px; }
 }
 

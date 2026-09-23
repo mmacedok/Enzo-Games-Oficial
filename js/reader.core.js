@@ -27,6 +27,7 @@
         chapterIndex: 0,
         zoom: readStoredZoom(),
         unlocked: false,
+        lastScroll: 0,
     };
 
     // ---------------------------------------------------------------- helpers
@@ -267,7 +268,9 @@
         if (state.comic.cover) {
             const coverWrapper = document.createElement('div');
             coverWrapper.className = 'page-wrapper cover-wrapper';
-            coverWrapper.appendChild(buildPageImage(state.comic.cover, 0));
+            const coverImage = buildPageImage(state.comic.cover, 0);
+            coverImage.alt = `Capa de ${state.comic.title}`;
+            coverWrapper.appendChild(coverImage);
             ui.imageContainer.appendChild(coverWrapper);
         }
 
@@ -464,12 +467,11 @@
         window.addEventListener('resize', updateZoomUI);
 
         // Barra some ao rolar para baixo e volta ao rolar para cima.
-        let lastScroll = 0;
         ui.viewport.addEventListener('scroll', () => {
             const top = ui.viewport.scrollTop;
-            if (Math.abs(top - lastScroll) < 12) return;
-            document.body.classList.toggle('ui-hidden', top > lastScroll && top > 120);
-            lastScroll = top;
+            if (Math.abs(top - state.lastScroll) < 12) return;
+            document.body.classList.toggle('ui-hidden', top > state.lastScroll && top > 120);
+            state.lastScroll = top;
         }, { passive: true });
         window.addEventListener('popstate', () => {
             const { comicId, chapterId } = readUrlState();
@@ -567,6 +569,16 @@
             state.db = await response.json();
             if (!Array.isArray(state.db?.comics)) throw new Error('database.json sem a lista "comics"');
             loadComic(comicId, chapterId);
+            if (enteringFromComic) {
+                const pagina = ui.imageContainer.querySelector('.page-wrapper:not(.cover-wrapper)');
+                if (pagina) {
+                    const paddingTopDoViewport = parseFloat(getComputedStyle(ui.viewport).paddingTop) || 0;
+                    const alvo = ui.imageContainer.offsetTop + pagina.offsetTop - paddingTopDoViewport;
+                    state.lastScroll = alvo;
+                    ui.viewport.scrollTop = alvo;
+                    document.body.classList.remove('ui-hidden');
+                }
+            }
         } catch (error) {
             console.error('Erro ao carregar o banco de dados:', error);
             ui.imageContainer.innerHTML = `
