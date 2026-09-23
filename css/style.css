@@ -158,7 +158,7 @@ a { color: var(--orange-light); text-decoration: none; }
     font-weight: 400;
     font-size: clamp(2.7rem, 12vw, 6rem);
     line-height: 1.1;
-    padding: 0.8em 0.45em 0.12em 0.1em;
+    padding: 1em 0.45em 0.12em 0.1em;
     white-space: nowrap;
     cursor: pointer;
 }
@@ -217,21 +217,22 @@ a { color: var(--orange-light); text-decoration: none; }
 .garfield-classic-logo .c8 { --i: 7; z-index: 2; transform: translateY(0.05em) rotate(3deg); margin-left: -0.09em; }
 .garfield-classic-logo .c9 { --i: 8; z-index: 1; transform: rotate(-2deg); margin-left: -0.11em; }
 
-/* O Enzo espiando atrás de "ENZO" */
+/* O Enzo (cabeça de óculos e barba) espiando atrás de "ENZO" */
 .logo-cat {
     position: absolute;
     z-index: 1;
-    left: 0.58em;
-    top: -0.02em;
-    width: 1.5em;
+    left: 0.42em;
+    top: 0;
+    width: 1.62em;
     height: auto;
-    overflow: visible;
-    animation: cat-peek 0.6s var(--ease-pop) 0.85s both;
+    max-width: none;
+    pointer-events: none;
+    user-select: none;
+    transform-origin: 50% 90%;
+    filter: drop-shadow(-0.03em 0.04em 0 rgba(0, 0, 0, 0.35));
+    animation: cat-peek 0.6s var(--ease-pop) 0.85s both, cat-tilt 8s ease-in-out 3s infinite;
 }
-.logo-eyes { transform-box: fill-box; transform-origin: center; animation: cat-blink 5s 2.2s infinite; }
-.logo-pupils { transition: transform 0.12s ease-out; }
-.logo-ear { transform-box: fill-box; transform-origin: 50% 100%; }
-.logo-ear--right { animation: ear-twitch 7s 3s infinite; }
+.garfield-classic-logo:hover .logo-cat { animation: cat-peek 0.6s var(--ease-pop) 0.85s both, cat-tilt 1.2s ease-in-out infinite; }
 
 /* Rabo listrado saindo do "S" */
 .logo-tail {
@@ -275,14 +276,10 @@ a { color: var(--orange-light); text-decoration: none; }
     from { translate: 0 0.55em; opacity: 0; }
     to { translate: 0 0; opacity: 1; }
 }
-@keyframes cat-blink {
-    0%, 94%, 100% { transform: scaleY(1); }
-    96% { transform: scaleY(0.08); }
-}
-@keyframes ear-twitch {
-    0%, 90%, 100% { transform: rotate(0deg); }
-    93% { transform: rotate(14deg); }
-    96% { transform: rotate(-4deg); }
+@keyframes cat-tilt {
+    0%, 86%, 100% { rotate: 0deg; }
+    90% { rotate: -7deg; }
+    95% { rotate: 4deg; }
 }
 @keyframes tail-in { from { opacity: 0; scale: 0.3; } to { opacity: 1; scale: 1; } }
 @keyframes tail-wag { from { transform: rotate(-10deg); } to { transform: rotate(14deg); } }

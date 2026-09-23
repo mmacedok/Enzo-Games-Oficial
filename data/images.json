@@ -738,6 +738,17 @@
       }
     ]
   },
+  "assets/enzo-cabeca-logo.png": {
+    "width": 600,
+    "height": 542,
+    "variants": [
+      {
+        "width": 600,
+        "src": "assets/web/86ba0c6f0fe68894-600.webp",
+        "bytes": 80378
+      }
+    ]
+  },
   "assets/enzo-face-t.png": {
     "width": 1080,
     "height": 1080,

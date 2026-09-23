@@ -17,28 +17,9 @@
     };
     addEventListener('pageshow', () => document.getElementById('macaroni-wipe')?.classList.remove('is-active'));
 
-    // Logo: após a entrada das letras, liga os pulinhos; os olhos do Enzo seguem o mouse.
+    // Logo: após a entrada das letras, liga os pulinhos em repouso.
     const logo = document.querySelector('.garfield-classic-logo');
-    if (logo) {
-        setTimeout(() => logo.classList.add('logo-ready'), 1500);
-        const pupils = logo.querySelector('.logo-pupils');
-        const calmo = matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (pupils && !calmo && matchMedia('(hover: hover)').matches) {
-            let frame = 0;
-            addEventListener('pointermove', (event) => {
-                cancelAnimationFrame(frame);
-                frame = requestAnimationFrame(() => {
-                    const box = logo.querySelector('.logo-cat').getBoundingClientRect();
-                    const dx = event.clientX - (box.left + box.width / 2);
-                    const dy = event.clientY - (box.top + box.height * 0.75);
-                    const dist = Math.hypot(dx, dy) || 1;
-                    const alcance = Math.min(1, dist / 300);
-                    pupils.style.transform = `translate(${(dx / dist) * 7 * alcance}px, ${(dy / dist) * 7 * alcance - 4}px)`;
-                });
-            }, { passive: true });
-        }
-    }
-    // Links reais (<a href>) continuam funcionando com Ctrl/⌘ ou botão do meio.
+    if (logo) setTimeout(() => logo.classList.add('logo-ready'), 1500);
     document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', (event) => {
         if (event.defaultPrevented || event.button > 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
         event.preventDefault();
