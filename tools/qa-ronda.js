@@ -1,16 +1,16 @@
 // Robô da Ronda nos Telhados no navegador (roda dentro de tools/qa.mjs).
 // Abre o jogo pelo título do Degustador, começa com Espaço e joga com o
-// mesmo robô de test/ronda-core.test.js. window.__MODO escolhe o roteiro:
+// mesmo robô de test/ronda-core.test.js. ?ronda-modo= na URL escolhe o roteiro:
 //   jogar (padrão)  25 s de corrida e congela a tela para o screenshot
 //   morrer          sem robô: deve terminar em 'fim' em poucos segundos
 //   pausa           25 s e aperta P: o tempo do jogo tem que parar
 //   fechar          25 s e fecha: a partida volta para 'pronto'
 // Uso:
 //   node tools/qa.mjs --url http://localhost:3000/degustador.html --width 1280 --height 800 --eval-wait 0 --eval-file tools/qa-ronda.js --out shots/ronda.png
-//   (outro modo: --eval "window.__MODO='morrer'; $(cat tools/qa-ronda.js)")
+//   (outro modo: --url http://localhost:3000/degustador.html?ronda-modo=morrer)
 (async () => {
   const w = (ms) => new Promise((r) => setTimeout(r, ms));
-  const MODO = window.__MODO || 'jogar';
+  const MODO = new URLSearchParams(location.search).get('ronda-modo') || 'jogar';
   const titulo = document.querySelector('[data-ronda-trigger]');
   const papel = titulo.getAttribute('role');
   titulo.click();
