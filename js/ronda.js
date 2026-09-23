@@ -2,7 +2,7 @@
 // Ronda nos Telhados — minigame do Degustador da Noite (easter egg).
 // Abre ao clicar no título da página do Degustador, na janela compartilhada
 // (js/game-dialog.js). Regras em js/ronda-core.js; aqui só desenho,
-// controles, telas e recorde. v1 com retângulos no lugar dos sprites.
+// controles, telas e recorde. Sprites em assets/ronda/; os retângulos ficam de reserva.
 // ============================================================================
 (() => {
     'use strict';
@@ -23,7 +23,7 @@
     });
     const { canvas, ctx } = janela;
 
-    // Cores provisórias (placeholders até chegarem os sprites).
+    // Cores de reserva (enquanto os sprites carregam ou se falharem).
     const COR = {
         jogador: '#e040fb',
         arma: '#ff6600',
@@ -36,6 +36,42 @@
         janela: '#ffd76a',
         tinta: '#111111',
     };
+
+    // ------------------------------------------------------------- artes
+    // Sprites de assets/ronda/ (quadros de 128×128). Enquanto uma imagem não
+    // carrega (ou se falhar), o desenho usa os retângulos de reserva.
+    const carregar = (arquivo) => {
+        const img = new Image();
+        img.src = `assets/ronda/${arquivo}?v=1`;
+        return img;
+    };
+    const ARTE = {
+        correr: ['correr-01', 'correr-02', 'correr-03', 'correr-04'].map((n) => carregar(`degustador/${n}.png`)),
+        atirar: ['atirar-01', 'atirar-02'].map((n) => carregar(`degustador/${n}.png`)),
+        pular: carregar('degustador/pular.png'),
+        cair: carregar('degustador/cair.png'),
+        tropecar: carregar('degustador/tropecar.png'),
+        passaro: ['passaro-01', 'passaro-02'].map((n) => carregar(`objetos/${n}.png`)),
+        drone: ['drone-01', 'drone-02'].map((n) => carregar(`objetos/${n}.png`)),
+        parede: carregar('objetos/parede-inteira.png'),
+        paredeRachada: carregar('objetos/parede-rachada.png'),
+        destrocos: carregar('objetos/parede-destrocos.png'),
+        baixos: ['caixa-dagua', 'ar-condicionado', 'antena'].map((n) => carregar(`objetos/${n}.png`)),
+        projetil: carregar('objetos/projetil.png'),
+        cidadeLonge: carregar('cidade-distante.png'),
+        cidadePerto: carregar('cidade-proxima.png'),
+        sinal: carregar('sinal-virgula.png'),
+    };
+    const pronta = (img) => img.complete && img.naturalWidth > 0;
+
+    // Parte visível de cada sprite dentro do quadro 128×128: [x, y, largura, altura].
+    const RECORTE = {
+        baixos: [[20, 5, 86, 112], [16, 17, 112, 85], [20, 13, 97, 92]],
+        destrocos: [5, 75, 112, 41],
+        projetil: [9, 50, 93, 19],
+    };
+    // Parede em 3 fatias (colunas 36..92 do quadro): tampa, tijolos (repete) e base.
+    const PAREDE = { x: 36, w: 57, tampa: [6, 14], meio: [20, 80], base: [100, 16], largura: 32 };
 
     // ------------------------------------------------------------- estado
     const jogo = core.criarJogo();
@@ -79,36 +115,53 @@
     const cidadePerto = faixaDeCidade('#170b30', 'rgba(255, 215, 106, 0.5)', 60, 150, 13);
 
     function desenharCeu() {
-        const ceu = ctx.createLinearGradient(0, 0, 0, H);
-        ceu.addColorStop(0, '#07041a');
-        ceu.addColorStop(0.6, '#1c0f45');
-        ceu.addColorStop(1, '#3a1a6b');
-        ctx.fillStyle = ceu;
-        ctx.fillRect(0, 0, W, H);
+        if (pronta(ARTE.cidadeLonge)) {
+            // Céu e cidade distante numa arte só (opaca). Fica parada: a arte
+            // não emenda nas bordas, e a cidade próxima já dá a paralaxe.
+            ctx.drawImage(ARTE.cidadeLonge, 0, 0, W, H);
+        } else {
+            const ceu = ctx.createLinearGradient(0, 0, 0, H);
+            ceu.addColorStop(0, '#07041a');
+            ceu.addColorStop(0.6, '#1c0f45');
+            ceu.addColorStop(1, '#3a1a6b');
+            ctx.fillStyle = ceu;
+            ctx.fillRect(0, 0, W, H);
+            const desloc = (jogo.distancia * 0.12) % cidadeLonge.width;
+            ctx.drawImage(cidadeLonge, -desloc, 0);
+            ctx.drawImage(cidadeLonge, cidadeLonge.width - desloc, 0);
+        }
 
         // Lua.
         ctx.fillStyle = '#f3e9c6';
         ctx.beginPath(); ctx.arc(90, 60, 22, 0, Math.PI * 2); ctx.fill();
 
         // Batsinal da vírgula: fixo no céu, fora das camadas que repetem.
-        ctx.save();
-        const luz = ctx.createLinearGradient(520, H, 470, 70);
-        luz.addColorStop(0, 'rgba(255, 240, 170, 0.35)');
-        luz.addColorStop(1, 'rgba(255, 240, 170, 0.08)');
-        ctx.fillStyle = luz;
-        ctx.beginPath(); ctx.moveTo(505, H); ctx.lineTo(535, H); ctx.lineTo(520, 60); ctx.lineTo(420, 60); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = 'rgba(255, 240, 170, 0.8)';
-        ctx.beginPath(); ctx.ellipse(470, 62, 46, 28, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#1c0f45';
-        ctx.beginPath(); ctx.arc(470, 56, 11, 0, Math.PI * 2); ctx.fill(); // vírgula: bolinha…
-        ctx.beginPath(); ctx.moveTo(478, 60); ctx.quadraticCurveTo(478, 80, 462, 86); ctx.quadraticCurveTo(472, 74, 466, 64); ctx.closePath(); ctx.fill(); // …e rabinho
-        ctx.restore();
+        if (pronta(ARTE.sinal)) {
+            ctx.drawImage(ARTE.sinal, 396, 11, 150, 150);
+        } else {
+            ctx.save();
+            const luz = ctx.createLinearGradient(520, H, 470, 70);
+            luz.addColorStop(0, 'rgba(255, 240, 170, 0.35)');
+            luz.addColorStop(1, 'rgba(255, 240, 170, 0.08)');
+            ctx.fillStyle = luz;
+            ctx.beginPath(); ctx.moveTo(505, H); ctx.lineTo(535, H); ctx.lineTo(520, 60); ctx.lineTo(420, 60); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'rgba(255, 240, 170, 0.8)';
+            ctx.beginPath(); ctx.ellipse(470, 62, 46, 28, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#1c0f45';
+            ctx.beginPath(); ctx.arc(470, 56, 11, 0, Math.PI * 2); ctx.fill(); // vírgula: bolinha…
+            ctx.beginPath(); ctx.moveTo(478, 60); ctx.quadraticCurveTo(478, 80, 462, 86); ctx.quadraticCurveTo(472, 74, 466, 64); ctx.closePath(); ctx.fill(); // …e rabinho
+            ctx.restore();
+        }
 
-        // Duas camadas de cidade em paralaxe.
-        for (const [faixa, fator] of [[cidadeLonge, 0.12], [cidadePerto, 0.3]]) {
-            const desloc = (jogo.distancia * fator) % faixa.width;
-            ctx.drawImage(faixa, -desloc, 0);
-            ctx.drawImage(faixa, faixa.width - desloc, 0);
+        // Cidade mais próxima, em paralaxe mais rápida.
+        if (pronta(ARTE.cidadePerto)) {
+            const desloc = (jogo.distancia * 0.3) % W;
+            ctx.drawImage(ARTE.cidadePerto, -desloc, H - 320, W, 320);
+            ctx.drawImage(ARTE.cidadePerto, W - desloc, H - 320, W, 320);
+        } else {
+            const desloc = (jogo.distancia * 0.3) % cidadePerto.width;
+            ctx.drawImage(cidadePerto, -desloc, 0);
+            ctx.drawImage(cidadePerto, cidadePerto.width - desloc, 0);
         }
     }
 
@@ -137,20 +190,22 @@
     function desenharDesafios() {
         for (const d of jogo.desafios) {
             if (d.x > W + 10 || d.x + d.w < -10) continue;
-            ctx.fillStyle = COR[d.tipo];
-            ctx.fillRect(d.x, d.y, d.w, d.h);
-            ctx.strokeStyle = COR.tinta;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(d.x, d.y, d.w, d.h);
-            if (d.tipo === 'passaro') {
-                // Asinha batendo.
-                const asa = Math.sin(visual.tempo * 18 + d.fase) * 6;
-                ctx.fillStyle = COR.passaro;
-                ctx.beginPath(); ctx.moveTo(d.x + 4, d.y + 6); ctx.lineTo(d.x + 12, d.y - 4 - asa); ctx.lineTo(d.x + 16, d.y + 6); ctx.fill(); ctx.stroke();
-            }
-            if (d.tipo === 'drone' && Math.floor(visual.tempo * 4) % 2 === 0) {
-                ctx.fillStyle = '#ff2d2d';
-                ctx.fillRect(d.x + d.w / 2 - 2, d.y + 3, 4, 4);
+            if (!desenharDesafioComArte(d)) {
+                ctx.fillStyle = COR[d.tipo];
+                ctx.fillRect(d.x, d.y, d.w, d.h);
+                ctx.strokeStyle = COR.tinta;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(d.x, d.y, d.w, d.h);
+                if (d.tipo === 'passaro') {
+                    // Asinha batendo.
+                    const asa = Math.sin(visual.tempo * 18 + d.fase) * 6;
+                    ctx.fillStyle = COR.passaro;
+                    ctx.beginPath(); ctx.moveTo(d.x + 4, d.y + 6); ctx.lineTo(d.x + 12, d.y - 4 - asa); ctx.lineTo(d.x + 16, d.y + 6); ctx.fill(); ctx.stroke();
+                }
+                if (d.tipo === 'drone' && Math.floor(visual.tempo * 4) % 2 === 0) {
+                    ctx.fillStyle = '#ff2d2d';
+                    ctx.fillRect(d.x + d.w / 2 - 2, d.y + 3, 4, 4);
+                }
             }
             const total = TIPOS[d.tipo].vida;
             if (total > 1) {
@@ -163,7 +218,80 @@
         }
     }
 
+    /** Desenha o desafio com o sprite; devolve false se a arte ainda não carregou. */
+    function desenharDesafioComArte(d) {
+        const cx = d.x + d.w / 2;
+        const cy = d.y + d.h / 2;
+        const chao = d.y + d.h;
+        if (d.tipo === 'passaro') {
+            const img = ARTE.passaro[Math.floor(visual.tempo * 8 + d.fase) % 2];
+            if (!pronta(img)) return false;
+            ctx.drawImage(img, cx - 20, cy - 20, 40, 40);
+        } else if (d.tipo === 'drone') {
+            const img = ARTE.drone[Math.floor(visual.tempo * 20) % 2];
+            if (!pronta(img)) return false;
+            ctx.drawImage(img, cx - 20, cy - 24.5, 40, 40);
+        } else if (d.tipo === 'baixo') {
+            const i = Math.floor(d.fase) % 3;
+            const img = ARTE.baixos[i];
+            if (!pronta(img)) return false;
+            const [sx, sy, sw, sh] = RECORTE.baixos[i];
+            const k = Math.min(36 / sw, 36 / sh);
+            ctx.drawImage(img, sx, sy, sw, sh, cx - (sw * k) / 2, chao - sh * k, sw * k, sh * k);
+        } else if (d.tipo === 'parede') {
+            const img = d.vida < TIPOS.parede.vida ? ARTE.paredeRachada : ARTE.parede;
+            if (!pronta(img)) return false;
+            desenharParede(img, cx - PAREDE.largura / 2, d.y, d.h);
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    /** Parede alta: tampa em cima, base embaixo e o tijolo repetido no meio (sem esticar). */
+    function desenharParede(img, x, y, altura) {
+        const k = PAREDE.largura / PAREDE.w;
+        const [tampaY, tampaH] = PAREDE.tampa;
+        const [meioY, meioH] = PAREDE.meio;
+        const [baseY, baseH] = PAREDE.base;
+        const fimMeio = y + altura - baseH * k;
+        ctx.drawImage(img, PAREDE.x, tampaY, PAREDE.w, tampaH, x, y, PAREDE.largura, tampaH * k);
+        for (let yy = y + tampaH * k; yy < fimMeio; yy += meioH * k) {
+            const h = Math.min(meioH * k, fimMeio - yy);
+            ctx.drawImage(img, PAREDE.x, meioY, PAREDE.w, h / k, x, yy, PAREDE.largura, h);
+        }
+        ctx.drawImage(img, PAREDE.x, baseY, PAREDE.w, baseH, x, fimMeio, PAREDE.largura, baseH * k);
+    }
+
+    /** Quadro do Degustador para o momento atual. */
+    function quadroDoJogador() {
+        const j = jogo.jogador;
+        if (jogo.fase === 'fim') return ARTE.tropecar;
+        if (jogo.fase === 'pronto') return ARTE.correr[0];
+        if (!j.noChao) return j.vy < 0 ? ARTE.pular : ARTE.cair;
+        const passo = Math.floor(jogo.distancia / 22) % 4;
+        if (visual.tempo - visual.ultimoTiro < 0.15) return ARTE.atirar[passo % 2];
+        return ARTE.correr[passo];
+    }
+
     function desenharJogador() {
+        const img = quadroDoJogador();
+        if (!pronta(img)) { desenharJogadorProvisorio(); return; }
+        const x = CONFIG.jogadorX;
+        const y = jogo.jogador.y;
+        // Quadro 128×128 desenhado em 64×64: tronco (coluna 76) no centro da
+        // hitbox e pés (linha 123) no chão da hitbox.
+        ctx.drawImage(img, x + CONFIG.jogadorL / 2 - 38, y + CONFIG.jogadorA - 61.5, 64, 64);
+        if (!jogo.jogador.noChao && visual.tempo - visual.ultimoTiro < 0.06) {
+            // No ar não há quadro de tiro: clarão na ponta da arma.
+            ctx.fillStyle = '#ffd400';
+            ctx.beginPath();
+            ctx.arc(x + 36, y + 14, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function desenharJogadorProvisorio() {
         const x = CONFIG.jogadorX;
         const y = jogo.jogador.y;
         ctx.save();
@@ -192,6 +320,12 @@
     }
 
     function desenharTiros() {
+        if (pronta(ARTE.projetil)) {
+            const [sx, sy, sw, sh] = RECORTE.projetil;
+            // Ponta do projétil onde termina o retângulo de reserva (t.x + 10).
+            for (const t of jogo.tiros) ctx.drawImage(ARTE.projetil, sx, sy, sw, sh, t.x + 10 - 24, t.y - 3, 24, 5);
+            return;
+        }
         ctx.fillStyle = '#ffb347';
         for (const t of jogo.tiros) ctx.fillRect(t.x, t.y - 2, 10, 4);
     }
@@ -202,6 +336,12 @@
             const t = (visual.tempo - e.inicio) / 0.5;
             ctx.save();
             ctx.globalAlpha = 1 - t;
+            if (e.tipo === 'parede' && pronta(ARTE.destrocos)) {
+                // Entulho fica no telhado: anda junto com o cenário.
+                const [sx, sy, sw, sh] = RECORTE.destrocos;
+                const x = e.x - (jogo.distancia - e.distancia);
+                ctx.drawImage(ARTE.destrocos, sx, sy, sw, sh, x - 20, e.chao - 15, 40, 15);
+            }
             texto('POW!', e.x, e.y - t * 20, 18 + t * 8, '#ffd400', 4);
             ctx.restore();
         }
@@ -308,7 +448,9 @@
             core.avancar(jogo, dt);
             // Desafio que sumiu sem sair da tela foi destruído: mostra o "POW!".
             for (const d of antes) {
-                if (!jogo.desafios.includes(d) && d.x + d.w > 0) visual.efeitos.push({ x: d.x + d.w / 2, y: d.y, inicio: visual.tempo });
+                if (!jogo.desafios.includes(d) && d.x + d.w > 0) {
+                    visual.efeitos.push({ x: d.x + d.w / 2, y: d.y, inicio: visual.tempo, tipo: d.tipo, chao: d.y + d.h, distancia: jogo.distancia });
+                }
             }
             if (jogo.fase === 'fim') terminou();
         }
@@ -411,5 +553,5 @@
         quadro = requestAnimationFrame(laco);
     }
 
-    window.RondaDegustador = { abrir, jogo, entrada, visual };
+    window.RondaDegustador = { abrir, jogo, entrada, visual, arte: ARTE };
 })();
