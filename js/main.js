@@ -214,6 +214,36 @@
         }
     }
 
+    // ----------------------------------------------------- easter egg: jogo
+    // Clicar no logo abre o Flappy Enzo. Os arquivos só baixam no 1º clique.
+    function carregarScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Falha ao carregar ${src}`));
+            document.body.appendChild(script);
+        });
+    }
+
+    let jogoCarregando = null;
+    function abrirJogo() {
+        jogoCarregando ??= carregarScript('js/flappy-core.js?v=1').then(() => carregarScript('js/flappy.js?v=1'));
+        jogoCarregando
+            .then(() => window.FlappyEnzo.abrir())
+            .catch((error) => { console.error('[jogo]', error); jogoCarregando = null; });
+    }
+
+    const logo = document.querySelector('[data-flappy-trigger]');
+    if (logo) {
+        logo.tabIndex = 0;
+        logo.setAttribute('role', 'button');
+        logo.addEventListener('click', abrirJogo);
+        logo.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); abrirJogo(); }
+        });
+    }
+
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
 })();
