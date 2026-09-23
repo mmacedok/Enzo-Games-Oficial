@@ -1258,37 +1258,20 @@ body.theme-degustador .section-title { color: var(--purple); }
 .theme-degustador .back-link { border-color: var(--purple); box-shadow: 2px 2px 0 var(--purple); }
 .theme-degustador .back-link:hover { background: var(--purple); }
 
-/* Título metálico estilo Batman */
-.batman-title { padding: 10px 0 26px; text-align: center; }
+/* Cabeçalho do Degustador: arte com o título (assets/degustador-header.png) */
+.batman-title { padding: 0 0 18px; text-align: center; line-height: 0; }
+.degustador-header {
+    display: block;
+    width: min(94vw, 760px);
+    height: auto;
+    margin-inline: auto;
+    filter: drop-shadow(0 0 22px rgba(138, 43, 226, 0.45));
+    user-select: none;
+}
 /* Easter egg: o título abre a Ronda nos Telhados (js/ronda.js) */
 .batman-title[data-ronda-trigger] { width: fit-content; margin-inline: auto; border-radius: var(--radius-sm); transition: filter 0.2s, scale 0.2s; }
 .batman-title[data-ronda-trigger]:hover { filter: drop-shadow(0 0 14px rgba(255, 140, 0, 0.55)); scale: 1.02; }
 .batman-title[data-ronda-trigger]:focus-visible { outline: 3px solid var(--focus); outline-offset: 6px; }
-.batman-style-title {
-    display: block;
-    font-family: 'Impact', 'Haettenschweiler', 'Arial Black', sans-serif;
-    font-size: clamp(2.6rem, 12.5vw, 7rem);
-    font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: 0.08em;
-    padding-left: 0.08em;
-    text-transform: uppercase;
-    background: linear-gradient(to bottom, #fff 0%, #aaa 45%, #555 50%, #111 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    filter: drop-shadow(4px 4px 0 #000) drop-shadow(0 0 18px rgba(138, 43, 226, 0.9));
-}
-.batman-style-title.subtitle {
-    margin-top: 6px;
-    font-size: clamp(1.6rem, 7vw, 4rem);
-    letter-spacing: 0.35em;
-    padding-left: 0.35em;
-    background: linear-gradient(to bottom, #ffb366 0%, #ff8000 45%, #cc5200 50%, #4d1f00 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 14px rgba(255, 102, 0, 0.7));
-}
 
 /* ================================================================ cursores */
 body { cursor: url('../assets/cursors/cutlery.svg') 7 3, default; }

@@ -1234,6 +1234,27 @@
       }
     ]
   },
+  "assets/degustador-header.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/7ad3422648e68b43-640.webp",
+        "bytes": 103912
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/7ad3422648e68b43-1280.webp",
+        "bytes": 306756
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/7ad3422648e68b43-1536.webp",
+        "bytes": 384994
+      }
+    ]
+  },
   "assets/enzo-cabeca-logo.png": {
     "width": 600,
     "height": 542,
