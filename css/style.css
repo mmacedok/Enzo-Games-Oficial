@@ -1439,3 +1439,17 @@ body.flappy-open { overflow: hidden; }
 .theme-degustador .book-caption small { color: var(--mp5k); }
 .theme-degustador .shelf-label { background: linear-gradient(#c9a6ff, #8a2be2); color: #fff; }
 .theme-degustador .comic-fly-flash { background: var(--purple-deep); }
+
+/* Capa fora do 9:16 (js/site.js fitCover): inteira, com a própria capa desfocada atrás */
+.cover-letterbox { background: #111; }
+.hero-cover-wrapper.cover-letterbox { position: relative; }
+.cover-letterbox::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    background: var(--cover-bg) center / cover no-repeat;
+    filter: blur(10px) brightness(0.5) saturate(1.2);
+}
+.book-front.cover-letterbox > img,
+.hero-cover-wrapper.cover-letterbox > img,
+.comic-fly .cover-letterbox > img { position: relative; z-index: 1; object-fit: contain; object-position: center; }

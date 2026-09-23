@@ -75,6 +75,7 @@
         cover.decoding = 'async';
         cover.draggable = false;
         front.appendChild(cover);
+        fitCover(front, coverSource);
 
         if (comic.id === 'capitulo-2') {
             item.classList.add('glitch-card');

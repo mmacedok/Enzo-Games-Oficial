@@ -78,6 +78,7 @@
         await window.EnzoOpen.fly({
             source,
             coverSrc: coverImg?.currentSrc || siteImageUrl(edition.cover),
+            coverSource: edition.cover,
             pageSrc: window.EnzoOpen.largeImageUrl(edition.firstPage),
         });
         location.href = url;
@@ -124,6 +125,7 @@
         cover.alt = `Capa de ${kicker}`;
         cover.fetchPriority = 'high';
         coverWrapper.appendChild(cover);
+        fitCover(coverWrapper, edition.cover);
 
         const text = document.createElement('div');
         text.className = 'hero-text';

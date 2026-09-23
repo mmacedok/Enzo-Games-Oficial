@@ -58,7 +58,7 @@
         });
     }
 
-    async function animate({ source, coverSrc, pageSrc }) {
+    async function animate({ source, coverSrc, coverSource, pageSrc }) {
         if (running) return new Promise(() => {}); // clique duplo: ignora
         if (!source || reducedMotion() || typeof Element.prototype.animate !== 'function') return;
         running = true;
@@ -93,6 +93,7 @@
         const coverImg = element('img', '', coverFront);
         coverImg.alt = '';
         coverImg.src = coverSrc;
+        if (coverSource && window.fitCover) fitCover(coverFront, coverSource);
         element('div', 'comic-fly-cover-back', cover);
         const flash = element('div', 'comic-fly-flash', stage);
 
