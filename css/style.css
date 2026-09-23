@@ -146,7 +146,11 @@ a { color: var(--orange-light); text-decoration: none; }
 /* ------------------------------------------------------------------ logo */
 .logo-link { display: inline-block; color: inherit; }
 
+/* Logo: letras com pelo listrado, brilho e extrusão; o Enzo espia por trás
+   de "ENZO" (olhos seguem o mouse, js/site.js) e o rabo sai do "S".
+   Entrada: letras caem uma a uma; depois (.logo-ready) pulinhos de vez em quando. */
 .garfield-classic-logo {
+    position: relative;
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -154,60 +158,134 @@ a { color: var(--orange-light); text-decoration: none; }
     font-weight: 400;
     font-size: clamp(2.7rem, 12vw, 6rem);
     line-height: 1.1;
-    padding: 0 0.3em 0.12em 0.1em;
-    transition: transform 0.3s var(--ease-pop);
+    padding: 0.8em 0.45em 0.12em 0.1em;
     white-space: nowrap;
     cursor: pointer;
 }
-.garfield-classic-logo:hover { transform: scale(1.04) rotate(-2deg); }
 
 .garfield-classic-logo .char {
     position: relative;
+    z-index: 2;
     display: inline-block;
     color: transparent;
-    -webkit-text-stroke: 0.045em var(--ink);
-    /* extrusão 3D escalável */
+    -webkit-text-stroke: 0.09em var(--ink);
+    /* extrusão 3D: miolo marrom e borda de nanquim */
     text-shadow:
-        -0.01em 0.01em 0 var(--ink), -0.02em 0.02em 0 var(--ink), -0.03em 0.03em 0 var(--ink),
-        -0.04em 0.04em 0 var(--ink), -0.05em 0.05em 0 var(--ink), -0.06em 0.06em 0 var(--ink),
-        -0.07em 0.07em 0 var(--ink), -0.08em 0.08em 0 var(--ink), -0.09em 0.09em 0 var(--ink),
-        -0.1em 0.1em 0 var(--ink), -0.11em 0.11em 0 var(--ink), -0.12em 0.12em 0 var(--ink);
+        -0.012em 0.012em 0 #7a2e00, -0.024em 0.024em 0 #7a2e00, -0.036em 0.036em 0 #7a2e00,
+        -0.048em 0.048em 0 #7a2e00, -0.06em 0.06em 0 #7a2e00, -0.072em 0.072em 0 #7a2e00,
+        -0.084em 0.084em 0 #7a2e00, -0.096em 0.096em 0 var(--ink), -0.108em 0.108em 0 var(--ink),
+        -0.12em 0.12em 0 var(--ink);
 }
-.garfield-classic-logo .char::after {
+/* Pelo: degradê laranja com listras de gato */
+.garfield-classic-logo .char::after,
+.garfield-classic-logo .char::before {
     content: attr(data-text);
     position: absolute;
     inset: 0;
-    color: var(--orange-light);
     -webkit-text-stroke: 0;
     text-shadow: none;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+.garfield-classic-logo .char::after {
     z-index: 2;
+    background-image:
+        repeating-linear-gradient(100deg, transparent 0 0.24em, rgba(120, 38, 0, 0.45) 0.24em 0.3em),
+        linear-gradient(#ffc740, #ff9900 52%, #ee7410);
 }
-.garfield-classic-logo .c1 { z-index: 10; transform: rotate(-3deg); }
-.garfield-classic-logo .c2 { z-index: 9; transform: translateY(0.07em) rotate(2deg) scale(0.95); margin-left: -0.045em; }
-.garfield-classic-logo .c3 { z-index: 8; transform: translateY(-0.045em) rotate(-2deg); margin-left: -0.07em; }
-.garfield-classic-logo .c4 { z-index: 7; transform: translateY(0.035em) rotate(4deg); margin-left: -0.09em; }
-.garfield-classic-logo .space { width: 0.22em; }
-.garfield-classic-logo .c5 { z-index: 5; transform: translateY(-0.05em) rotate(-3deg); }
-.garfield-classic-logo .c6 { z-index: 4; transform: translateY(0.045em) rotate(2deg); margin-left: -0.13em; }
-.garfield-classic-logo .c7 { z-index: 3; transform: translateY(-0.025em) rotate(-1deg); margin-left: -0.045em; }
-.garfield-classic-logo .c8 { z-index: 2; transform: translateY(0.05em) rotate(3deg); margin-left: -0.09em; }
-.garfield-classic-logo .c9 { z-index: 1; transform: rotate(-2deg); margin-left: -0.11em; }
+/* Brilho de plástico no topo + faixa de luz que atravessa no hover */
+.garfield-classic-logo .char::before {
+    z-index: 3;
+    background-image:
+        linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, 0.9) 50%, transparent 58%),
+        linear-gradient(rgba(255, 255, 255, 0.75) 0 16%, rgba(255, 255, 255, 0) 30%);
+    background-size: 300% 100%, 100% 100%;
+    background-position: 200% 0, 0 0;
+    background-repeat: no-repeat;
+}
 
-/* Rabinho de gato saindo do O */
-.garfield-classic-logo .cat-tail {
+.garfield-classic-logo .c1 { --i: 0; z-index: 10; transform: rotate(-3deg); }
+.garfield-classic-logo .c2 { --i: 1; z-index: 9; transform: translateY(0.07em) rotate(2deg) scale(0.95); margin-left: -0.045em; }
+.garfield-classic-logo .c3 { --i: 2; z-index: 8; transform: translateY(-0.045em) rotate(-2deg); margin-left: -0.07em; }
+.garfield-classic-logo .c4 { --i: 3; z-index: 7; transform: translateY(0.035em) rotate(4deg); margin-left: -0.09em; }
+.garfield-classic-logo .space { width: 0.22em; }
+.garfield-classic-logo .c5 { --i: 4; z-index: 5; transform: translateY(-0.05em) rotate(-3deg); }
+.garfield-classic-logo .c6 { --i: 5; z-index: 4; transform: translateY(0.045em) rotate(2deg); margin-left: -0.13em; }
+.garfield-classic-logo .c7 { --i: 6; z-index: 3; transform: translateY(-0.025em) rotate(-1deg); margin-left: -0.045em; }
+.garfield-classic-logo .c8 { --i: 7; z-index: 2; transform: translateY(0.05em) rotate(3deg); margin-left: -0.09em; }
+.garfield-classic-logo .c9 { --i: 8; z-index: 1; transform: rotate(-2deg); margin-left: -0.11em; }
+
+/* O Enzo espiando atrás de "ENZO" */
+.logo-cat {
     position: absolute;
-    width: 0.54em;
-    height: 0.27em;
-    right: -0.31em;
-    bottom: 0.13em;
-    background: repeating-linear-gradient(70deg, var(--orange-light), var(--orange-light) 0.1em, var(--ink) 0.1em, var(--ink) 0.16em);
-    border: 0.03em solid var(--ink);
-    border-radius: 10px 40px 40px 10px / 50%;
-    transform-origin: 0% 50%;
-    z-index: -1;
-    animation: wagTail 1s ease-in-out infinite alternate;
+    z-index: 1;
+    left: 0.58em;
+    top: -0.02em;
+    width: 1.5em;
+    height: auto;
+    overflow: visible;
+    animation: cat-peek 0.6s var(--ease-pop) 0.85s both;
 }
-@keyframes wagTail { from { transform: rotate(0deg); } to { transform: rotate(25deg); } }
+.logo-eyes { transform-box: fill-box; transform-origin: center; animation: cat-blink 5s 2.2s infinite; }
+.logo-pupils { transition: transform 0.12s ease-out; }
+.logo-ear { transform-box: fill-box; transform-origin: 50% 100%; }
+.logo-ear--right { animation: ear-twitch 7s 3s infinite; }
+
+/* Rabo listrado saindo do "S" */
+.logo-tail {
+    position: absolute;
+    z-index: 0;
+    right: -0.02em;
+    bottom: 0.28em;
+    width: 0.62em;
+    height: auto;
+    overflow: visible;
+    transform-origin: 8% 92%;
+    animation: tail-in 0.4s ease-out 1.05s both, tail-wag 1.3s ease-in-out infinite alternate;
+}
+
+/* Entrada: letras caem uma a uma */
+.garfield-classic-logo:not(.logo-ready) .char { animation: logo-drop 0.7s var(--ease-pop) both; animation-delay: calc(var(--i) * 70ms); }
+/* Depois: uma onda de pulinhos a cada 7 s; no hover, onda rápida e brilho */
+.garfield-classic-logo.logo-ready .char { animation: logo-hop 7s ease-in-out infinite; animation-delay: calc(var(--i) * 70ms); }
+.garfield-classic-logo.logo-ready:hover .char { animation: logo-hop-fast 0.55s ease-in-out both; animation-delay: calc(var(--i) * 45ms); }
+.garfield-classic-logo:hover .char::before { background-position: -100% 0, 0 0; transition: background-position 0.7s ease; }
+.garfield-classic-logo:hover .logo-tail { animation-duration: 0.4s, 0.35s; }
+.garfield-classic-logo:active .char { scale: 0.94 1.06; }
+
+@keyframes logo-drop {
+    0% { translate: 0 -1.3em; scale: 1.15 0.75; opacity: 0; }
+    55% { translate: 0 0.08em; scale: 0.9 1.12; opacity: 1; }
+    78% { translate: 0 -0.05em; scale: 1.06 0.95; }
+    100% { translate: 0 0; scale: 1 1; opacity: 1; }
+}
+@keyframes logo-hop {
+    0%, 9%, 100% { translate: 0 0; }
+    3% { translate: 0 -0.13em; }
+    6% { translate: 0 0.02em; }
+}
+@keyframes logo-hop-fast {
+    0%, 100% { translate: 0 0; }
+    40% { translate: 0 -0.16em; }
+    75% { translate: 0 0.03em; }
+}
+@keyframes cat-peek {
+    from { translate: 0 0.55em; opacity: 0; }
+    to { translate: 0 0; opacity: 1; }
+}
+@keyframes cat-blink {
+    0%, 94%, 100% { transform: scaleY(1); }
+    96% { transform: scaleY(0.08); }
+}
+@keyframes ear-twitch {
+    0%, 90%, 100% { transform: rotate(0deg); }
+    93% { transform: rotate(14deg); }
+    96% { transform: rotate(-4deg); }
+}
+@keyframes tail-in { from { opacity: 0; scale: 0.3; } to { opacity: 1; scale: 1; } }
+@keyframes tail-wag { from { transform: rotate(-10deg); } to { transform: rotate(14deg); } }
 
 /* --------------------------------------------------------- cabeçalho */
 .site-header {
