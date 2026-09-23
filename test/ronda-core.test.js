@@ -8,7 +8,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const R = require('../js/ronda-core.js');
 
-const { CONFIG, TIPOS, criarJogo, reiniciar, pular, atirar, avancar, pontos, alcanceDoPulo, alturaPulo, velocidadeEm } = R;
+const { CONFIG, TIPOS, criarJogo, reiniciar, pular, atirar, recarregar, avancar, pontos, alcanceDoPulo, alturaPulo, velocidadeEm, estadoLaser, zonaLaser } = R;
 
 function semente(valor) {
     let s = valor >>> 0;
@@ -47,8 +47,10 @@ const tempoParaSubir = (altura) => {
 /**
  * Robô que joga "como gente": olha o que vem à frente e pula ou atira.
  * Pula cheio a tempo de passar buracos e subir em telhados mais altos (sem
- * bater na fachada) e antes de obstáculos baixos; atira sem parar quando há
- * algo quebrável à frente.
+ * bater na fachada) e antes de obstáculos baixos e do inimigo-coração. Atira
+ * só o necessário no alvo que chega (conta as balas em voo) e recarrega logo
+ * depois da rajada quando sobram menos de 3 balas: a estratégia que o gerador
+ * usa para garantir munição.
  */
 function robo(jogo) {
     const j = jogo.jogador;
@@ -70,13 +72,23 @@ function robo(jogo) {
             const alvo = Math.max(precisa, buraco > 1 ? buraco / v + 0.02 : 0);
             if ((buraco > 1 || subida > 0) && ateFachada <= alvo) querPular = true;
         }
-        const baixo = jogo.desafios.find((d) => d.tipo === 'baixo' && d.x + d.w > pes && d.x - frente() < v * 0.12 && Math.abs(d.y + d.h - base) < 2);
+        const aproxima = (d) => v + (d.correndo ? CONFIG.corridaCoracao : 0);
+        const baixo = jogo.desafios.find((d) => (d.tipo === 'baixo' || d.tipo === 'coracao') && d.x + d.w > pes &&
+            d.x - frente() < aproxima(d) * 0.12 && Math.abs(d.y + d.h - base) < 2);
         if (baixo) querPular = true;
     }
     if (querPular) { pular(jogo, true); pular(jogo, false); j.vy = Math.min(j.vy, CONFIG.impulso); }
 
-    const quebravel = jogo.desafios.find((d) => d.vida > 0 && d.x + d.w > CONFIG.jogadorX && d.x - frente() < 600);
-    if (quebravel) atirar(jogo);
+    // Só vale a bala que está na altura do alvo (de outro telhado, ela passa por baixo).
+    const naAltura = (y, d) => y > d.y - 1 && y < d.y + d.h + 1;
+    const emVoo = (d) => jogo.tiros.filter((t) => t.x < d.x + d.w && naAltura(t.y, d)).length;
+    const alvo = jogo.desafios.find((d) => ['parede', 'passaro', 'drone'].includes(d.tipo) && d.vida > 0 &&
+        d.x + d.w > CONFIG.jogadorX && d.x - frente() < v * 0.6 && d.vida > emVoo(d));
+    if (alvo) {
+        if (naAltura(j.y + CONFIG.alturaArma, alvo)) atirar(jogo);
+    } else if (jogo.balas < 3) {
+        recarregar(jogo);
+    }
 }
 
 // ------------------------------------------------------------------ física
