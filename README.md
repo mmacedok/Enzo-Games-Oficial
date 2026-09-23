@@ -2,7 +2,7 @@
 
 Leitor de HQs do Enzo Games + mini-game **Flappy Enzo** + galeria de personagens.
 
-- **Home** (`index.html`) — hero com o lançamento, grid de edições e o jogo (abra clicando no logo).
+- **Home** (`index.html`) — destaque do último capítulo, grade da série principal, seção de spin-offs e o jogo (abra clicando no logo).
 - **Leitor** (`reader.html?comic=<id>&chapter=<id>`) — leitura vertical com zoom, censura por senha e easter eggs.
 - **Spin-off** (`degustador.html`) — Degustador da Noite, com tema próprio.
 - **Personagens** (`personagens.html`) — galeria de fichas com visualização em tela cheia.
@@ -92,13 +92,12 @@ js/game-core.js           regras puras do jogo (colisão, física) — testável
 js/game.js                motor do Flappy Enzo (canvas, input, ranking)
 js/main.js                home (hero + grid)
 js/reader.core.js         leitor (único motor de renderização)
-js/game.test.js           (removido) — testes agora em test/
 css/style.css             estilos do site inteiro
 data/comics.manifest.json conteúdo curado (fonte de verdade)
 data/database.json        catálogo gerado (não editar à mão)
 test/                     testes (npm test)
 tools/qa.mjs              harness de screenshot headless
-docs/historico/           relatórios antigos de agentes (não refletem o código atual)
+docs/CORRECOES.md         registro das correções e da verificação
 ```
 
 ## Imagens e publicação
@@ -128,3 +127,19 @@ em desktop e celular. Resultados ficam em `shots/site-audit/results.json`.
   entre reinícios do servidor, configure `LEADERBOARD_SECRET` no ambiente.
 - **Cache**: imagens com `max-age` de 7 dias; HTML sempre revalidado. Não há
   cache-busting por requisição no leitor.
+
+## Design
+
+Todo o visual vive em `css/style.css`, organizado por seções e guiado pelos
+tokens do `:root` (cores, fontes, contornos e sombras "de gibi"). Não use
+estilo inline nem `<style>` nas páginas; crie uma classe no CSS. Fontes:
+Bangers (títulos), Comic Neue (texto) e Luckiest Guy (só o logo). Botões usam
+`.btn` e variações (`.btn--purple`, `.btn--danger`, `.btn--muted`, `.btn--small`).
+
+Os títulos exibidos na home vêm de `data/comics.manifest.json`: `title`
+("Capítulo 3") vira a etiqueta e `description` ("Mistério do Estacionamento")
+vira o título grande. Gibis com `featured: false` aparecem em **Spin-offs**.
+
+Páginas deitadas (mais largas que altas) ganham no leitor o botão **Ampliar**,
+que abre a página em tela cheia com rolagem lateral — essencial no celular.
+Mesmo assim, prefira gerar páginas no formato vertical 9:16.

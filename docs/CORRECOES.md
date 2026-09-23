@@ -1,7 +1,8 @@
 # Correções e validação do site inteiro
 
-Revisão: 17/09/2026. Este é o estado atual; `BUG_REPORT.md` contém o diagnóstico
-histórico, e `docs/historico/` não descreve a implementação atual.
+Revisão: 17/09/2026, com redesign e limpeza em 23/09/2026 (ver seção no fim).
+Relatórios antigos (`BUG_REPORT.md`, `docs/historico/`) foram removidos; estão
+no primeiro commit do git se algum dia forem necessários.
 
 ## Auditoria dos 34 itens
 
@@ -85,3 +86,17 @@ continuam em `assets/`; versões de navegação ficam em `assets/web/`.
 A sessão assinada dificulta envios triviais e repetidos, mas a simulação continua
 no cliente. A senha das brincadeiras de censura também é client-side: não constitui
 controle de acesso a arquivos confidenciais.
+
+## Redesign e limpeza (23/09/2026)
+
+- Removidos: relatórios antigos de agentes, `BUG_REPORT.md`, `ORIGINAL_REQUEST.md`,
+  8 imagens sem uso e suas variantes web, 48 MB de screenshots de QA (para a Lixeira).
+- CSS reescrito com tokens; estilos inline e `<style>` removidos das páginas;
+  fonte Outfit e Impact de texto corrido removidas; favicon único.
+- Home: navegação no topo, destaque com o título real do capítulo, cards com
+  número da edição (sem o preço falso "R$ 5,90"), spin-offs em seção própria,
+  grade de 6/3/2 colunas sem capa órfã.
+- Celular: título do Degustador não estoura mais a tela; logo em uma linha;
+  barra do leitor não cobre a primeira página e some ao rolar; páginas deitadas
+  com botão **Ampliar**.
+- Metadados de descrição e Open Graph em todas as páginas.

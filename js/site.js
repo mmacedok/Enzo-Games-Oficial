@@ -16,7 +16,12 @@
         setTimeout(() => { location.href = url; }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350);
     };
     addEventListener('pageshow', () => document.getElementById('macaroni-wipe')?.classList.remove('is-active'));
-    document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => playMacaroniTransition(el.dataset.nav)));
+    // Links reais (<a href>) continuam funcionando com Ctrl/⌘ ou botão do meio.
+    document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', (event) => {
+        if (event.defaultPrevented || event.button > 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        event.preventDefault();
+        playMacaroniTransition(el.dataset.nav);
+    }));
     const copy = document.querySelector('[data-pix]');
     copy?.addEventListener('click', async () => {
         try {

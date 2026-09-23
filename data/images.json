@@ -716,27 +716,6 @@
       }
     ]
   },
-  "assets/batman.png": {
-    "width": 1600,
-    "height": 1600,
-    "variants": [
-      {
-        "width": 640,
-        "src": "assets/web/b6d56bb4ffec4b3a-640.webp",
-        "bytes": 5958
-      },
-      {
-        "width": 1280,
-        "src": "assets/web/b6d56bb4ffec4b3a-1280.webp",
-        "bytes": 14008
-      },
-      {
-        "width": 1600,
-        "src": "assets/web/b6d56bb4ffec4b3a-1600.webp",
-        "bytes": 10092
-      }
-    ]
-  },
   "assets/batman_cursor.png": {
     "width": 32,
     "height": 32,
@@ -748,33 +727,6 @@
       }
     ]
   },
-  "assets/cursor-enzo.png": {
-    "width": 64,
-    "height": 64,
-    "variants": [
-      {
-        "width": 64,
-        "src": "assets/web/224b83b4c0e06ef9-64.webp",
-        "bytes": 4172
-      }
-    ]
-  },
-  "assets/degustador-face-gothic.jpg": {
-    "width": 1024,
-    "height": 1024,
-    "variants": [
-      {
-        "width": 640,
-        "src": "assets/web/4c10e7ecae5b8ca9-640.webp",
-        "bytes": 44572
-      },
-      {
-        "width": 1024,
-        "src": "assets/web/4c10e7ecae5b8ca9-1024.webp",
-        "bytes": 109366
-      }
-    ]
-  },
   "assets/degustador-face-t.png": {
     "width": 392,
     "height": 354,
@@ -783,17 +735,6 @@
         "width": 392,
         "src": "assets/web/010ebac3aafdd747-392.webp",
         "bytes": 16866
-      }
-    ]
-  },
-  "assets/degustador-face.png": {
-    "width": 392,
-    "height": 354,
-    "variants": [
-      {
-        "width": 392,
-        "src": "assets/web/2aabf7b21b5899ba-392.webp",
-        "bytes": 15612
       }
     ]
   },
@@ -904,49 +845,6 @@
       }
     ]
   },
-  "assets/italo-face.png": {
-    "width": 470,
-    "height": 364,
-    "variants": [
-      {
-        "width": 470,
-        "src": "assets/web/de5ae45dd71a716a-470.webp",
-        "bytes": 15176
-      }
-    ]
-  },
-  "assets/macaroni_bowl.jpg": {
-    "width": 1024,
-    "height": 1024,
-    "variants": [
-      {
-        "width": 640,
-        "src": "assets/web/638e08d20e4f56d2-640.webp",
-        "bytes": 101260
-      },
-      {
-        "width": 1024,
-        "src": "assets/web/638e08d20e4f56d2-1024.webp",
-        "bytes": 198588
-      }
-    ]
-  },
-  "assets/macaroni_explosion.jpg": {
-    "width": 1024,
-    "height": 1024,
-    "variants": [
-      {
-        "width": 640,
-        "src": "assets/web/61da83de50939d56-640.webp",
-        "bytes": 159052
-      },
-      {
-        "width": 1024,
-        "src": "assets/web/61da83de50939d56-1024.webp",
-        "bytes": 310032
-      }
-    ]
-  },
   "assets/macaroni_meatballs.jpg": {
     "width": 1024,
     "height": 1024,
@@ -987,22 +885,6 @@
         "width": 280,
         "src": "assets/web/96739b00bd79b687-280.webp",
         "bytes": 12678
-      }
-    ]
-  },
-  "assets/side_bowl.jpg": {
-    "width": 1024,
-    "height": 1024,
-    "variants": [
-      {
-        "width": 640,
-        "src": "assets/web/2ae5739e41767b0e-640.webp",
-        "bytes": 42220
-      },
-      {
-        "width": 1024,
-        "src": "assets/web/2ae5739e41767b0e-1024.webp",
-        "bytes": 79164
       }
     ]
   }

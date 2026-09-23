@@ -3,87 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enzo Games Site</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-    <meta name="description" content="Um leitor de gibis moderno, rápido e bonito.">
-    <link rel="stylesheet" href="css/style.css?v=20260916b">
-    <!-- Google Fonts -->
+    <title>Enzo Games — HQs da saga da macarronada</title>
+    <meta name="description" content="Leia de graça as HQs de Enzo Games: o gato gamer que odeia quartas-feiras, ama macarronada e enfrenta o Degustador da Noite e o Inominável.">
+    <meta name="theme-color" content="#e65100">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Enzo Games">
+    <meta property="og:title" content="Enzo Games — HQs da saga da macarronada">
+    <meta property="og:description" content="Leia as HQs de Enzo Games, Degustador da Noite e toda a Legião do Mal.">
+    <meta property="og:image" content="assets/web/e4d58efa050329a5-640.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=20260923">
     <link rel="stylesheet" href="css/images.generated.css?v=1">
 </head>
 <body>
-    <!-- Overlay de Transição Macarronada -->
+    <!-- Transição de macarronada entre páginas -->
     <div id="macaroni-wipe" class="macaroni-wipe"></div>
-    
-    <header class="navbar">
-        <div class="container" style="display:flex; justify-content:center; align-items:center; flex-direction:column; padding-top:40px;">
-            <h1 class="garfield-classic-logo" data-game-trigger title="Clique para jogar o Flappy Enzo">
-                <span class="char c1" data-text="E">E</span><span class="char c2" data-text="N">N</span><span class="char c3" data-text="Z">Z</span><span class="char c4" data-text="O">O<div class="cat-tail"></div></span>
-                <span class="space">&nbsp;</span>
-                <span class="char c5" data-text="G">G</span><span class="char c6" data-text="A">A</span><span class="char c7" data-text="M">M</span><span class="char c8" data-text="E">E</span><span class="char c9" data-text="S">S</span>
-            </h1>
-        </div>
+
+    <header class="site-header">
+        <h1 class="garfield-classic-logo" data-game-trigger title="Enzo Games">
+            <span class="char c1" data-text="E">E</span><span class="char c2" data-text="N">N</span><span class="char c3" data-text="Z">Z</span><span class="char c4" data-text="O">O<span class="cat-tail"></span></span><span class="space"></span><span class="char c5" data-text="G">G</span><span class="char c6" data-text="A">A</span><span class="char c7" data-text="M">M</span><span class="char c8" data-text="E">E</span><span class="char c9" data-text="S">S</span>
+        </h1>
+        <nav class="site-nav" aria-label="Seções do site">
+            <a href="#edicoes">Edições</a>
+            <a href="personagens.html" data-nav="personagens.html">Personagens</a>
+            <a href="degustador.html" data-nav="degustador.html">Degustador da Noite</a>
+            <a href="#apoie">Apoie</a>
+        </nav>
     </header>
 
     <main class="container">
-        <section class="hero" id="hero-comic">
-            <!-- O gibi mais recente entra aqui como destaque -->
-        </section>
+        <!-- O gibi mais recente entra aqui como destaque (js/main.js) -->
+        <section class="hero" id="hero-comic" aria-label="Último lançamento"></section>
 
         <!-- Área do mini-game (preenchida por js/game.js; nunca é limpa pela home) -->
         <section id="game-slot" aria-label="Flappy Enzo"></section>
 
-        <h2 style="font-family: var(--font-heading); font-size: 2.5rem; margin-top: 40px; margin-bottom: 20px; text-shadow: 2px 2px 0px #000; letter-spacing: 2px; text-transform: uppercase;">Edições Completas</h2>
-        
-        <section class="comic-grid" id="comic-grid">
-            <!-- Os gibis serão inseridos aqui dinamicamente pelo JavaScript -->
-            <div class="loading">Carregando gibis...</div>
+        <section class="section" id="edicoes" aria-labelledby="edicoes-title">
+            <h2 class="section-title" id="edicoes-title">Edições completas</h2>
+            <div class="comic-grid" id="comic-grid">
+                <div class="loading">Carregando gibis...</div>
+            </div>
         </section>
 
-        <!-- Seção de Personagens e Extras -->
-        <div style="text-align: center; padding: 40px 0 80px 0; display: flex; flex-direction: column; align-items: center; gap: 30px;">
-            <h2 style="font-family: var(--font-heading); font-size: 2.5rem; text-shadow: 2px 2px 0px #000; letter-spacing: 2px; text-transform: uppercase; color: #fff;">
-                Quem faz a bagunça?
-            </h2>
-            
-            <!-- Botão Degustador da Noite -->
-            <button class="hero-btn btn-degustador" style="display: inline-flex; align-items: center; gap: 20px; padding: 15px 30px; font-size: 2rem;" data-nav="degustador.html">
-                <img data-original="assets/degustador-face-t.png" src="assets/web/010ebac3aafdd747-392.webp" srcset="assets/web/010ebac3aafdd747-392.webp 392w" sizes="(max-width: 600px) 90vw, 420px" width="392" height="354" alt="Degustador da Noite" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 0 5px #8a2be2);">
-                <span style="font-family: 'Bangers', cursive; letter-spacing: 2px;">Degustador da Noite</span>
-                <img data-original="assets/mp5k.png" src="assets/web/e44ff3da28c4dc49-640.webp" srcset="assets/web/e44ff3da28c4dc49-640.webp 640w, assets/web/e44ff3da28c4dc49-1080.webp 1080w" sizes="(max-width: 600px) 90vw, 420px" width="1080" height="1080" alt="MP5K Laranja" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 0 5px #ff6600); transform: scaleX(-1);">
-            </button>
+        <section class="section" id="spinoffs" aria-labelledby="spinoffs-title" hidden>
+            <h2 class="section-title" id="spinoffs-title">Spin-offs</h2>
+            <div class="comic-grid comic-grid--spinoffs" id="spinoff-grid"></div>
+        </section>
 
-            <!-- Botão Galeria de Personagens -->
-            <button class="hero-btn characters-btn" style="display: inline-flex; align-items: center; gap: 20px; padding: 15px 30px; font-size: 2rem;" data-nav="personagens.html">
-                <img data-original="assets/enzo-face-t.png" src="assets/web/21dd4172ac401f2e-640.webp" srcset="assets/web/21dd4172ac401f2e-640.webp 640w, assets/web/21dd4172ac401f2e-1080.webp 1080w" sizes="(max-width: 600px) 90vw, 420px" width="1080" height="1080" alt="Enzo Games" style="width: 60px; height: 60px; object-fit: contain;">
-                <span>Conheça os Personagens</span>
-                <img data-original="assets/italo-face-t.png" src="assets/web/db6944977fba8928-470.webp" srcset="assets/web/db6944977fba8928-470.webp 470w" sizes="(max-width: 600px) 90vw, 420px" width="470" height="364" alt="Italo" style="width: 60px; height: 60px; object-fit: contain;">
-            </button>
-        </div>
+        <section class="section" aria-labelledby="universo-title">
+            <h2 class="section-title section-title--center" id="universo-title">Quem faz a bagunça?</h2>
+            <div class="universe-links">
+                <a class="btn btn--purple" href="degustador.html" data-nav="degustador.html">
+                    <img data-original="assets/degustador-face-t.png" src="assets/web/010ebac3aafdd747-392.webp" srcset="assets/web/010ebac3aafdd747-392.webp 392w" sizes="(max-width: 600px) 90vw, 420px" width="392" height="354" alt="" loading="lazy">
+                    <span>Degustador da Noite</span>
+                </a>
+                <a class="btn" href="personagens.html" data-nav="personagens.html">
+                    <img data-original="assets/enzo-face-t.png" src="assets/web/21dd4172ac401f2e-640.webp" srcset="assets/web/21dd4172ac401f2e-640.webp 640w, assets/web/21dd4172ac401f2e-1080.webp 1080w" sizes="(max-width: 600px) 90vw, 420px" width="1080" height="1080" alt="" loading="lazy">
+                    <span>Conheça os personagens</span>
+                    <img data-original="assets/italo-face-t.png" src="assets/web/db6944977fba8928-470.webp" srcset="assets/web/db6944977fba8928-470.webp 470w" sizes="(max-width: 600px) 90vw, 420px" width="470" height="364" alt="" loading="lazy">
+                </a>
+            </div>
+        </section>
     </main>
 
-    <!-- Donation Banner -->
-    <footer class="donation-footer">
+    <footer class="site-footer" id="apoie">
         <div class="donation-container">
-            <img data-original="assets/enzo_money.jpg" src="assets/web/808c3b4927d71465-640.webp" srcset="assets/web/808c3b4927d71465-640.webp 640w, assets/web/808c3b4927d71465-1024.webp 1024w" sizes="(max-width: 600px) 90vw, 420px" width="1024" height="1024" alt="Enzo Mendigo" class="donation-mascot" loading="lazy">
+            <img data-original="assets/enzo_money.jpg" src="assets/web/808c3b4927d71465-640.webp" srcset="assets/web/808c3b4927d71465-640.webp 640w, assets/web/808c3b4927d71465-1024.webp 1024w" sizes="(max-width: 600px) 90vw, 420px" width="1024" height="1024" alt="Enzo pedindo uma moedinha" class="donation-mascot" loading="lazy">
             <div class="donation-text">
-                <h3>CONTRIBUA COM ENZO GAMES</h3>
+                <h2>Contribua com Enzo Games</h2>
                 <p>Curtiu a saga? Faça um PIX e ajude a financiar as próximas edições!</p>
-                <button class="pix-copy-btn" data-pix="00020126580014BR.GOV.BCB.PIX013678545a64-ab6f-4383-9d66-085e3a6dfbad5204000053039865802BR5925Henrique dos Santos Maced6009SAO PAULO62140510kqtRo7tLvM6304EB4F" aria-live="polite">
-                    Copiar Código PIX
-                </button>
+                <button type="button" class="btn pix-copy-btn" data-pix="00020126580014BR.GOV.BCB.PIX013678545a64-ab6f-4383-9d66-085e3a6dfbad5204000053039865802BR5925Henrique dos Santos Maced6009SAO PAULO62140510kqtRo7tLvM6304EB4F" aria-live="polite">Copiar código PIX</button>
                 <textarea id="pix-code" aria-label="Código PIX para copiar" readonly hidden></textarea>
             </div>
-            <img src="assets/qrcode.png" alt="QR Code PIX" class="donation-qr">
+            <img src="assets/qrcode.png" alt="QR Code do PIX" class="donation-qr" width="280" height="280" loading="lazy">
         </div>
+        <p class="site-credits">Enzo Games · HQ satírica independente · Macarronada sim, lasanha nunca.</p>
     </footer>
 
     <script src="js/images.generated.js?v=1"></script>
-    <script src="js/site.js?v=1"></script>
-    <script src="js/main.js?v=18"></script>
-    <!-- Game Engine: núcleo puro (regras) + motor (canvas) -->
+    <script src="js/site.js?v=2"></script>
+    <script src="js/main.js?v=19"></script>
+    <!-- Mini-game: núcleo puro (regras) + motor (canvas) -->
     <script src="js/game-core.js?v=3"></script>
     <script src="js/game.js?v=30"></script>
 </body>

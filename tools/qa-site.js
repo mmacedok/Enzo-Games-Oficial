@@ -6,9 +6,11 @@
     check(document.documentElement.scrollWidth <= innerWidth + 2, 'sem overflow horizontal da página');
     if (path === '/' || path === '/index.html') {
         check(document.querySelectorAll('#hero-comic .hero-banner').length === 1, 'um hero');
-        check(document.querySelector('#hero-comic h2')?.textContent === 'Capítulo 6', 'destaque correto');
-        check(document.querySelectorAll('#comic-grid .comic-card').length === 6, 'seis cards sem perder spin-off');
-        check(document.querySelectorAll('[data-nav]').length === 2, 'navegação para extras');
+        check(document.querySelector('#hero-comic .hero-kicker')?.textContent.includes('Capítulo 6'), 'destaque correto');
+        check(document.querySelectorAll('#comic-grid .comic-card').length === 6, 'seis capítulos na série principal');
+        check(document.querySelectorAll('#spinoff-grid .comic-card').length === 1 && !document.querySelector('#spinoffs').hidden, 'spin-off em seção própria');
+        check(!document.body.textContent.includes('R$ 5,90'), 'sem preço falso nos cards');
+        check(document.querySelectorAll('a[data-nav]').length === 4, 'navegação para extras');
         const copy = document.querySelector('[data-pix]');
         const original = navigator.clipboard.writeText;
         let copied;
@@ -22,7 +24,7 @@
         document.querySelector('#pix-code').hidden = true;
     }
     if (path === '/personagens.html') {
-        const cards = [...document.querySelectorAll('.characters-roster .comic-book-style')];
+        const cards = [...document.querySelectorAll('.characters-roster .character-card')];
         check(cards.length === 7 && cards.every(c => c.tabIndex === 0), 'sete fichas acessíveis por teclado');
         cards[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
         const viewer = document.querySelector('.character-viewer');
@@ -62,6 +64,15 @@
             await wait(550);
             check(!document.querySelector('.cabo-coco-mask'), 'leitor remove censura após senha');
         }
+        const bar = document.querySelector('.floating-ui-container').getBoundingClientRect();
+        check(document.querySelector('.page-wrapper').getBoundingClientRect().top >= bar.bottom - 12, 'barra não cobre a primeira página');
+        const expand = document.querySelector('.page-expand-btn');
+        if (expand) {
+            expand.click();
+            const viewer = document.querySelector('.page-viewer');
+            check(viewer.open, 'página deitada abre ampliada');
+            viewer.querySelector('.viewer-close').click();
+        }
         const egg = document.querySelector('.easter-egg-trigger');
         if (egg) { egg.click(); check(!!egg.querySelector('.show-secret'), 'easter egg revela imagem'); }
         const pasta = document.querySelector('.macarronada-hotspot');
@@ -72,6 +83,8 @@
     }
     if (path === '/degustador.html') {
         check(document.querySelector('[data-nav*="comic=degustador"]'), 'botão aponta para spin-off');
+        const title = document.querySelector('.batman-style-title');
+        check(title.scrollWidth <= title.clientWidth + 2, 'título do Degustador cabe na tela');
         check(getComputedStyle(document.body).cursor.includes('batman_cursor'), 'cursor do tema ativo');
     }
     // Load every image, including below-the-fold panels, to catch broken assets.

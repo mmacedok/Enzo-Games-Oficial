@@ -9,7 +9,7 @@
     input.setAttribute('aria-label', 'Senha de acesso');
     const viewer = document.createElement('dialog');
     viewer.className = 'character-viewer';
-    viewer.innerHTML = '<button class="game-btn viewer-close" aria-label="Fechar ficha">Fechar ×</button><img alt=""><p></p>';
+    viewer.innerHTML = '<button type="button" class="btn btn--small viewer-close" aria-label="Fechar ficha">Fechar ×</button><img alt=""><p></p>';
     document.body.appendChild(viewer);
     let previousFocus;
     const closePassword = () => { overlay.style.display = 'none'; lockedCard?.focus(); };
@@ -24,9 +24,9 @@
         viewer.showModal();
         document.body.classList.add('viewer-open');
     };
-    document.querySelectorAll('.characters-roster .comic-book-style').forEach(card => {
+    document.querySelectorAll('.characters-roster .character-card').forEach(card => {
         card.tabIndex = 0; card.setAttribute('role', 'button');
-        card.setAttribute('aria-label', `Abrir ficha: ${card.querySelector('img').alt}`);
+        card.setAttribute('aria-label', card.dataset.locked === 'true' ? 'Ficha banida: pede senha' : `Abrir ficha: ${card.querySelector('img').alt}`);
         card.addEventListener('click', () => {
             if (card.dataset.locked === 'true') {
                 lockedCard = card; input.value = ''; error.style.display = 'none';
@@ -42,6 +42,8 @@
         }
         lockedCard.dataset.locked = 'false';
         lockedCard.querySelector('.crime-scene-overlay').hidden = true;
+        lockedCard.querySelector('.character-name').textContent = lockedCard.querySelector('img').alt;
+        lockedCard.setAttribute('aria-label', `Abrir ficha: ${lockedCard.querySelector('img').alt}`);
         closePassword(); show(lockedCard);
     };
     document.getElementById('password-submit').addEventListener('click', check);
@@ -58,5 +60,4 @@
     viewer.querySelector('button').addEventListener('click', () => viewer.close());
     viewer.addEventListener('click', e => { if (e.target === viewer) viewer.close(); });
     viewer.addEventListener('close', () => { document.body.classList.remove('viewer-open'); previousFocus?.focus(); });
-    document.querySelector('[data-nav][role="link"]')?.addEventListener('keydown', e => { if (e.key === 'Enter') e.currentTarget.click(); });
 })();

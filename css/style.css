@@ -1,251 +1,300 @@
 /* ==========================================================================
-   CSS Variables & Tokens (Premium Dark Mode)
+   Enzo Games — folha de estilo única do site
+   Linguagem visual: gibi de domingo. Laranja do Garfield, retícula preta,
+   contornos de nanquim (borda preta grossa) e sombras chapadas.
+   Regra: cores, fontes e sombras só via tokens abaixo. Nada de estilo inline.
    ========================================================================== */
+
+/* ------------------------------------------------------------------ tokens */
 :root {
-    --bg-base: #1a1a1a;
-    --bg-surface: #2b2b2b;
-    --bg-elevated: #3a3a3a;
-    --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --accent-color: #f58220; /* Garfield Orange */
-    --accent-hover: #ff983f;
-    --border-color: #444444;
-    --garfield-yellow: #e65100; /* Laranja mais escuro */
-    
-    --font-heading: 'Bangers', 'Luckiest Guy', cursive;
-    --font-sans: 'Comic Neue', 'Outfit', sans-serif;
-    
+    /* Cores da marca */
+    --orange-deep: #e65100;      /* fundo da página */
+    --orange: #f58220;           /* ação principal */
+    --orange-light: #ff9900;     /* pelo do Garfield / logo */
+    --orange-hover: #ffa447;
+    --ink: #111111;              /* contornos e sombras */
+    --paper: #fff5d1;            /* papel de gibi (cards) */
+    --paper-ink: #3b3024;        /* texto sobre papel */
+    --surface: #1b1b1b;          /* painéis escuros */
+    --surface-2: #262626;
+    --line: #3a3a3a;
+    --text: #ffffff;
+    --text-muted: #e2d8cc;
+    --danger: #d32f2f;
+    --danger-light: #ff6b6b;
+    --caution: #ffcc00;
+    --focus: #ffcf5c;
+
+    /* Tema Degustador da Noite */
+    --purple: #8a2be2;
+    --purple-deep: #4b0082;
+    --mp5k: #ff6600;
+
+    /* Tipografia: Bangers (títulos), Comic Neue (texto), Luckiest Guy (só o logo) */
+    --font-heading: 'Bangers', 'Luckiest Guy', 'Arial Black', sans-serif;
+    --font-sans: 'Comic Neue', 'Trebuchet MS', sans-serif;
+    --font-logo: 'Luckiest Guy', 'Bangers', 'Arial Black', sans-serif;
+
+    /* Contorno e sombra "de gibi" */
+    --stroke: 3px solid var(--ink);
+    --stroke-thick: 4px solid var(--ink);
+    --pop-sm: 2px 2px 0 var(--ink);
+    --pop: 4px 4px 0 var(--ink);
+    --pop-lg: 6px 6px 0 var(--ink);
+    --shadow-soft: 0 14px 30px rgba(0, 0, 0, 0.45);
+
     --radius-sm: 6px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    
-    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --radius: 12px;
+    --radius-pill: 999px;
 
-    /* Largura da página de leitura (leitor) */
     --reader-page-width: 800px;
-    
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --reader-bar-space: 84px;
+    --ease-pop: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* ==========================================================================
-   Base Reset & Styles
-   ========================================================================== */
-/* Cursor customizado de Garfo e Faca! */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    
-}
+/* ------------------------------------------------------------------ base */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-a, button, .comic-card, .hero-banner, .island-select, select, [role="button"], .hero-btn, .easter-egg-trigger {
-    
-}
+html { scroll-behavior: smooth; }
 
 body {
+    min-height: 100dvh;
     font-family: var(--font-sans);
-    background-color: var(--garfield-yellow);
-    background-image: radial-gradient(#000000 15%, transparent 16%), radial-gradient(#000000 15%, transparent 16%);
+    font-size: 1.05rem;
+    line-height: 1.55;
+    color: var(--text);
+    background-color: var(--orange-deep);
+    background-image:
+        radial-gradient(rgba(0, 0, 0, 0.28) 15%, transparent 16%),
+        radial-gradient(rgba(0, 0, 0, 0.28) 15%, transparent 16%);
     background-size: 20px 20px;
     background-position: 0 0, 10px 10px;
-    color: var(--text-primary);
-    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
-a {
-    color: var(--accent-color);
-    text-decoration: none;
-    transition: var(--transition);
-}
+img { max-width: 100%; }
+button { font: inherit; color: inherit; background: none; border: 0; }
+a { color: var(--orange-light); text-decoration: none; }
 
-a:hover {
-    color: var(--accent-hover);
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+
+.sr-only {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
 }
 
 .container {
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
 }
 
-/* ==========================================================================
-   Home Page Components
-   ========================================================================== */
-.navbar {
-    padding: 20px 0;
+/* ------------------------------------------------------------- botões */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 26px;
+    font-family: var(--font-heading);
+    font-size: 1.45rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 1.1;
+    color: var(--ink);
+    background: var(--orange);
+    border: var(--stroke);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--pop);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
+.btn:hover { background: var(--orange-hover); transform: translate(-2px, -2px); box-shadow: var(--pop-lg); }
+.btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+.btn img { width: 52px; height: 52px; object-fit: contain; }
+
+.btn--dark { background: var(--surface); color: var(--text); }
+.btn--dark:hover { background: #000; }
+.btn--purple { background: var(--surface); color: var(--text); border-color: var(--purple); box-shadow: 4px 4px 0 var(--purple); }
+.btn--purple:hover { background: #000; box-shadow: 6px 6px 0 var(--purple); }
+.btn--danger { background: var(--danger); color: #fff; }
+.btn--danger:hover { background: #f44336; }
+.btn--muted { background: #555; color: #fff; }
+.btn--muted:hover { background: #666; }
+.btn--small { font-size: 1.15rem; padding: 6px 16px; }
+
+/* Voltar (páginas internas) */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 18px;
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+    color: var(--text);
+    background: var(--surface);
+    border: var(--stroke);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--pop-sm);
+    transition: transform 0.15s ease;
+}
+.back-link:hover { color: var(--text); transform: translate(-1px, -1px); }
+
+/* ------------------------------------------------------------------ logo */
+.logo-link { display: inline-block; color: inherit; }
 
 .garfield-classic-logo {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    font-family: 'Luckiest Guy', cursive;
-    font-size: 6rem; /* De volta a um tamanho gigante puro! */
-    margin: 40px 0;
-    
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-family: var(--font-logo);
+    font-weight: 400;
+    font-size: clamp(2.7rem, 12vw, 6rem);
+    line-height: 1.1;
+    padding: 0 0.3em 0.12em 0.1em;
+    transition: transform 0.3s var(--ease-pop);
+    white-space: nowrap;
+    cursor: pointer;
 }
-
-.garfield-classic-logo:hover {
-    transform: scale(1.05) rotate(-2deg);
-}
+.garfield-classic-logo:hover { transform: scale(1.04) rotate(-2deg); }
 
 .garfield-classic-logo .char {
     position: relative;
-    display: inline-block; /* Essencial para o ::after alinhar perfeitamente sobre a letra */
+    display: inline-block;
     color: transparent;
-    -webkit-text-stroke: 4px #000;
-    /* Efeito de extrusão 3D bloco grosso, escuro, apontando pra baixo/esquerda */
-    text-shadow: 
-        -1px 1px 0 #000,
-        -2px 2px 0 #000,
-        -3px 3px 0 #000,
-        -4px 4px 0 #000,
-        -5px 5px 0 #000,
-        -6px 6px 0 #000,
-        -7px 7px 0 #000,
-        -8px 8px 0 #000,
-        -9px 9px 0 #000,
-        -10px 10px 0 #000,
-        -11px 11px 0 #000,
-        -12px 12px 0 #000;
+    -webkit-text-stroke: 0.045em var(--ink);
+    /* extrusão 3D escalável */
+    text-shadow:
+        -0.01em 0.01em 0 var(--ink), -0.02em 0.02em 0 var(--ink), -0.03em 0.03em 0 var(--ink),
+        -0.04em 0.04em 0 var(--ink), -0.05em 0.05em 0 var(--ink), -0.06em 0.06em 0 var(--ink),
+        -0.07em 0.07em 0 var(--ink), -0.08em 0.08em 0 var(--ink), -0.09em 0.09em 0 var(--ink),
+        -0.1em 0.1em 0 var(--ink), -0.11em 0.11em 0 var(--ink), -0.12em 0.12em 0 var(--ink);
 }
-
-/* O pelo do Garfield vai por cima da letra */
 .garfield-classic-logo .char::after {
     content: attr(data-text);
     position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    /* Cor sólida (exato do Garfield), sem listras! */
-    background: #ff9900;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    -webkit-text-stroke: 0; /* Removemos o stroke da camada de cima para ver o fundo */
+    inset: 0;
+    color: var(--orange-light);
+    -webkit-text-stroke: 0;
     text-shadow: none;
     z-index: 2;
 }
-
-/* Letras se sobrepondo em efeito bagunçado (bouncy) com EM para escalar */
-.garfield-classic-logo .c1 { z-index: 10; transform: translateY(0) rotate(-3deg); }
+.garfield-classic-logo .c1 { z-index: 10; transform: rotate(-3deg); }
 .garfield-classic-logo .c2 { z-index: 9; transform: translateY(0.07em) rotate(2deg) scale(0.95); margin-left: -0.045em; }
 .garfield-classic-logo .c3 { z-index: 8; transform: translateY(-0.045em) rotate(-2deg); margin-left: -0.07em; }
 .garfield-classic-logo .c4 { z-index: 7; transform: translateY(0.035em) rotate(4deg); margin-left: -0.09em; }
-
-.garfield-classic-logo .space {
-    width: 0.22em;
-    z-index: 6;
-}
-
+.garfield-classic-logo .space { width: 0.22em; }
 .garfield-classic-logo .c5 { z-index: 5; transform: translateY(-0.05em) rotate(-3deg); }
 .garfield-classic-logo .c6 { z-index: 4; transform: translateY(0.045em) rotate(2deg); margin-left: -0.13em; }
 .garfield-classic-logo .c7 { z-index: 3; transform: translateY(-0.025em) rotate(-1deg); margin-left: -0.045em; }
 .garfield-classic-logo .c8 { z-index: 2; transform: translateY(0.05em) rotate(3deg); margin-left: -0.09em; }
-.garfield-classic-logo .c9 { z-index: 1; transform: translateY(0) rotate(-2deg); margin-left: -0.11em; }
+.garfield-classic-logo .c9 { z-index: 1; transform: rotate(-2deg); margin-left: -0.11em; }
 
-/* Rabinho de Gato saindo do O escalável */
+/* Rabinho de gato saindo do O */
 .garfield-classic-logo .cat-tail {
     position: absolute;
     width: 0.54em;
     height: 0.27em;
-    background: repeating-linear-gradient(
-        70deg,
-        #ff9900,
-        #ff9900 10px,
-        #111 10px,
-        #111 16px
-    );
-    border: 3px solid #000;
-    border-radius: 10px 40px 40px 10px / 50% 50% 50% 50%;
     right: -0.31em;
     bottom: 0.13em;
+    background: repeating-linear-gradient(70deg, var(--orange-light), var(--orange-light) 0.1em, var(--ink) 0.1em, var(--ink) 0.16em);
+    border: 0.03em solid var(--ink);
+    border-radius: 10px 40px 40px 10px / 50%;
     transform-origin: 0% 50%;
-    transform: rotate(5deg);
     z-index: -1;
     animation: wagTail 1s ease-in-out infinite alternate;
 }
+@keyframes wagTail { from { transform: rotate(0deg); } to { transform: rotate(25deg); } }
 
-@keyframes wagTail {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(25deg); }
-}
-
-.hero {
-    text-align: center;
-    padding: 20px 0 20px;
-}
-
-/* ==========================================================================
-   Hero Banner (Destaque do Lançamento)
-   ========================================================================== */
-.hero-banner {
-    position: relative;
-    width: 100%;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    min-height: 400px;
-    
-    border: 4px solid #fff;
-    box-shadow: var(--shadow-lg), 0 0 0 4px #000;
-    transition: var(--transition);
-    margin-bottom: 30px;
-}
-
-.hero-banner:hover {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 0 0 4px #000;
-}
-
-/* Estado "sem lançamento": banner neutro, sem hover de link */
-.hero-banner-placeholder {
-    cursor: default;
-    justify-content: center;
-}
-
-.hero-banner-placeholder:hover {
-    transform: none;
-}
-
-.hero-bg.is-muted {
-    background-color: #2b2b2b;
-    background-image: none;
-}
-
-.hero-badge.is-muted {
-    background: #444;
-    color: #fff;
-}
-
-.hero-content.is-centered {
-    justify-content: center;
-    text-align: center;
-}
-
-.hero-text.is-centered {
-    width: 100%;
+/* --------------------------------------------------------- cabeçalho */
+.site-header {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 14px;
+    padding: 34px 20px 10px;
+    text-align: center;
+}
+.site-header--inner { position: relative; padding-top: 70px; }
+.site-header--inner .back-link { position: absolute; top: 20px; left: 20px; }
+
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+.site-nav a {
+    padding: 4px 16px;
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    color: var(--text);
+    background: var(--surface);
+    border: var(--stroke);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--pop-sm);
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.site-nav a:hover { background: #000; color: var(--orange-light); transform: translateY(-2px); }
+
+/* ---------------------------------------------------------- seções */
+.section { padding: 34px 0 10px; }
+
+.section-title {
+    margin-bottom: 22px;
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 6vw, 2.8rem);
+    font-weight: 400;
+    letter-spacing: 2px;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: var(--text);
+    text-shadow: 3px 3px 0 var(--ink);
+}
+.section-title--center { text-align: center; }
+
+.page-title {
+    margin: 10px 0 34px;
+    font-family: var(--font-heading);
+    font-size: clamp(2.3rem, 9vw, 4rem);
+    font-weight: 400;
+    letter-spacing: 2px;
+    line-height: 1.05;
+    text-align: center;
+    text-transform: uppercase;
+    text-shadow: 3px 3px 0 var(--ink);
 }
 
-.hero-text.is-centered h2 {
-    color: #888;
+/* ------------------------------------------------------------ hero */
+.hero { padding: 14px 0 0; }
+
+.hero-banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 380px;
+    overflow: hidden;
+    color: var(--text);
+    background: var(--surface);
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    box-shadow: var(--pop-lg);
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
+.hero-banner:hover { transform: translate(-2px, -3px); box-shadow: 9px 10px 0 var(--ink); }
 
 .hero-bg {
     position: absolute;
-    inset: -20px;
+    inset: -24px;
     background-size: cover;
     background-position: center;
-    filter: blur(10px) brightness(0.4);
+    filter: blur(14px) brightness(0.35) saturate(1.2);
     z-index: 1;
 }
 
@@ -253,918 +302,523 @@ a:hover {
     position: relative;
     z-index: 2;
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 30px;
-    padding: 30px;
+    gap: 40px;
     width: 100%;
+    padding: 36px 44px;
 }
 
 .hero-cover-wrapper {
-    position: relative;
-    width: 250px;
-    aspect-ratio: 2 / 3;
-    border-radius: var(--radius-sm);
-    box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
-    border: 3px solid #fff;
-    transform: rotate(-3deg);
-    transition: var(--transition);
+    flex: 0 0 auto;
+    width: 240px;
+    aspect-ratio: 9 / 16;
     overflow: hidden;
+    border: var(--stroke);
+    border-radius: var(--radius-sm);
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.55);
+    transform: rotate(-3deg);
+    transition: transform 0.3s var(--ease-pop);
+    background: #000;
+}
+.hero-banner:hover .hero-cover-wrapper { transform: rotate(0deg) scale(1.03); }
+
+.hero-cover { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+
+.hero-text { flex: 1; min-width: 0; }
+
+.hero-kicker {
+    display: inline-block;
+    margin-bottom: 12px;
+    padding: 3px 12px;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    letter-spacing: 1.5px;
+    color: var(--ink);
+    background: var(--caution);
+    border: 2px solid var(--ink);
+    box-shadow: var(--pop-sm);
+    transform: rotate(-2deg);
 }
 
-/* Efeito Glitch para edições especiais (Ex: Capítulo 2) */
-.glitch-card {
-    animation: signal-loss 2s infinite;
+.hero-text h2 {
+    margin-bottom: 12px;
+    font-family: var(--font-heading);
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: 1px;
+    text-shadow: 3px 3px 0 var(--ink);
 }
 
-.glitch-card .comic-cover-wrapper {
-    animation: glitch-skew 1.5s infinite linear alternate-reverse;
+.hero-text p {
+    max-width: 46ch;
+    margin-bottom: 22px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-muted);
 }
 
-@keyframes signal-loss {
-    0%, 94%, 100% { opacity: 1; filter: grayscale(0) brightness(1); }
-    95% { opacity: 0.1; filter: grayscale(1) brightness(3); } /* Estática Branca */
-    96% { opacity: 0.8; filter: grayscale(0.5) brightness(0.5); }
-    97% { opacity: 0.2; filter: grayscale(1) brightness(0.2); } /* Apagão */
-    98% { opacity: 0.9; filter: grayscale(0.8) brightness(2); }
+/* Estado "sem lançamento" */
+.hero-banner-placeholder { cursor: default; justify-content: center; }
+.hero-banner-placeholder:hover { transform: none; box-shadow: var(--pop-lg); }
+.hero-bg.is-muted { background: var(--surface-2); filter: none; }
+.hero-content.is-centered, .hero-text.is-centered { justify-content: center; text-align: center; }
+.hero-text.is-centered p { margin-inline: auto; }
+
+/* ---------------------------------------------------- grade de edições */
+/* 6 colunas no desktop largo, 3 no intermediário, 2 no celular: a série
+   fecha linhas completas em vez de deixar uma capa sozinha. */
+.comic-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 30px 26px;
+    align-items: start;
+}
+.comic-grid--spinoffs { grid-template-columns: repeat(auto-fill, minmax(165px, 200px)); }
+
+.loading {
+    grid-column: 1 / -1;
+    padding: 40px 0;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    text-align: center;
+    text-shadow: var(--pop-sm);
 }
 
-.glitch-card .comic-cover-wrapper::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url('../assets/eye.jpg');
-    background-size: cover;
-    background-position: center;
-    z-index: 10;
-    pointer-events: none;
-    animation: eye-swap 15s infinite;
-    mix-blend-mode: normal;
-}
-
-@keyframes eye-swap {
-    0%, 66% { opacity: 0; }
-    66.1%, 100% { opacity: 1; }
-}
-
-@keyframes glitch-skew {
-  0% { transform: skew(0deg); }
-  90% { transform: skew(0deg); }
-  92% { transform: skew(5deg); filter: contrast(150%); }
-  94% { transform: skew(-5deg); filter: invert(10%); }
-  96% { transform: skew(2deg); filter: contrast(120%); }
-  98% { transform: skew(0deg); }
-  100% { transform: skew(0deg); }
-}
-
-.hero-cover-wrapper::before {
-    content: '';
-    position: absolute;
-    inset: -20px;
-    background-image: inherit;
-    background-size: cover;
-    background-position: center;
-    filter: blur(10px) brightness(0.6);
-    z-index: 1;
-}
-
-.hero-cover {
+.comic-card {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    color: var(--paper-ink);
+    background: var(--paper);
+    border: var(--stroke);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--pop);
+    cursor: pointer;
+    transition: transform 0.35s var(--ease-pop), box-shadow 0.35s ease;
+}
+.comic-card:hover { transform: translate(-3px, -5px) rotate(-1deg); box-shadow: 8px 10px 0 var(--ink); }
+
+/* Selo do número da edição */
+.comic-issue {
+    position: absolute;
+    top: -12px;
+    right: -10px;
+    z-index: 10;
+    min-width: 40px;
+    padding: 1px 8px;
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    text-align: center;
+    color: var(--ink);
+    background: #fff;
+    border: 2px solid var(--ink);
+    box-shadow: var(--pop-sm);
+    transform: rotate(8deg);
+}
+.comic-issue.is-new { background: var(--caution); }
+
+.comic-cover-wrapper {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    overflow: hidden;
+    background: #000;
+    border-bottom: var(--stroke);
+    border-radius: 3px 3px 0 0;
+}
+.comic-cover {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center top;
-    z-index: 2;
+    transition: transform 0.35s ease;
 }
+.comic-card:hover .comic-cover { transform: scale(1.04); }
 
-.hero-banner:hover .hero-cover-wrapper {
-    transform: rotate(0deg) scale(1.05);
-}
-
-.hero-text {
-    flex: 1;
-    min-width: 300px;
-    text-align: left;
-}
-
-.hero-badge {
-    position: absolute;
-    top: 35px;
-    right: -70px;
-    width: 280px;
-    text-align: center;
-    background-color: red;
-    color: white;
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    padding: 5px 0;
-    transform: rotate(45deg);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-    letter-spacing: 2px;
-    z-index: 3;
-}
-
-.hero-btn {
-    background-color: var(--accent-color);
-    color: white;
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    padding: 10px 30px;
-    border: 3px solid #000;
-    border-radius: var(--radius-sm);
-    box-shadow: 4px 4px 0px #000;
-    
-    transition: var(--transition);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.hero-btn:hover {
-    background-color: var(--garfield-yellow);
-    color: #000;
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0px #000;
-}
-
-.hero h2 {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-}
-
-.hero p {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-}
-
-.comic-grid {
-    display: grid;
-    /* Com max-width de 1200px, minmax(250px) garante 4 colunas no desktop */
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 40px;
-    padding-bottom: 60px;
-    align-items: start;
-}
-
-/* Último card de uma linha incompleta não estica para a linha toda */
-.comic-card.orphan {
-    grid-column: span 1;
-    justify-self: start;
-}
-
-.loading {
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    letter-spacing: 1px;
-    color: #fff;
-    text-shadow: 2px 2px 0 #000;
-    text-align: center;
-    grid-column: 1 / -1;
-    padding: 40px 0;
-}
-
-/* ==========================================================================
-   Comic Card
-   ========================================================================== */
-.comic-card {
-    background: var(--bg-surface);
-    border-radius: var(--radius-md);
-    overflow: visible; /* Permitir que o selo de preço saia do card */
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
-    
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-/* Comic Book Style Modifiers */
-.comic-book-style {
-    border: 4px solid #fff;
-    background: #fff;
-    /* Modelo 3D Base */
-    transform-style: preserve-3d;
-    transform: perspective(1000px) rotateY(-15deg) rotateX(10deg) translateZ(0);
-    /* Sombra projetando profundidade das páginas na inclinação */
-    box-shadow: 
-        1px 1px 0 #ccc, 2px 2px 0 #ccc, 3px 3px 0 #ccc, 
-        4px 4px 0 #ccc, 5px 5px 0 #ccc, 6px 6px 0 #000, 
-        15px 20px 20px rgba(0,0,0,0.5);
-    border-radius: 4px;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Transição elástica linda */
-}
-
-/* Reflexo plástico/brilhante de revista nova */
-.comic-book-style::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,0.4) 30%, transparent 40%);
-    background-size: 250% 250%;
-    background-position: 100% 0%;
-    z-index: 9;
-    pointer-events: none;
-    transition: background-position 0.5s ease;
-    border-radius: inherit;
-}
-
-.comic-book-style:hover {
-    /* Gibi levanta, vira de frente pro usuário e aproxima */
-    transform: perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1.05) translateZ(40px);
-    box-shadow: 
-        0px 25px 35px rgba(0,0,0,0.6), 
-        0px 0px 0px 1px #000; 
-}
-
-.comic-book-style:hover::after {
-    /* Brilho desliza pela revista quando ela se move */
-    background-position: 0% 100%;
-}
-
-.comic-book-style::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 15px;
-    background: linear-gradient(to right, rgba(255,255,255,0.4) 0%, rgba(0,0,0,0.1) 50%, rgba(255,255,255,0.4) 100%);
-    z-index: 5;
-    pointer-events: none;
-    border-right: 1px solid rgba(0,0,0,0.1);
-}
-
-.comic-price-tag {
-    position: absolute;
-    top: -12px;
-    right: -12px;
-    background: #fff;
-    border: 2px solid #000;
-    color: #000;
-    font-family: var(--font-heading);
-    padding: 2px 8px;
-    font-size: 1rem;
-    z-index: 10;
-    box-shadow: 2px 2px 0px #000;
-    /* Faz o adesivo pular pra FORA da capa no ambiente 3D */
-    transform: rotate(10deg) translateZ(20px);
-}
-
-.comic-cover-wrapper {
-    position: relative;
-    width: 100%;
-    padding-top: 150%;
-    border-bottom: 2px solid #000;
-    overflow: hidden;
-    /* Mantém os cantos arredondados no topo já que o pai não tem mais overflow: hidden */
-    border-top-left-radius: inherit;
-    border-top-right-radius: inherit;
-}
-
-.comic-cover-wrapper::before {
-    content: '';
-    position: absolute;
-    inset: -20px;
-    background-image: inherit;
-    background-size: cover;
-    background-position: center;
-    filter: blur(10px) brightness(0.6);
-    z-index: 1;
-}
-
-.comic-cover {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+.comic-info { padding: 10px 12px 12px; }
+.comic-info small {
     display: block;
-    z-index: 2;
-    transition: var(--transition);
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    letter-spacing: 1px;
+    color: #b0461a;
 }
-
-.comic-card:hover .comic-cover {
-    transform: scale(1.05); /* Pequeno zoom na imagem */
-}
-
-/* A animação de levantar no hover da imagem já é suficiente para mostrar interatividade */
-
-.comic-info {
-    padding: 15px;
-    background: var(--bg-surface);
-    flex-grow: 1;
-}
-
-.comic-book-style .comic-info {
-    background: #fff5d1; /* Amarelo pastel/macarrão, legível e no tema */
-    color: #000;
-    border-top: 2px solid #000;
-}
-
-.comic-book-style .comic-info h3 {
-    color: #000;
-}
-
-.comic-book-style .comic-info p {
-    color: #444; /* Cinza escuro para melhor legibilidade no fundo claro */
-}
-
 .comic-info h3 {
-    font-size: 1.1rem;
-    margin-bottom: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.comic-info p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* ==========================================================================
-   Reader Interface
-   Reader UI (Ilhas Flutuantes)
-   ========================================================================== */
-.reader-mode {
-    overflow: hidden; /* Evita double scroll, scroll será no viewport */
-}
+/* Spin-off: capa com moldura roxa */
+.comic-card--spinoff { background: var(--surface); color: var(--text); border-color: var(--purple); box-shadow: 4px 4px 0 var(--purple); }
+.comic-card--spinoff:hover { box-shadow: 8px 10px 0 var(--purple); }
+.comic-card--spinoff .comic-cover-wrapper { border-bottom-color: var(--purple); }
+.comic-card--spinoff .comic-info small { color: var(--mp5k); }
+.comic-card--spinoff .comic-issue { background: var(--mp5k); border-color: var(--ink); }
 
-.reader-ui {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background-color: transparent;
-    position: relative;
-}
-
-.floating-ui-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    pointer-events: none; /* Deixa o clique passar para o gibi no fundo */
-    z-index: 100;
-}
-
-.floating-island {
-    pointer-events: auto; /* Restaura o clique apenas nas ilhas */
-    background: rgba(20, 20, 20, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50px;
-    padding: 8px 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-/* Esconde as ilhas quando estiver em fullscreen (opcional) ou no scroll (se implementado) */
-.ui-hidden .floating-island {
-    transform: translateY(-100px);
-    opacity: 0;
-}
-
-.btn-island {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 1.2rem;
-    
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.btn-island:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(1.1);
-}
-
-.btn-island span {
-    font-size: 0.9rem;
-    font-weight: bold;
-    font-family: var(--font-sans);
-}
-
-.island-divider {
-    width: 1px;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.2);
-    margin: 0 5px;
-}
-
-.island-select {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-family: var(--font-heading);
-    font-size: 1.2rem;
-    
-    outline: none;
-    padding: 0 32px 0 8px; /* Aumentado o padding da direita para 32px para a seta caber */
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right -5px center; /* Move a seta exatos 5px para a direita */
-}
-
-.island-select option {
-    background: var(--bg-surface);
-    color: var(--text-primary);
-    font-family: var(--font-sans);
-}
-
-/* Select Inputs */
-.custom-select {
-    background-color: var(--bg-elevated);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    font-family: inherit;
-    font-size: 0.9rem;
-    
-    outline: none;
-    transition: var(--transition);
-}
-
-.custom-select:hover, .custom-select:focus {
-    border-color: var(--accent-color);
-}
-
-/* Buttons */
-.btn-icon, .btn-nav {
-    background: transparent;
-    color: var(--text-primary);
-    border: none;
-    
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-family: inherit;
-    font-size: 1rem;
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
-}
-
-.btn-icon:hover, .btn-nav:hover {
-    background-color: var(--bg-elevated);
-    color: var(--accent-color);
-}
-
-.btn-nav {
-    background-color: var(--bg-elevated);
-    border: 1px solid var(--border-color);
-    font-weight: 600;
-}
-
-.btn-nav:disabled {
-    opacity: 0.5;
-    
-}
-
-.btn-nav:disabled:hover {
-    background-color: var(--bg-elevated);
-    color: var(--text-primary);
-}
-
-/* Viewport & Image */
-.reader-viewport {
-    flex: 1;
-    overflow: auto;
-    background-color: transparent; /* Permite ver o fundo de gibi do body */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    padding: 20px;
-}
-
-.image-container {
-    position: relative;
-    max-width: none; /* Permite zoom infinito horizontal */
-    width: 100%;
-    max-height: 100%;
-    display: flex;
-    flex-direction: column; /* FORÇA O EMPILHAMENTO VERTICAL */
-    justify-content: flex-start;
-    align-items: center;
-    transition: var(--transition);
-}
-
-/* Página de leitura: ocupa a largura disponível (mobile) e no máximo
-   --reader-page-width no desktop, crescendo com o zoom. */
-.webtoon-image {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    box-shadow: var(--shadow-lg);
-    border-radius: 4px;
-    margin-bottom: 15px; /* Espaço entre as páginas */
-    transition: width 0.2s ease-out;
-    transform-origin: top center;
-}
-
-.reader-viewport.scroll-mode {
-    align-items: flex-start;
-}
-
-/* Com zoom aplicado a página pode passar da largura da tela: garante rolagem. */
-.reader-viewport.zoomed {
-    align-items: flex-start;
-    overflow: auto;
-}
-
-.reader-viewport.zoomed .image-container {
-    align-items: flex-start;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-@keyframes mobileFloat {
-    0% { transform: perspective(1000px) rotateY(-5deg) rotateX(5deg) translateY(0); }
-    100% { transform: perspective(1000px) rotateY(-2deg) rotateX(2deg) translateY(-5px); }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .comic-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 20px;
-    }
-
-    .hero-content {
-        flex-direction: column;
-        text-align: center;
-        justify-content: center;
-    }
-
-    .hero-text {
-        text-align: center;
-        min-width: auto;
-    }
-
-    .comic-book-style {
-        /* Reduz a inclinação extrema no mobile para facilitar leitura e caber na tela */
-        transform: perspective(1000px) rotateY(-5deg) rotateX(5deg) translateZ(0);
-        /* Animação contínua para simular vida sem precisar de mouse */
-        animation: mobileFloat 3s ease-in-out infinite alternate;
-    }
-
-    .comic-card:nth-child(even) {
-        animation-delay: -1.5s;
-    }
-
-    .toolbar-center {
-        display: none; /* Hide selects on mobile to save space, use bottom nav */
-    }
-
-    .reader-title {
-        font-size: 1rem;
-    }
-    
-    .garfield-classic-logo {
-        flex-wrap: wrap;
-        font-size: 14.3vw; /* Reduzido em 45% do tamanho anterior de 26vw */
-        margin: 10px 0;
-        line-height: 0.7;
-    }
-    
-    /* Quebra o texto e gruda as duas linhas */
-    .garfield-classic-logo .space {
-        flex-basis: 100%;
-        height: 0; 
-        margin-bottom: -8.2vw; /* Ajustado para a nova proporção */
-    }
-    
-    .garfield-classic-logo .char {
-        -webkit-text-stroke: 3px #000;
-        /* Sombra forte para destacar */
-        text-shadow: 
-            -1px 1px 0 #000,
-            -2px 2px 0 #000,
-            -3px 3px 0 #000,
-            -4px 4px 0 #000,
-            -5px 5px 0 #000,
-            -6px 6px 0 #000,
-            -7px 7px 0 #000,
-            -8px 8px 0 #000,
-            -9px 9px 0 #000,
-            -10px 10px 0 #000;
-    }
-    
-    /* O rabo de gato não precisa mais ser ajustado aqui porque agora ele usa unidades 'em' relativas à fonte! */
-}
-
-/* ==========================================================================
-   Easter Eggs
-   ========================================================================== */
-
-/* Area invisível do Macarrão na imagem */
-.macarronada-hotspot {
-    position: absolute;
-    bottom: 0;
-    left: 20%;
-    width: 60%;
-    height: 30%;
-    
-    z-index: 10;
-}
-
-/* Container que segura a imagem e o hotspot pra posicionar certo */
-.page-wrapper {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    width: min(100%, calc(var(--reader-page-width) * var(--zoom-level, 1)));
-    transition: width 0.2s ease-out;
-    margin: 0 auto;
-    container-type: inline-size;
-}
-
-/* Capa do capítulo: menor que as páginas, centralizada */
-.page-wrapper.cover-wrapper {
-    width: min(100%, calc(var(--reader-page-width) * 0.6 * var(--zoom-level, 1)));
-    margin-bottom: 25px;
-}
-
-/* Botão "Ler próximo capítulo" */
-.next-chapter-container {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    padding: 40px 0 80px;
-}
-
-.next-chapter-btn {
-    cursor: pointer;
-    border: none;
-    font: inherit;
-    color: inherit;
-}
-
-.next-chapter-btn .reader-title {
-    margin-right: 15px;
-    font-size: 1.2rem;
-    font-family: var(--font-heading);
-    letter-spacing: 1px;
-}
-
-.next-chapter-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--accent-color);
-    border: 2px solid #000;
-    box-shadow: 2px 2px 0 #000;
-    color: #000;
-}
-
-/* Mensagem de erro da home (database.json ausente/corrompido) */
-.home-error {
-    grid-column: 1 / -1;
-    background: #ffebee;
-    color: #c62828;
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #ef9a9a;
-    max-width: 600px;
-    margin: 0 auto;
-    font-family: var(--font-sans);
-}
-
-.home-error h3 { margin: 0 0 8px; font-family: var(--font-heading); letter-spacing: 1px; }
-.home-error code { background: rgba(0,0,0,.08); padding: 1px 5px; border-radius: 4px; }
-.home-error-detail { font-size: 0.9rem; opacity: .8; margin-top: 8px; }
-
-/* Mensagens do leitor (capítulo vazio / gibi inexistente / erro) */
-.reader-empty {
-    max-width: 520px;
-    margin: 60px auto;
-    padding: 30px;
-    text-align: center;
-    background: rgba(20, 20, 20, 0.85);
-    border: 3px solid var(--accent-color);
-    border-radius: var(--radius-md);
-    color: #fff;
-    font-family: var(--font-sans);
-}
-
-.reader-empty h2 {
-    font-family: var(--font-heading);
-    font-size: 2rem;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    color: var(--accent-color);
-}
-
-.reader-error-link {
-    display: inline-block;
-    width: auto;
-    margin-top: 15px;
-    padding: 12px 28px;
-    border-radius: 30px;
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    text-decoration: none;
-    font-family: var(--font-heading);
-    letter-spacing: 1px;
-}
-
-.page-wrapper .webtoon-image {
-    width: 100%;
-    max-width: 100%;
-}
-
-/* Notificação da Conquista */
-.achievement-popup {
-    position: fixed;
-    bottom: -100px; /* Começa escondido */
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(20, 20, 20, 0.95);
-    border: 2px solid var(--accent-color);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.8), 0 0 15px var(--accent-color);
-    color: white;
-    padding: 15px 30px;
-    border-radius: 50px;
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    letter-spacing: 1px;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.achievement-popup.show {
-    bottom: 30px;
-    opacity: 1;
-}
-
-.achievement-icon {
-    font-size: 2.5rem;
-}
-
-/* ==========================================================================
-   Macaroni Transition Wipe
-   ========================================================================== */
-.macaroni-wipe {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background-image: url('../assets/macaroni_meatballs.jpg');
-    background-size: 300px; /* Textura densa para a onda de macarrão */
-    border-bottom: 25px solid #000;
-    border-top: 25px solid #000;
-    z-index: 99999;
-    
-    /* Começa escondido acima da tela */
-    transform: translateY(-100%);
-    transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
-    
-    /* Sombra gigante para dar peso à transição */
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 -30px 60px rgba(0,0,0,0.8);
-}
-
-/* Quando entra cobrindo a tela */
-.macaroni-wipe.is-active {
-    transform: translateY(0);
-}
-
-/* Quando sai deslizando por baixo */
-.macaroni-wipe.is-leaving {
-    transform: translateY(100%);
-}
-
-/* ==========================================================================
-   Cyberpunk Glitch Effects (Capítulo 2)
-   ========================================================================== */
-.glitch-layer {
+/* Edição especial com efeito glitch (Capítulo 2) */
+.glitch-card { animation: signal-loss 2s infinite; }
+.glitch-card .comic-cover-wrapper { animation: glitch-skew 1.5s infinite linear alternate-reverse; }
+.glitch-card .comic-cover-wrapper::after {
+    content: '';
     position: absolute;
     inset: 0;
     background-size: cover;
     background-position: center;
+    z-index: 10;
+    pointer-events: none;
+    animation: eye-swap 15s infinite;
+}
+.glitch-card h3, .glitch-card small { animation: text-glitch 2s infinite; }
+
+.glitch-layer {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center top;
+    background-blend-mode: multiply;
     mix-blend-mode: screen;
     pointer-events: none;
     z-index: 5;
 }
-
-.glitch-layer.cyan {
-    background-color: cyan;
-    background-blend-mode: multiply;
-    animation: cyber-glitch-1 0.4s infinite steps(1);
-}
-
-.glitch-layer.red {
-    background-color: red;
-    background-blend-mode: multiply;
-    animation: cyber-glitch-2 0.5s infinite steps(1);
-}
-
-@keyframes cyber-glitch-1 {
-    0% { clip-path: polygon(0 2%, 100% 2%, 100% 5%, 0 5%); transform: translate(-3px, 1px); }
-    10% { clip-path: polygon(0 15%, 100% 15%, 100% 16%, 0 16%); transform: translate(3px, -1px); }
-    20% { clip-path: polygon(0 40%, 100% 40%, 100% 45%, 0 45%); transform: translate(-3px, 2px); }
-    30% { clip-path: polygon(0 60%, 100% 60%, 100% 62%, 0 62%); transform: translate(3px, -2px); }
-    40% { clip-path: polygon(0 80%, 100% 80%, 100% 88%, 0 88%); transform: translate(-3px, 1px); }
-    50% { clip-path: polygon(0 20%, 100% 20%, 100% 30%, 0 30%); transform: translate(3px, -1px); }
-    60% { clip-path: polygon(0 10%, 100% 10%, 100% 15%, 0 15%); transform: translate(-3px, 2px); }
-    70% { clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%); transform: translate(3px, -2px); }
-    80% { clip-path: polygon(0 70%, 100% 70%, 100% 72%, 0 72%); transform: translate(-3px, 1px); }
-    90% { clip-path: polygon(0 90%, 100% 90%, 100% 95%, 0 95%); transform: translate(3px, -1px); }
-    100% { clip-path: polygon(0 30%, 100% 30%, 100% 32%, 0 32%); transform: translate(-3px, 2px); }
-}
-
-@keyframes cyber-glitch-2 {
-    0% { clip-path: polygon(0 10%, 100% 10%, 100% 15%, 0 15%); transform: translate(3px, -1px); }
-    10% { clip-path: polygon(0 30%, 100% 30%, 100% 35%, 0 35%); transform: translate(-3px, 2px); }
-    20% { clip-path: polygon(0 50%, 100% 50%, 100% 52%, 0 52%); transform: translate(3px, -2px); }
-    30% { clip-path: polygon(0 70%, 100% 70%, 100% 78%, 0 78%); transform: translate(-3px, 1px); }
-    40% { clip-path: polygon(0 90%, 100% 90%, 100% 92%, 0 92%); transform: translate(3px, -1px); }
-    50% { clip-path: polygon(0 20%, 100% 20%, 100% 25%, 0 25%); transform: translate(-3px, 2px); }
-    60% { clip-path: polygon(0 40%, 100% 40%, 100% 45%, 0 45%); transform: translate(3px, -2px); }
-    70% { clip-path: polygon(0 60%, 100% 60%, 100% 62%, 0 62%); transform: translate(-3px, 1px); }
-    80% { clip-path: polygon(0 80%, 100% 80%, 100% 85%, 0 85%); transform: translate(3px, -1px); }
-    90% { clip-path: polygon(0 10%, 100% 10%, 100% 12%, 0 12%); transform: translate(-3px, 2px); }
-    100% { clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%); transform: translate(3px, -2px); }
-}
+.glitch-layer.cyan { background-color: cyan; animation: cyber-glitch-1 0.4s infinite steps(1); }
+.glitch-layer.red { background-color: red; animation: cyber-glitch-2 0.5s infinite steps(1); }
 
 .glitch-noise {
     position: absolute;
     inset: 0;
     z-index: 6;
-    background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+    background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="n"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23n)"/%3E%3C/svg%3E');
     opacity: 0.15;
     mix-blend-mode: overlay;
     animation: noise-move 0.1s infinite;
     pointer-events: none;
 }
 
+@keyframes signal-loss {
+    0%, 94%, 100% { opacity: 1; filter: none; }
+    95% { opacity: 0.1; filter: grayscale(1) brightness(3); }
+    96% { opacity: 0.8; filter: grayscale(0.5) brightness(0.5); }
+    97% { opacity: 0.2; filter: grayscale(1) brightness(0.2); }
+    98% { opacity: 0.9; filter: grayscale(0.8) brightness(2); }
+}
+@keyframes eye-swap { 0%, 66% { opacity: 0; } 66.1%, 100% { opacity: 1; } }
+@keyframes glitch-skew {
+    0%, 90%, 98%, 100% { transform: skew(0deg); }
+    92% { transform: skew(5deg); filter: contrast(150%); }
+    94% { transform: skew(-5deg); filter: invert(10%); }
+    96% { transform: skew(2deg); filter: contrast(120%); }
+}
+@keyframes cyber-glitch-1 {
+    0% { clip-path: polygon(0 2%, 100% 2%, 100% 5%, 0 5%); transform: translate(-3px, 1px); }
+    20% { clip-path: polygon(0 40%, 100% 40%, 100% 45%, 0 45%); transform: translate(-3px, 2px); }
+    40% { clip-path: polygon(0 80%, 100% 80%, 100% 88%, 0 88%); transform: translate(-3px, 1px); }
+    60% { clip-path: polygon(0 10%, 100% 10%, 100% 15%, 0 15%); transform: translate(-3px, 2px); }
+    80% { clip-path: polygon(0 70%, 100% 70%, 100% 72%, 0 72%); transform: translate(-3px, 1px); }
+    100% { clip-path: polygon(0 30%, 100% 30%, 100% 32%, 0 32%); transform: translate(-3px, 2px); }
+}
+@keyframes cyber-glitch-2 {
+    0% { clip-path: polygon(0 10%, 100% 10%, 100% 15%, 0 15%); transform: translate(3px, -1px); }
+    20% { clip-path: polygon(0 50%, 100% 50%, 100% 52%, 0 52%); transform: translate(3px, -2px); }
+    40% { clip-path: polygon(0 90%, 100% 90%, 100% 92%, 0 92%); transform: translate(3px, -1px); }
+    60% { clip-path: polygon(0 40%, 100% 40%, 100% 45%, 0 45%); transform: translate(3px, -2px); }
+    80% { clip-path: polygon(0 80%, 100% 80%, 100% 85%, 0 85%); transform: translate(3px, -1px); }
+    100% { clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%); transform: translate(3px, -2px); }
+}
 @keyframes noise-move {
     0%, 100% { transform: translate(0, 0); }
-    20% { transform: translate(-5px, 5px); }
-    40% { transform: translate(5px, -5px); }
-    60% { transform: translate(-5px, -5px); }
-    80% { transform: translate(5px, 5px); }
+    25% { transform: translate(-5px, 5px); }
+    50% { transform: translate(5px, -5px); }
+    75% { transform: translate(-5px, -5px); }
 }
-
-/* Glitch nos Textos */
 @keyframes text-glitch {
-    0% { text-shadow: 2px 0 red, -2px 0 cyan; }
+    0%, 10% { text-shadow: 2px 0 red, -2px 0 cyan; }
     5% { text-shadow: -2px 0 red, 2px 0 cyan; }
-    10% { text-shadow: 2px 0 red, -2px 0 cyan; }
-    15% { text-shadow: none; }
-    100% { text-shadow: none; }
+    15%, 100% { text-shadow: none; }
 }
 
-.glitch-card h3, .glitch-card p {
-    animation: text-glitch 2s infinite;
+.home-error {
+    grid-column: 1 / -1;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #8e1c1c;
+    background: #ffebee;
+    border: var(--stroke);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--pop);
+}
+.home-error h3 { margin-bottom: 8px; font-family: var(--font-heading); font-weight: 400; font-size: 1.6rem; letter-spacing: 1px; }
+.home-error .btn { margin-top: 12px; }
+.home-error-detail { margin-top: 8px; font-size: 0.9rem; opacity: 0.8; }
+
+/* ---------------------------------------------- universo (atalhos) */
+.universe-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 22px;
+}
+.universe-links .btn { font-size: 1.7rem; padding: 12px 26px; }
+
+/* ------------------------------------------------------ rodapé / PIX */
+.site-footer {
+    margin-top: 70px;
+    padding: 40px 20px 26px;
+    background: var(--surface);
+    border-top: var(--stroke-thick);
 }
 
-/* ==========================================================================
-   Easter Eggs System
-   ========================================================================== */
-.easter-egg-trigger {
-    position: absolute;
-    
-    z-index: 10;
-    /* Descomente para debugar a área clicável: */
-    /* border: 2px dashed rgba(255, 0, 0, 0.5); */
+.donation-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px;
+    background: #0d0d0d;
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    box-shadow: 6px 6px 0 var(--orange);
+}
+.donation-mascot {
+    width: 104px;
+    height: 104px;
+    object-fit: cover;
+    border: var(--stroke);
+    border-radius: 50%;
+    background: var(--orange);
+}
+.donation-text { flex: 1; min-width: 220px; }
+.donation-text h2 {
+    margin-bottom: 6px;
+    font-family: var(--font-heading);
+    font-weight: 400;
+    font-size: 2.1rem;
+    letter-spacing: 1.5px;
+    line-height: 1.1;
+    color: var(--orange);
+    text-shadow: var(--pop-sm);
+}
+.donation-text p { margin-bottom: 14px; font-weight: 700; }
+.pix-copy-btn { font-size: 1.2rem; padding: 8px 18px; }
+.donation-qr {
+    width: 124px;
+    height: 124px;
+    padding: 5px;
+    background: #fff;
+    border: var(--stroke);
+    border-radius: var(--radius-sm);
+}
+#pix-code { width: 100%; min-height: 90px; margin-top: 12px; padding: 8px; font-family: monospace; }
+
+.site-credits {
+    margin-top: 26px;
+    font-size: 0.95rem;
+    text-align: center;
+    color: #a89f94;
 }
 
-.easter-egg-image {
+/* ================================================================ leitor */
+.reader-mode { overflow: hidden; }
+
+.reader-ui { position: relative; display: flex; flex-direction: column; height: 100dvh; }
+
+.floating-ui-container {
     position: absolute;
     top: 0;
     left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px 20px;
+    pointer-events: none;
+}
+
+.floating-island {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(17, 17, 17, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.ui-hidden .floating-ui-container .floating-island { transform: translateY(-140%); opacity: 0; pointer-events: none; }
+
+.btn-island {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    font-size: 1.25rem;
+    color: #fff;
+    border-radius: 50%;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.btn-island:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.08); }
+.btn-island span { font-size: 0.9rem; font-weight: 700; }
+#zoom-reset-btn { width: 56px; border-radius: var(--radius-pill); }
+
+.island-divider { width: 1px; height: 24px; margin: 0 4px; background: rgba(255, 255, 255, 0.2); }
+
+.island-select {
+    min-width: 0;
+    max-width: 320px;
+    padding: 4px 30px 4px 8px;
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: transparent url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 2px center;
+    border: 0;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    text-overflow: ellipsis;
+}
+.island-select option { font-family: var(--font-sans); color: var(--text); background: var(--surface-2); }
+
+.reader-viewport {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: var(--reader-bar-space) 16px 20px;
+}
+
+.image-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-inline: auto;
+}
+.reader-viewport.zoomed .image-container { align-items: flex-start; }
+
+.page-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto 16px;
+    container-type: inline-size;
+}
+.page-wrapper.cover-wrapper { width: 70%; max-width: 480px; margin-bottom: 26px; }
+
+.webtoon-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: var(--stroke);
+    border-radius: 4px;
+    box-shadow: var(--shadow-soft);
+}
+
+/* Página deitada: botão para ampliar em tela cheia */
+.page-expand-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 12;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--caution);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--pop-sm);
+}
+
+.page-viewer {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    background: #000;
+    border: 0;
+}
+.page-viewer::backdrop { background: #000; }
+.page-viewer-scroll { width: 100%; height: 100%; overflow: auto; overscroll-behavior: contain; }
+.page-viewer img { display: block; height: 100%; width: auto; max-width: none; }
+.page-viewer .viewer-close { position: fixed; top: 12px; right: 12px; z-index: 2; }
+.page-viewer-hint {
+    white-space: nowrap;
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    padding: 4px 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: var(--radius-pill);
+    pointer-events: none;
+}
+
+.next-chapter-container { display: flex; justify-content: center; width: 100%; padding: 30px 0 80px; }
+.next-chapter-btn { padding: 8px 10px 8px 24px; cursor: pointer; }
+.next-chapter-btn .reader-title { margin-right: 14px; font-family: var(--font-heading); font-size: 1.35rem; letter-spacing: 1px; color: #fff; }
+.next-chapter-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    color: var(--ink);
+    background: var(--orange);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    box-shadow: var(--pop-sm);
+}
+
+.reader-empty {
+    max-width: 520px;
+    margin: 60px auto;
+    padding: 30px;
+    text-align: center;
+    background: var(--surface);
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    box-shadow: 6px 6px 0 var(--orange);
+}
+.reader-empty h2 { margin-bottom: 10px; font-family: var(--font-heading); font-weight: 400; font-size: 2rem; letter-spacing: 1px; color: var(--orange); }
+.reader-error-link { margin-top: 16px; }
+
+/* --------------------------------------------- easter eggs e censura */
+.macarronada-hotspot { position: absolute; bottom: 0; left: 20%; width: 60%; height: 30%; z-index: 10; }
+
+.easter-egg-trigger { position: absolute; z-index: 10; }
+.easter-egg-image {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -1174,356 +828,285 @@ a:hover {
     transition: opacity 1.5s ease-in-out;
     z-index: 11;
 }
+.easter-egg-image.show-secret { opacity: 1; }
 
-/* ==========================================================================
-   Donation Banner
-   ========================================================================== */
-.donation-footer {
-    background-color: var(--bg-surface);
-    border-top: 4px solid #000;
-    padding: 30px 20px;
-    margin-top: 60px;
-    box-shadow: inset 0 8px 15px rgba(0,0,0,0.3);
-    width: 100%;
-}
-
-.donation-container {
-    max-width: 800px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #111111; /* Fundo SÓLIDO escuro para legibilidade máxima */
-    border: 4px solid #000;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 6px 6px 0 #000;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.donation-mascot {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 3px solid #000;
-    box-shadow: 2px 2px 0 #000;
-    background-color: var(--accent-color);
-}
-
-.donation-text {
-    flex: 1;
-    text-align: left;
-    min-width: 200px;
-}
-
-.donation-text h3 {
-    font-family: var(--font-heading);
-    font-size: 2.2rem;
-    color: var(--accent-color);
-    text-shadow: 2px 2px 0px #000;
-    margin-bottom: 8px;
-    letter-spacing: 1.5px;
-}
-
-.donation-text p {
-    font-family: var(--font-sans);
-    font-size: 1.1rem;
-    color: #ffffff;
-    line-height: 1.5;
-    opacity: 1;
-    font-weight: 600;
-    margin-bottom: 12px;
-}
-
-.pix-copy-btn {
-    background-color: var(--accent-color);
-    color: #000;
-    font-family: var(--font-sans);
-    font-weight: 700;
-    font-size: 1rem;
-    border: 3px solid #000;
-    border-radius: 8px;
-    padding: 8px 16px;
-    
-    box-shadow: 2px 2px 0 #000;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.pix-copy-btn:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 4px 4px 0 #000;
-}
-
-.pix-copy-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 0 0 0 #000;
-}
-
-.donation-qr {
-    width: 120px;
-    height: 120px;
-    border: 3px solid #000;
-    border-radius: 8px;
-    box-shadow: 2px 2px 0 #000;
-    background: #fff;
-    padding: 5px;
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 600px) {
-    .donation-container {
-        flex-direction: column;
-        text-align: center;
-        padding: 15px;
-    }
-    
-    .donation-text {
-        text-align: center;
-    }
-    
-    .donation-text h3 {
-        font-size: 1.5rem;
-    }
-}
-
-.easter-egg-image.show-secret {
-    opacity: 1;
-}
-
-
-/* Tarja de censura pontual do Cabo Coco na HQ */
-.cabo-coco-mask {
+.cabo-coco-mask,
+.crime-scene-overlay {
     position: absolute;
-    bottom: 1%;
-    left: 26%;
-    width: 33%;
-    height: 37%;
-    background: repeating-linear-gradient(45deg, #000, #000 20px, #ffcc00 20px, #ffcc00 40px);
-    border: 4px solid #000;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 10;
-    
+    background: repeating-linear-gradient(45deg, var(--ink), var(--ink) 20px, var(--caution) 20px, var(--caution) 40px);
+    border: var(--stroke-thick);
     transition: opacity 0.5s ease;
 }
-.cabo-coco-mask span,
-.cabo-coco-text {
-    background: #000;
-    color: #ffcc00;
-    font-family: 'Bangers', cursive;
-    font-size: clamp(12px, 2.8cqi, 24px);
-    padding: 0.3em 0.6em;
-    border: 2px solid #ffcc00;
-    transform: rotate(-10deg);
-    text-align: center;
-    line-height: 1.1;
-    text-shadow: 2px 2px 0px #000;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+.cabo-coco-mask { bottom: 1%; left: 26%; width: 33%; height: 37%; box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5); }
+.crime-scene-overlay { inset: 0; border: 0; border-radius: 3px; }
+
+.cabo-coco-text,
+.crime-scene-overlay span {
     display: inline-block;
     max-width: 90%;
-}
-
-/* Botão Temático do Degustador da Noite */
-.btn-degustador {
-    background: #111;
-    color: #fff;
-    border: 4px solid #8a2be2;
-    box-shadow: 4px 4px 0px #8a2be2, 0 0 15px rgba(138, 43, 226, 0.4);
-    text-transform: uppercase;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    font-family: 'Bangers', cursive;
-}
-.btn-degustador:hover {
-    transform: translate(-2px, -2px) scale(1.02);
-    box-shadow: 6px 6px 0px #8a2be2, 0 0 25px rgba(138, 43, 226, 0.7);
-    background: #000;
-}
-.btn-degustador:active {
-    transform: translate(4px, 4px) scale(0.98);
-    box-shadow: 0px 0px 0px #8a2be2;
-}
-
-/* ==========================================================================
-/* ==========================================================================
-   Theme Degustador (Batman Palette) — overrides de componentes
-   ========================================================================== */
-.theme-degustador .hero-banner {
-    border: 4px solid #8a2be2;
-    background-color: #1a0033;
-}
-.theme-degustador .hero-banner:hover {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 0 0 4px #8a2be2;
-}
-.theme-degustador .hero-cover-wrapper {
-    border: 3px solid #8a2be2;
-}
-.theme-degustador .hero-badge {
-    background-color: #8a2be2;
-    color: #fff;
-    border: 2px solid #000;
-}
-.theme-degustador .hero-btn {
-    background-color: #ff6600;
-    color: #000;
-}
-.theme-degustador .hero-btn:hover {
-    background-color: #8a2be2;
-    color: #fff;
-    border-color: #ff6600;
-}
-.theme-degustador .comic-book-style {
-    border: 4px solid #8a2be2;
-    background: #111;
-}
-.theme-degustador .comic-book-style .comic-info {
-    background: #111;
-    color: #fff;
-    border-top: 2px solid #8a2be2;
-}
-.theme-degustador .comic-book-style .comic-info h3 {
-    color: #ff6600;
-}
-.theme-degustador .comic-book-style .comic-info p {
-    color: #ccc;
-}
-.theme-degustador .comic-price-tag {
-    border: 2px solid #8a2be2;
-    background: #ff6600;
-    color: #000;
-}
-.theme-degustador h2 {
-    color: #8a2be2;
-}
-.floating-voltar:hover {
-    background: #8a2be2 !important;
-    color: #000 !important;
-    box-shadow: 4px 4px 0px #ff6600 !important;
-    border-color: #ff6600 !important;
-    transform: translate(-2px, -2px) scale(1.05);
-}
-
-/* ==========================================================================
-   Batman Style Title (Degustador da Noite Header)
-   ========================================================================== */
-.batman-style-title-container {
-    text-align: center;
-    padding: 40px 20px;
-    margin-bottom: 20px;
-}
-
-.batman-style-title {
-    font-family: 'Impact', 'Arial Black', sans-serif;
-    font-size: 7rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 12px;
-    margin: 0;
+    padding: 0.3em 0.6em;
+    font-family: var(--font-heading);
     line-height: 1.1;
-    
-    /* Efeito Metálico Dark (Batman) */
-    background: linear-gradient(to bottom, #ffffff 0%, #aaaaaa 45%, #555555 50%, #111111 100%);
+    text-align: center;
+    color: var(--caution);
+    background: var(--ink);
+    border: 2px solid var(--caution);
+    transform: rotate(-10deg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+}
+.cabo-coco-text { font-size: clamp(12px, 2.8cqi, 24px); }
+.crime-scene-overlay span { font-size: 1.9rem; }
+.cabo-coco-text small,
+.crime-scene-overlay small { display: block; font-size: 0.6em; color: #fff; }
+
+.achievement-popup {
+    position: fixed;
+    bottom: -120px;
+    left: 50%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: max-content;
+    max-width: calc(100vw - 24px);
+    padding: 14px 26px;
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    letter-spacing: 1px;
+    color: #fff;
+    background: rgba(17, 17, 17, 0.96);
+    border: 2px solid var(--orange);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8), 0 0 15px var(--orange);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%);
+    transition: all 0.5s var(--ease-pop);
+}
+.achievement-popup.show { bottom: 30px; opacity: 1; }
+.achievement-label { font-size: 0.8rem; color: var(--orange-hover); text-transform: uppercase; }
+.achievement-icon { font-size: 2.4rem; }
+
+/* Transição de macarronada entre páginas (imagem via images.generated.css) */
+.macaroni-wipe {
+    position: fixed;
+    inset: 0;
+    height: 100dvh;
+    z-index: 99999;
+    background-color: var(--orange);
+    background-size: 300px;
+    border-block: 25px solid var(--ink);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 -30px 60px rgba(0, 0, 0, 0.8);
+    transform: translateY(-100%);
+    transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+}
+.macaroni-wipe.is-active { transform: translateY(0); }
+.macaroni-wipe.is-leaving { transform: translateY(100%); }
+
+/* ----------------------------------------------------- modal de senha */
+.password-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+}
+.password-modal {
+    width: min(450px, 100%);
+    max-height: 92dvh;
+    overflow: auto;
+    padding: 30px 26px;
+    text-align: center;
+    color: #fff;
+    background: var(--surface);
+    border: 4px solid var(--danger);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 40px rgba(211, 47, 47, 0.4);
+    animation: modalPop 0.3s var(--ease-pop);
+}
+@keyframes modalPop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.password-modal h3 { font-family: var(--font-heading); font-weight: 400; font-size: 2.8rem; letter-spacing: 2px; color: var(--danger); }
+.password-modal p { margin: 10px 0 20px; font-size: 1.2rem; line-height: 1.4; }
+.password-modal input {
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 12px;
+    font-family: var(--font-sans);
+    font-size: 1.4rem;
+    text-align: center;
+    color: var(--caution);
+    background: #000;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-sm);
+    outline: none;
+}
+.password-modal input:focus { border-color: var(--danger); }
+.password-error { display: none; margin-bottom: 14px; font-weight: 700; color: var(--danger-light); }
+.password-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+/* ------------------------------------------------ galeria de personagens */
+.characters-roster {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    align-items: start;
+    gap: 44px 34px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 0 40px;
+}
+.character-card {
+    position: relative;
+    padding: 6px;
+    background: #fff;
+    border: var(--stroke);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--pop-lg);
+    cursor: pointer;
+    transition: transform 0.35s var(--ease-pop), box-shadow 0.35s ease;
+}
+.character-card:nth-child(odd) { transform: rotate(-1.2deg); }
+.character-card:nth-child(even) { transform: rotate(1.2deg); }
+.character-card:hover { transform: rotate(0) translateY(-6px) scale(1.02); box-shadow: 10px 12px 0 var(--ink); }
+.character-card img { display: block; width: 100%; height: auto; border-radius: 3px; }
+.character-name {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    text-align: center;
+    color: var(--ink);
+}
+
+.viewer-open { overflow: hidden; }
+.character-viewer {
+    max-width: 95vw;
+    max-height: 95dvh;
+    margin: auto;
+    padding: 16px;
+    color: #fff;
+    background: var(--surface);
+    border: 3px solid var(--orange);
+    border-radius: var(--radius);
+}
+.character-viewer::backdrop { background: rgba(0, 0, 0, 0.87); }
+.character-viewer img { display: block; width: auto; max-width: 88vw; height: auto; max-height: 78dvh; margin: auto; object-fit: contain; }
+.character-viewer p { margin-top: 8px; font-family: var(--font-heading); font-size: 1.4rem; letter-spacing: 1px; text-align: center; }
+.character-viewer .viewer-close { display: flex; margin: 0 0 12px auto; }
+
+/* ========================================== tema Degustador da Noite */
+body.theme-degustador {
+    background-color: var(--purple-deep);
+}
+body.theme-degustador .page-title,
+body.theme-degustador .section-title { color: var(--purple); }
+
+.theme-degustador .hero-banner { border-color: var(--purple); background: #1a0033; box-shadow: 6px 6px 0 var(--purple); }
+.theme-degustador .hero-banner:hover { box-shadow: 9px 10px 0 var(--purple); }
+.theme-degustador .hero-cover-wrapper { border-color: var(--purple); }
+.theme-degustador .hero-kicker { background: var(--purple); color: #fff; }
+.theme-degustador .hero-banner .btn { background: var(--mp5k); }
+.theme-degustador .hero-banner .btn:hover { background: var(--purple); color: #fff; }
+.theme-degustador .back-link { border-color: var(--purple); box-shadow: 2px 2px 0 var(--purple); }
+.theme-degustador .back-link:hover { background: var(--purple); }
+
+/* Título metálico estilo Batman */
+.batman-title { padding: 10px 0 26px; text-align: center; }
+.batman-style-title {
+    display: block;
+    font-family: 'Impact', 'Haettenschweiler', 'Arial Black', sans-serif;
+    font-size: clamp(2.6rem, 12.5vw, 7rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: 0.08em;
+    padding-left: 0.08em;
+    text-transform: uppercase;
+    background: linear-gradient(to bottom, #fff 0%, #aaa 45%, #555 50%, #111 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    
-    /* Sombra pesada e glow roxo */
-    filter: drop-shadow(5px 5px 0px #000) drop-shadow(0 0 20px rgba(138, 43, 226, 0.9));
+    filter: drop-shadow(4px 4px 0 #000) drop-shadow(0 0 18px rgba(138, 43, 226, 0.9));
 }
-
 .batman-style-title.subtitle {
-    font-size: 4rem;
-    letter-spacing: 25px;
-    /* Efeito Metálico Laranja (MP5K) */
+    margin-top: 6px;
+    font-size: clamp(1.6rem, 7vw, 4rem);
+    letter-spacing: 0.35em;
+    padding-left: 0.35em;
     background: linear-gradient(to bottom, #ffb366 0%, #ff8000 45%, #cc5200 50%, #4d1f00 100%);
     -webkit-background-clip: text;
     background-clip: text;
-    color: transparent;
-    
-    /* Sombra pesada e glow laranja */
-    filter: drop-shadow(4px 4px 0px #000) drop-shadow(0 0 15px rgba(255, 102, 0, 0.7));
-    margin-top: 10px;
+    filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 14px rgba(255, 102, 0, 0.7));
 }
 
-/* ==========================================================================
-   Tema Global do Degustador da Noite
-   ========================================================================== */
-body.theme-degustador {
-    background-color: #4b0082 !important; /* Roxo vibrante */
-    background-image: radial-gradient(#000000 15%, transparent 16%), radial-gradient(#000000 15%, transparent 16%) !important;
-    background-size: 20px 20px !important;
-    background-position: 0 0, 10px 10px !important;
-}
-
-/* Cursores do Degustador: definidos junto ao bloco de cursores, no fim do arquivo. */
-
-/* Cursores vetoriais originais: talheres no repouso, macarronada nas ações. */
-body {
-    cursor: url('../assets/cursors/cutlery.svg') 7 3, default;
-}
-body :is(a[href], button, select, [role="button"], [role="link"], [onclick],
-    .comic-card, .hero-banner, .garfield-classic-logo, .characters-roster .comic-book-style,
-    .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask, .webtoon-image,
-    .flip-overlay, .flip-clone, #flappyenzo-canvas),
-body :is(a[href], button, select, [role="button"], [role="link"], [onclick],
-    .comic-card, .hero-banner, .garfield-classic-logo, .characters-roster .comic-book-style,
+/* ================================================================ cursores */
+body { cursor: url('../assets/cursors/cutlery.svg') 7 3, default; }
+body :is(a[href], button, select, [role="button"], [role="link"],
+    .comic-card, .hero-banner, .garfield-classic-logo, .character-card,
+    .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask, .webtoon-image),
+body :is(a[href], button, select, [role="button"], [role="link"],
+    .comic-card, .hero-banner, .garfield-classic-logo, .character-card,
     .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask) * {
     cursor: url('../assets/cursors/pasta.svg') 20 20, pointer;
 }
 body :is(input, textarea, [contenteditable="true"]) { cursor: text; }
 body :is(button, select, input):disabled { cursor: not-allowed; }
 
-/* Tema Degustador da Noite: cursor próprio (morcego) sobrepõe os talheres. */
 body.theme-degustador,
-body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"], [onclick],
-    .comic-card, .hero-banner, .garfield-classic-logo, .easter-egg-trigger, .cabo-coco-mask,
-    .webtoon-image, .flip-overlay, .flip-clone) {
+body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
+    .comic-card, .hero-banner, .garfield-classic-logo, .easter-egg-trigger, .cabo-coco-mask, .webtoon-image) {
     cursor: url('../assets/batman_cursor.png') 8 4, pointer;
 }
 body.theme-degustador :is(input, textarea, [contenteditable="true"]) { cursor: text; }
 
-/* Controles completos em telas estreitas, sem cortar o botão de tela cheia. */
+/* ============================================================ responsivo */
+@media (max-width: 1099px) {
+    .comic-grid { grid-template-columns: repeat(3, minmax(0, 220px)); justify-content: center; gap: 34px 30px; }
+    .comic-grid--spinoffs { justify-content: start; }
+}
+
+@media (max-width: 768px) {
+    .site-header { padding-top: 22px; }
+    .site-header--inner { padding-top: 64px; }
+    .site-header--inner .back-link { top: 14px; left: 14px; }
+
+    .hero-banner { min-height: 0; }
+    .hero-content { flex-direction: column; gap: 22px; padding: 26px 20px 28px; text-align: center; }
+    .hero-cover-wrapper { width: min(50vw, 190px); }
+    .hero-text p { margin-inline: auto; }
+
+    .comic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 18px; }
+    .comic-grid--spinoffs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .comic-card:hover { transform: none; box-shadow: var(--pop); }
+
+    .universe-links .btn { width: 100%; font-size: 1.45rem; padding: 10px 16px; }
+    .btn img { width: 40px; height: 40px; }
+
+    .donation-container { flex-direction: column; text-align: center; padding: 20px 16px; }
+    .donation-text h2 { font-size: 1.7rem; }
+
+    .character-card:nth-child(n) { transform: none; }
+}
+
 @media (max-width: 600px) {
-    .floating-ui-container { padding: 10px; gap: 8px; flex-wrap: wrap; }
-    .floating-ui-container .floating-island { padding: 5px 10px; gap: 6px; max-width: 100%; }
+    :root { --reader-bar-space: 124px; }
+    .floating-ui-container { flex-wrap: wrap; padding: 10px; gap: 8px; }
+    .floating-island { padding: 4px 8px; gap: 4px; max-width: 100%; }
     .island-left { flex: 1 1 100%; min-width: 0; }
-    .island-left .island-select { flex: 1; min-width: 0; width: 0; }
+    .island-left .island-select { flex: 1; width: 0; max-width: none; }
     .island-right { margin-left: auto; }
-    .floating-island .btn-island { flex-shrink: 0; }
-    .ui-hidden .floating-island { transform: translateY(-160px); pointer-events: none; }
+    .reader-viewport { padding-inline: 8px; }
+    .page-wrapper.cover-wrapper { width: 85%; }
+    .webtoon-image { border-width: 2px; }
 }
-/* Responsive reading, gallery and accessible controls. */
-[hidden] { display: none !important; }
-:focus-visible { outline: 3px solid #ffcf5c; outline-offset: 4px; }
-.reader-ui { height: 100dvh; }
-.reader-viewport { align-items: flex-start; justify-content: flex-start; min-height: 0; }
-.image-container { flex: 0 0 auto; margin-inline: auto; max-height: none; }
-.page-wrapper { width: 100%; }
-.page-wrapper.cover-wrapper { width: 80%; }
-.webtoon-image { margin-bottom: 0; }
-.page-wrapper { margin-bottom: 15px; }
-#password-modal { width: min(450px, calc(100vw - 24px)); max-height: 90dvh; overflow: auto; padding: 24px !important; }
-.viewer-open { overflow: hidden; }
-.character-viewer { border: 2px solid #f58220; background: #171717; color: white; border-radius: 12px; margin: auto; max-width: 95vw; max-height: 95dvh; padding: 16px; }
-.character-viewer::backdrop { background: #000d; }
-.character-viewer img { display: block; width: auto; max-width: 88vw; height: auto; max-height: 78dvh; object-fit: contain; margin: auto; }
-.character-viewer p { text-align: center; margin: 8px 0 0; }
-.viewer-close { display: block; margin: 0 0 12px auto; padding: 8px 16px; background: #f58220; border-radius: 6px; color: #111; font-weight: bold; }
-#pix-code { width: 100%; min-height: 100px; margin-top: 12px; }
-@media (max-width: 600px) {
-    .characters-page > .container { padding-top: 90px !important; }
-    .characters-page main h2 { font-size: 2.5rem !important; margin-bottom: 20px !important; }
-    .characters-roster { padding: 10px 0 50px !important; gap: 30px !important; }
-    .characters-btn, .btn-degustador { max-width: 100%; gap: 10px !important; padding: 12px !important; font-size: 1.4rem !important; }
-    .characters-btn img, .btn-degustador img { width: 38px !important; height: 38px !important; }
-}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

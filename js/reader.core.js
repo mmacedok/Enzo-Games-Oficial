@@ -94,13 +94,46 @@
         return img;
     }
 
+    function buildExpandButton(url, index) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'page-expand-btn';
+        button.innerHTML = '<i class="ri-fullscreen-line" aria-hidden="true"></i><span>Ampliar</span>';
+        button.setAttribute('aria-label', `Ampliar página ${index + 1}`);
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            openPageViewer(url, index);
+        });
+        return button;
+    }
+
+    let pageViewer = null;
+    function openPageViewer(url, index) {
+        if (!pageViewer) {
+            pageViewer = document.createElement('dialog');
+            pageViewer.className = 'page-viewer';
+            pageViewer.setAttribute('aria-label', 'Página ampliada');
+            pageViewer.innerHTML = `
+                <div class="page-viewer-scroll"><img alt=""></div>
+                <button type="button" class="btn btn--small viewer-close">Fechar ×</button>
+                <p class="page-viewer-hint">Arraste para os lados para ler</p>`;
+            pageViewer.querySelector('.viewer-close').addEventListener('click', () => pageViewer.close());
+            document.body.appendChild(pageViewer);
+        }
+        const img = pageViewer.querySelector('img');
+        applySiteImage(img, url, '2000px');
+        img.alt = `Página ${index + 1} ampliada`;
+        pageViewer.showModal();
+        pageViewer.querySelector('.page-viewer-scroll').scrollLeft = 0;
+    }
+
     function buildCaboCocoMask(box) {
         const mask = document.createElement('div');
         mask.className = 'cabo-coco-mask';
         if (box) Object.assign(mask.style, box);
         mask.innerHTML =
             '<span class="cabo-coco-text">CONTEÚDO BANIDO<br>' +
-            '<small style="font-size: 1em; color: #fff;">EM 456 PAÍSES</small></span>';
+            '<small>EM 456 PAÍSES</small></span>';
         mask.setAttribute('role', 'button');
         mask.tabIndex = 0;
         mask.setAttribute('aria-label', 'Desbloquear conteúdo');
@@ -230,7 +263,10 @@
         chapter.pages.forEach((url, index) => {
             const wrapper = document.createElement('div');
             wrapper.className = 'page-wrapper';
-            wrapper.appendChild(buildPageImage(url, index));
+            const image = buildPageImage(url, index);
+            wrapper.appendChild(image);
+            // Páginas deitadas ficam ilegíveis no celular: oferece tela cheia com rolagem.
+            if (image.width > image.height) wrapper.appendChild(buildExpandButton(url, index));
 
             const masks = (state.db.censorship?.[state.comic.id] || []).filter(entry => !entry.chapterId || entry.chapterId === chapter.id);
             const mask = masks.find((entry) => entry.pageIndex === index);
@@ -349,7 +385,7 @@
         popup.innerHTML = `
             <div class="achievement-icon">🏆</div>
             <div>
-                <div style="font-size: 0.8rem; color: #ff983f; text-transform: uppercase;">Conquista Desbloqueada</div>
+                <div class="achievement-label">Conquista desbloqueada</div>
                 <div>PARABÉNS! VOCÊ ACHOU 1 DE 999 MACARRONADAS!</div>
             </div>
         `;
@@ -415,6 +451,15 @@
         }, { passive: false });
 
         window.addEventListener('resize', updateZoomUI);
+
+        // Barra some ao rolar para baixo e volta ao rolar para cima.
+        let lastScroll = 0;
+        ui.viewport.addEventListener('scroll', () => {
+            const top = ui.viewport.scrollTop;
+            if (Math.abs(top - lastScroll) < 12) return;
+            document.body.classList.toggle('ui-hidden', top > lastScroll && top > 120);
+            lastScroll = top;
+        }, { passive: true });
         window.addEventListener('popstate', () => {
             const { comicId, chapterId } = readUrlState();
             if (comicId) loadComic(comicId, chapterId, 'none');
@@ -453,7 +498,7 @@
         populateChapterSelect();
         renderChapter();
         if (navigation === 'push') ui.viewport.scrollTo(0, 0);
-        document.title = `${comic.title || 'Leitura'} - Enzo Games Site`;
+        document.title = `${comic.title || 'Leitura'} — Enzo Games`;
     }
 
     function renderMissingComic(comicId) {
@@ -462,7 +507,7 @@
             <div class="reader-empty reader-error">
                 <h2>Este gibi ainda não está disponível</h2>
                 <p>Não encontramos o conteúdo <code></code>.</p>
-                <a href="index.html" class="btn-island reader-error-link">Voltar para o Início</a>
+                <a href="index.html" class="btn reader-error-link">Voltar para o Início</a>
             </div>
         `;
         ui.imageContainer.querySelector('code').textContent = comicId;
@@ -472,7 +517,7 @@
         ui.imageContainer.innerHTML = `
             <div class="reader-empty reader-error">
                 <h2>Nenhum gibi selecionado</h2>
-                <a href="index.html" class="btn-island reader-error-link">Voltar para o Início</a>
+                <a href="index.html" class="btn reader-error-link">Voltar para o Início</a>
             </div>
         `;
     }
