@@ -1,0 +1,46 @@
+{
+  "comics": {
+    "capitulo-1": { "description": "A Origem da Macarronada" },
+    "capitulo-2": { "description": "A Sociedade Secreta" },
+    "capitulo-3": { "description": "Mistério do Estacionamento" },
+    "capitulo-4": { "description": "A ameaça INOMINÁVEL" },
+    "capitulo-5": { "description": "A saga fresca começou" },
+    "capitulo-6": { "description": "O acordo mais épico da história dos games" },
+    "degustador-da-noite": {
+      "id": "degustador",
+      "title": "Degustador da Noite",
+      "description": "O spin-off sombrio da saga",
+      "order": 100,
+      "featured": false
+    }
+  },
+
+  "censorship": {
+    "capitulo-5": [
+      {
+        "pageIndex": 4,
+        "box": { "bottom": "1%", "left": "26%", "width": "33%", "height": "37%" }
+      }
+    ],
+    "capitulo-6": [
+      {
+        "pageIndex": 2,
+        "box": { "bottom": "0%", "left": "16%", "width": "45%", "height": "31%" }
+      }
+    ]
+  },
+
+  "easterEggs": [
+    {
+      "comicId": "capitulo-1",
+      "pageIndex": 0,
+      "kind": "macarronada"
+    },
+    {
+      "comicId": "capitulo-5",
+      "pageIndex": 3,
+      "image": "assets/Easter Eggs/Easter egg1.jpg",
+      "box": { "left": "53%", "top": "52.5%", "width": "47%", "height": "19%" }
+    }
+  ]
+}

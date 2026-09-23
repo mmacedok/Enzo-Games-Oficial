@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personagens - Enzo Games Site</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦸‍♂️</text></svg>">
+    <link rel="stylesheet" href="css/style.css?v=20260916b">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .flip-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            
+        }
+        .flip-clone {
+            position: fixed;
+            z-index: 9999;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            
+        }
+        #password-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        #password-modal {
+            background: #1a1a1a;
+            border: 4px solid #d32f2f;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 450px;
+            box-shadow: 0 0 40px rgba(211, 47, 47, 0.4);
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalPop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #password-modal h3 {
+            font-family: 'Bangers', cursive;
+            color: #d32f2f;
+            font-size: 3rem;
+            margin-top: 0;
+            letter-spacing: 2px;
+        }
+        #password-modal p {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        #password-modal input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.5rem;
+            font-family: 'Outfit', sans-serif;
+            border: 2px solid #000;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 15px;
+            background: #000;
+            color: #ffcc00;
+            outline: none;
+        }
+        #password-modal input:focus {
+            border-color: #d32f2f;
+        }
+        #password-modal button {
+            background: #d32f2f;
+            color: white;
+            border: 2px solid #000;
+            padding: 10px 20px;
+            font-family: 'Bangers', cursive;
+            font-size: 1.5rem;
+            
+            border-radius: 4px;
+            box-shadow: 2px 2px 0px #000;
+            transition: all 0.2s ease;
+        }
+        #password-modal button:hover {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000;
+            background: #f44336;
+        }
+        .crime-scene-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(45deg, #000, #000 20px, #ffcc00 20px, #ffcc00 40px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            z-index: 5;
+            transition: opacity 0.5s ease;
+        }
+        .crime-scene-overlay span {
+            background: #000;
+            color: #ffcc00;
+            font-family: 'Bangers', cursive;
+            font-size: 2rem;
+            padding: 10px 20px;
+            border: 4px solid #ffcc00;
+            transform: rotate(-10deg);
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.8);
+            text-shadow: 2px 2px 0px #000;
+            text-align: center;
+            line-height: 1.2;
+        }
+    </style>
+    <link rel="stylesheet" href="css/images.generated.css?v=1">
+</head>
+<body class="characters-page">
+    <!-- Overlay de Transição Macarronada -->
+    <div id="macaroni-wipe" class="macaroni-wipe"></div>
+    
+    <div class="container" style="padding-top: 30px; position: relative;">
+        <button class="btn-nav" style="position: absolute; left: 20px; top: 40px;" data-nav="index.html">
+            <span aria-hidden="true">←</span> Voltar para HQs
+        </button>
+        <header class="navbar" style="display:flex; justify-content:center; align-items:center; flex-direction:column; padding-bottom: 0;">
+            <h1 role="link" tabindex="0" class="garfield-classic-logo" style="margin: 0; " data-nav="index.html">
+                <span class="char c1" data-text="E">E</span><span class="char c2" data-text="N">N</span><span class="char c3" data-text="Z">Z</span><span class="char c4" data-text="O">O<div class="cat-tail"></div></span>
+                <span class="space">&nbsp;</span>
+                <span class="char c5" data-text="G">G</span><span class="char c6" data-text="A">A</span><span class="char c7" data-text="M">M</span><span class="char c8" data-text="E">E</span><span class="char c9" data-text="S">S</span>
+            </h1>
+        </header>
+    </div>
+
+    <main class="container" style="padding-top: 20px; text-align: center;">
+        <h2 style="font-family: var(--font-heading); font-size: 4rem; margin-bottom: 60px; text-shadow: 3px 3px 0px #000; letter-spacing: 2px; text-transform: uppercase; color: #fff;">
+            Galeria de Personagens
+        </h2>
+        
+        <section class="characters-roster" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); align-items: start; gap: 60px 40px; padding: 20px 20px 100px; max-width: 1200px; margin: 0 auto;">
+            
+            <!-- 1. Enzo Games -->
+            <div class="comic-book-style" style="border-radius: 8px; ">
+                <img data-original="assets/Personagens/Enzo games ficha.png" src="assets/web/923569396f52acf1-640.webp" srcset="assets/web/923569396f52acf1-640.webp 640w, assets/web/923569396f52acf1-1280.webp 1280w, assets/web/923569396f52acf1-1696.webp 1696w" sizes="(max-width: 600px) 90vw, 420px" width="1696" height="2528" alt="Enzo Games" loading="eager" decoding="async" style="width:100%; height:auto; display:block; border-radius: 4px;">
+            </div>
+
+            <!-- 2. Italolol -->
+            <div class="comic-book-style" style="border-radius: 8px; ">
+                <img data-original="assets/Personagens/Italolol.png" src="assets/web/35abbd7f000760a8-640.webp" srcset="assets/web/35abbd7f000760a8-640.webp 640w, assets/web/35abbd7f000760a8-1280.webp 1280w, assets/web/35abbd7f000760a8-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2016" height="2114" alt="Italolol" loading="lazy" decoding="async" style="width:100%; height:auto; display:block; border-radius: 4px;">
+            </div>
+
+            <!-- 3. Inominavel -->
+            <div class="comic-book-style" style="border-radius: 8px; ">
+                <img data-original="assets/Personagens/O Inominavel Ficha.png" src="assets/web/396f3fd71eaad2f7-640.webp" srcset="assets/web/396f3fd71eaad2f7-640.webp 640w, assets/web/396f3fd71eaad2f7-1280.webp 1280w, assets/web/396f3fd71eaad2f7-1344.webp 1344w" sizes="(max-width: 600px) 90vw, 420px" width="1344" height="3100" alt="O Inominável" loading="lazy" decoding="async" style="width:100%; height:auto; display:block; border-radius: 4px;">
+            </div>
+
+            <!-- 4. Degustador da noite -->
+            <div class="comic-book-style" style="border-radius: 8px; ">
+                <img data-original="assets/Personagens/Degustador da noite Ficha.png" src="assets/web/ae15609878b0c353-640.webp" srcset="assets/web/ae15609878b0c353-640.webp 640w, assets/web/ae15609878b0c353-1280.webp 1280w, assets/web/ae15609878b0c353-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2048" height="2056" alt="Degustador da Noite" loading="lazy" decoding="async" style="width:100%; height:auto; display:block; border-radius: 4px;">
+            </div>
+
+            <!-- 5. Cabo Côco (bloqueado por senha) -->
+            <div class="comic-book-style" data-locked="true" style="position: relative; border-radius: 8px; ">
+                <div class="crime-scene-overlay">
+                    <span>CONTEÚDO BANIDO<br><small style="font-size: 1rem; color: #fff;">EM 456 PAÍSES</small></span>
+                </div>
+                <img data-original="assets/Personagens/Cabo Côco.png" src="assets/web/c0df924b96103b1d-640.webp" srcset="assets/web/c0df924b96103b1d-640.webp 640w, assets/web/c0df924b96103b1d-1280.webp 1280w, assets/web/c0df924b96103b1d-1750.webp 1750w" sizes="(max-width: 600px) 90vw, 420px" width="1750" height="2432" alt="Cabo Côco" loading="lazy" decoding="async" style="width:100%; height:auto; display:block; border-radius: 4px;">
+            </div>
+
+            <!-- 6. Superkid -->
+            <div class="comic-book-style" style="border-radius: 8px; ">
+                <img data-original="assets/Personagens/Superkid Ficha.png" src="assets/web/77d918b4b1d05682-640.webp" srcset="assets/web/77d918b4b1d05682-640.webp 640w, assets/web/77d918b4b1d05682-1280.webp 1280w, assets/web/77d918b4b1d05682-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2016" height="2086" alt="Superkid" loading="lazy" decoding="async" style="width:100%; height:auto; display:block; border-radius: 4px;">
+            </div>
+
+            <!-- 7. Hatsune Neves -->
+            <div class="comic-book-style" style="border-radius: 8px; ">
+                <img data-original="assets/Personagens/Hatsune Neves Ficha.png" src="assets/web/5cbfeb049ab34406-640.webp" srcset="assets/web/5cbfeb049ab34406-640.webp 640w, assets/web/5cbfeb049ab34406-1280.webp 1280w, assets/web/5cbfeb049ab34406-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2048" height="2056" alt="Hatsune Neves" loading="lazy" decoding="async" style="width:100%; height:auto; display:block; border-radius: 4px;">
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Modal de Senha Customizado -->
+    <div id="password-modal-overlay">
+        <div id="password-modal">
+            <h3>🚨 ALERTA 🚨</h3>
+            <p><strong>CONTEUDO BANIDO EM 456 PAISES</strong><br><br>Insira a senha de acesso confidencial:</p>
+            <input type="password" id="password-input" placeholder="Sua senha...">
+            <div id="password-error" style="color: #ff5252; font-weight: bold; margin-bottom: 15px; display: none;">❌ SENHA INCORRETA! ACESSO NEGADO.</div>
+            <button id="password-submit">DECODIFICAR</button>
+            <button id="password-cancel" style="background: #555; margin-left: 10px;">CANCELAR</button>
+        </div>
+    </div>
+
+    <script src="js/images.generated.js?v=1"></script>
+    <script src="js/site.js?v=1"></script>
+    <script src="js/characters.js?v=1"></script>
+
+</body>
+</html>

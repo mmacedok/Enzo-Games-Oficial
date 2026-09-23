@@ -1,0 +1,18 @@
+# Dependências
+node_modules/
+
+# Catálogo gerado e backups do build
+data/database.json
+data/database.json.bak
+data/leaderboard.json
+
+# Artefatos gerados a partir de assets/
+assets/Personagens/cabo-coco.png
+
+# Screenshots de QA
+shots/
+
+# Sistema
+Thumbs.db
+desktop.ini
+.DS_Store

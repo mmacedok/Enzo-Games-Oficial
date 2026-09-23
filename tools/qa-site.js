@@ -1,0 +1,86 @@
+(async () => {
+    const checks = [];
+    const check = (ok, name) => { if (!ok) throw new Error(name); checks.push(name); };
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const path = location.pathname;
+    check(document.documentElement.scrollWidth <= innerWidth + 2, 'sem overflow horizontal da página');
+    if (path === '/' || path === '/index.html') {
+        check(document.querySelectorAll('#hero-comic .hero-banner').length === 1, 'um hero');
+        check(document.querySelector('#hero-comic h2')?.textContent === 'Capítulo 6', 'destaque correto');
+        check(document.querySelectorAll('#comic-grid .comic-card').length === 6, 'seis cards sem perder spin-off');
+        check(document.querySelectorAll('[data-nav]').length === 2, 'navegação para extras');
+        const copy = document.querySelector('[data-pix]');
+        const original = navigator.clipboard.writeText;
+        let copied;
+        navigator.clipboard.writeText = async value => { copied = value; };
+        copy.click(); await wait(0);
+        check(copied === copy.dataset.pix && copy.textContent.includes('copiado'), 'PIX confirma somente após cópia');
+        navigator.clipboard.writeText = async () => { throw new Error('negado'); };
+        copy.click(); await wait(0);
+        check(!document.querySelector('#pix-code').hidden, 'PIX oferece seleção manual quando negado');
+        navigator.clipboard.writeText = original;
+        document.querySelector('#pix-code').hidden = true;
+    }
+    if (path === '/personagens.html') {
+        const cards = [...document.querySelectorAll('.characters-roster .comic-book-style')];
+        check(cards.length === 7 && cards.every(c => c.tabIndex === 0), 'sete fichas acessíveis por teclado');
+        cards[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        const viewer = document.querySelector('.character-viewer');
+        check(viewer.open, 'ficha abre pelo teclado');
+        viewer.querySelector('button').click();
+        await wait(50);
+        check(!viewer.open && document.activeElement === cards[0], 'fechar devolve foco');
+        const locked = document.querySelector('[data-locked="true"]');
+        locked.click();
+        const input = document.querySelector('#password-input');
+        input.value = 'errada'; document.querySelector('#password-submit').click();
+        check(getComputedStyle(document.querySelector('#password-error')).display !== 'none', 'senha incorreta dá feedback');
+        input.value = 'copodelagrimas'; document.querySelector('#password-submit').click();
+        check(locked.dataset.locked === 'false' && viewer.open, 'senha correta revela e abre ficha');
+        viewer.close();
+    }
+    if (path === '/reader.html') {
+        check(document.querySelectorAll('.webtoon-image').length > 1, 'capítulo renderizado');
+        const page = document.querySelector('.page-wrapper:not(.cover-wrapper)');
+        const viewport = document.querySelector('#reader-viewport');
+        document.querySelector('#zoom-reset-btn').click();
+        await wait(250);
+        const initial = page.getBoundingClientRect().width;
+        document.querySelector('#zoom-in-btn').click();
+        document.querySelector('#zoom-in-btn').click();
+        await wait(250);
+        check(page.getBoundingClientRect().width > initial * 1.4, 'zoom aumenta página de verdade');
+        if (innerWidth < 800) check(viewport.scrollWidth > viewport.clientWidth, 'zoom permite rolagem horizontal');
+        document.querySelector('#zoom-reset-btn').click();
+        const mask = document.querySelector('.cabo-coco-mask');
+        if (mask) {
+            mask.click();
+            const input = document.querySelector('#password-input');
+            input.value = 'errada'; document.querySelector('#password-submit').click();
+            check(getComputedStyle(document.querySelector('#password-error')).display !== 'none', 'leitor rejeita senha incorreta');
+            input.value = 'copodelagrimas'; document.querySelector('#password-submit').click();
+            await wait(550);
+            check(!document.querySelector('.cabo-coco-mask'), 'leitor remove censura após senha');
+        }
+        const egg = document.querySelector('.easter-egg-trigger');
+        if (egg) { egg.click(); check(!!egg.querySelector('.show-secret'), 'easter egg revela imagem'); }
+        const pasta = document.querySelector('.macarronada-hotspot');
+        if (pasta) { pasta.click(); check(!!document.querySelector('#macarronada-achievement'), 'conquista funciona'); }
+        document.querySelector('#image-container img').click();
+        check(document.body.classList.contains('ui-hidden'), 'toque esconde controles');
+        document.querySelector('#image-container img').click();
+    }
+    if (path === '/degustador.html') {
+        check(document.querySelector('[data-nav*="comic=degustador"]'), 'botão aponta para spin-off');
+        check(getComputedStyle(document.body).cursor.includes('batman_cursor'), 'cursor do tema ativo');
+    }
+    // Load every image, including below-the-fold panels, to catch broken assets.
+    const images = [...document.images];
+    await Promise.all(images.map(async img => {
+        img.loading = 'eager';
+        await Promise.race([img.decode().catch(() => {}), wait(10000)]);
+        check(img.complete && img.naturalWidth > 0, `imagem carregada: ${img.alt || img.src}`);
+    }));
+    const bytes = performance.getEntriesByType('resource').filter(r => r.name.startsWith(location.origin)).reduce((sum, r) => sum + r.transferSize, 0);
+    return { checks, localTransferBytes: bytes, imageCount: images.length };
+})()
