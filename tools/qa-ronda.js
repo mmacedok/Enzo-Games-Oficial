@@ -32,10 +32,24 @@
         const alvo = Math.max(prec, bur > 1 ? bur / v + 0.02 : 0);
         if ((bur > 1 || sub > 0) && ate <= alvo) q = true;
       }
-      if (jogo.desafios.find((dd) => dd.tipo === 'baixo' && dd.x + dd.w > pes && dd.x - frente() < v * 0.12 && Math.abs(dd.y + dd.h - base) < 2)) q = true;
+      // Obstáculo baixo e homem do coração (que corre na direção do jogador): pular.
+      const aproxima = (dd) => v + (dd.correndo ? CFG.corridaCoracao : 0);
+      if (jogo.desafios.find((dd) => (dd.tipo === 'baixo' || dd.tipo === 'coracao') && dd.x + dd.w > pes &&
+        dd.x - frente() < aproxima(dd) * 0.12 && Math.abs(dd.y + dd.h - base) < 2)) q = true;
     }
     if (q) { C.pular(jogo, true); C.pular(jogo, false); j.vy = Math.min(j.vy, CFG.impulso); }
-    R.entrada.gatilho = !!jogo.desafios.find((dd) => dd.vida > 0 && dd.x + dd.w > CFG.jogadorX && dd.x - frente() < 600);
+    // Atira só o necessário (conta balas em voo na altura do alvo) e recarrega
+    // com menos de 3 balas: a mesma estratégia de test/ronda-core.test.js.
+    const naAltura = (y, dd) => y > dd.y - 1 && y < dd.y + dd.h + 1;
+    const emVoo = (dd) => jogo.tiros.filter((t) => t.x < dd.x + dd.w && naAltura(t.y, dd)).length;
+    const alvo = jogo.desafios.find((dd) => ['parede', 'passaro', 'drone'].includes(dd.tipo) && dd.vida > 0 &&
+      dd.x + dd.w > CFG.jogadorX && dd.x - frente() < v * 0.6 && dd.vida > emVoo(dd));
+    R.entrada.gatilho = false;
+    if (alvo) {
+      if (naAltura(j.y + CFG.alturaArma, alvo) && C.atirar(jogo)) R.visual.ultimoTiro = R.visual.tempo;
+    } else if (jogo.balas < 3) {
+      C.recarregar(jogo);
+    }
   }
   const avancarOriginal = C.avancar;
   let congelado = false, usarRobo = MODO !== 'morrer';
