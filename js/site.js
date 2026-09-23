@@ -18,7 +18,8 @@
         const info = window.SiteImages?.[source];
         const letterbox = Boolean(info) && Math.abs(info.width / info.height - 9 / 16) > 0.03;
         wrapper.classList.toggle('cover-letterbox', letterbox);
-        if (letterbox) wrapper.style.setProperty('--cover-bg', `url('${siteImageUrl(source)}')`);
+        // Endereço completo: url() dentro de variável CSS seria lido a partir de css/.
+        if (letterbox) wrapper.style.setProperty('--cover-bg', `url('${new URL(siteImageUrl(source), document.baseURI).href}')`);
         return letterbox;
     };
     window.playMacaroniTransition = url => {

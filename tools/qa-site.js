@@ -87,7 +87,10 @@
         document.querySelector('#image-container img').click();
     }
     if (path === '/degustador.html') {
-        check(document.querySelector('[data-nav*="comic=degustador"]'), 'botão aponta para spin-off');
+        const livros = [...document.querySelectorAll('#comic-shelf .shelf-book')];
+        check(livros.length >= 1 && livros.every(b => b.dataset.comicId === 'degustador' && b.dataset.chapterId), 'estante com as edições do spin-off');
+        check(new Set(livros.map(b => b.querySelector('.book').offsetHeight)).size === 1, 'edições do mesmo tamanho');
+        check(document.querySelector('#hero-comic .hero-banner'), 'destaque da edição mais recente');
         const title = document.querySelector('.batman-style-title');
         check(title.scrollWidth <= title.clientWidth + 2, 'título do Degustador cabe na tela');
         check(getComputedStyle(document.body).cursor.includes('batman_cursor'), 'cursor do tema ativo');
