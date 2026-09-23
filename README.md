@@ -1,8 +1,9 @@
 # Enzo Games Site
 
-Leitor de HQs do Enzo Games + mini-game **Flappy Enzo** + galeria de personagens.
+Leitor de HQs do Enzo Games + galeria de personagens. (O mini-game Flappy Enzo foi removido
+para ser refeito do zero; as artes dele continuam em `assets/flappy/` e na pasta `Floppy enzo`.)
 
-- **Home** (`index.html`) — destaque do último capítulo, estante 3D com a série principal e o jogo (abra clicando no logo).
+- **Home** (`index.html`) — destaque do último capítulo e estante 3D com a série principal.
 - **Leitor** (`reader.html?comic=<id>&chapter=<id>`) — leitura vertical com zoom, censura por senha e easter eggs.
 - **Spin-off** (`degustador.html`) — Degustador da Noite, com tema próprio.
 - **Personagens** (`personagens.html`) — galeria de fichas com visualização em tela cheia.
@@ -22,7 +23,7 @@ Abra <http://localhost:3000>.
 | `npm start` | Sobe o servidor e o `watch.js` (reconstrói o catálogo quando algo muda em `assets/`) |
 | `npm run serve` | Só o servidor |
 | `npm run build` | Só o build do catálogo (`data/database.json`) |
-| `npm test` | Testes automatizados (catálogo, física do jogo, API, máscara de imagem) |
+| `npm test` | Testes automatizados (catálogo, estante, servidor, máscara de imagem) |
 | `npm run qa -- --url <url> --out <arquivo.png>` | Screenshot headless + relatório de erros de console/rede |
 
 ### Exemplo de verificação visual
@@ -31,27 +32,15 @@ Abra <http://localhost:3000>.
 npm run qa -- --url http://localhost:3000/index.html --width 390 --height 844 --mobile --out shots/home-mobile.png
 ```
 
-## Como jogar
-
-Clique no logo Enzo Games. Use **Espaço**, **seta para cima** ou **toque no canvas**
-para voar entre os obstáculos. Você tem três chances, com proteção breve após cada
-impacto. A cada cinco pontos o ritmo aumenta, até um limite. **P** ou o botão de
-pausa interrompe a partida; voltar de outra aba deixa o jogo pausado.
-
-Após perder, um toque recomeça. Salvar no ranking é opcional, pelo botão
-**Salvar placar**. O recorde local e o ranking existentes são preservados.
-
-### Testes de interação
+## Testes de interação
 
 ```bash
-node tools/qa.mjs --url http://localhost:3000 --eval-file tools/qa-game.js --out shots/game-desktop.png
-node tools/qa.mjs --url http://localhost:3000 --mobile --width 390 --height 844 --eval-file tools/qa-game.js --out shots/game-mobile.png
+node tools/qa-all.mjs http://localhost:3000
 node tools/qa.mjs --url "http://localhost:3000/reader.html?comic=capitulo-1" --eval-file tools/qa-reader.js
 ```
 
-O teste do jogo simula falha e sucesso do envio sem escrever no ranking real.
-O aviso HTTP 503 nessa simulação é esperado. `npm test` cobre 35 casos; veja
-[docs/CORRECOES.md](docs/CORRECOES.md) para resultados e limites da verificação.
+O primeiro confere todas as páginas em desktop e celular; o segundo, histórico e
+zoom do leitor. Veja [docs/CORRECOES.md](docs/CORRECOES.md) para detalhes.
 
 ## Como publicar conteúdo
 
@@ -85,11 +74,9 @@ Senha da censura: `copodelagrimas`.
 
 ```
 atualizar.js              build do catálogo (assets/ + manifest -> database.json)
-server.js                 servidor estático + API do ranking
+server.js                 servidor estático
 watch.js                  vigia de assets (dispara o build)
 lib/cabo-coco-mask.js     gera a máscara transparente do Cabo Côco
-js/game-core.js           regras puras do jogo (colisão, física) — testável
-js/game.js                motor do Flappy Enzo (canvas, input, ranking)
 js/main.js                home (hero + grid)
 js/reader.core.js         leitor (único motor de renderização)
 css/style.css             estilos do site inteiro
@@ -117,14 +104,6 @@ em desktop e celular. Resultados ficam em `shots/site-audit/results.json`.
 
 ## Notas técnicas
 
-- **Física do jogo**: passo fixo de 1/60 s; roda igual em 60 Hz ou 144 Hz.
-- **Canos novos**: sprite de molho e macarrão com boca e corpo recortados pelo canvas.
-- **Hitbox = desenho**: `js/game-core.js` é a única fonte dos retângulos usados
-  para desenhar e para detectar colisão — não existe "cano invisível".
-- **Ranking**: `POST /api/leaderboard` valida tipo, sinal e teto (`MAX_SCORE`,
-  padrão 300, configurável por env), sessão assinada, tempo de partida, uso único
-  e rate limit por IP. O jogo abre a sessão automaticamente. Para manter sessões
-  entre reinícios do servidor, configure `LEADERBOARD_SECRET` no ambiente.
 - **Cache**: imagens com `max-age` de 7 dias; HTML sempre revalidado. Não há
   cache-busting por requisição no leitor.
 

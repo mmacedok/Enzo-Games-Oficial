@@ -100,3 +100,10 @@ controle de acesso a arquivos confidenciais.
   barra do leitor não cobre a primeira página e some ao rolar; páginas deitadas
   com botão **Ampliar**.
 - Metadados de descrição e Open Graph em todas as páginas.
+
+## Mini-game removido (23/09/2026)
+
+O Flappy Enzo antigo (`js/game.js`, `js/game-core.js`, API `/api/leaderboard`,
+testes e QA do jogo) foi removido para ser refeito do zero. As artes
+continuam em `assets/flappy/` e em `E:\AI Workshop\Enzo Games\Floppy enzo`.
+Os itens da auditoria acima que citam o jogo descrevem a versão removida.
