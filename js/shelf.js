@@ -48,7 +48,7 @@
     }
 
     /** Monta um gibi 3D. `entry` = { comic, issue, isNew, kicker, headline }. */
-    function buildBook(entry, onOpen) {
+    function buildBook(entry, onOpen, onIntent) {
         const { comic, issue, isNew, kicker, headline } = entry;
 
         const item = document.createElement('article');
@@ -121,13 +121,18 @@
 
         item.append(book, caption);
 
-        item.addEventListener('click', () => onOpen(comic));
+        item.addEventListener('click', () => onOpen(comic, item));
         item.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                onOpen(comic);
+                onOpen(comic, item);
             }
         });
+        // Mouse em cima ou foco: já começa a baixar a 1ª página (para a animação).
+        if (onIntent) {
+            item.addEventListener('pointerenter', () => onIntent(comic), { once: true });
+            item.addEventListener('focus', () => onIntent(comic), { once: true });
+        }
         attachHolo(item);
         return item;
     }
@@ -167,11 +172,11 @@
      * entries: [{ comic, issue, isNew, kicker, headline }] na ordem de exibição.
      * Retorna { destroy }.
      */
-    function mount(container, entries, { onOpen }) {
+    function mount(container, entries, { onOpen, onIntent }) {
         container.classList.add('bookcase');
         container.replaceChildren();
 
-        const books = entries.map((entry) => buildBook(entry, onOpen));
+        const books = entries.map((entry) => buildBook(entry, onOpen, onIntent));
         let columns = 0;
 
         function layout() {

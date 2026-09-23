@@ -26,22 +26,45 @@
         return { kicker, headline };
     }
 
-    function openComic(comicId) {
-        localStorage.setItem('currentComicId', comicId);
+    const firstPage = (comic) => comic.chapters?.[0]?.pages?.[0];
+
+    /**
+     * Abre o gibi no leitor. Com `source` (a capa clicada), o gibi voa até a
+     * tela e abre antes de carregar o leitor (js/comic-open.js).
+     */
+    async function openComic(comic, source) {
+        localStorage.setItem('currentComicId', comic.id);
         localStorage.removeItem('currentChapterId');
-        window.playMacaroniTransition(`reader.html?comic=${encodeURIComponent(comicId)}`);
+        const url = `reader.html?comic=${encodeURIComponent(comic.id)}`;
+        if (!source || !window.EnzoOpen) {
+            window.playMacaroniTransition(url);
+            return;
+        }
+        const coverImg = source.querySelector('img');
+        await window.EnzoOpen.fly({
+            source,
+            coverSrc: coverImg?.currentSrc || siteImageUrl(comic.cover),
+            pageSrc: window.EnzoOpen.largeImageUrl(firstPage(comic)),
+        });
+        location.href = url;
     }
 
-    function makeActivatable(element, comic) {
+    function preloadFirstPage(comic) {
+        window.EnzoOpen?.preload(window.EnzoOpen.largeImageUrl(firstPage(comic)));
+    }
+
+    function makeActivatable(element, comic, getSource) {
         element.tabIndex = 0;
         element.setAttribute('role', 'link');
-        element.addEventListener('click', () => openComic(comic.id));
+        element.addEventListener('click', () => openComic(comic, getSource?.()));
         element.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                openComic(comic.id);
+                openComic(comic, getSource?.());
             }
         });
+        element.addEventListener('pointerenter', () => preloadFirstPage(comic), { once: true });
+        element.addEventListener('focus', () => preloadFirstPage(comic), { once: true });
     }
 
     // ------------------------------------------------------------------ hero
@@ -50,7 +73,7 @@
         const banner = document.createElement('div');
         banner.className = 'hero-banner';
         banner.setAttribute('aria-label', `Ler ${kicker}: ${headline}`);
-        makeActivatable(banner, comic);
+        makeActivatable(banner, comic, () => banner.querySelector('.hero-cover-wrapper'));
 
         const bg = document.createElement('div');
         bg.className = 'hero-bg';
@@ -151,7 +174,10 @@
             isNew: comic === state.latest,
             ...labels(comic),
         }));
-        shelf = EnzoShelf.mount(shelfElement, entries, { onOpen: (comic) => openComic(comic.id) });
+        shelf = EnzoShelf.mount(shelfElement, entries, {
+            onOpen: (comic, item) => openComic(comic, item.querySelector('.book-front')),
+            onIntent: preloadFirstPage,
+        });
     }
 
     function renderError(error) {

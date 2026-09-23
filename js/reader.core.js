@@ -535,7 +535,16 @@
 
     async function init() {
         const wipe = qs('macaroni-wipe');
-        if (wipe) {
+        // Veio da animação de abrir o gibi na home: entra direto, sem macarronada.
+        let enteringFromComic = false;
+        try {
+            enteringFromComic = sessionStorage.getItem('enzo-enter-comic') === '1';
+            sessionStorage.removeItem('enzo-enter-comic');
+        } catch { /* sem sessionStorage: usa a transição normal */ }
+        if (enteringFromComic) {
+            document.body.classList.add('enter-from-comic');
+            wipe?.classList.remove('is-active');
+        } else if (wipe) {
             setTimeout(() => {
                 wipe.classList.remove('is-active');
                 wipe.classList.add('is-leaving');
