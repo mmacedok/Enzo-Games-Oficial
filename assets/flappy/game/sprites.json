@@ -1,0 +1,38 @@
+{
+  "enzo": {
+    "arquivo": "assets/flappy/game/enzo.png",
+    "largura": 168,
+    "altura": 152
+  },
+  "macarronada": {
+    "arquivo": "assets/flappy/game/macarronada.png",
+    "largura": 192,
+    "altura": 157
+  },
+  "faca": {
+    "ponta": {
+      "arquivo": "assets/flappy/game/faca-ponta.png",
+      "largura": 165,
+      "altura": 798
+    },
+    "cabo": {
+      "arquivo": "assets/flappy/game/faca-cabo.png",
+      "largura": 165,
+      "altura": 8
+    },
+    "larguraVisivelCabo": 80
+  },
+  "garfo": {
+    "ponta": {
+      "arquivo": "assets/flappy/game/garfo-ponta.png",
+      "largura": 192,
+      "altura": 794
+    },
+    "cabo": {
+      "arquivo": "assets/flappy/game/garfo-cabo.png",
+      "largura": 192,
+      "altura": 8
+    },
+    "larguraVisivelCabo": 54
+  }
+}
