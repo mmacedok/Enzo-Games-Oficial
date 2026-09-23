@@ -91,8 +91,9 @@
         check(livros.length >= 1 && livros.every(b => b.dataset.comicId === 'degustador' && b.dataset.chapterId), 'estante com as edições do spin-off');
         check(new Set(livros.map(b => b.querySelector('.book').offsetHeight)).size === 1, 'edições do mesmo tamanho');
         check(document.querySelector('#hero-comic .hero-banner'), 'destaque da edição mais recente');
-        const title = document.querySelector('.batman-style-title');
-        check(title.scrollWidth <= title.clientWidth + 2, 'título do Degustador cabe na tela');
+        const header = document.querySelector('.degustador-header');
+        check(header && header.complete && header.naturalWidth > 0, 'cabeçalho do Degustador carregado');
+        check(header && header.getBoundingClientRect().right <= innerWidth + 1, 'cabeçalho do Degustador cabe na tela');
         check(getComputedStyle(document.body).cursor.includes('mp5k'), 'cursor do tema ativo');
     }
     // Load every image, including below-the-fold panels, to catch broken assets.

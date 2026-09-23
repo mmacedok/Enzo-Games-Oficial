@@ -31,6 +31,9 @@
         parede: '#ff6600',
         passaro: '#ffd400',
         drone: '#2ecc71',
+        coracao: '#e0245e',
+        feiticeira: '#b04dff',
+        laser: '#ff4fd8',
         predio: '#1d0f33',
         telhado: '#8a2be2',
         janela: '#ffd76a',
@@ -53,6 +56,9 @@
         tropecar: carregar('degustador/tropecar.png'),
         passaro: ['passaro-01', 'passaro-02'].map((n) => carregar(`objetos/${n}.png`)),
         drone: ['drone-01', 'drone-02'].map((n) => carregar(`objetos/${n}.png`)),
+        coracao: ['coracao-01', 'coracao-02', 'coracao-03', 'coracao-04'].map((n) => carregar(`inimigos/${n}.png`)),
+        feiticeira: ['feiticeira-01', 'feiticeira-02', 'feiticeira-03', 'feiticeira-04'].map((n) => carregar(`inimigos/${n}.png`)),
+        predios: ['predio-1.webp', 'predio-2.webp', 'predio-3.webp'].map((n) => carregar(`predios/${n}`)),
         parede: carregar('objetos/parede-inteira.png'),
         paredeRachada: carregar('objetos/parede-rachada.png'),
         destrocos: carregar('objetos/parede-destrocos.png'),
@@ -165,18 +171,46 @@
         }
     }
 
+    /** Fachada do prédio: textura repetida na horizontal (espelhada a cada cópia, para não marcar a emenda). */
+    function desenharFachada(p) {
+        const img = ARTE.predios[Math.floor(p.w * 7 + p.topo * 13) % 3];
+        if (!pronta(img)) return false;
+        const tw = img.naturalWidth;
+        const th = img.naturalHeight;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(p.x, p.topo, p.w, H - p.topo);
+        ctx.clip();
+        for (let i = 0, x = p.x; x < p.x + p.w; i++, x += tw) {
+            if (x + tw < 0 || x > W) continue;
+            if (i % 2 === 0) {
+                ctx.drawImage(img, x, p.topo, tw, th);
+            } else {
+                ctx.save();
+                ctx.translate(x + tw, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(img, 0, p.topo, tw, th);
+                ctx.restore();
+            }
+        }
+        ctx.restore();
+        return true;
+    }
+
     function desenharPredios() {
         for (const p of jogo.predios) {
             if (p.x > W || p.x + p.w < 0) continue;
-            ctx.fillStyle = COR.predio;
-            ctx.fillRect(p.x, p.topo, p.w, H - p.topo);
-            // Janelas: padrão fixo por prédio (não pisca ao rolar).
-            ctx.fillStyle = COR.janela;
-            let s = Math.floor(p.w * 7 + p.topo * 13);
-            for (let y = p.topo + 18; y < H - 8; y += 22) {
-                for (let x = 12; x < p.w - 16; x += 26) {
-                    s = (s * 16807) % 2147483647;
-                    if (s % 5 === 0) ctx.fillRect(p.x + x, y, 8, 10);
+            if (!desenharFachada(p)) {
+                ctx.fillStyle = COR.predio;
+                ctx.fillRect(p.x, p.topo, p.w, H - p.topo);
+                // Janelas: padrão fixo por prédio (não pisca ao rolar).
+                ctx.fillStyle = COR.janela;
+                let s = Math.floor(p.w * 7 + p.topo * 13);
+                for (let y = p.topo + 18; y < H - 8; y += 22) {
+                    for (let x = 12; x < p.w - 16; x += 26) {
+                        s = (s * 16807) % 2147483647;
+                        if (s % 5 === 0) ctx.fillRect(p.x + x, y, 8, 10);
+                    }
                 }
             }
             ctx.fillStyle = COR.telhado;
@@ -187,9 +221,40 @@
         }
     }
 
+    /** Laser da feiticeira: aviso tracejado piscando, depois a linha rosa que mata. */
+    function desenharLaser(d) {
+        const estado = core.estadoLaser(d, jogo.tempo);
+        if (estado === 'pausa') return;
+        const zona = core.zonaLaser(d);
+        const maoX = d.x - 8;
+        const maoY = d.y + d.h / 2 - 10;
+        ctx.save();
+        ctx.lineCap = 'round';
+        if (estado === 'aviso') {
+            if (Math.floor(visual.tempo * 12) % 2 === 0) {
+                ctx.strokeStyle = 'rgba(255, 79, 216, 0.75)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([6, 5]);
+                ctx.beginPath(); ctx.moveTo(zona.x, d.laserY); ctx.lineTo(maoX, d.laserY); ctx.stroke();
+            }
+        } else {
+            for (const [cor, largura] of [['rgba(255, 79, 216, 0.35)', 9], [COR.laser, 4], ['#ffd1f4', 1.5]]) {
+                ctx.strokeStyle = cor;
+                ctx.lineWidth = largura;
+                ctx.beginPath();
+                ctx.moveTo(maoX, maoY);
+                ctx.lineTo(maoX, d.laserY);
+                ctx.lineTo(zona.x, d.laserY);
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
+    }
+
     function desenharDesafios() {
         for (const d of jogo.desafios) {
             if (d.x > W + 10 || d.x + d.w < -10) continue;
+            if (d.tipo === 'feiticeira') desenharLaser(d);
             if (!desenharDesafioComArte(d)) {
                 ctx.fillStyle = COR[d.tipo];
                 ctx.fillRect(d.x, d.y, d.w, d.h);
@@ -242,6 +307,15 @@
             const img = d.vida < TIPOS.parede.vida ? ARTE.paredeRachada : ARTE.parede;
             if (!pronta(img)) return false;
             desenharParede(img, cx - PAREDE.largura / 2, d.y, d.h);
+        } else if (d.tipo === 'coracao') {
+            const img = d.correndo ? ARTE.coracao[Math.floor(visual.tempo * 10) % 4] : ARTE.coracao[0];
+            if (!pronta(img)) return false;
+            // 128×128 em 52×52: pés (linha 125) no telhado.
+            ctx.drawImage(img, cx - 26, chao - 51, 52, 52);
+        } else if (d.tipo === 'feiticeira') {
+            const img = ARTE.feiticeira[Math.floor(visual.tempo * 6) % 4];
+            if (!pronta(img)) return false;
+            ctx.drawImage(img, cx - 28, cy - 28, 56, 56);
         } else {
             return false;
         }
@@ -363,19 +437,46 @@
         buraco: ['SPLAT!', 'Caiu entre os prédios!'],
         predio: ['CRASH!', 'Deu de cara na fachada!'],
         desafio: ['POW!', 'Atropelado na ronda!'],
+        laser: ['ZAP!', 'Fritado pelo laser!'],
     };
+
+    /** Canto superior direito: 10 balas, barra de recarga e dica de recarregar. */
+    function desenharMunicao() {
+        const pente = CONFIG.pente;
+        for (let i = 0; i < pente; i++) {
+            const x = W - 20 - i * 9;
+            ctx.fillStyle = i < jogo.balas && jogo.recarregando === 0 ? '#ffb347' : 'rgba(255, 255, 255, 0.18)';
+            ctx.strokeStyle = COR.tinta;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(x, 12, 5, 16, [3, 3, 1, 1]);
+            ctx.fill();
+            ctx.stroke();
+        }
+        if (jogo.recarregando > 0) {
+            const feito = 1 - jogo.recarregando / CONFIG.tempoRecarga;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+            ctx.fillRect(W - 101, 33, 86, 5);
+            ctx.fillStyle = '#ffd400';
+            ctx.fillRect(W - 101, 33, 86 * feito, 5);
+            texto('RECARREGANDO', W - 14, 50, 14, '#ffd400', 3, 'right');
+        } else if (jogo.balas < 3 && jogo.fase === 'correndo' && Math.floor(visual.tempo * 3) % 2 === 0) {
+            texto(toque ? 'toque aqui: recarregar' : 'R: recarregar', W - 14, 44, 14, '#ff4fd8', 3, 'right');
+        }
+    }
 
     function desenharTelas() {
         if (jogo.fase !== 'pronto') {
             texto(`${Math.floor(jogo.distancia / 20)} m`, 14, 22, 22, '#fff', 4, 'left');
-            texto(`${core.pontos(jogo)} pts`, W - 14, 22, 22, '#ff9900', 4, 'right');
+            texto(`${core.pontos(jogo)} pts`, 14, 48, 20, '#ff9900', 4, 'left');
+            desenharMunicao();
         }
         if (jogo.fase === 'pronto') {
             ctx.fillStyle = 'rgba(7, 4, 26, 0.55)';
             ctx.fillRect(0, 0, W, H);
             texto('RONDA NOS TELHADOS', W / 2, 110, 46, '#ff6600', 7);
-            texto(toque ? 'Toque à esquerda: PULAR  ·  à direita: ATIRAR' : 'ESPAÇO pula (segure = mais alto)  ·  F ou clique atira', W / 2, 170, 18, '#fff', 4);
-            texto('Quebre as paredes, derrube pássaros e drones!', W / 2, 198, 16, '#e6d6ff', 4);
+            texto(toque ? 'Toque à esquerda: PULAR  ·  à direita: ATIRAR' : 'ESPAÇO pula  ·  F ou clique atira  ·  R recarrega', W / 2, 170, 18, '#fff', 4);
+            texto('10 balas por pente: economize! E não pule no laser rosa.', W / 2, 198, 16, '#e6d6ff', 4);
             texto(toque ? 'Toque para começar' : 'Aperte ESPAÇO para começar', W / 2, 250, 26, '#ffd400', 5);
             if (recorde > 0) texto(`RECORDE: ${recorde}`, W / 2, 290, 18, '#fff', 4);
             if (toque && innerHeight > innerWidth) texto('↻ Gire o celular para jogar melhor', W / 2, 325, 16, '#e6d6ff', 4);
@@ -497,6 +598,9 @@
         } else if (TECLAS_TIRO.includes(event.code)) {
             event.preventDefault();
             if (jogo.fase === 'correndo' && !visual.pausado) entrada.gatilho = true;
+        } else if (event.code === 'KeyR') {
+            event.preventDefault();
+            if (jogo.fase === 'correndo' && !visual.pausado) core.recarregar(jogo);
         } else if (event.code === 'KeyP') {
             pausar();
         }
@@ -516,6 +620,10 @@
         const caixa = canvas.getBoundingClientRect();
         const esquerda = event.clientX - caixa.left < caixa.width / 2;
         if (jogo.fase !== 'correndo' || visual.pausado) { apertarPulo(); return; }
+        // Toque/clique no canto das balas: recarregar.
+        const lx = ((event.clientX - caixa.left) / caixa.width) * W;
+        const ly = ((event.clientY - caixa.top) / caixa.height) * H;
+        if (lx > W - 120 && ly < 60) { core.recarregar(jogo); return; }
         if (event.pointerType === 'touch' && esquerda) {
             toquesDePulo.add(event.pointerId);
             apertarPulo();

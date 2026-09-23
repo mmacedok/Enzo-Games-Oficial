@@ -258,7 +258,7 @@
     // Cada easter egg: scripts em ordem e o objeto global que abre o jogo.
     const JOGOS = {
         flappy: { scripts: ['js/game-dialog.js?v=1', 'js/flappy-core.js?v=1', 'js/flappy.js?v=3'], global: 'FlappyEnzo' },
-        ronda: { scripts: ['js/game-dialog.js?v=1', 'js/ronda-core.js?v=1', 'js/ronda.js?v=3'], global: 'RondaDegustador' },
+        ronda: { scripts: ['js/game-dialog.js?v=1', 'js/ronda-core.js?v=2', 'js/ronda.js?v=4'], global: 'RondaDegustador' },
     };
     const carregando = {};
     function abrirJogo(nome) {
