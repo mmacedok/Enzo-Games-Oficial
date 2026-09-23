@@ -16,16 +16,13 @@
     const MACARRONADA_LARGURA = 74;
 
     // ------------------------------------------------------------- janela
-    const dialog = document.createElement('dialog');
-    dialog.className = 'flappy-dialog';
-    dialog.setAttribute('aria-label', 'Flappy Enzo');
-    dialog.innerHTML = `
-        <button type="button" class="btn btn--small flappy-close" aria-label="Fechar o jogo">Fechar ×</button>
-        <canvas class="flappy-canvas" tabindex="0" role="img"
-            aria-label="Flappy Enzo. Toque, clique, espaço ou seta para cima para voar."></canvas>`;
-    document.body.appendChild(dialog);
-    const canvas = dialog.querySelector('canvas');
-    const ctx = canvas.getContext('2d');
+    const janela = window.GameDialog.create({
+        titulo: 'Flappy Enzo',
+        descricaoCanvas: 'Flappy Enzo. Toque, clique, espaço ou seta para cima para voar.',
+        largura: W,
+        altura: H,
+    });
+    const { dialog, canvas, ctx } = janela;
 
     // ------------------------------------------------------------- estado
     const jogo = core.criarJogo();
@@ -33,7 +30,6 @@
     let recorde = lerRecorde();
     let ultimoQuadro = null;
     let quadro = 0;
-    let escala = 1;
 
     function lerRecorde() {
         try { return Number.parseInt(localStorage.getItem(RECORDE), 10) || 0; } catch { return 0; }
@@ -77,20 +73,6 @@
         return ctx.createPattern(tile, 'repeat');
     })();
 
-    // ------------------------------------------------------------- tamanho
-    function ajustarTamanho() {
-        const margem = 16;
-        const livreW = innerWidth - margem * 2;
-        const livreH = innerHeight - margem * 2 - 56; // espaço do botão Fechar
-        escala = Math.max(0.3, Math.min(livreW / W, livreH / H));
-        const dpr = Math.min(devicePixelRatio || 1, 3);
-        canvas.style.width = `${Math.round(W * escala)}px`;
-        canvas.style.height = `${Math.round(H * escala)}px`;
-        canvas.width = Math.round(W * escala * dpr);
-        canvas.height = Math.round(H * escala * dpr);
-        ctx.setTransform(escala * dpr, 0, 0, escala * dpr, 0, 0);
-        ctx.imageSmoothingQuality = 'high';
-    }
 
     // ------------------------------------------------------------- desenho
     function texto(conteudo, x, y, tamanho, cor = '#fff', contorno = 5) {
@@ -313,24 +295,18 @@
             if (!event.repeat) acao();
         }
     });
-    dialog.querySelector('.flappy-close').addEventListener('click', () => dialog.close());
-    dialog.addEventListener('close', () => {
+    janela.aoFechar(() => {
         cancelAnimationFrame(quadro);
-        document.body.classList.remove('flappy-open');
         // Partida em andamento volta para o "toque para voar" ao reabrir.
         if (jogo.fase === 'jogando') core.reiniciar(jogo);
     });
-    addEventListener('resize', () => { if (dialog.open) ajustarTamanho(); });
     // Aba escondida: o laço para sozinho (requestAnimationFrame) e o core
     // limita o salto de tempo; ao voltar, zera o relógio para não pular.
     document.addEventListener('visibilitychange', () => { ultimoQuadro = null; });
 
     function abrir() {
-        if (dialog.open) return;
-        ajustarTamanho();
-        document.body.classList.add('flappy-open');
-        dialog.showModal();
-        canvas.focus({ preventScroll: true });
+        if (janela.aberta) return;
+        janela.abrir();
         ultimoQuadro = null;
         artesProntas.then(() => { cancelAnimationFrame(quadro); quadro = requestAnimationFrame(laco); });
         desenhar();

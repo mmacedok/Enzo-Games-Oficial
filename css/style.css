@@ -1400,9 +1400,9 @@ body.enter-from-comic .reader-viewport { animation: reader-enter 0.6s cubic-bezi
     to { opacity: 1; transform: none; }
 }
 
-/* =============================================== Flappy Enzo (easter egg)
+/* =============================================== Janela de jogo (easter eggs)
    js/flappy.js: janela em tela cheia aberta pelo logo da home. */
-.flappy-dialog {
+.game-dialog {
     width: 100vw;
     max-width: 100vw;
     height: 100dvh;
@@ -1413,10 +1413,10 @@ body.enter-from-comic .reader-viewport { animation: reader-enter 0.6s cubic-bezi
     background: rgba(10, 6, 3, 0.94);
     color: var(--text);
 }
-.flappy-dialog[open] { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
-.flappy-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
-.flappy-close { align-self: flex-end; }
-.flappy-canvas {
+.game-dialog[open] { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+.game-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+.game-close { align-self: flex-end; }
+.game-canvas {
     display: block;
     border: var(--stroke-thick);
     border-radius: var(--radius-sm);
@@ -1425,8 +1425,8 @@ body.enter-from-comic .reader-viewport { animation: reader-enter 0.6s cubic-bezi
     cursor: pointer;
     outline: none;
 }
-.flappy-canvas:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
-body.flappy-open { overflow: hidden; }
+.game-canvas:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+body.game-dialog-open { overflow: hidden; }
 
 /* Estante no tema do Degustador: luz roxa, lombadas pretas e roxas, detalhes MP5K */
 .theme-degustador .bookcase {
