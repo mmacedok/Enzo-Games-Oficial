@@ -265,10 +265,12 @@
             return;
         }
 
-        if (state.comic.cover) {
+        // Spin-offs têm capa por capítulo; a série usa a capa do gibi.
+        const cover = chapter.cover || state.comic.cover;
+        if (cover) {
             const coverWrapper = document.createElement('div');
             coverWrapper.className = 'page-wrapper cover-wrapper';
-            const coverImage = buildPageImage(state.comic.cover, 0);
+            const coverImage = buildPageImage(cover, 0);
             coverImage.alt = `Capa de ${state.comic.title}`;
             coverWrapper.appendChild(coverImage);
             ui.imageContainer.appendChild(coverWrapper);

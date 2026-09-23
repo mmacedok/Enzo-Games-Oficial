@@ -47,7 +47,7 @@
         return width;
     }
 
-    /** Monta um gibi 3D. `entry` = { comic, issue, isNew, kicker, headline }. */
+    /** Monta um gibi 3D. `entry` = { comic, chapterId, cover, issue, isNew, kicker, headline, spine }. */
     function buildBook(entry, onOpen, onIntent) {
         const { comic, issue, isNew, kicker, headline } = entry;
 
@@ -57,6 +57,8 @@
         item.setAttribute('role', 'link');
         item.setAttribute('aria-label', `Ler ${kicker}: ${headline}`);
         item.dataset.comicId = comic.id;
+        if (entry.chapterId) item.dataset.chapterId = entry.chapterId;
+        const coverSource = entry.cover || comic.cover;
 
         const book = document.createElement('div');
         book.className = 'book';
@@ -67,7 +69,7 @@
         front.className = 'book-face book-front comic-cover-wrapper';
         const cover = document.createElement('img');
         cover.className = 'book-cover';
-        applySiteImage(cover, comic.cover, '(max-width: 600px) 45vw, 230px');
+        applySiteImage(cover, coverSource, '(max-width: 600px) 45vw, 230px');
         cover.alt = `Capa de ${kicker}`;
         cover.loading = 'lazy';
         cover.decoding = 'async';
@@ -79,7 +81,7 @@
             for (const tone of ['cyan', 'red']) {
                 const layer = document.createElement('div');
                 layer.className = `glitch-layer ${tone}`;
-                layer.style.backgroundImage = `url('${siteImageUrl(comic.cover)}')`;
+                layer.style.backgroundImage = `url('${siteImageUrl(coverSource)}')`;
                 front.appendChild(layer);
             }
             const noise = document.createElement('div');
@@ -99,7 +101,7 @@
         const spine = document.createElement('div');
         spine.className = 'book-face book-spine';
         const spineText = document.createElement('span');
-        spineText.textContent = `ENZO GAMES ${issue}`;
+        spineText.textContent = `${entry.spine || 'ENZO GAMES'} ${issue}`;
         spine.appendChild(spineText);
 
         const pages = document.createElement('div');
@@ -114,24 +116,24 @@
         const caption = document.createElement('div');
         caption.className = 'book-caption';
         const small = document.createElement('small');
-        small.textContent = `${issue} · ${kicker}`;
+        small.textContent = headline === kicker ? issue : `${issue} · ${kicker}`;
         const title = document.createElement('h3');
         title.textContent = headline;
         caption.append(small, title);
 
         item.append(book, caption);
 
-        item.addEventListener('click', () => onOpen(comic, item));
+        item.addEventListener('click', () => onOpen(entry, item));
         item.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                onOpen(comic, item);
+                onOpen(entry, item);
             }
         });
         // Mouse em cima ou foco: já começa a baixar a 1ª página (para a animação).
         if (onIntent) {
-            item.addEventListener('pointerenter', () => onIntent(comic), { once: true });
-            item.addEventListener('focus', () => onIntent(comic), { once: true });
+            item.addEventListener('pointerenter', () => onIntent(entry), { once: true });
+            item.addEventListener('focus', () => onIntent(entry), { once: true });
         }
         attachHolo(item);
         return item;

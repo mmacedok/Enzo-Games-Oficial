@@ -1,12 +1,15 @@
 // ============================================================================
-// Home: hero de lançamento e estante 3D da série principal (js/shelf.js).
+// Coleções com estante 3D (js/shelf.js) e destaque do lançamento.
+// A página escolhe a coleção em #comic-shelf[data-colecao]:
+//   "serie"      -> home: um gibi por capítulo da série principal
+//   "<id>"       -> página de spin-off (ex.: "degustador"): um gibi por capítulo
 // Regras: valida o banco ANTES de tocar no DOM e nunca usa HTML interpolado
 // com dados do catálogo (evita quebra de atributo e XSS).
 // ============================================================================
 (() => {
     'use strict';
 
-    const state = { comics: [], latest: null };
+    const state = { comics: [] };
 
     /** Índice numérico do capítulo, tolerante a ids não numéricos. */
     const chapterNumber = (comic) => {
@@ -19,23 +22,54 @@
 
     const isSpinOff = (comic) => comic.featured === false;
 
-    /** Título curto ("Capítulo 3") e título da história ("Mistério do Estacionamento"). */
-    function labels(comic) {
-        const kicker = comic.title || comic.id;
-        const headline = comic.description || kicker;
-        return { kicker, headline };
+    /**
+     * Lista de edições da coleção. Cada edição: { comic, chapterId, cover,
+     * firstPage, kicker ("Capítulo 3"), headline (nome da história), issue ("#3"),
+     * isNew, spine (texto da lombada) }.
+     */
+    function editionsFor(colecao) {
+        if (colecao === 'serie') {
+            const series = [...state.comics].sort(byReleaseOrder).filter((comic) => !isSpinOff(comic));
+            return series.map((comic, index) => ({
+                comic,
+                chapterId: null,
+                cover: comic.cover,
+                firstPage: comic.chapters[0]?.pages?.[0],
+                kicker: comic.title || comic.id,
+                headline: comic.description || comic.title || comic.id,
+                issue: `#${index + 1}`,
+                isNew: index === series.length - 1,
+                spine: 'ENZO GAMES',
+            }));
+        }
+        const comic = state.comics.find((entry) => entry.id === colecao);
+        if (!comic) return [];
+        return comic.chapters.map((chapter, index) => ({
+            comic,
+            chapterId: chapter.id,
+            cover: chapter.cover || comic.cover,
+            firstPage: chapter.pages?.[0],
+            kicker: `Capítulo ${chapter.id}`,
+            headline: chapter.title || `Capítulo ${chapter.id}`,
+            issue: `#${index + 1}`,
+            isNew: index === comic.chapters.length - 1,
+            spine: String(comic.title || colecao).split(' ')[0].toUpperCase(),
+        }));
     }
 
-    const firstPage = (comic) => comic.chapters?.[0]?.pages?.[0];
+    const readerUrl = (edition) =>
+        `reader.html?comic=${encodeURIComponent(edition.comic.id)}` +
+        (edition.chapterId ? `&chapter=${encodeURIComponent(edition.chapterId)}` : '');
 
     /**
-     * Abre o gibi no leitor. Com `source` (a capa clicada), o gibi voa até a
+     * Abre a edição no leitor. Com `source` (a capa clicada), o gibi voa até a
      * tela e abre antes de carregar o leitor (js/comic-open.js).
      */
-    async function openComic(comic, source) {
-        localStorage.setItem('currentComicId', comic.id);
-        localStorage.removeItem('currentChapterId');
-        const url = `reader.html?comic=${encodeURIComponent(comic.id)}`;
+    async function openEdition(edition, source) {
+        localStorage.setItem('currentComicId', edition.comic.id);
+        if (edition.chapterId) localStorage.setItem('currentChapterId', edition.chapterId);
+        else localStorage.removeItem('currentChapterId');
+        const url = readerUrl(edition);
         if (!source || !window.EnzoOpen) {
             window.playMacaroniTransition(url);
             return;
@@ -43,41 +77,41 @@
         const coverImg = source.querySelector('img');
         await window.EnzoOpen.fly({
             source,
-            coverSrc: coverImg?.currentSrc || siteImageUrl(comic.cover),
-            pageSrc: window.EnzoOpen.largeImageUrl(firstPage(comic)),
+            coverSrc: coverImg?.currentSrc || siteImageUrl(edition.cover),
+            pageSrc: window.EnzoOpen.largeImageUrl(edition.firstPage),
         });
         location.href = url;
     }
 
-    function preloadFirstPage(comic) {
-        window.EnzoOpen?.preload(window.EnzoOpen.largeImageUrl(firstPage(comic)));
+    function preloadFirstPage(edition) {
+        window.EnzoOpen?.preload(window.EnzoOpen.largeImageUrl(edition.firstPage));
     }
 
-    function makeActivatable(element, comic, getSource) {
+    function makeActivatable(element, edition, getSource) {
         element.tabIndex = 0;
         element.setAttribute('role', 'link');
-        element.addEventListener('click', () => openComic(comic, getSource?.()));
+        element.addEventListener('click', () => openEdition(edition, getSource?.()));
         element.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                openComic(comic, getSource?.());
+                openEdition(edition, getSource?.());
             }
         });
-        element.addEventListener('pointerenter', () => preloadFirstPage(comic), { once: true });
-        element.addEventListener('focus', () => preloadFirstPage(comic), { once: true });
+        element.addEventListener('pointerenter', () => preloadFirstPage(edition), { once: true });
+        element.addEventListener('focus', () => preloadFirstPage(edition), { once: true });
     }
 
     // ------------------------------------------------------------------ hero
-    function buildHero(comic) {
-        const { kicker, headline } = labels(comic);
+    function buildHero(edition, colecao) {
+        const { kicker, headline } = edition;
         const banner = document.createElement('div');
         banner.className = 'hero-banner';
         banner.setAttribute('aria-label', `Ler ${kicker}: ${headline}`);
-        makeActivatable(banner, comic, () => banner.querySelector('.hero-cover-wrapper'));
+        makeActivatable(banner, edition, () => banner.querySelector('.hero-cover-wrapper'));
 
         const bg = document.createElement('div');
         bg.className = 'hero-bg';
-        bg.style.backgroundImage = `url('${siteImageUrl(comic.cover)}')`;
+        bg.style.backgroundImage = `url('${siteImageUrl(edition.cover)}')`;
 
         const content = document.createElement('div');
         content.className = 'hero-content';
@@ -86,7 +120,7 @@
         coverWrapper.className = 'hero-cover-wrapper';
         const cover = document.createElement('img');
         cover.className = 'hero-cover';
-        applySiteImage(cover, comic.cover, '(max-width: 768px) 62vw, 240px');
+        applySiteImage(cover, edition.cover, '(max-width: 768px) 62vw, 240px');
         cover.alt = `Capa de ${kicker}`;
         cover.fetchPriority = 'high';
         coverWrapper.appendChild(cover);
@@ -95,11 +129,13 @@
         text.className = 'hero-text';
         const tag = document.createElement('span');
         tag.className = 'hero-kicker';
-        tag.textContent = `Novo · ${kicker}`;
+        tag.textContent = headline === kicker ? 'Novo' : `Novo · ${kicker}`;
         const title = document.createElement('h2');
         title.textContent = headline;
         const description = document.createElement('p');
-        description.textContent = 'O capítulo mais recente da saga. Pegue sua macarronada e boa leitura!';
+        description.textContent = colecao === 'serie'
+            ? 'O capítulo mais recente da saga. Pegue sua macarronada e boa leitura!'
+            : (edition.comic.description || 'A edição mais recente.');
         const button = document.createElement('span');
         button.className = 'btn';
         button.textContent = 'Ler agora';
@@ -138,7 +174,7 @@
         }
         return database.comics.filter((comic) => {
             const valid = comic && typeof comic.id === 'string' && Array.isArray(comic.chapters);
-            if (!valid) console.warn('[home] gibi ignorado por falta de id/chapters:', comic);
+            if (!valid) console.warn('[catálogo] gibi ignorado por falta de id/chapters:', comic);
             return valid;
         });
     }
@@ -150,32 +186,23 @@
         const heroSection = document.getElementById('hero-comic');
         if (!shelfElement) return;
 
-        // Spin-offs (featured: false) ficam só na página própria, não na home.
-        const series = [...state.comics].sort(byReleaseOrder).filter((comic) => !isSpinOff(comic));
-        state.latest = series.length > 0 ? series[series.length - 1] : null;
+        const colecao = shelfElement.dataset.colecao || 'serie';
+        const editions = editionsFor(colecao);
+        const latest = editions[editions.length - 1] || null;
 
-        // Páginas com hero próprio (ex.: degustador.html) usam data-keeper.
-        if (heroSection && !heroSection.hasAttribute('data-keeper')) {
-            heroSection.replaceChildren(state.latest ? buildHero(state.latest) : buildComingSoon());
-        }
+        if (heroSection) heroSection.replaceChildren(latest ? buildHero(latest, colecao) : buildComingSoon());
 
         shelf?.destroy();
         shelf = null;
-        if (series.length === 0) {
+        if (editions.length === 0) {
             const empty = document.createElement('p');
             empty.className = 'loading';
             empty.textContent = 'Sua coleção está vazia. Adicione páginas em "assets/".';
             shelfElement.replaceChildren(empty);
             return;
         }
-        const entries = series.map((comic, index) => ({
-            comic,
-            issue: `#${index + 1}`,
-            isNew: comic === state.latest,
-            ...labels(comic),
-        }));
-        shelf = EnzoShelf.mount(shelfElement, entries, {
-            onOpen: (comic, item) => openComic(comic, item.querySelector('.book-front')),
+        shelf = EnzoShelf.mount(shelfElement, editions, {
+            onOpen: (edition, item) => openEdition(edition, item.querySelector('.book-front')),
             onIntent: preloadFirstPage,
         });
     }
