@@ -370,7 +370,7 @@ a { color: var(--orange-light); text-decoration: none; }
    quantos cabem por prateleira depende da largura, e novas prateleiras
    aparecem sozinhas conforme a coleção cresce. */
 .bookcase {
-    --book-w: clamp(84px, 22vw, 150px);
+    --book-w: clamp(120px, 38vw, 230px);
     --book-h: calc(var(--book-w) * 16 / 9);
     --book-d: calc(var(--book-w) * 0.12);   /* espessura do gibi */
     --shelf-gap: clamp(14px, 3vw, 38px);
@@ -396,7 +396,7 @@ a { color: var(--orange-light); text-decoration: none; }
     grid-template-columns: repeat(var(--cols, 1), var(--book-w));
     gap: 0 var(--shelf-gap);
     justify-content: center;
-    perspective: 1100px;
+    perspective: 1700px;
     perspective-origin: var(--vx, 50%) 20%;
 }
 
@@ -427,7 +427,7 @@ a { color: var(--orange-light); text-decoration: none; }
     transform-style: preserve-3d;
     transform-origin: 50% 100%;
     /* Pose de repouso: levemente virado, mostrando lombada e topo */
-    transform: translateZ(var(--lift, 0px)) rotateX(var(--rx, -6deg)) rotateY(var(--ry, 22deg));
+    transform: translateZ(var(--lift, 0px)) rotateX(var(--rx, -5deg)) rotateY(var(--ry, 16deg));
     transition: transform 0.55s var(--ease-pop);
     will-change: transform;
 }
@@ -604,14 +604,14 @@ a { color: var(--orange-light); text-decoration: none; }
 .book-caption small {
     display: block;
     font-family: var(--font-heading);
-    font-size: clamp(0.8rem, 2.4vw, 1rem);
+    font-size: clamp(0.9rem, 2.6vw, 1.15rem);
     letter-spacing: 1px;
     color: var(--orange-light);
 }
 .book-caption h3 {
     min-height: 2.5em;
     font-family: var(--font-sans);
-    font-size: clamp(0.78rem, 2.4vw, 0.95rem);
+    font-size: clamp(0.85rem, 2.6vw, 1.05rem);
     font-weight: 700;
     line-height: 1.25;
     color: #fff;

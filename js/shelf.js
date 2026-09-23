@@ -67,7 +67,7 @@
         front.className = 'book-face book-front comic-cover-wrapper';
         const cover = document.createElement('img');
         cover.className = 'book-cover';
-        applySiteImage(cover, comic.cover, '(max-width: 600px) 30vw, 160px');
+        applySiteImage(cover, comic.cover, '(max-width: 600px) 45vw, 230px');
         cover.alt = `Capa de ${kicker}`;
         cover.loading = 'lazy';
         cover.decoding = 'async';
@@ -146,8 +146,8 @@
             cancelAnimationFrame(frame);
             frame = requestAnimationFrame(() => {
                 item.classList.add('is-active');
-                item.style.setProperty('--ry', `${(nx * 28).toFixed(2)}deg`);
-                item.style.setProperty('--rx', `${(-ny * 16).toFixed(2)}deg`);
+                item.style.setProperty('--ry', `${(nx * 18).toFixed(2)}deg`);
+                item.style.setProperty('--rx', `${(-ny * 10).toFixed(2)}deg`);
                 item.style.setProperty('--mx', `${((nx + 1) * 50).toFixed(1)}%`);
                 item.style.setProperty('--my', `${((ny + 1) * 50).toFixed(1)}%`);
             });
