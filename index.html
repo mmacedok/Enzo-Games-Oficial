@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260923">
+    <link rel="stylesheet" href="css/style.css?v=20260923b">
     <link rel="stylesheet" href="css/images.generated.css?v=1">
 </head>
 <body>
@@ -30,7 +30,7 @@
         <nav class="site-nav" aria-label="Seções do site">
             <a href="#edicoes">Edições</a>
             <a href="personagens.html" data-nav="personagens.html">Personagens</a>
-            <a href="degustador.html" data-nav="degustador.html">Degustador da Noite</a>
+            <a href="#bagunca">Quem faz a bagunça</a>
             <a href="#apoie">Apoie</a>
         </nav>
     </header>
@@ -44,17 +44,12 @@
 
         <section class="section" id="edicoes" aria-labelledby="edicoes-title">
             <h2 class="section-title" id="edicoes-title">Edições completas</h2>
-            <div class="comic-grid" id="comic-grid">
+            <div class="bookcase" id="comic-shelf">
                 <div class="loading">Carregando gibis...</div>
             </div>
         </section>
 
-        <section class="section" id="spinoffs" aria-labelledby="spinoffs-title" hidden>
-            <h2 class="section-title" id="spinoffs-title">Spin-offs</h2>
-            <div class="comic-grid comic-grid--spinoffs" id="spinoff-grid"></div>
-        </section>
-
-        <section class="section" aria-labelledby="universo-title">
+        <section class="section" id="bagunca" aria-labelledby="universo-title">
             <h2 class="section-title section-title--center" id="universo-title">Quem faz a bagunça?</h2>
             <div class="universe-links">
                 <a class="btn btn--purple" href="degustador.html" data-nav="degustador.html">
@@ -86,7 +81,8 @@
 
     <script src="js/images.generated.js?v=1"></script>
     <script src="js/site.js?v=2"></script>
-    <script src="js/main.js?v=19"></script>
+    <script src="js/shelf.js?v=1"></script>
+    <script src="js/main.js?v=20"></script>
     <!-- Mini-game: núcleo puro (regras) + motor (canvas) -->
     <script src="js/game-core.js?v=3"></script>
     <script src="js/game.js?v=30"></script>

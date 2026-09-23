@@ -2,7 +2,7 @@
 
 Leitor de HQs do Enzo Games + mini-game **Flappy Enzo** + galeria de personagens.
 
-- **Home** (`index.html`) — destaque do último capítulo, grade da série principal, seção de spin-offs e o jogo (abra clicando no logo).
+- **Home** (`index.html`) — destaque do último capítulo, estante 3D com a série principal e o jogo (abra clicando no logo).
 - **Leitor** (`reader.html?comic=<id>&chapter=<id>`) — leitura vertical com zoom, censura por senha e easter eggs.
 - **Spin-off** (`degustador.html`) — Degustador da Noite, com tema próprio.
 - **Personagens** (`personagens.html`) — galeria de fichas com visualização em tela cheia.
@@ -138,7 +138,19 @@ Bangers (títulos), Comic Neue (texto) e Luckiest Guy (só o logo). Botões usam
 
 Os títulos exibidos na home vêm de `data/comics.manifest.json`: `title`
 ("Capítulo 3") vira a etiqueta e `description` ("Mistério do Estacionamento")
-vira o título grande. Gibis com `featured: false` aparecem em **Spin-offs**.
+vira o título grande. Gibis com `featured: false` (spin-offs) **não aparecem na
+home**: ficam só nas páginas próprias (ex.: Degustador, via "Quem faz a bagunça"),
+e o leitor navega apenas dentro da mesma coleção.
+
+### Estante 3D (`js/shelf.js`)
+
+As edições da home ficam numa estante: cada gibi é um livro 3D do mesmo
+tamanho (capa recortada em 9:16, não importa a imagem original), com lombada,
+miolo e brilho holográfico que segue o mouse. O número de gibis por prateleira
+é calculado pela largura da tela (6 no desktop largo, 3 no celular) e novas
+prateleiras surgem sozinhas: para publicar o capítulo 7, 18 ou 60, basta criar
+a pasta em `assets/` e rodar o build. Tamanhos ficam em variáveis no `.bookcase`
+do CSS (`--book-w`, `--shelf-gap`).
 
 Páginas deitadas (mais largas que altas) ganham no leitor o botão **Ampliar**,
 que abre a página em tela cheia com rolagem lateral — essencial no celular.

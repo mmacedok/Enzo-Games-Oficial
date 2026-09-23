@@ -365,108 +365,273 @@ a { color: var(--orange-light); text-decoration: none; }
 .hero-content.is-centered, .hero-text.is-centered { justify-content: center; text-align: center; }
 .hero-text.is-centered p { margin-inline: auto; }
 
-/* ---------------------------------------------------- grade de edições */
-/* 6 colunas no desktop largo, 3 no intermediário, 2 no celular: a série
-   fecha linhas completas em vez de deixar uma capa sozinha. */
-.comic-grid {
+/* ------------------------------------------------ estante 3D de gibis
+   Montada por js/shelf.js. Todo gibi tem o mesmo tamanho (--book-w, 9:16);
+   quantos cabem por prateleira depende da largura, e novas prateleiras
+   aparecem sozinhas conforme a coleção cresce. */
+.bookcase {
+    --book-w: clamp(84px, 22vw, 150px);
+    --book-h: calc(var(--book-w) * 16 / 9);
+    --book-d: calc(var(--book-w) * 0.12);   /* espessura do gibi */
+    --shelf-gap: clamp(14px, 3vw, 38px);
+    --pad: clamp(14px, 3vw, 40px);
+    position: relative;
+    padding: 36px var(--pad) 8px;
+    background:
+        radial-gradient(ellipse at 50% -10%, rgba(255, 196, 120, 0.22), transparent 60%),
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 3px, transparent 3px 150px),
+        linear-gradient(#3d2314, #221209);
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    box-shadow: var(--pop-lg), inset 0 0 60px rgba(0, 0, 0, 0.8);
+}
+.bookcase > .loading, .bookcase > .home-error { margin: 0 auto 28px; }
+
+.shelf-row { position: relative; margin-bottom: 30px; }
+
+.shelf-books {
+    position: relative;
+    z-index: 2;
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 30px 26px;
-    align-items: start;
-}
-.comic-grid--spinoffs { grid-template-columns: repeat(auto-fill, minmax(165px, 200px)); }
-
-.loading {
-    grid-column: 1 / -1;
-    padding: 40px 0;
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    letter-spacing: 1px;
-    text-align: center;
-    text-shadow: var(--pop-sm);
+    grid-template-columns: repeat(var(--cols, 1), var(--book-w));
+    gap: 0 var(--shelf-gap);
+    justify-content: center;
+    perspective: 1100px;
+    perspective-origin: var(--vx, 50%) 20%;
 }
 
-.comic-card {
+.shelf-book {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    color: var(--paper-ink);
-    background: var(--paper);
-    border: var(--stroke);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--pop);
+    width: var(--book-w);
+    transform-style: preserve-3d;
     cursor: pointer;
-    transition: transform 0.35s var(--ease-pop), box-shadow 0.35s ease;
+    outline-offset: 8px;
 }
-.comic-card:hover { transform: translate(-3px, -5px) rotate(-1deg); box-shadow: 8px 10px 0 var(--ink); }
 
-/* Selo do número da edição */
-.comic-issue {
+/* Sombra do gibi sobre a prateleira */
+.shelf-book::before {
+    content: '';
     position: absolute;
-    top: -12px;
-    right: -10px;
-    z-index: 10;
-    min-width: 40px;
-    padding: 1px 8px;
-    font-family: var(--font-heading);
-    font-size: 1.2rem;
-    letter-spacing: 1px;
-    text-align: center;
-    color: var(--ink);
-    background: #fff;
-    border: 2px solid var(--ink);
-    box-shadow: var(--pop-sm);
-    transform: rotate(8deg);
+    left: 4%;
+    width: 110%;
+    top: calc(var(--book-h) - 10px);
+    height: 18px;
+    background: radial-gradient(ellipse at 45% 50%, rgba(0, 0, 0, 0.65), transparent 70%);
+    pointer-events: none;
 }
-.comic-issue.is-new { background: var(--caution); }
 
-.comic-cover-wrapper {
+.book {
     position: relative;
-    aspect-ratio: 9 / 16;
+    width: var(--book-w);
+    height: var(--book-h);
+    transform-style: preserve-3d;
+    transform-origin: 50% 100%;
+    /* Pose de repouso: levemente virado, mostrando lombada e topo */
+    transform: translateZ(var(--lift, 0px)) rotateX(var(--rx, -6deg)) rotateY(var(--ry, 22deg));
+    transition: transform 0.55s var(--ease-pop);
+    will-change: transform;
+}
+.shelf-book.is-active .book { --lift: 34px; transition: transform 0.1s linear; }
+.shelf-book:focus-visible .book { --lift: 26px; --ry: 0deg; --rx: 0deg; }
+
+.book-face { position: absolute; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+
+.book-front {
+    inset: 0;
     overflow: hidden;
     background: #000;
-    border-bottom: var(--stroke);
-    border-radius: 3px 3px 0 0;
+    border: 2px solid var(--ink);
+    border-radius: 2px 5px 5px 2px;
+    transform: translateZ(calc(var(--book-d) / 2));
 }
-.comic-cover {
+.book-back {
+    inset: 0;
+    background: #7a2e0a;
+    border: 2px solid var(--ink);
+    transform: rotateY(180deg) translateZ(calc(var(--book-d) / 2));
+}
+.book-spine {
+    top: 0;
+    left: 0;
+    width: var(--book-d);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(90deg, #6d2808, #c9581b 45%, #8a3510);
+    border: 2px solid var(--ink);
+    transform-origin: left center;
+    transform: translateZ(calc(var(--book-d) / -2)) rotateY(-90deg);
+}
+.book-spine span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: var(--font-heading);
+    font-size: calc(var(--book-d) * 0.62);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    color: #ffd27a;
+}
+.book-pages {
+    top: 2px;
+    right: 0;
+    width: var(--book-d);
+    height: calc(100% - 4px);
+    background: repeating-linear-gradient(90deg, #f6eedb 0 1px, #d6c9aa 1px 2px);
+    border: 1px solid var(--ink);
+    transform-origin: right center;
+    transform: translateZ(calc(var(--book-d) / -2)) rotateY(90deg);
+}
+.book-top {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--book-d);
+    background: repeating-linear-gradient(0deg, #f6eedb 0 1px, #d6c9aa 1px 2px);
+    border: 1px solid var(--ink);
+    transform-origin: top center;
+    transform: translateZ(calc(var(--book-d) / -2)) rotateX(90deg);
+}
+
+.book-cover {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center top;
-    transition: transform 0.35s ease;
+    user-select: none;
 }
-.comic-card:hover .comic-cover { transform: scale(1.04); }
 
-.comic-info { padding: 10px 12px 12px; }
-.comic-info small {
+/* Brilho holográfico: arco-íris que corre pela capa seguindo o mouse */
+.book-foil {
+    position: absolute;
+    inset: 0;
+    z-index: 12;
+    background: linear-gradient(115deg,
+        transparent 22%,
+        rgba(255, 0, 170, 0.6) 36%,
+        rgba(0, 255, 230, 0.6) 45%,
+        rgba(255, 240, 0, 0.55) 54%,
+        rgba(130, 80, 255, 0.6) 63%,
+        transparent 78%);
+    background-size: 300% 300%;
+    background-position: var(--mx, 50%) var(--my, 50%);
+    mix-blend-mode: color-dodge;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.shelf-book.is-active .book-foil { opacity: 0.6; }
+
+/* Reflexo de capa plastificada */
+.book-glare {
+    position: absolute;
+    inset: 0;
+    z-index: 13;
+    background: radial-gradient(circle at var(--mx, 25%) var(--my, 15%), rgba(255, 255, 255, 0.6), transparent 55%);
+    mix-blend-mode: overlay;
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.book-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 6px;
+    z-index: 14;
+    padding: 0 7px;
+    font-family: var(--font-heading);
+    font-size: clamp(0.8rem, 2.4vw, 1.1rem);
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: #fff;
+    border: 2px solid var(--ink);
+    box-shadow: var(--pop-sm);
+    transform: rotate(-6deg);
+}
+.book-badge.is-new { background: var(--caution); }
+
+/* Prateleira de madeira: tampo em perspectiva + frente com veios */
+.shelf-plank {
+    position: absolute;
+    z-index: 1;
+    left: calc(var(--pad) * -1);
+    right: calc(var(--pad) * -1);
+    top: calc(var(--book-h) - 12px);
+    height: 40px;
+    pointer-events: none;
+}
+.shelf-plank::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 17px;
+    background: linear-gradient(#e0a86c, #b3733a);
+    clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
+}
+.shelf-plank::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 17px;
+    height: 23px;
+    background:
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.1) 0 2px, transparent 2px 29px),
+        linear-gradient(#a0602a, #6b3914);
+    border-block: 3px solid var(--ink);
+    box-shadow: 0 14px 20px rgba(0, 0, 0, 0.6);
+}
+.shelf-label {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: 20px;
+    padding: 0 10px;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    line-height: 1.35;
+    color: var(--ink);
+    background: linear-gradient(#f4d98a, #c99a3c);
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+    transform: translateX(-50%);
+}
+
+.book-caption { margin-top: 46px; }
+.book-caption small {
     display: block;
     font-family: var(--font-heading);
-    font-size: 1rem;
+    font-size: clamp(0.8rem, 2.4vw, 1rem);
     letter-spacing: 1px;
-    color: #b0461a;
+    color: var(--orange-light);
 }
-.comic-info h3 {
+.book-caption h3 {
+    min-height: 2.5em;
     font-family: var(--font-sans);
-    font-size: 1rem;
+    font-size: clamp(0.78rem, 2.4vw, 0.95rem);
     font-weight: 700;
     line-height: 1.25;
+    color: #fff;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* Spin-off: capa com moldura roxa */
-.comic-card--spinoff { background: var(--surface); color: var(--text); border-color: var(--purple); box-shadow: 4px 4px 0 var(--purple); }
-.comic-card--spinoff:hover { box-shadow: 8px 10px 0 var(--purple); }
-.comic-card--spinoff .comic-cover-wrapper { border-bottom-color: var(--purple); }
-.comic-card--spinoff .comic-info small { color: var(--mp5k); }
-.comic-card--spinoff .comic-issue { background: var(--mp5k); border-color: var(--ink); }
+/* Sem mouse (celular): o holográfico passeia sozinho pela capa */
+@media (hover: none) {
+    .book-foil { opacity: 0.28; animation: foil-drift 7s linear infinite; }
+    .shelf-book:nth-child(2n) .book-foil { animation-delay: -3s; }
+    .shelf-book:active .book { --ry: 0deg; --rx: 0deg; --lift: 20px; }
+}
+@keyframes foil-drift { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
 
 /* Edição especial com efeito glitch (Capítulo 2) */
-.glitch-card { animation: signal-loss 2s infinite; }
-.glitch-card .comic-cover-wrapper { animation: glitch-skew 1.5s infinite linear alternate-reverse; }
+.glitch-card .book-front { animation: signal-loss 2s infinite; }
+.glitch-card .book-cover { animation: glitch-skew 1.5s infinite linear alternate-reverse; }
 .glitch-card .comic-cover-wrapper::after {
     content: '';
     position: absolute;
@@ -477,7 +642,7 @@ a { color: var(--orange-light); text-decoration: none; }
     pointer-events: none;
     animation: eye-swap 15s infinite;
 }
-.glitch-card h3, .glitch-card small { animation: text-glitch 2s infinite; }
+.glitch-card .book-caption h3, .glitch-card .book-caption small { animation: text-glitch 2s infinite; }
 
 .glitch-layer {
     position: absolute;
@@ -1049,10 +1214,10 @@ body.theme-degustador .section-title { color: var(--purple); }
 /* ================================================================ cursores */
 body { cursor: url('../assets/cursors/cutlery.svg') 7 3, default; }
 body :is(a[href], button, select, [role="button"], [role="link"],
-    .comic-card, .hero-banner, .garfield-classic-logo, .character-card,
+    .shelf-book, .hero-banner, .garfield-classic-logo, .character-card,
     .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask, .webtoon-image),
 body :is(a[href], button, select, [role="button"], [role="link"],
-    .comic-card, .hero-banner, .garfield-classic-logo, .character-card,
+    .shelf-book, .hero-banner, .garfield-classic-logo, .character-card,
     .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask) * {
     cursor: url('../assets/cursors/pasta.svg') 20 20, pointer;
 }
@@ -1061,17 +1226,12 @@ body :is(button, select, input):disabled { cursor: not-allowed; }
 
 body.theme-degustador,
 body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
-    .comic-card, .hero-banner, .garfield-classic-logo, .easter-egg-trigger, .cabo-coco-mask, .webtoon-image) {
+    .shelf-book, .hero-banner, .garfield-classic-logo, .easter-egg-trigger, .cabo-coco-mask, .webtoon-image) {
     cursor: url('../assets/batman_cursor.png') 8 4, pointer;
 }
 body.theme-degustador :is(input, textarea, [contenteditable="true"]) { cursor: text; }
 
 /* ============================================================ responsivo */
-@media (max-width: 1099px) {
-    .comic-grid { grid-template-columns: repeat(3, minmax(0, 220px)); justify-content: center; gap: 34px 30px; }
-    .comic-grid--spinoffs { justify-content: start; }
-}
-
 @media (max-width: 768px) {
     .site-header { padding-top: 22px; }
     .site-header--inner { padding-top: 64px; }
@@ -1082,9 +1242,6 @@ body.theme-degustador :is(input, textarea, [contenteditable="true"]) { cursor: t
     .hero-cover-wrapper { width: min(50vw, 190px); }
     .hero-text p { margin-inline: auto; }
 
-    .comic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 18px; }
-    .comic-grid--spinoffs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .comic-card:hover { transform: none; box-shadow: var(--pop); }
 
     .universe-links .btn { width: 100%; font-size: 1.45rem; padding: 10px 16px; }
     .btn img { width: 40px; height: 40px; }

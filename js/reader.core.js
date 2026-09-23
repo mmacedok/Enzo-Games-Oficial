@@ -65,10 +65,21 @@
         };
     }
 
+    /**
+     * Gibis da mesma coleção do atual, em ordem: a série principal navega só
+     * entre capítulos da série; um spin-off (featured: false) fica no próprio spin-off.
+     */
+    function sameCollection() {
+        const spinOff = state.comic.featured === false;
+        return [...state.db.comics]
+            .filter((c) => (spinOff ? c.id === state.comic.id : c.featured !== false))
+            .sort((a, b) => (a.order ?? chapterNumber(a)) - (b.order ?? chapterNumber(b)));
+    }
+
     // ------------------------------------------------------------------ render
     function populateChapterSelect() {
         ui.chapterSelect.innerHTML = '';
-        const comics = [...state.db.comics].sort((a, b) => (a.order ?? chapterNumber(a)) - (b.order ?? chapterNumber(b)));
+        const comics = sameCollection();
         for (const comic of comics) {
             const group = document.createElement('optgroup');
             group.label = comic.title || comic.id;
@@ -204,7 +215,7 @@
             nextUrl = `reader.html?comic=${encodeURIComponent(comic.id)}&chapter=${encodeURIComponent(next.id)}`;
             nextTitle = next.title || 'Próximo Capítulo';
         } else {
-            const ordered = [...db.comics].sort((a, b) => (a.order ?? chapterNumber(a)) - (b.order ?? chapterNumber(b)));
+            const ordered = sameCollection();
             const position = ordered.findIndex((c) => c.id === comic.id);
             const nextComic = position !== -1 ? ordered[position + 1] : null;
             if (nextComic) {

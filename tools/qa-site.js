@@ -7,10 +7,15 @@
     if (path === '/' || path === '/index.html') {
         check(document.querySelectorAll('#hero-comic .hero-banner').length === 1, 'um hero');
         check(document.querySelector('#hero-comic .hero-kicker')?.textContent.includes('Capítulo 6'), 'destaque correto');
-        check(document.querySelectorAll('#comic-grid .comic-card').length === 6, 'seis capítulos na série principal');
-        check(document.querySelectorAll('#spinoff-grid .comic-card').length === 1 && !document.querySelector('#spinoffs').hidden, 'spin-off em seção própria');
-        check(!document.body.textContent.includes('R$ 5,90'), 'sem preço falso nos cards');
-        check(document.querySelectorAll('a[data-nav]').length === 4, 'navegação para extras');
+        const books = [...document.querySelectorAll('#comic-shelf .shelf-book')];
+        check(books.length === 6, 'seis capítulos na estante');
+        check(!books.some(b => b.dataset.comicId === 'degustador'), 'Degustador fora da home');
+        check(!document.querySelector('#spinoffs'), 'sem seção de spin-off na home');
+        const sizes = new Set(books.map(b => { return Math.round(b.querySelector('.book').offsetWidth) + 'x' + Math.round(b.querySelector('.book').offsetHeight); }));
+        check(sizes.size === 1, 'todos os gibis do mesmo tamanho');
+        const columns = Number(document.querySelector('#comic-shelf').dataset.columns);
+        check(document.querySelectorAll('.shelf-row').length === Math.ceil(6 / columns), 'prateleiras conforme a largura');
+        check(document.querySelectorAll('a[data-nav]').length === 3, 'navegação para extras');
         const copy = document.querySelector('[data-pix]');
         const original = navigator.clipboard.writeText;
         let copied;

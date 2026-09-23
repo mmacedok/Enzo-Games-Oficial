@@ -1,5 +1,5 @@
 // ============================================================================
-// Home: hero de lançamento, grade da série principal e grade de spin-offs.
+// Home: hero de lançamento e estante 3D da série principal (js/shelf.js).
 // Regras: valida o banco ANTES de tocar no DOM e nunca usa HTML interpolado
 // com dados do catálogo (evita quebra de atributo e XSS).
 // ============================================================================
@@ -108,79 +108,6 @@
         return banner;
     }
 
-    // ------------------------------------------------------------------ card
-    function buildCard(comic, { issue, isNew = false, spinOff = false }) {
-        const { kicker, headline } = labels(comic);
-        const card = document.createElement('article');
-        card.className = `comic-card${spinOff ? ' comic-card--spinoff' : ''}`;
-        card.setAttribute('aria-label', `Ler ${kicker}: ${headline}`);
-        makeActivatable(card, comic);
-
-        const badge = document.createElement('div');
-        badge.className = `comic-issue${isNew ? ' is-new' : ''}`;
-        badge.textContent = isNew ? 'NOVO' : issue;
-
-        const coverWrapper = document.createElement('div');
-        coverWrapper.className = 'comic-cover-wrapper';
-        const cover = document.createElement('img');
-        cover.className = 'comic-cover';
-        applySiteImage(cover, comic.cover, '(max-width: 768px) 45vw, 200px');
-        cover.alt = `Capa de ${kicker}`;
-        cover.loading = 'lazy';
-        cover.decoding = 'async';
-        coverWrapper.appendChild(cover);
-
-        if (comic.id === 'capitulo-2') {
-            // Edição especial com efeito glitch
-            card.classList.add('glitch-card');
-            for (const tone of ['cyan', 'red']) {
-                const layer = document.createElement('div');
-                layer.className = `glitch-layer ${tone}`;
-                layer.style.backgroundImage = `url('${siteImageUrl(comic.cover)}')`;
-                coverWrapper.appendChild(layer);
-            }
-            const noise = document.createElement('div');
-            noise.className = 'glitch-noise';
-            coverWrapper.appendChild(noise);
-        }
-
-        const info = document.createElement('div');
-        info.className = 'comic-info';
-        const small = document.createElement('small');
-        small.textContent = kicker;
-        const title = document.createElement('h3');
-        title.textContent = headline;
-        info.append(small, title);
-
-        card.append(badge, coverWrapper, info);
-        attachTilt(card);
-        return card;
-    }
-
-    /** Efeito 3D seguindo o mouse — só em dispositivos com ponteiro real. */
-    function attachTilt(card) {
-        if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-        card.addEventListener('pointermove', (event) => {
-            if (event.pointerType !== 'mouse') return;
-            const rect = card.getBoundingClientRect();
-            const offsetX = (event.clientX - rect.left - rect.width / 2) / (rect.width / 2);
-            const offsetY = (event.clientY - rect.top - rect.height / 2) / (rect.height / 2);
-            card.style.transition = 'transform 0.1s ease-out';
-            card.style.transform =
-                `perspective(900px) rotateX(${(-offsetY * 10).toFixed(2)}deg) ` +
-                `rotateY(${(offsetX * 10).toFixed(2)}deg) translateY(-6px)`;
-        });
-
-        const reset = () => {
-            card.style.transition = '';
-            card.style.transform = '';
-        };
-        card.addEventListener('pointerleave', reset);
-        card.addEventListener('pointercancel', reset);
-    }
-
     // ------------------------------------------------------------------ load
     function validate(database) {
         if (!database || !Array.isArray(database.comics)) {
@@ -193,14 +120,15 @@
         });
     }
 
-    function render() {
-        const grid = document.getElementById('comic-grid');
-        const heroSection = document.getElementById('hero-comic');
-        if (!grid) return;
+    let shelf = null;
 
-        const ordered = [...state.comics].sort(byReleaseOrder);
-        const series = ordered.filter((comic) => !isSpinOff(comic));
-        const spinOffs = ordered.filter(isSpinOff);
+    function render() {
+        const shelfElement = document.getElementById('comic-shelf');
+        const heroSection = document.getElementById('hero-comic');
+        if (!shelfElement) return;
+
+        // Spin-offs (featured: false) ficam só na página própria, não na home.
+        const series = [...state.comics].sort(byReleaseOrder).filter((comic) => !isSpinOff(comic));
         state.latest = series.length > 0 ? series[series.length - 1] : null;
 
         // Páginas com hero próprio (ex.: degustador.html) usam data-keeper.
@@ -208,28 +136,26 @@
             heroSection.replaceChildren(state.latest ? buildHero(state.latest) : buildComingSoon());
         }
 
-        grid.replaceChildren();
+        shelf?.destroy();
+        shelf = null;
         if (series.length === 0) {
             const empty = document.createElement('p');
             empty.className = 'loading';
             empty.textContent = 'Sua coleção está vazia. Adicione páginas em "assets/".';
-            grid.appendChild(empty);
+            shelfElement.replaceChildren(empty);
+            return;
         }
-        series.forEach((comic, index) => {
-            grid.appendChild(buildCard(comic, { issue: `#${index + 1}`, isNew: comic === state.latest }));
-        });
-
-        const spinOffGrid = document.getElementById('spinoff-grid');
-        const spinOffSection = document.getElementById('spinoffs');
-        if (spinOffGrid && spinOffSection) {
-            spinOffGrid.replaceChildren(...spinOffs.map((comic) =>
-                buildCard(comic, { issue: `${comic.chapters.length} cap.`, spinOff: true })));
-            spinOffSection.hidden = spinOffs.length === 0;
-        }
+        const entries = series.map((comic, index) => ({
+            comic,
+            issue: `#${index + 1}`,
+            isNew: comic === state.latest,
+            ...labels(comic),
+        }));
+        shelf = EnzoShelf.mount(shelfElement, entries, { onOpen: (comic) => openComic(comic.id) });
     }
 
     function renderError(error) {
-        const grid = document.getElementById('comic-grid');
+        const grid = document.getElementById('comic-shelf');
         if (!grid) return;
         const box = document.createElement('div');
         box.className = 'home-error';
@@ -250,7 +176,7 @@
     }
 
     async function init() {
-        if (!document.getElementById('comic-grid')) return;
+        if (!document.getElementById('comic-shelf')) return;
         try {
             const response = await fetch('data/database.json');
             if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
