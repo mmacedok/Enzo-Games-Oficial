@@ -1201,14 +1201,25 @@
       }
     ]
   },
-  "assets/batman_cursor.png": {
+  "assets/cursors/mp5k-fogo.png": {
     "width": 32,
     "height": 32,
     "variants": [
       {
         "width": 32,
-        "src": "assets/web/f3c5a8b4f076b6e8-32.webp",
-        "bytes": 262
+        "src": "assets/web/d1c03bbf64c12953-32.webp",
+        "bytes": 878
+      }
+    ]
+  },
+  "assets/cursors/mp5k.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/cc6afd7969032fe7-32.webp",
+        "bytes": 870
       }
     ]
   },

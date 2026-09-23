@@ -93,7 +93,7 @@
         check(document.querySelector('#hero-comic .hero-banner'), 'destaque da edição mais recente');
         const title = document.querySelector('.batman-style-title');
         check(title.scrollWidth <= title.clientWidth + 2, 'título do Degustador cabe na tela');
-        check(getComputedStyle(document.body).cursor.includes('batman_cursor'), 'cursor do tema ativo');
+        check(getComputedStyle(document.body).cursor.includes('mp5k'), 'cursor do tema ativo');
     }
     // Load every image, including below-the-fold panels, to catch broken assets.
     const images = [...document.images];

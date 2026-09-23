@@ -1299,10 +1299,15 @@ body :is(a[href], button, select, [role="button"], [role="link"],
 body :is(input, textarea, [contenteditable="true"]) { cursor: text; }
 body :is(button, select, input):disabled { cursor: not-allowed; }
 
-body.theme-degustador,
+/* Tema Degustador: MP5K laranja; nos itens clicáveis, com clarão de disparo. */
+body.theme-degustador {
+    cursor: url('../assets/cursors/mp5k.svg') 2 3, url('../assets/cursors/mp5k.png') 2 3, auto;
+}
 body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
-    .shelf-book, .hero-banner, .garfield-classic-logo, .easter-egg-trigger, .cabo-coco-mask, .webtoon-image) {
-    cursor: url('../assets/batman_cursor.png') 8 4, pointer;
+    .shelf-book, .hero-banner, .easter-egg-trigger, .cabo-coco-mask, .webtoon-image),
+body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
+    .shelf-book, .hero-banner, .easter-egg-trigger, .cabo-coco-mask) * {
+    cursor: url('../assets/cursors/mp5k-fogo.svg') 2 3, url('../assets/cursors/mp5k-fogo.png') 2 3, pointer;
 }
 body.theme-degustador :is(input, textarea, [contenteditable="true"]) { cursor: text; }
 
