@@ -1,7 +1,7 @@
 # Plano: minigame do Degustador da Noite — "Ronda nos Telhados"
 
-Status: **plano, nada implementado**. Revisado em 23/09/2026 com o conceito do
-Henrique. Easter egg simples; a v1 usa **só retângulos coloridos** no lugar
+Status: **v1 jogável com placeholders** (fases 1 a 4 feitas em 23/09/2026).
+Falta a fase 5 (ajuste da sensação jogando) e a 6 (sprites). Easter egg simples; a v1 usa **só retângulos coloridos** no lugar
 das artes. Os sprites vêm depois (lista na seção 7).
 
 ## 1. O que é o jogo
@@ -86,7 +86,7 @@ js/ronda-core.js          regras puras: física, gerador de prédios e desafios,
                           tiros, colisão, pontos, dificuldade (testável no Node)
 js/ronda.js               desenho, controles, telas, recorde
 test/ronda-core.test.js   contrato + robô que prova que todo trecho é vencível
-tools/qa-ronda.js         robô jogando no navegador (desktop e celular)
+tools/qa-ronda.js         robô jogando no navegador (roda dentro de tools/qa.mjs)
 ```
 
 - Mesmo desenho de sucesso do Flappy: física com passo fixo (60 Hz e 144 Hz
@@ -125,7 +125,7 @@ retângulo para sprite fica isolada no `ronda.js` e é uma tarefa boa para o Gem
 | 1 | Extrair a janela do Flappy para `js/game-dialog.js` sem mudar o comportamento | **Gemini** (QA do Flappy como prova) |
 | 2 | Regras, gerador justo e testes com robô | Claude (é a parte difícil) |
 | 3 | Desenho com placeholders, controles, telas, gatilho no título | Claude |
-| 4 | Robô de QA no navegador | **Gemini** |
+| 4 | Robô de QA no navegador (`tools/qa-ronda.js`) | Claude (saiu junto com o teste da fase 3) |
 | 5 | Ajuste da sensação | Claude + Henrique jogando |
 | 6 (depois) | Trocar placeholders pelos sprites | **Gemini** (Claude confere) |
 

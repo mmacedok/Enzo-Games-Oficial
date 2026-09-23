@@ -244,7 +244,7 @@
     }
 
     // ----------------------------------------------------- easter egg: jogo
-    // Clicar no logo abre o Flappy Enzo. Os arquivos só baixam no 1º clique.
+    // Os arquivos de cada jogo só baixam no 1º clique.
     function carregarScript(src) {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
@@ -255,23 +255,29 @@
         });
     }
 
-    let jogoCarregando = null;
-    function abrirJogo() {
-        jogoCarregando ??= carregarScript('js/game-dialog.js?v=1')
-            .then(() => carregarScript('js/flappy-core.js?v=1'))
-            .then(() => carregarScript('js/flappy.js?v=3'));
-        jogoCarregando
-            .then(() => window.FlappyEnzo.abrir())
-            .catch((error) => { console.error('[jogo]', error); jogoCarregando = null; });
+    // Cada easter egg: scripts em ordem e o objeto global que abre o jogo.
+    const JOGOS = {
+        flappy: { scripts: ['js/game-dialog.js?v=1', 'js/flappy-core.js?v=1', 'js/flappy.js?v=3'], global: 'FlappyEnzo' },
+        ronda: { scripts: ['js/game-dialog.js?v=1', 'js/ronda-core.js?v=1', 'js/ronda.js?v=1'], global: 'RondaDegustador' },
+    };
+    const carregando = {};
+    function abrirJogo(nome) {
+        const jogo = JOGOS[nome];
+        carregando[nome] ??= jogo.scripts.reduce((fila, src) => fila.then(() => carregarScript(src)), Promise.resolve());
+        carregando[nome]
+            .then(() => window[jogo.global].abrir())
+            .catch((error) => { console.error('[jogo]', error); carregando[nome] = null; });
     }
 
-    const logo = document.querySelector('[data-flappy-trigger]');
-    if (logo) {
-        logo.tabIndex = 0;
-        logo.setAttribute('role', 'button');
-        logo.addEventListener('click', abrirJogo);
-        logo.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); abrirJogo(); }
+    // Logo da home abre o Flappy; título do Degustador abre a Ronda.
+    for (const [seletor, nome] of [['[data-flappy-trigger]', 'flappy'], ['[data-ronda-trigger]', 'ronda']]) {
+        const gatilho = document.querySelector(seletor);
+        if (!gatilho) continue;
+        gatilho.tabIndex = 0;
+        gatilho.setAttribute('role', 'button');
+        gatilho.addEventListener('click', () => abrirJogo(nome));
+        gatilho.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); abrirJogo(nome); }
         });
     }
 

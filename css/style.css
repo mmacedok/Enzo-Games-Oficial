@@ -1260,6 +1260,10 @@ body.theme-degustador .section-title { color: var(--purple); }
 
 /* Título metálico estilo Batman */
 .batman-title { padding: 10px 0 26px; text-align: center; }
+/* Easter egg: o título abre a Ronda nos Telhados (js/ronda.js) */
+.batman-title[data-ronda-trigger] { width: fit-content; margin-inline: auto; border-radius: var(--radius-sm); transition: filter 0.2s, scale 0.2s; }
+.batman-title[data-ronda-trigger]:hover { filter: drop-shadow(0 0 14px rgba(255, 140, 0, 0.55)); scale: 1.02; }
+.batman-title[data-ronda-trigger]:focus-visible { outline: 3px solid var(--focus); outline-offset: 6px; }
 .batman-style-title {
     display: block;
     font-family: 'Impact', 'Haettenschweiler', 'Arial Black', sans-serif;
@@ -1304,7 +1308,7 @@ body.theme-degustador {
     cursor: url('../assets/cursors/mp5k.svg') 2 3, url('../assets/cursors/mp5k.png') 2 3, auto;
 }
 body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
-    .shelf-book, .hero-banner, .easter-egg-trigger, .cabo-coco-mask, .webtoon-image),
+    .shelf-book, .hero-banner, .easter-egg-trigger, .cabo-coco-mask, .webtoon-image, .game-canvas),
 body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
     .shelf-book, .hero-banner, .easter-egg-trigger, .cabo-coco-mask) * {
     cursor: url('../assets/cursors/mp5k-fogo.svg') 2 3, url('../assets/cursors/mp5k-fogo.png') 2 3, pointer;
