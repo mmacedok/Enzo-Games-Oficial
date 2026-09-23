@@ -62,8 +62,13 @@ O gerador nunca cria um trecho impossível:
 - **Celular em pé**: o jogo aparece menor, com o aviso "gire o celular para
   jogar melhor". Em pé continua jogável.
 - O Degustador fica fixo a ~25% da tela a partir da esquerda; o mundo passa por ele.
-- Céu noturno em degradê com a lua e duas camadas de silhueta de cidade em
-  paralaxe, tudo por código.
+- Fundo de uma **cidade metropolitana à noite**, em tons de roxo e azul-escuro,
+  com prédios altos e janelas iluminadas. Duas camadas de cidade em paralaxe.
+- **Batsinal do Degustador:** um holofote projetando uma **vírgula** grande e
+  reconhecível nas nuvens, em vez de um morcego. O sinal fica no céu, separado
+  das camadas de prédios que se repetem, para não aparecer duplicado na rolagem.
+- Na v1, o cenário pode ser desenhado por código; as artes de fundo entram
+  junto com os sprites, preservando a leitura dos obstáculos e do personagem.
 - Interface: distância em metros, pontos, recorde; no fim, quadro de gibi com
   placar e onomatopeia ("CRASH!", "SPLAT!").
 
@@ -91,8 +96,10 @@ tools/qa-ronda.js         robô jogando no navegador (desktop e celular)
 
 ## 7. Artes para depois (para combinar a geração)
 
-Todas as artes em PNG com fundo transparente, desenhadas de lado, olhando para
-a direita, no estilo do gibi.
+Os sprites de personagens e objetos serão pequenos, em PNG com fundo
+transparente, desenhados de lado, olhando para a direita, no estilo do gibi.
+O cenário é uma arte separada: céu noturno pode ser opaco; camadas de cidade
+e o batsinal de vírgula devem ter transparência ao redor dos elementos.
 
 | Sprite | Quadros | Observação |
 |---|---|---|
@@ -105,6 +112,8 @@ a direita, no estilo do gibi.
 | Parede quebrável | 3 | inteira, rachada, destroços |
 | Obstáculo baixo | 2–3 variações | caixa d'água, ar-condicionado, antena |
 | Topo de prédio / fachada | opcional | dá para manter por código |
+| Fundo de metrópole noturna | 2 camadas + céu | roxo e azul-escuro; cidade com repetição horizontal contínua para paralaxe |
+| Batsinal de vírgula | 1 | projeção luminosa nas nuvens; camada separada para não se repetir com os prédios |
 
 Com isso, são cerca de **10 quadros do Degustador**, como você falou. A troca de
 retângulo para sprite fica isolada no `ronda.js` e é uma tarefa boa para o Gemini.
