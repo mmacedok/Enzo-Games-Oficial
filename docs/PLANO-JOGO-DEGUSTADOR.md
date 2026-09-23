@@ -1,83 +1,131 @@
-# Plano: minigame do Degustador da Noite (easter egg)
+# Plano: minigame do Degustador da Noite — "Ronda nos Telhados"
 
-Status: **plano, nada implementado**. 23/09/2026.
-Mesmo princípio do Flappy Enzo: easter egg **simples**, rápido de jogar e de manter.
+Status: **plano, nada implementado**. Revisado em 23/09/2026 com o conceito do
+Henrique. Easter egg simples; a v1 usa **só retângulos coloridos** no lugar
+das artes. Os sprites vêm depois (lista na seção 7).
 
-## 1. Conceito recomendado: "Faxina no Discord"
+## 1. O que é o jogo
 
-O Inominável está falando besteira no Discord de falar besteira. O Degustador
-da Noite, com a MP5K laranja, limpa o chat na bala.
+Um **runner lateral infinito** à noite. O Degustador da Noite corre sozinho
+pelos telhados de prédios de alturas diferentes. O jogador faz duas coisas:
 
-- Balões de mensagem estilo Discord pipocam pela tela (sobre o fundo da
-  Toradolândia, com monitores e o T-Rex em silhueta).
-- **Atire nas besteiras** (clique ou toque): "EU VOU FALAR BESTEIRA",
-  "vírgula é opcional", "lasanha > macarronada", "quarta-feira é o melhor dia",
-  "faz o L", "67"...
-- **Não atire nos aliados:** "macarronada 🍝", "Enzo Games", "Heroes never die"
-  (Otis). Acertou aliado: perde pontos e o Degustador grita
-  "VOCE TA ME HUMILHANDO" (sem vírgula, como manda o cânone).
-- **Stand do Joinha 👍:** de tempos em tempos aparece um joinha; acertar nele
-  apaga todas as besteiras da tela de uma vez.
-- Partida de **60 segundos**, combo por acertos seguidos, recorde no aparelho.
-- Título no fim conforme os pontos: "Estagiário da Toradolândia" →
-  "Vigilante de São João do Butico" → "Degustador Supremo".
+- **PULAR**: de prédio em prédio, por cima de buracos e de obstáculos baixos.
+- **ATIRAR** com a MP5K laranja: para a frente, quebrando paredes e
+  derrubando ameaças que não dá para pular.
 
-Por que este: usa o cursor da MP5K que já existe (mira natural), funciona igual
-no PC e no celular (tocar = atirar), não precisa de arte nova (os balões e o
-cenário são desenhados por código) e as frases carregam o humor da obra.
+A partida acaba na primeira falha: cair num buraco, bater numa parede ou ser
+atingido por uma ameaça. Os pontos vêm da distância percorrida mais os bônus
+do que ele destruir. O jogo acelera aos poucos.
 
-### Alternativas (se preferir)
-- **B. Escudo de Parênteses:** o Inominável atira balas "Blasfêmia" de um
-  prédio; você gira um escudo de parênteses em volta do Degustador para
-  rebater. Um botão só, mais "jogo de reflexo". Pede mais ajuste de física.
-- **C. Fuga no Onix Hatch:** corrida infinita desviando de foguetes do
-  Inominável até a Toradolândia. É o mais trabalhoso dos três, porque pede arte
-  do carro e do cenário rolando.
+## 2. Controles
 
-## 2. Onde fica
+| Ação | PC | Celular |
+|---|---|---|
+| Pular (segurar = pulo mais alto) | Espaço, ↑ ou W | tocar na **metade esquerda** da tela |
+| Atirar | F, J ou clique | tocar na **metade direita** da tela |
+| Pausar | P | botão na tela |
 
-- **Gatilho:** clicar no título metálico "DEGUSTADOR DA NOITE" da página do
-  Degustador (o espelho do logo da home, que abre o Flappy).
-- Abre na mesma **janela em tela cheia** do Flappy (Fechar ou Esc), com o tema
-  roxo. Os arquivos só baixam no primeiro clique.
+Dois detalhes que deixam um runner "gostoso" e justo:
+- **Tolerância de pulo**: dá para pular até ~0,1 s depois de sair da beirada.
+- **Pulo antecipado**: se apertar pouco antes de pousar, ele pula ao tocar o chão.
 
-## 3. Técnica (reaproveita o Flappy)
+## 3. Mundo e desafios (v1)
+
+| Elemento | Placeholder | Como se vence |
+|---|---|---|
+| **Prédios** (a base) | retângulos roxo-escuro com janelas amarelas desenhadas por código | alturas e larguras sorteadas; um mais alto, outro mais baixo |
+| **Buraco** entre prédios | vão vazio | pular |
+| **Obstáculo baixo** (caixa d'água, ar-condicionado) | retângulo cinza | pular (não quebra) |
+| **Parede quebrável** (tijolo, tábua) | retângulo laranja com barra de vida | atirar (3 tiros); alta demais para pular |
+| **Pássaro** | quadrado amarelo, voa ondulando na altura do corpo | pular por baixo/cima ou atirar (1 tiro) |
+| **Drone do Inominável** (a partir de ~40 s) | quadrado verde que desce na frente | atirar (2 tiros) |
+
+Bônus (opcional na v1): **vírgulas** flutuando para coletar, a piada
+gramatical do Degustador.
+
+### Justiça (regras do gerador de fases)
+O gerador nunca cria um trecho impossível:
+- Um buraco nunca passa de 85% do alcance máximo do pulo **na velocidade atual**.
+- Um prédio nunca sobe mais do que 70% da altura máxima do pulo em relação ao anterior. Descer pode.
+- Uma parede quebrável sempre aparece longe o bastante para dar tempo de dar
+  os 3 tiros, e nunca logo depois de um pouso.
+- Nunca há dois desafios "de pulo" colados; sempre sobra chão para respirar.
+- O teste automático prova isso com um robô que joga milhares de trechos.
+
+### Dificuldade
+- A velocidade sobe de ~260 para ~520 px/s ao longo de ~90 s e depois estabiliza.
+- Buracos, paredes e ameaças ficam mais frequentes com o tempo, sempre dentro das regras acima.
+
+## 4. Tela
+
+- Canvas lógico **640×360 (16:9, deitado)**: o natural para um runner.
+- **Celular em pé**: o jogo aparece menor, com o aviso "gire o celular para
+  jogar melhor". Em pé continua jogável.
+- O Degustador fica fixo a ~25% da tela a partir da esquerda; o mundo passa por ele.
+- Céu noturno em degradê com a lua e duas camadas de silhueta de cidade em
+  paralaxe, tudo por código.
+- Interface: distância em metros, pontos, recorde; no fim, quadro de gibi com
+  placar e onomatopeia ("CRASH!", "SPLAT!").
+
+## 5. Onde fica
+
+- **Gatilho:** clicar no título "DEGUSTADOR DA NOITE" da página do Degustador.
+- Abre na mesma **janela em tela cheia** do Flappy, no tema roxo, com o cursor da MP5K.
+  Os arquivos só baixam no primeiro clique.
+
+## 6. Técnica
 
 ```
-js/degustador-core.js   regras puras: surgimento das mensagens, tempo de vida,
-                        acerto, pontos, combo, joinha, relógio (testável no Node)
-js/degustador-game.js   janela, canvas, desenho, toque/clique, recorde
-js/game-dialog.js       (novo) janela de jogo compartilhada: Flappy e Degustador
-data/degustador-frases.json   frases de besteira e de aliados (fácil de editar)
-test/degustador-core.test.js
+js/game-dialog.js         janela de jogo compartilhada (sai do Flappy)
+js/ronda-core.js          regras puras: física, gerador de prédios e desafios,
+                          tiros, colisão, pontos, dificuldade (testável no Node)
+js/ronda.js               desenho, controles, telas, recorde
+test/ronda-core.test.js   contrato + robô que prova que todo trecho é vencível
+tools/qa-ronda.js         robô jogando no navegador (desktop e celular)
 ```
 
-- Canvas lógico 360×640 (9:16), igual ao Flappy; nítido no celular.
-- As mensagens surgem em posições livres (sem sobrepor), duram de 1,6 a 2,4 s
-  e ficam mais frequentes ao longo da partida.
-- Acerto = o ponto do clique dentro do balão (a mesma caixa usada no desenho).
-- Clarão e "PEW!" no ponto do tiro; o balão estoura em estilo gibi ("POW!").
-- Assets existentes: rosto do Degustador (`assets/degustador-face-t.png`) no
-  canto, a MP5K como cursor e o logo do Discord desenhado por código.
-- **Fora da v1:** som, ranking online, fases, chefão.
+- Mesmo desenho de sucesso do Flappy: física com passo fixo (60 Hz e 144 Hz
+  jogam igual), colisão igual ao desenho, pausa ao trocar de aba.
+- Hitbox do Degustador um pouco menor que o retângulo (perdoa raspão).
+- Sem som na v1.
 
-## 4. Fases e quem faz
+## 7. Artes para depois (para combinar a geração)
+
+Todas as artes em PNG com fundo transparente, desenhadas de lado, olhando para
+a direita, no estilo do gibi.
+
+| Sprite | Quadros | Observação |
+|---|---|---|
+| Degustador correndo | 4–6 | todos no mesmo tamanho de quadro, pés na mesma linha |
+| Degustador pulando / caindo | 2 | subida e queda |
+| Degustador atirando (correndo) | 2 | com clarão laranja na MP5K |
+| Degustador morrendo | 1 | tropeço ou queda |
+| Pássaro | 2 | asa para cima e para baixo |
+| Drone do Inominável | 1–2 | |
+| Parede quebrável | 3 | inteira, rachada, destroços |
+| Obstáculo baixo | 2–3 variações | caixa d'água, ar-condicionado, antena |
+| Topo de prédio / fachada | opcional | dá para manter por código |
+
+Com isso, são cerca de **10 quadros do Degustador**, como você falou. A troca de
+retângulo para sprite fica isolada no `ronda.js` e é uma tarefa boa para o Gemini.
+
+## 8. Fases e quem faz
 
 | Fase | O que | Quem |
 |---|---|---|
-| 0 | Escolher o conceito e aprovar a lista de frases | Henrique |
-| 1 | Extrair a janela do Flappy para `js/game-dialog.js` sem mudar o comportamento | **Gemini** (refatoração mecânica, com o QA do Flappy como prova) |
-| 2 | Regras + testes | Claude (pequeno demais para valer delegar, lição do Flappy) |
-| 3 | Desenho, balões, cenário, efeitos, gatilho no título | Claude |
-| 4 | Robô de QA que joga e confere pontos e erros | **Gemini** |
-| 5 | Ajuste da diversão e conferência final | Claude + Henrique jogando |
+| 1 | Extrair a janela do Flappy para `js/game-dialog.js` sem mudar o comportamento | **Gemini** (QA do Flappy como prova) |
+| 2 | Regras, gerador justo e testes com robô | Claude (é a parte difícil) |
+| 3 | Desenho com placeholders, controles, telas, gatilho no título | Claude |
+| 4 | Robô de QA no navegador | **Gemini** |
+| 5 | Ajuste da sensação | Claude + Henrique jogando |
+| 6 (depois) | Trocar placeholders pelos sprites | **Gemini** (Claude confere) |
 
-Estimativa: cerca de **1 janela de 5 h do Claude** e 2 tarefas do Gemini.
+Estimativa: cerca de **1,5 a 2 janelas de 5 h do Claude** (é mais que o
+Flappy, por causa do gerador de fases) e 2 tarefas do Gemini.
 
-## 5. Decisões pendentes (Henrique)
+## 9. Decisões com padrão sugerido (é só dizer se quiser diferente)
 
-1. Conceito: **A (Faxina no Discord, recomendado)**, B ou C?
-2. Gatilho: clicar no título "DEGUSTADOR DA NOITE" está bom?
-3. Partida de 60 segundos está bom?
-4. Frases: eu escrevo uma primeira lista (20 besteiras e 6 aliados) para você
-   aprovar, ou você já tem piadas internas que quer usar?
+1. **Uma falha = fim** (igual ao Flappy). Alternativa: 3 corações.
+2. **Tiro sem limite**, com cadência (≈ 6 tiros por segundo). Alternativa: munição com recarga.
+3. **Tela deitada 16:9**, com aviso para girar o celular.
+4. **Vírgulas colecionáveis**: entram na v1 ou ficam para depois?
