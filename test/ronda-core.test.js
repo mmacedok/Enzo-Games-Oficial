@@ -326,3 +326,13 @@ test('pontos = metros + bônus; no fim nada muda; reiniciar volta ao começo', (
     assert.equal(pontos(jogo), 0);
     assert.equal(jogo.desafios.length, 0);
 });
+
+test('anti-cheat: partida real do robô nunca passa do teto de pontos', () => {
+    const { tetoRonda } = require('../api/anti-cheat.js');
+    for (let s = 1; s <= 10; s++) {
+        const jogo = criarJogo(semente(s));
+        pular(jogo, true); pular(jogo, false);
+        rodar(jogo, 120, 60, robo);
+        assert.ok(pontos(jogo) <= tetoRonda(120), `semente ${s}: ${pontos(jogo)} > ${tetoRonda(120)}`);
+    }
+});

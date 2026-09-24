@@ -263,3 +263,13 @@ test('no fim, tocar não faz nada; reiniciar volta ao começo', () => {
     assert.equal(jogo.vy, 0);
     assert.deepEqual(jogo.talheres, []);
 });
+
+test('anti-cheat: partida real do robô nunca passa do teto de pontos', () => {
+    const { tetoFlappy } = require('../api/anti-cheat.js');
+    for (let s = 1; s <= 20; s++) {
+        const jogo = criarJogo(semente(s));
+        tocar(jogo);
+        rodar(jogo, 60, 60, robo);
+        assert.ok(jogo.pontos <= tetoFlappy(60), `semente ${s}: ${jogo.pontos} > ${tetoFlappy(60)}`);
+    }
+});
