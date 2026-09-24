@@ -16,9 +16,10 @@ const user = require('./user.js');
 const leitores = require('./leitores.js');
 const admin = require('./admin.js');
 const comentarios = require('./comentarios.js');
+const baralho = require('./baralho.js');
 const SCHEMA = require('./schema.js');
 
-const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...comentarios.rotas];
+const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...comentarios.rotas, ...baralho.rotas];
 
 function acharRota(metodo, caminho) {
     let caminhoExiste = false;
@@ -53,8 +54,9 @@ async function migrar(db) {
  * @param {object} [opcoes.env] variáveis de ambiente (padrão: process.env)
  * @param {Function} [opcoes.verificarGoogle] troca o verificador do Google (testes)
  * @param {Function} [opcoes.agora] relógio em ms (testes)
+ * @param {Function} [opcoes.aleatorio] sorteador do Baralho: (max) -> inteiro em [0, max) (testes)
  */
-function createApi({ db, env = process.env, verificarGoogle, agora = Date.now } = {}) {
+function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, aleatorio = baralho.aleatorioSeguro } = {}) {
     const config = lerConfig(env);
     const producao = env.NODE_ENV === 'production';
     verificarGoogle ??= auth.verificadorGoogle(config.clientId);
@@ -66,7 +68,7 @@ function createApi({ db, env = process.env, verificarGoogle, agora = Date.now } 
         if (!rota) return json(caminhoExiste ? 405 : 404, { error: caminhoExiste ? 'método não permitido' : 'rota não encontrada' });
 
         const ctx = {
-            request, url, params, db, config, agora, verificarGoogle,
+            request, url, params, db, config, agora, verificarGoogle, aleatorio,
             headers: new Headers(),
             cookies: lerCookies(request),
             cookieSeguro: producao || url.protocol === 'https:',

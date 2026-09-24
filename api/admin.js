@@ -132,12 +132,15 @@ const rotas = [
                   WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 300`, [id]);
             const [{ sessoes }] = await ctx.db.query(
                 'SELECT COUNT(*) AS sessoes FROM sessions WHERE user_id = $1 AND expires_at > $2', [id, ctx.agora()]);
+            // require aqui dentro: api/baralho.js também usa este arquivo.
+            const baralho = await require('./baralho.js').estado(ctx.db, id);
             return {
                 id: u.id, name: u.display_name, email: u.email, role: u.role, avatarUrl: u.avatar_url || null,
                 fala: u.fala || null, criadoEm: Number(u.created_at), ultimoLogin: Number(u.last_login_at),
                 admin: ehAdmin(ctx.config, u), sessoes: Number(sessoes),
                 achievements: conquistas.map((c) => ({ id: c.achievement_id, em: Number(c.unlocked_at) })),
                 scores: partidas.map(partida),
+                baralho,
                 reading: leitura.map((p) => ({
                     comicId: p.comic_id, chapterId: p.chapter_id, page: Number(p.last_page),
                     completed: Boolean(p.completed), em: Number(p.updated_at),
@@ -240,4 +243,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, lerAdmins, ehAdmin };
+module.exports = { rotas, lerAdmins, ehAdmin, exigirUsuario, registrar };

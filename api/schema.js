@@ -88,4 +88,43 @@ module.exports = [
     )`,
     'CREATE INDEX IF NOT EXISTS idx_comments_capitulo ON comments(comic_id, chapter_id, created_at)',
     'CREATE INDEX IF NOT EXISTS idx_comments_usuario ON comments(user_id, created_at)',
+    // Baralho Enzo (api/baralho.js). Sem transações (o driver do Neon roda um
+    // comando por vez): cada operação com dinheiro é UM comando (CTE), com a
+    // condição de saldo no próprio UPDATE.
+    `CREATE TABLE IF NOT EXISTS carteira (
+        user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        creditos BIGINT NOT NULL DEFAULT 0 CHECK (creditos >= 0),
+        po BIGINT NOT NULL DEFAULT 0 CHECK (po >= 0),
+        boas_vindas BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at BIGINT NOT NULL
+    )`,
+    // Todo ganho e gasto: moeda = 'creditos' | 'po'; motivo = partida, compra, po, admin.
+    `CREATE TABLE IF NOT EXISTS extrato (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        moeda TEXT NOT NULL,
+        delta BIGINT NOT NULL,
+        motivo TEXT NOT NULL,
+        ref TEXT,
+        created_at BIGINT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_extrato_usuario ON extrato(user_id, created_at)',
+    // Inventário = pacotes com aberto_em IS NULL. resultado = JSON com os ids das cartas.
+    `CREATE TABLE IF NOT EXISTS pacotes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        tipo TEXT NOT NULL,
+        origem TEXT NOT NULL,
+        created_at BIGINT NOT NULL,
+        aberto_em BIGINT,
+        resultado TEXT
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_pacotes_usuario ON pacotes(user_id, aberto_em)',
+    `CREATE TABLE IF NOT EXISTS colecao (
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        card_id TEXT NOT NULL,
+        qtd INTEGER NOT NULL CHECK (qtd >= 1),
+        primeira_em BIGINT NOT NULL,
+        PRIMARY KEY (user_id, card_id)
+    )`,
 ];

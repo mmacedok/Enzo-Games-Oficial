@@ -4,11 +4,13 @@
 //   submit -> consome o token (uso único), passa no anti-cheat e grava
 //   leaderboard -> Top 50 (melhor pontuação de cada jogador) + a posição de quem pede
 // Só partidas com login vão para o ranking; convidado joga só com recorde local.
+// Partida verificada com pontos também credita o Baralho Enzo (api/baralho.js).
 // ============================================================================
 const crypto = require('node:crypto');
 const { HttpError } = require('./http.js');
 const { jogoValido, validarPontuacao } = require('./anti-cheat.js');
 const { nomePublico } = require('./auth.js');
+const { creditarPartida } = require('./baralho.js');
 
 const HORA = 60 * 60 * 1000;
 const VALIDADE_PARTIDA = 3 * HORA;
@@ -92,14 +94,18 @@ const rotas = [
                 'SELECT MAX(score) AS melhor FROM game_scores WHERE user_id = $1 AND game_id = $2 AND verified',
                 [ctx.usuario.id, gameId]);
             const anterior = melhor === null ? 0 : Number(melhor);
+            let credits = 0;
             if (score > 0) {
+                const id = crypto.randomUUID();
                 await ctx.db.query(
                     `INSERT INTO game_scores (id, user_id, game_id, score, duration_ms, verified, client_metadata, created_at)
                      VALUES ($1, $2, $3, $4, $5, TRUE, $6, $7)`,
-                    [crypto.randomUUID(), ctx.usuario.id, gameId, score, duracao, metadadosSeguros(metadata), agora]);
+                    [id, ctx.usuario.id, gameId, score, duracao, metadadosSeguros(metadata), agora]);
+                // Pontos viram créditos do Baralho Enzo (sem limite diário).
+                credits = await creditarPartida(ctx, gameId, score, id);
             }
             const { me } = await ranking(ctx.db, gameId, ctx.usuario.id);
-            return { accepted: true, score, best: Math.max(anterior, score), newRecord: score > anterior, position: me?.position ?? null };
+            return { accepted: true, score, best: Math.max(anterior, score), newRecord: score > anterior, position: me?.position ?? null, credits };
         },
     },
     {
