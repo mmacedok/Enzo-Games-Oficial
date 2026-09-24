@@ -6,7 +6,9 @@ fase 6 (campos e goons).
 
 Mudança pedida pelo Henrique durante a construção: **pacote e abertura no estilo do Balatro** — pacote
 serrilhado com leque de cartas na capa, fundo de tinta rodando (WebGL pixelado, nas `cores` do pacote),
-tudo balança e inclina com mola, o pacote aperta e estoura em confete, as cartas são distribuídas com mola.
+tudo balança e inclina com mola, o pacote aperta e estoura em confete.
+Segunda mudança: as cartas saem numa **pilha** e a pessoa **arrasta para o lado** para ir revelando,
+da **menor raridade para a maior** (a mais rara por último); no fim, todas lado a lado.
 Este arquivo se sustenta sozinho: o chat vai ser limpo, então tudo o que é preciso para construir está aqui.
 
 ## Contexto

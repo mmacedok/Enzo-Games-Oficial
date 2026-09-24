@@ -568,8 +568,9 @@
     // ------------------------------------------------------------ abertura em tela cheia
     /**
      * Toca os pacotes abertos um por um, no estilo Balatro: fundo de tinta
-     * rodando, pacote balançando → aperta e estoura em confete → as cartas são
-     * distribuídas viradas, com mola → clicar vira cada uma.
+     * rodando, pacote balançando → aperta e estoura em confete → pilha de cartas
+     * (da mais comum à mais rara) que a pessoa arrasta para o lado, uma a uma →
+     * todas lado a lado no fim.
      * `colecao` é a coleção DEPOIS de abrir: dá o "REPETIDA ×N" certo de cada cópia.
      */
     function abertura(abertos, colecao) {
@@ -627,7 +628,7 @@
             titulo.textContent = def?.nome || 'Pacote';
             contador.textContent = abertos.length > 1 ? `Pacote ${atual + 1} de ${abertos.length}` : '';
             rodape.replaceChildren();
-            if (semMovimento()) { mostrarCartas(p, true); return; }
+            if (semMovimento()) { mostrarCartas(p); return; }
 
             const embrulho = botao('abertura-pacote');
             embrulho.setAttribute('aria-label', `Abrir o ${def?.nome || 'pacote'}`);
@@ -648,7 +649,7 @@
                 tremer();
                 embrulho.classList.add('abertura-pacote--estourou');
                 await esperar(260);
-                mostrarCartas(p, false);
+                mostrarCartas(p);
             }, { once: true });
         }
 
@@ -661,87 +662,166 @@
             return frente;
         }
 
-        function mostrarCartas(p, jaAbertas) {
-            const mesa = el('div', `abertura-mesa abertura-mesa--${p.cartas.length}`);
-            const pendentes = new Set();
-            const molas = new Map();
-            const revelar = (slot, c) => {
-                if (!pendentes.has(slot)) return;
-                pendentes.delete(slot);
+        /** Carta com as duas faces (costas e frente) dentro do balanço + mola. */
+        function cartaComFaces(c, virada) {
+            const slot = el('div', `abertura-carta abertura-carta--${c.raridade}${virada ? ' abertura-carta--virada' : ''}`);
+            const miolo = el('div', 'abertura-carta-miolo');
+            const costas = el('div', 'abertura-face abertura-face--verso');
+            costas.appendChild(verso());
+            miolo.append(costas, faceDaCarta(c));
+            const { raiz, mola: m } = vivo(miolo);
+            raiz.prepend(el('span', 'abertura-sombra'));
+            slot.appendChild(raiz);
+            slot.mola = m;
+            return slot;
+        }
+
+        const rotuloDaCarta = (c) => {
+            const def = B.carta(c.id);
+            return `${def.nome}, ${B.raridade(def.raridade).nome}${c.nova ? ', nova!' : `, repetida ×${c.copia}`}`;
+        };
+
+        /** Efeito de quando a carta aparece: tranco, raios (épico/lendário) e clarão (lendário). */
+        function comemorar(slot, c) {
+            const forte = { lendario: 0.09, epico: 0.07, raro: 0.055 }[c.raridade] || 0.045;
+            slot.mola.tranco(forte, forte * 55);
+            if (c.raridade === 'lendario' || c.raridade === 'epico') {
+                slot.prepend(el('span', 'abertura-raio'));
+                if (c.raridade === 'lendario') {
+                    tela.classList.remove('abertura--flash');
+                    void tela.offsetWidth;   // reinicia a animação do clarão
+                    tela.classList.add('abertura--flash');
+                    tremer();
+                }
+            }
+        }
+
+        /**
+         * Pilha: da carta mais comum (em cima) para a mais rara (embaixo). A de
+         * cima vira sozinha; arrastar para o lado (ou Enter/setas) joga ela fora e
+         * revela a próxima. Épico e lendário brilham ainda de costas antes de virar.
+         */
+        function mostrarCartas(p) {
+            const ordem = [...p.cartas].sort((a, b) => B.nivel(a.raridade) - B.nivel(b.raridade));
+            const area = el('div', 'abertura-pilha-area');
+            const pilha = el('div', 'abertura-pilha');
+            const conta = el('p', 'abertura-pilha-conta');
+            conta.setAttribute('aria-live', 'polite');
+            const dica = el('p', 'abertura-dica abertura-dica--arrastar', '⟵ Arraste para o lado ⟶');
+            const slots = ordem.map((c) => cartaComFaces(c, false));
+            // A primeira da lista fica por cima (última no DOM).
+            for (const slot of [...slots].reverse()) pilha.appendChild(slot);
+            area.append(pilha, conta, dica);
+            palco.replaceChildren(area);
+
+            let i = 0;
+            let pronta = false;   // só arrasta depois que a carta de cima virou
+
+            const arrumar = () => slots.forEach((slot, n) => slot.style.setProperty('--d', Math.max(0, n - i)));
+            arrumar();
+            if (!semMovimento()) {
+                pilha.animate([{ transform: 'scale(0.4) rotate(-12deg)', opacity: 0 }, { transform: 'scale(1.06)', opacity: 1, offset: 0.7 }, { transform: 'none', opacity: 1 }],
+                    { duration: 480, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+            }
+
+            const revelarTopo = async () => {
+                const slot = slots[i];
+                const c = ordem[i];
+                pronta = false;
+                slot.classList.add('abertura-carta--topo');
+                conta.textContent = `Carta ${i + 1} de ${ordem.length}`;
+                const suspense = c.raridade === 'lendario' ? 900 : c.raridade === 'epico' ? 650 : 180;
+                if (!semMovimento()) await esperar(i === 0 ? 420 : suspense);
+                if (!slot.isConnected) return;
                 slot.classList.add('abertura-carta--virada');
-                slot.removeAttribute('role');
-                slot.removeAttribute('tabindex');
-                const def = B.carta(c.id);
-                slot.setAttribute('aria-label', `${def.nome}, ${B.raridade(def.raridade).nome}${c.nova ? ', nova!' : `, repetida ×${c.copia}`}`);
-                if (jaAbertas) return;
-                const forte = { lendario: 0.09, epico: 0.07, raro: 0.055 }[c.raridade] || 0.045;
-                setTimeout(() => molas.get(slot)?.tranco(forte, forte * 55), 180);
-                if (c.raridade === 'lendario' || c.raridade === 'epico') {
-                    slot.prepend(el('span', 'abertura-raio'));
-                    if (c.raridade === 'lendario') {
-                        tela.classList.remove('abertura--flash');
-                        void tela.offsetWidth;   // reinicia a animação do clarão
-                        tela.classList.add('abertura--flash');
-                        tremer();
-                    }
-                }
-                if (!pendentes.size) terminou();
+                slot.setAttribute('role', 'button');
+                slot.tabIndex = 0;
+                slot.setAttribute('aria-label', `Carta ${i + 1} de ${ordem.length}: ${rotuloDaCarta(c)}. ${i < ordem.length - 1 ? 'Arraste para o lado ou aperte Enter para a próxima.' : 'Arraste ou aperte Enter para ver todas.'}`);
+                slot.focus({ preventScroll: true });
+                if (!semMovimento()) await esperar(260);
+                comemorar(slot, c);
+                pronta = true;
             };
-            p.cartas.forEach((c, n) => {
-                const slot = el('div', `abertura-carta abertura-carta--${c.raridade}`);
-                const miolo = el('div', 'abertura-carta-miolo');
-                const costas = el('div', 'abertura-face abertura-face--verso');
-                costas.appendChild(verso());
-                miolo.append(costas, faceDaCarta(c));
-                const { raiz, mola: m } = vivo(miolo);
-                raiz.prepend(el('span', 'abertura-sombra'));
-                molas.set(slot, m);
-                slot.appendChild(raiz);
-                pendentes.add(slot);
-                if (!jaAbertas) {
-                    slot.setAttribute('role', 'button');
-                    slot.tabIndex = 0;
-                    slot.setAttribute('aria-label', `Carta ${n + 1} virada. Clique para revelar.`);
-                    slot.addEventListener('click', () => revelar(slot, c));
-                    slot.addEventListener('keydown', (evento) => {
-                        if (evento.key === 'Enter' || evento.key === ' ') { evento.preventDefault(); revelar(slot, c); }
-                    });
+
+            const jogar = async (direcao) => {
+                if (!pronta) return;
+                pronta = false;
+                const slot = slots[i];
+                dica.classList.add('abertura-dica--sumiu');
+                if (!semMovimento()) {
+                    const atual = getComputedStyle(slot).transform;
+                    await slot.animate([
+                        { transform: atual === 'none' ? 'none' : atual },
+                        { transform: `translate(${direcao * Math.max(innerWidth, 600)}px, -60px) rotate(${direcao * 38}deg)`, opacity: 0.2 },
+                    ], { duration: 380, easing: 'cubic-bezier(0.3, 0.6, 0.4, 1)', fill: 'forwards' }).finished.catch(() => {});
                 }
+                slot.remove();
+                i += 1;
+                if (i < ordem.length) { arrumar(); revelarTopo(); } else mesaFinal(p);
+            };
+
+            // Arrastar com mouse ou dedo (a pilha não rola a página para os lados).
+            pilha.addEventListener('pointerdown', (evento) => {
+                const slot = slots[i];
+                if (!pronta || !slot?.contains(evento.target)) return;
+                const x0 = evento.clientX;
+                const t0 = performance.now();
+                let dx = 0;
+                slot.setPointerCapture(evento.pointerId);
+                slot.classList.add('abertura-carta--arrastando');
+                const mover = (e) => {
+                    dx = e.clientX - x0;
+                    slot.style.transform = `translate(${dx}px, ${-Math.abs(dx) * 0.06}px) rotate(${dx * 0.06}deg)`;
+                };
+                const soltar = () => {
+                    slot.removeEventListener('pointermove', mover);
+                    slot.removeEventListener('pointerup', soltar);
+                    slot.removeEventListener('pointercancel', soltar);
+                    slot.classList.remove('abertura-carta--arrastando');
+                    const velocidade = Math.abs(dx) / Math.max(1, performance.now() - t0);
+                    if (Math.abs(dx) > slot.offsetWidth * 0.3 || (Math.abs(dx) > 24 && velocidade > 0.6)) {
+                        jogar(Math.sign(dx) || 1);
+                    } else {
+                        // Volta para a pilha com mola.
+                        const atual = slot.style.transform;
+                        slot.style.transform = '';
+                        if (atual && !semMovimento()) {
+                            slot.animate([{ transform: atual }, { transform: 'translate(0, -6px) rotate(-1deg)', offset: 0.6 }, { transform: 'none' }],
+                                { duration: 320, easing: 'cubic-bezier(0.3, 1.4, 0.5, 1)' });
+                        }
+                    }
+                };
+                slot.addEventListener('pointermove', mover);
+                slot.addEventListener('pointerup', soltar);
+                slot.addEventListener('pointercancel', soltar);
+            });
+            pilha.addEventListener('keydown', (evento) => {
+                if (['Enter', ' ', 'ArrowRight'].includes(evento.key)) { evento.preventDefault(); jogar(1); }
+                if (evento.key === 'ArrowLeft') { evento.preventDefault(); jogar(-1); }
+            });
+
+            const pular = botao('baralho-botao', 'Pular');
+            pular.setAttribute('aria-label', 'Pular e ver todas as cartas do pacote');
+            pular.addEventListener('click', () => mesaFinal(p));
+            rodape.replaceChildren(pular);
+            revelarTopo();
+        }
+
+        /** Fim do pacote: todas as cartas lado a lado, viradas, balançando. */
+        function mesaFinal(p) {
+            const ordem = [...p.cartas].sort((a, b) => B.nivel(a.raridade) - B.nivel(b.raridade));
+            const mesa = el('div', `abertura-mesa abertura-mesa--${ordem.length}`);
+            ordem.forEach((c, n) => {
+                const slot = cartaComFaces(c, true);
+                slot.setAttribute('aria-label', rotuloDaCarta(c));
                 mesa.appendChild(slot);
+                if (!semMovimento()) {
+                    slot.animate([{ transform: 'translateY(40px) scale(0.6)', opacity: 0 }, { transform: 'translateY(-10px) scale(1.05)', opacity: 1, offset: 0.7 }, { transform: 'none', opacity: 1 }],
+                        { duration: 420, delay: n * 80, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'backwards' });
+                }
             });
             palco.replaceChildren(mesa);
-
-            if (jaAbertas) {
-                [...mesa.children].forEach((slot, i) => revelar(slot, p.cartas[i]));
-            } else {
-                // Distribui: cada carta sai do centro (onde estava o pacote) e voa para o lugar.
-                const centro = palco.getBoundingClientRect();
-                const cx = centro.left + centro.width / 2;
-                const cy = centro.top + centro.height / 2;
-                [...mesa.children].forEach((slot, n) => {
-                    const r = slot.getBoundingClientRect();
-                    const dx = cx - (r.left + r.width / 2);
-                    const dy = cy - (r.top + r.height / 2);
-                    slot.animate([
-                        { transform: `translate(${dx}px, ${dy}px) scale(0.3) rotate(${(n - 2) * 12}deg)`, opacity: 0 },
-                        { transform: 'translate(0, -18px) scale(1.08) rotate(-2deg)', opacity: 1, offset: 0.7 },
-                        { transform: 'none', opacity: 1 },
-                    ], { duration: 560, delay: 90 + n * 110, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'backwards' });
-                });
-            }
-
-            if (pendentes.size) {
-                const todas = botao('baralho-botao baralho-botao--abrir', 'Revelar todas');
-                todas.addEventListener('click', async () => {
-                    todas.disabled = true;
-                    for (const [i, slot] of [...mesa.children].entries()) {
-                        revelar(slot, p.cartas[i]);
-                        await esperar(170);
-                    }
-                });
-                rodape.replaceChildren(todas);
-                mesa.querySelector('[role="button"]')?.focus();
-            }
+            terminou();
         }
 
         function terminou() {

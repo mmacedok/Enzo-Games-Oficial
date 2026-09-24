@@ -114,12 +114,17 @@ admin dá créditos/pó/pacotes pela rota `/api/admin/users/:id/baralho` (ou `cr
 ### Abertura (estilo Balatro)
 - [ ] Abrir fecha a Ficha; fundo de tinta rodando nas cores do pacote (cinza/amarelo, verde/roxo, vermelho/laranja).
 - [ ] Pacote balança e inclina com o mouse; clique: aperta, treme, estoura em confete.
-- [ ] Cartas saem do centro e vão para o lugar com mola; balançam e inclinam com o mouse.
-- [ ] Épico/lendário brilham ainda virados; ao virar: raios atrás, lendário com clarão e tremida.
+- [ ] Depois do estouro vem uma PILHA: a carta de cima vira sozinha; as de baixo ficam de costas.
+- [ ] Ordem da pilha: da menor raridade (primeira) para a maior (última).
+- [ ] Arrastar a carta de cima para o lado (mouse e dedo) joga ela fora e revela a próxima; arrasto curto volta com mola.
+- [ ] No celular, arrastar para o lado não rola a página; arrastar para cima/baixo ainda rola.
+- [ ] Épico/lendário brilham de costas por um instante antes de virar; ao virar: raios atrás, lendário com clarão e tremida.
+- [ ] "Carta N de 5" acompanha; a dica "Arraste para o lado" some depois da 1ª.
 - [ ] Selos "Nova!" e "Repetida ×N" com o número certo (inclusive abrindo vários pacotes de uma vez).
-- [ ] "Revelar todas"; "Próximo pacote (2/N)"; resumo no fim com vários pacotes; fechar reabre a Ficha na aba Baralho.
-- [ ] Teclado: Tab/Enter viram cartas; Esc fecha.
-- [ ] `prefers-reduced-motion`: sem animação, cartas aparecem direto e viradas.
+- [ ] Depois da última: todas lado a lado, balançando e inclinando com o mouse; "Pular" leva direto para lá.
+- [ ] "Próximo pacote (2/N)"; resumo no fim com vários pacotes; fechar reabre a Ficha na aba Baralho.
+- [ ] Teclado: Enter/→/← passam a carta; Esc fecha.
+- [ ] `prefers-reduced-motion`: sem animação (a carta some na hora), pilha continua funcionando.
 - [ ] Celular: 5 cartas cabem na tela (2 fileiras) sem cortar.
 - [ ] Sem WebGL: fundo em degradê parado nas cores do pacote.
 
