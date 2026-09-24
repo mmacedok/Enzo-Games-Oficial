@@ -15,3 +15,6 @@ shots/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Saída do deploy (tools/dist.js)
+dist/

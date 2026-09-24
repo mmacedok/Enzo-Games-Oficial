@@ -1,0 +1,23 @@
+# Deploy no Netlify: atualiza o catálogo e monta dist/ só com o que é público.
+[build]
+  command = "npm run build:deploy"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Mesmo cache do server.js: páginas e catálogo sempre revalidados; imagens por 7 dias.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
