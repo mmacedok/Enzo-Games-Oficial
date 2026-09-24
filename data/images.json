@@ -1265,6 +1265,70 @@
       }
     ]
   },
+  "assets/Spin Offs/Superkid/Capitulo 1/Capa/capa.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/673ce515bdf0fa16-640.webp",
+        "bytes": 276038
+      },
+      {
+        "width": 941,
+        "src": "assets/web/673ce515bdf0fa16-941.webp",
+        "bytes": 492216
+      }
+    ]
+  },
+  "assets/Spin Offs/Superkid/Capitulo 1/Paginas/pagina-01.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6c964837ad91b8a6-640.webp",
+        "bytes": 216686
+      },
+      {
+        "width": 941,
+        "src": "assets/web/6c964837ad91b8a6-941.webp",
+        "bytes": 390086
+      }
+    ]
+  },
+  "assets/Spin Offs/Superkid/Capitulo 1/Paginas/pagina-02.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ffd8f59a9f6f5e08-640.webp",
+        "bytes": 229906
+      },
+      {
+        "width": 941,
+        "src": "assets/web/ffd8f59a9f6f5e08-941.webp",
+        "bytes": 388904
+      }
+    ]
+  },
+  "assets/Spin Offs/Superkid/Capitulo 1/Paginas/pagina-03.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/51c855c7d915e55e-640.webp",
+        "bytes": 265884
+      },
+      {
+        "width": 941,
+        "src": "assets/web/51c855c7d915e55e-941.webp",
+        "bytes": 474744
+      }
+    ]
+  },
   "assets/Spin Offs/Torado/Capitulo 1/Capa/capa.png": {
     "width": 941,
     "height": 1672,

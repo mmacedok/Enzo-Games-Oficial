@@ -42,6 +42,18 @@
       "description": "Direto da Toradolândia, no ZeZoVerso",
       "order": 110,
       "featured": false
+    },
+    "superkid": {
+      "id": "superkid",
+      "title": "Superkid",
+      "description": "As origens de Superkid",
+      "order": 120,
+      "featured": false,
+      "chapters": {
+        "1": {
+          "title": "As origens de Superkid"
+        }
+      }
     }
   },
   "censorship": {
