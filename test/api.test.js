@@ -437,11 +437,11 @@ test('20. convidado leva Enzos secretos no login', async (t) => {
     await entrar(chamar);
 
     const res = await chamar('POST', '/api/user/sync-guest', {
-        achievements: ['enzo-secreto-3', 'enzo-secreto-99', 'macarronada'],
+        achievements: ['enzo-secreto-3', 'enzo-secreto-100', 'macarronada'],
     });
     assert.equal(res.status, 200);
     assert.ok(res.dados.achievements.includes('enzo-secreto-3'));
     assert.ok(res.dados.achievements.includes('macarronada'));
-    assert.equal(res.dados.achievements.includes('enzo-secreto-99'), false);
+    assert.equal(res.dados.achievements.includes('enzo-secreto-100'), false);
 });
 
