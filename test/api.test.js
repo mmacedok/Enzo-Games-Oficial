@@ -409,3 +409,39 @@ test('18. corpo grande demais', async (t) => {
     const grande = await chamar('POST', '/api/auth/google', { credential: 'x'.repeat(20000) });
     assert.equal(grande.status, 413);
 });
+
+test('19. conquistas novas aceitas pela API', async (t) => {
+    const { db, navegador } = montar();
+    t.after(() => db.close());
+    const chamar = navegador();
+    await entrar(chamar);
+
+    for (const id of ['serie-completa', 'degustador-completo', 'enzo-secreto-1', 'enzo-secreto-99']) {
+        const res = await chamar('POST', '/api/user/achievement', { id });
+        assert.equal(res.status, 200);
+        assert.ok(res.dados.achievements.includes(id));
+    }
+    const ultima = await chamar('POST', '/api/user/achievement', { id: 'enzo-secreto-99' });
+    assert.equal(ultima.status, 200);
+    for (const id of ['serie-completa', 'degustador-completo', 'enzo-secreto-1', 'enzo-secreto-99']) {
+        assert.ok(ultima.dados.achievements.includes(id));
+    }
+    const invalida = await chamar('POST', '/api/user/achievement', { id: 'enzo-secreto-100' });
+    assert.equal(invalida.status, 400);
+});
+
+test('20. convidado leva Enzos secretos no login', async (t) => {
+    const { db, navegador } = montar();
+    t.after(() => db.close());
+    const chamar = navegador();
+    await entrar(chamar);
+
+    const res = await chamar('POST', '/api/user/sync-guest', {
+        achievements: ['enzo-secreto-3', 'enzo-secreto-99', 'macarronada'],
+    });
+    assert.equal(res.status, 200);
+    assert.ok(res.dados.achievements.includes('enzo-secreto-3'));
+    assert.ok(res.dados.achievements.includes('macarronada'));
+    assert.equal(res.dados.achievements.includes('enzo-secreto-99'), false);
+});
+

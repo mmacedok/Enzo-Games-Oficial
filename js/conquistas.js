@@ -20,7 +20,7 @@
         { id: 'cabo-coco', icone: '🥥', titulo: 'Acesso Confidencial', descricao: 'Descubra a senha do conteúdo banido em 456 países.' },
     ].map(Object.freeze));
 
-    const SECRETOS = 50;
+    const SECRETOS = 99;
     const PREFIXO_SECRETO = 'enzo-secreto-';
 
     /** Quais gibis cada coleção exige (todos os capítulos de cada um). */

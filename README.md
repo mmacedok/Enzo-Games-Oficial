@@ -111,13 +111,13 @@ A aba **Conquistas** fica no balão da conta (clique no seu nome). A lista é
 | Vigília Completa | Ler até a última página todas as edições do Degustador da Noite |
 | Caçador de Macarronada | Achar a macarronada escondida |
 | Acesso Confidencial | Descobrir a senha do conteúdo banido (libera o Cabo Côco para sempre) |
-| Enzo secreto 1–50 | Colecionáveis: clicar num Enzo escondido nas páginas |
+| Enzo secreto 1–99 | Colecionáveis: clicar num Enzo escondido nas páginas |
 
 As de coleção contam o catálogo na hora: se sair o capítulo 8, quem ainda não
 tem a conquista precisa ler o 8 também (quem já tem, continua tendo).
 
 **Esconder um Enzo secreto:** acrescente em `easterEggs` do
-`data/comics.manifest.json` (um número de 1 a 50 para cada, sem repetir) e rode
+`data/comics.manifest.json` (um número de 1 a 99 para cada, sem repetir) e rode
 `npm run build`:
 
 ```json

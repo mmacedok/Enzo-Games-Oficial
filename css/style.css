@@ -1723,7 +1723,7 @@ body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%
 .conquista-barra-cheia { display: block; width: 0; height: 100%; background: var(--orange); transition: width 0.4s ease; }
 .conquista-conta { font-size: 0.78rem; font-weight: 700; }
 .conquistas-secretos { display: flex; flex-direction: column; gap: 4px; }
-.secretos-grade { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin-top: 4px; list-style: none; }
+.secretos-grade { display: grid; grid-template-columns: repeat(11, 1fr); gap: 3px; margin-top: 4px; list-style: none; }
 .secreto {
     display: grid;
     place-items: center;
