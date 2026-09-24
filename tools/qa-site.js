@@ -95,7 +95,7 @@
         check(topo && topo.naturalWidth > 0, 'letreiro do ZeZoVerso carregado');
         check(document.querySelector('#spin-offs a[href="degustador.html"]'), 'spin-off do Degustador listado');
         check(document.querySelector('#superkid .bookcase[data-colecao="superkid"]'), 'estante do Superkid');
-        check(document.querySelectorAll('#fichas .character-card').length === 2, 'fichas do ZeZoVerso');
+        check(document.querySelectorAll('#fichas .character-card').length >= 7, 'fichas do ZeZoVerso (todos os personagens)');
         const torado = [...document.querySelectorAll('#comic-shelf .shelf-book')];
         check(torado.length >= 1 && torado.every((b) => b.dataset.comicId === 'torado'), 'estante do Torado');
     }
