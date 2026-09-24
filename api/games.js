@@ -35,7 +35,7 @@ async function ranking(db, gameId, usuarioId = null) {
          )
          SELECT * FROM posicoes WHERE posicao <= $2 OR user_id = $3 ORDER BY posicao`,
         [gameId, TOPO, usuarioId]);
-    const linha = (l) => ({ position: Number(l.posicao), name: nomePublico(l.display_name), score: Number(l.score), isMe: l.user_id === usuarioId });
+    const linha = (l) => ({ id: l.user_id, position: Number(l.posicao), name: nomePublico(l.display_name), score: Number(l.score), isMe: l.user_id === usuarioId });
     const eu = linhas.find((l) => l.user_id === usuarioId);
     return {
         gameId,

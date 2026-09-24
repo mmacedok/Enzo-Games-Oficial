@@ -12,9 +12,10 @@ const { HttpError, json, lerJson, checarMesmaOrigem, lerCookies } = require('./h
 const auth = require('./auth.js');
 const games = require('./games.js');
 const user = require('./user.js');
+const leitores = require('./leitores.js');
 const SCHEMA = require('./schema.js');
 
-const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas];
+const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas];
 
 function acharRota(metodo, caminho) {
     let caminhoExiste = false;

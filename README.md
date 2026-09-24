@@ -129,6 +129,20 @@ tem a conquista precisa ler o 8 também (quem já tem, continua tendo).
 com vários capítulos, ex. `"chapterId": "2"` no Degustador). A área é invisível
 e brilha ao ser clicada. Convidado também coleciona; sobe para a conta no login.
 
+### Ficha do Leitor e Leitores do site
+
+Clicar no seu medalhão abre a **Ficha do Leitor** (`js/auth-widget.js`), com duas abas:
+
+- **Minha ficha**: a fala do balão é editável ("Mudar fala": até 80 letras, sem
+  links) e fica salva na conta (`POST /api/user/profile`). Todo mundo vê.
+- **Leitores do site**: todos os leitores (`GET /api/readers`); clicar abre a
+  ficha pública (`GET /api/readers/:id`): fala, conquistas, Enzos secretos e
+  recordes do placar. Os nomes no Placar global também abrem a ficha.
+
+Público é só: nome abreviado ("Henrique M."), número de leitor (ordem de
+chegada), fala, conquistas e recordes verificados. Foto do Google, e-mail e
+progresso de leitura ficam privados.
+
 ### Configurar no computador
 
 1. Copie `.env.example` para `.env` e preencha `GOOGLE_CLIENT_ID` e

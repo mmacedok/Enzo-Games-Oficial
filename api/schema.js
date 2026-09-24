@@ -15,6 +15,8 @@ module.exports = [
         created_at BIGINT NOT NULL,
         last_login_at BIGINT NOT NULL
     )`,
+    // Fala do balão na Ficha do Leitor (pública; null = fala sorteada do Enzo).
+    'ALTER TABLE users ADD COLUMN IF NOT EXISTS fala TEXT',
     // id = HMAC-SHA256 do token do cookie: vazar o banco não entrega sessões.
     `CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,

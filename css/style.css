@@ -1905,6 +1905,7 @@ img.conta-chave { padding: 6px; object-fit: contain; }
 .ficha-retrato .conta-inicial { font-size: 3rem; }
 .ficha-fala {
     position: relative;
+    min-width: 0;
     padding: 10px 14px;
     font-size: 0.85rem;
     font-weight: 700;
@@ -2112,6 +2113,144 @@ img.conta-chave { padding: 6px; object-fit: contain; }
     .ficha-retrato { width: 84px; height: 84px; }
 }
 
+
+/* Abas da ficha: marcadores de papel logo abaixo da capa */
+.pagina-abas { display: flex; gap: 6px; padding: 0 16px; margin-top: -2px; }
+.pagina-aba {
+    padding: 6px 16px 5px;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    color: var(--paper-ink);
+    background: var(--silver);
+    border: var(--stroke);
+    border-top: 0;
+    border-radius: 0 0 6px 6px;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+}
+.pagina-aba:hover { transform: translateY(2px); }
+.pagina-aba[aria-current="page"] { color: var(--ink); background: var(--caption); box-shadow: var(--pop-sm); }
+.pagina-aba:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pagina-corpo { display: flex; flex-direction: column; }
+.pagina-voltar {
+    align-self: flex-start;
+    margin: 12px 14px 0;
+    padding: 4px 12px;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--text);
+    border: var(--stroke);
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+}
+
+/* Fala do balão: texto do leitor (ou do Enzo) e o modo de edição */
+.ficha-fala-texto { overflow-wrap: anywhere; }
+.ficha-fala--enzo .ficha-fala-texto::before { content: 'ENZO: '; color: var(--danger); }
+.ficha-fala-editar {
+    display: block;
+    margin: 6px 0 0 auto;
+    padding: 2px 8px;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--caption);
+    border: 2px solid var(--ink);
+    cursor: pointer;
+}
+.ficha-fala-campo {
+    width: 100%;
+    padding: 4px;
+    font: inherit;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--paper);
+    border: 2px dashed var(--ink);
+    resize: none;
+}
+.ficha-fala-campo:focus { outline: 3px solid var(--focus); outline-offset: 1px; }
+.ficha-fala-acoes { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 6px; }
+.ficha-fala-conta { margin-right: auto; font-size: 0.75rem; }
+.ficha-fala-salvar,
+.ficha-fala-cancelar {
+    padding: 3px 10px;
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--orange-light);
+    border: 2px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    cursor: pointer;
+}
+.ficha-fala-cancelar { background: var(--text); }
+
+/* Leitores do site: cada leitor é um quadrinho clicável */
+.leitores { display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.leitores-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; list-style: none; }
+.leitor-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    text-align: left;
+    color: var(--paper-ink);
+    background: var(--halftone), var(--text);
+    border: var(--stroke);
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+    transform: rotate(var(--giro, 0deg));
+    transition: transform 0.15s var(--ease-pop), box-shadow 0.15s ease;
+}
+.leitor-card:hover { transform: rotate(0deg) translate(-2px, -2px); box-shadow: var(--pop); }
+.leitor-card:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.leitor-card--eu { background: var(--halftone), var(--caption); }
+.leitor-topo { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.leitor-medalhao {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background: var(--halftone-forte), var(--orange-light);
+    border: var(--stroke);
+    border-radius: 50%;
+}
+.leitor-medalhao .conta-inicial { font-size: 1.3rem; }
+.leitor-nome { flex: 1; min-width: 0; font-family: var(--font-heading); font-size: 1.15rem; letter-spacing: 1px; line-height: 1.05; color: var(--ink); overflow-wrap: anywhere; }
+.leitor-selo { display: flex; flex-direction: column; align-items: center; padding: 1px 6px; font-size: 0.55rem; font-weight: 700; line-height: 1.1; color: var(--ink); background: var(--text); border: 2px solid var(--ink); }
+.leitor-selo strong { font-family: var(--font-heading); font-size: 1rem; font-weight: 400; }
+.leitor-fala {
+    position: relative;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--text);
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    overflow-wrap: anywhere;
+}
+.leitor-fala--vazia { color: var(--line); }
+.leitor-numeros { display: flex; gap: 12px; font-family: var(--font-heading); font-size: 1rem; letter-spacing: 1px; color: var(--ink); }
+.leitor-numeros .ui-icone { width: 1.4em; height: 1.4em; }
+.leitores-mais { align-self: center; width: auto; }
+.leitores-mais[hidden] { display: none; }
+
+/* Nome no placar abre a ficha do leitor */
+button.ranking-nome { padding: 0; font: inherit; font-weight: 700; text-align: left; color: inherit; background: none; border: 0; cursor: pointer; }
+button.ranking-nome:hover { text-decoration: underline 2px; }
+button.ranking-nome:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 /* Leitor: Enzo secreto (área invisível sobre a arte; brilha ao ser achado) */
 .enzo-secreto-hotspot { position: absolute; z-index: 10; cursor: pointer; border-radius: 50%; }
 .enzo-secreto-hotspot:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }

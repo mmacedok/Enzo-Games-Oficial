@@ -185,6 +185,10 @@
     }
 
     // ---------------------------------------------------------------- ficha do leitor
+    // A Ficha é uma página de gibi com duas abas: "Minha ficha" (fala editável) e
+    // "Leitores do site" (todos os leitores; clicar abre a ficha pública, só leitura).
+    // Perfil = { id, name, fala, numero, achievements[], records {jogo: pontos},
+    //            progress?, avatarUrl?, proprio } — o mesmo desenho serve para os dois.
     const FALAS = [
         'BORA LER MAIS UMA EDIÇÃO?',
         'ODEIO QUARTAS-FEIRAS... MAS GOSTO DE VOCÊ AQUI!',
@@ -192,6 +196,8 @@
         'TEM ENZO ESCONDIDO NAS PÁGINAS... ACHA ELE!',
         'RECORDE BOM É RECORDE BATIDO!',
     ];
+    const FALA_MAX = 80;
+    const falaDoEnzo = () => FALAS[Math.floor(Math.random() * FALAS.length)];
 
     /** Quadro de gibi com recordatório amarelo no canto. */
     function quadro(classe, recordatorio, ...conteudo) {
@@ -201,38 +207,108 @@
         return secao;
     }
 
-    function quadroDoLeitor() {
-        const fala = el('p', 'ficha-fala', FALAS[Math.floor(Math.random() * FALAS.length)]);
-        const nome = el('p', 'ficha-nome', estado.usuario.name);
-        return quadro('quadro--leitor', '', avatar(estado.usuario, 'ficha-retrato'), fala, nome);
+    function perfilProprio() {
+        return {
+            id: estado.usuario.id,
+            name: estado.usuario.name,
+            firstName: estado.usuario.firstName,
+            avatarUrl: estado.usuario.avatarUrl,
+            fala: estado.usuario.fala,
+            numero: numeroProprio,
+            achievements: estado.dados?.achievements || [],
+            records: Object.fromEntries(Object.keys(JOGOS).map((jogo) => [jogo, melhorRecorde(jogo)])),
+            progress: estado.dados?.progress,
+            proprio: true,
+        };
+    }
+    let numeroProprio = null;
+
+    /** Balão de fala do leitor; na própria ficha vira um campo para editar e salvar. */
+    function balaoDaFala(perfil) {
+        const caixa = el('div', 'ficha-fala');
+        const mostrar = () => {
+            const texto = el('p', 'ficha-fala-texto', perfil.fala || falaDoEnzo());
+            caixa.replaceChildren(texto);
+            caixa.classList.toggle('ficha-fala--enzo', !perfil.fala);
+            if (!perfil.proprio) return;
+            const editar = botaoEl('ficha-fala-editar', 'Mudar fala');
+            editar.setAttribute('aria-label', 'Mudar a fala do seu balão');
+            editar.addEventListener('click', editarFala);
+            caixa.appendChild(editar);
+        };
+        const editarFala = () => {
+            const campo = el('textarea', 'ficha-fala-campo');
+            campo.maxLength = FALA_MAX;
+            campo.rows = 2;
+            campo.value = perfil.fala || '';
+            campo.placeholder = 'Escreva o que você diria no gibi...';
+            campo.setAttribute('aria-label', `Sua fala (até ${FALA_MAX} letras). Todos os leitores veem.`);
+            const conta = el('span', 'ficha-fala-conta', `${campo.value.length}/${FALA_MAX}`);
+            const erro = el('p', 'conta-erro');
+            erro.hidden = true;
+            const salvar = botaoEl('ficha-fala-salvar', 'Salvar');
+            const cancelar = botaoEl('ficha-fala-cancelar', 'Cancelar');
+            const acoes = el('div', 'ficha-fala-acoes');
+            acoes.append(conta, cancelar, salvar);
+            caixa.replaceChildren(campo, acoes, erro);
+            caixa.classList.remove('ficha-fala--enzo');
+            campo.focus();
+            campo.addEventListener('input', () => { conta.textContent = `${campo.value.length}/${FALA_MAX}`; });
+            const gravar = async () => {
+                salvar.disabled = true;
+                const { ok, dados } = await pedir('/api/user/profile', { fala: campo.value }).catch(() => ({ ok: false, dados: null }));
+                salvar.disabled = false;
+                if (!ok) { erro.textContent = dados?.error || 'Não deu para salvar agora.'; erro.hidden = false; return; }
+                perfil.fala = dados.fala;
+                estado.usuario.fala = dados.fala;
+                mostrar();
+            };
+            salvar.addEventListener('click', gravar);
+            cancelar.addEventListener('click', mostrar);
+            campo.addEventListener('keydown', (evento) => {
+                if (evento.key === 'Enter' && !evento.shiftKey) { evento.preventDefault(); gravar(); }
+                // Esc cancela a edição em vez de fechar a ficha inteira.
+                if (evento.key === 'Escape') { evento.preventDefault(); evento.stopPropagation(); mostrar(); }
+            });
+        };
+        mostrar();
+        return caixa;
     }
 
-    function quadroDeRecordes() {
+    function quadroDoLeitor(perfil) {
+        // Foto do Google só na própria ficha; para os outros, o medalhão com a inicial.
+        const retrato = avatar({ firstName: perfil.firstName || perfil.name, avatarUrl: perfil.proprio ? perfil.avatarUrl : null }, 'ficha-retrato');
+        return quadro('quadro--leitor', '', retrato, balaoDaFala(perfil), el('p', 'ficha-nome', perfil.name));
+    }
+
+    function quadroDeRecordes(perfil) {
         const lista = el('div', 'ficha-recordes');
         for (const [jogo, titulo] of Object.entries(JOGOS)) {
             const item = el('div', 'ficha-recorde');
-            item.append(el('span', 'ficha-recorde-jogo', titulo), el('strong', 'ficha-estouro', String(melhorRecorde(jogo))));
+            item.append(el('span', 'ficha-recorde-jogo', titulo), el('strong', 'ficha-estouro', String(perfil.records[jogo] || 0)));
             lista.appendChild(item);
         }
-        const ranking = botaoEl('ficha-ranking', icone('trofeu', '🏆'), el('span', '', 'Ranking global'));
+        const ranking = botaoEl('ficha-ranking', icone('trofeu', '🏆'), el('span', '', 'Placar global'));
         ranking.addEventListener('click', () => { ficha.close(); abrirRanking(); });
-        return quadro('quadro--recordes', 'Recordes', lista, ranking);
+        return quadro('quadro--recordes', perfil.proprio ? 'Recordes' : 'Recordes no placar', lista, ranking);
     }
 
-    function quadroDeConquistas() {
+    function quadroDeConquistas(perfil) {
         const C = window.EnzoConquistas;
-        const feitas = C.LISTA.filter((def) => temConquista(def.id)).length;
+        const tem = (id) => perfil.achievements.includes(id);
+        const feitas = C.LISTA.filter((def) => tem(def.id)).length;
         const album = el('ul', 'figurinhas');
         const barras = [];
         C.LISTA.forEach((def, i) => {
-            const feita = temConquista(def.id);
+            const feita = tem(def.id);
             const card = el('li', `figurinha${feita ? ' figurinha--feita' : ''}`);
             card.style.setProperty('--giro', `${i % 2 ? 1.2 : -1.2}deg`);
             const arte = el('div', 'figurinha-arte');
             arte.appendChild(feita ? icone(def.imagem, def.icone, 'figurinha-icone') : icone('cadeado', '🔒', 'figurinha-icone'));
             const texto = el('div', 'figurinha-texto');
             texto.append(el('strong', 'figurinha-titulo', def.titulo), el('span', 'figurinha-descricao', def.descricao));
-            if (def.colecao && !feita) {
+            // Progresso de leitura é privado: barra só na própria ficha.
+            if (def.colecao && !feita && perfil.progress) {
                 const barra = el('span', 'figurinha-barra');
                 barra.appendChild(el('span'));
                 const conta = el('span', 'figurinha-conta', '...');
@@ -243,11 +319,10 @@
             card.setAttribute('aria-label', `${def.titulo}: ${feita ? 'desbloqueada' : 'bloqueada'}. ${def.descricao}`);
             album.appendChild(card);
         });
-        // Progresso das coleções precisa do catálogo (quantas edições existem).
         if (barras.length) {
             carregarCatalogo().then((catalogo) => {
                 for (const { def, barra, conta } of barras) {
-                    const { lidos, total } = C.progressoDaColecao(catalogo, def.colecao, estado.dados?.progress);
+                    const { lidos, total } = C.progressoDaColecao(catalogo, def.colecao, perfil.progress);
                     barra.firstChild.style.width = `${total ? Math.round((lidos / total) * 100) : 0}%`;
                     conta.textContent = `${lidos} de ${total} edições`;
                 }
@@ -256,23 +331,149 @@
         return quadro('quadro--conquistas', `Álbum de conquistas · ${feitas}/${C.LISTA.length}`, album);
     }
 
-    function quadroDeSecretos() {
+    function quadroDeSecretos(perfil) {
         const C = window.EnzoConquistas;
         const grade = el('ol', 'album-secretos');
+        let achados = 0;
         for (let n = 1; n <= C.SECRETOS; n++) {
-            const achado = temConquista(C.idSecreto(n));
+            const achado = perfil.achievements.includes(C.idSecreto(n));
+            if (achado) achados++;
             const vaga = el('li', `album-vaga${achado ? ' album-vaga--achada' : ''}`);
             if (achado) vaga.appendChild(icone('enzo-secreto', '🐱', 'album-icone'));
             vaga.appendChild(el('span', 'album-numero', String(n)));
             vaga.title = achado ? `Enzo secreto nº ${n}` : `Nº ${n}: ainda escondido`;
             grade.appendChild(vaga);
         }
-        return quadro('quadro--secretos', `Enzos secretos · ${secretosAchados()}/${C.SECRETOS}`,
-            el('p', 'quadro-texto', 'Enzos escondidos nas páginas das HQs. Clique neles para colar no álbum!'), grade);
+        const texto = perfil.proprio ? 'Enzos escondidos nas páginas das HQs. Clique neles para colar no álbum!' : 'Enzos secretos que este leitor já achou nas HQs.';
+        return quadro('quadro--secretos', `Enzos secretos · ${achados}/${C.SECRETOS}`, el('p', 'quadro-texto', texto), grade);
+    }
+
+    function gradeDoPerfil(perfil) {
+        const grade = el('div', 'ficha-grade');
+        grade.append(quadroDoLeitor(perfil), quadroDeRecordes(perfil));
+        if (window.EnzoConquistas) grade.append(quadroDeConquistas(perfil), quadroDeSecretos(perfil));
+        return grade;
+    }
+
+    /** Aba "Leitores do site": cada leitor é um quadrinho; clicar abre a ficha dele. */
+    function listaDeLeitores(aoContar) {
+        const C = window.EnzoConquistas;
+        const area = el('div', 'leitores');
+        const lista = el('ul', 'leitores-lista');
+        const mais = botaoEl('ficha-ranking leitores-mais', el('span', '', 'Mais leitores'));
+        mais.hidden = true;
+        const aviso = el('p', 'quadro-texto leitores-aviso', 'Carregando os leitores...');
+        area.append(el('p', 'quadro-texto', 'Todo mundo que já entrou no site. Clique num leitor para ver a ficha dele.'), aviso, lista, mais);
+        let pagina = 0;
+        const carregar = async () => {
+            mais.disabled = true;
+            const { ok, dados } = await pedir(`/api/readers?pagina=${pagina}`).catch(() => ({ ok: false }));
+            mais.disabled = false;
+            if (!ok) { aviso.textContent = 'Não deu para carregar os leitores agora.'; return; }
+            aviso.hidden = true;
+            dados.readers.forEach((leitor, i) => {
+                const card = botaoEl(`leitor-card${leitor.isMe ? ' leitor-card--eu' : ''}`);
+                card.style.setProperty('--giro', `${(pagina * 60 + i) % 3 - 1}deg`);
+                const selo = el('span', 'leitor-selo');
+                selo.append(el('span', '', 'Nº'), el('strong', '', String(leitor.numero)));
+                const topo = el('span', 'leitor-topo');
+                topo.append(avatar({ firstName: leitor.name }, 'leitor-medalhao'), el('span', 'leitor-nome', leitor.isMe ? `${leitor.name} (você)` : leitor.name), selo);
+                const fala = el('span', `leitor-fala${leitor.fala ? '' : ' leitor-fala--vazia'}`, leitor.fala || '...');
+                const numeros = el('span', 'leitor-numeros');
+                const conquistas = el('span', '');
+                conquistas.append(icone('trofeu', '🏆'), ` ${leitor.conquistas}/${C?.LISTA.length ?? 0}`);
+                const secretos = el('span', '');
+                secretos.append(icone('enzo-secreto', '🐱'), ` ${leitor.secretos}/${C?.SECRETOS ?? 0}`);
+                numeros.append(conquistas, secretos);
+                card.append(topo, fala, numeros);
+                card.setAttribute('aria-label', `Ver a ficha de ${leitor.name}`);
+                card.addEventListener('click', () => mostrarVista({ leitorId: leitor.id }));
+                const item = el('li');
+                item.appendChild(card);
+                lista.appendChild(item);
+            });
+            mais.hidden = !dados.maisPaginas;
+            pagina++;
+            aoContar?.(lista.children.length, dados.maisPaginas);
+        };
+        mais.addEventListener('click', carregar);
+        carregar();
+        return area;
     }
 
     let ficha = null;
-    function abrirFicha() {
+    let vistaAtual = 'minha';
+
+    /** vista: 'minha' | 'leitores' | { leitorId } */
+    async function mostrarVista(vista) {
+        vistaAtual = vista;
+        const deOutro = typeof vista === 'object';
+        const fechar = botaoEl('pagina-fechar', '×');
+        fechar.setAttribute('aria-label', 'Fechar a ficha');
+        fechar.addEventListener('click', () => ficha.close());
+        const selo = el('div', 'pagina-selo');
+        const titulo = el('div', 'pagina-titulo');
+        const manchete = el('h2', 'pagina-manchete', vista === 'leitores' ? 'Leitores do site' : 'Ficha do Leitor');
+        titulo.append(el('p', 'pagina-sobre', 'Enzo Games apresenta'), manchete);
+        const topo = el('header', 'pagina-topo');
+        topo.append(selo, titulo, fechar);
+        const setSelo = (numero) => {
+            // "Nº" em fonte de texto: a Bangers não tem o "º" (sai "NO").
+            selo.replaceChildren(el('span', '', 'Nº'), el('span', 'pagina-selo-numero', numero ? String(numero) : '?'), el('span', '', vista === 'leitores' ? 'Leitores' : 'Leitor do site'));
+        };
+        setSelo(vista === 'minha' ? numeroProprio : null);
+
+        // Abas de papel no topo da página (como marcadores de um fichário).
+        const abas = el('nav', 'pagina-abas');
+        abas.setAttribute('aria-label', 'Páginas da ficha');
+        for (const [id, rotulo] of [['minha', 'Minha ficha'], ['leitores', 'Leitores do site']]) {
+            if (id === 'minha' && !estado.usuario) continue;
+            const aba = botaoEl('pagina-aba', rotulo);
+            const ativa = vista === id || (id === 'leitores' && deOutro);
+            if (ativa) aba.setAttribute('aria-current', 'page');
+            aba.addEventListener('click', () => mostrarVista(id));
+            abas.appendChild(aba);
+        }
+
+        const corpo = el('div', 'pagina-corpo');
+        const rodape = el('footer', 'pagina-rodape');
+        if (vista === 'minha') {
+            corpo.appendChild(gradeDoPerfil(perfilProprio()));
+            const sair = botaoEl('ficha-sair', 'Sair da conta');
+            sair.addEventListener('click', () => { ficha.close(); sair.disabled = true; sairDaConta(); });
+            rodape.append(el('p', 'pagina-continua', 'Continua na próxima edição...'), sair);
+            // Número de leitor vem do perfil público (ordem de chegada ao site).
+            if (!numeroProprio) {
+                pedir(`/api/readers/${estado.usuario.id}`).then(({ ok, dados }) => {
+                    if (ok) { numeroProprio = dados.numero; if (vistaAtual === 'minha') setSelo(numeroProprio); }
+                }).catch(() => {});
+            }
+        } else if (vista === 'leitores') {
+            corpo.appendChild(listaDeLeitores((total, mais) => { if (vistaAtual === 'leitores') setSelo(mais ? `${total}+` : total); }));
+            rodape.appendChild(el('p', 'pagina-continua', 'Todos os leitores, numa edição só!'));
+        } else {
+            const voltar = botaoEl('pagina-voltar', '← Voltar aos leitores');
+            voltar.addEventListener('click', () => mostrarVista('leitores'));
+            corpo.append(voltar, el('p', 'quadro-texto leitores-aviso', 'Abrindo a ficha...'));
+            rodape.appendChild(el('p', 'pagina-continua', 'Continua na próxima edição...'));
+        }
+        ficha.replaceChildren(topo, abas, corpo, rodape);
+        if (!ficha.open) ficha.showModal();
+        ficha.scrollTop = 0;
+        fechar.focus();
+
+        if (deOutro) {
+            const { ok, dados } = await pedir(`/api/readers/${encodeURIComponent(vista.leitorId)}`).catch(() => ({ ok: false }));
+            if (vistaAtual !== vista) return;   // já trocou de página
+            if (!ok) { corpo.lastChild.textContent = 'Não achamos esse leitor.'; return; }
+            if (dados.isMe) { mostrarVista('minha'); return; }
+            setSelo(dados.numero);
+            manchete.textContent = `Ficha de ${dados.name}`;
+            corpo.lastChild.replaceWith(gradeDoPerfil({ ...dados, proprio: false }));
+        }
+    }
+
+    function abrirFicha(vista = 'minha') {
         fecharBalao();
         if (!ficha) {
             ficha = el('dialog', 'ficha pagina-gibi');
@@ -280,29 +481,9 @@
             ficha.addEventListener('click', (evento) => { if (evento.target === ficha) ficha.close(); });
             document.body.appendChild(ficha);
         }
-        const fechar = botaoEl('pagina-fechar', '×');
-        fechar.setAttribute('aria-label', 'Fechar a ficha');
-        fechar.addEventListener('click', () => ficha.close());
-        const selo = el('div', 'pagina-selo');
-        // "Nº" em fonte de texto: a Bangers não tem o "º" (sai "NO").
-        selo.append(el('span', '', 'Nº'), el('span', 'pagina-selo-numero', '1'), el('span', '', 'Edição do leitor'));
-        const titulo = el('div', 'pagina-titulo');
-        titulo.append(el('p', 'pagina-sobre', 'Enzo Games apresenta'), el('h2', 'pagina-manchete', 'Ficha do Leitor'));
-        const topo = el('header', 'pagina-topo');
-        topo.append(selo, titulo, fechar);
-
-        const grade = el('div', 'ficha-grade');
-        grade.append(quadroDoLeitor(), quadroDeRecordes());
-        if (window.EnzoConquistas) grade.append(quadroDeConquistas(), quadroDeSecretos());
-
-        const sair = botaoEl('ficha-sair', 'Sair da conta');
-        sair.addEventListener('click', () => { ficha.close(); sair.disabled = true; sairDaConta(); });
-        const rodape = el('footer', 'pagina-rodape');
-        rodape.append(el('p', 'pagina-continua', 'Continua na próxima edição...'), sair);
-
-        ficha.replaceChildren(topo, grade, rodape);
-        if (!ficha.open) ficha.showModal();
-        fechar.focus();
+        // Sem login dá para ver fichas de outros leitores (vindo do placar), mas não "Minha ficha".
+        if (!estado.usuario && typeof vista !== 'object') return;
+        mostrarVista(vista);
     }
 
     function renderizar() {
@@ -317,7 +498,7 @@
                 botao.classList.add('conta-botao--logado');
                 botao.append(avatar(estado.usuario), el('span', 'conta-nome', estado.usuario.firstName));
                 botao.setAttribute('aria-label', `Ficha do leitor ${estado.usuario.firstName}: recordes, conquistas e sair`);
-                botao.addEventListener('click', abrirFicha);
+                botao.addEventListener('click', () => abrirFicha());
             } else {
                 botao.append(icone('chave', '🔑', 'conta-chave'), el('span', 'conta-nome', 'Entrar'));
                 botao.setAttribute('aria-label', 'Entrar com Google');
@@ -361,7 +542,11 @@
         // Pódio com medalha (arte em assets/ui quando existir); o resto só o número.
         if (MEDALHAS[item.position]) posicao.appendChild(icone(`medalha-${item.position}`, MEDALHAS[item.position], 'ranking-medalha'));
         else posicao.textContent = `${item.position}.`;
-        linha.append(posicao, el('span', 'ranking-nome', item.isMe ? `${item.name} (você)` : item.name), el('strong', 'ranking-pontos', String(item.score)));
+        // Nome abre a ficha do leitor (conquistas e recordes dele).
+        const nome = botaoEl('ranking-nome', item.isMe ? `${item.name} (você)` : item.name);
+        nome.title = `Ver a ficha de ${item.name}`;
+        nome.addEventListener('click', () => { dialogoRanking.close(); abrirFicha(item.isMe ? 'minha' : { leitorId: item.id }); });
+        linha.append(posicao, nome, el('strong', 'ranking-pontos', String(item.score)));
         return linha;
     }
 

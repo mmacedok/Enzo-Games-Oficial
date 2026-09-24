@@ -39,9 +39,11 @@ const primeiroNome = (nome) => String(nome || '').trim().split(/\s+/)[0] || 'Jog
 /** O que o navegador pode saber do usuário logado (sem e-mail, sem ids do Google). */
 function usuarioPublico(usuario) {
     return {
+        id: usuario.id,
         name: usuario.display_name,
         firstName: primeiroNome(usuario.display_name),
         avatarUrl: usuario.avatar_url || null,
+        fala: usuario.fala || null,
     };
 }
 
