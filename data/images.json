@@ -432,6 +432,86 @@
       }
     ]
   },
+  "assets/Capitulo 7/Capa/CAP7 CAPA.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c6dfea0d29d8f2ba-640.webp",
+        "bytes": 283226
+      },
+      {
+        "width": 941,
+        "src": "assets/web/c6dfea0d29d8f2ba-941.webp",
+        "bytes": 513470
+      }
+    ]
+  },
+  "assets/Capitulo 7/Paginas/PAG1.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a3b827d808a4e5ff-640.webp",
+        "bytes": 214662
+      },
+      {
+        "width": 941,
+        "src": "assets/web/a3b827d808a4e5ff-941.webp",
+        "bytes": 405606
+      }
+    ]
+  },
+  "assets/Capitulo 7/Paginas/PAG2.png": {
+    "width": 1062,
+    "height": 1480,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/617e46d83be1ae64-640.webp",
+        "bytes": 185242
+      },
+      {
+        "width": 1062,
+        "src": "assets/web/617e46d83be1ae64-1062.webp",
+        "bytes": 440574
+      }
+    ]
+  },
+  "assets/Capitulo 7/Paginas/PAG3.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/184d44303f342040-640.webp",
+        "bytes": 296474
+      },
+      {
+        "width": 941,
+        "src": "assets/web/184d44303f342040-941.webp",
+        "bytes": 555542
+      }
+    ]
+  },
+  "assets/Capitulo 7/Paginas/PAG4.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/9dc31baa3427485e-640.webp",
+        "bytes": 233616
+      },
+      {
+        "width": 941,
+        "src": "assets/web/9dc31baa3427485e-941.webp",
+        "bytes": 405400
+      }
+    ]
+  },
   "assets/Easter Eggs/Easter egg1.jpg": {
     "width": 4080,
     "height": 2296,
