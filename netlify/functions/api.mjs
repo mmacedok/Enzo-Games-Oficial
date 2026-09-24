@@ -10,9 +10,7 @@ import neon from '../../api/db-neon.js';
 let api;
 
 function abrirBanco() {
-    // O Netlify expõe as variáveis em Netlify.env (e, em geral, também em process.env).
-    const netlifyDbUrl = globalThis.Netlify?.env?.get?.('NETLIFY_DB_URL') || process.env.NETLIFY_DB_URL;
-    if (netlifyDbUrl) return netlifyDb.createNetlifyDb();
+    if (netlifyDb.lerUrl()) return netlifyDb.createNetlifyDb();
     const url = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL;
     return url ? neon.createNeonDb(url) : null;
 }
