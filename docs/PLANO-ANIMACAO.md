@@ -1,6 +1,6 @@
 # Plano: animação "Da macarronada à Toradolândia"
 
-Status: **plano**. Parte 1 de uma série (máx. 100 s; esta parte ~45 s).
+Status: **v1 pronta** (animacao/abertura.html). Parte 1 de uma série (máx. 100 s; esta parte ~45 s).
 Referência de estilo: vídeo de DreW no X (zoom infinito, 32 s, 1920×1080).
 
 ## 1. Regras do Henrique

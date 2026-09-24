@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Da macarronada à Toradolândia — Enzo Games</title>
+    <style>
+        html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+        body { display: grid; place-items: center; font-family: 'Comic Sans MS', 'Trebuchet MS', sans-serif; }
+        canvas { display: block; }
+        #hud {
+            position: fixed; left: 50%; bottom: 14px; translate: -50% 0;
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 14px; border: 3px solid #141014; border-radius: 14px;
+            background: #ff8a1e; box-shadow: 4px 4px 0 #141014;
+            transition: opacity 0.3s;
+        }
+        #hud.escondido { opacity: 0; pointer-events: none; }
+        #hud button {
+            font: bold 16px 'Comic Sans MS', sans-serif; cursor: pointer;
+            padding: 4px 12px; border: 3px solid #141014; border-radius: 10px; background: #fff;
+        }
+        #hud input { width: min(46vw, 520px); accent-color: #7b2cbf; }
+        #tempo { min-width: 76px; font-weight: bold; color: #141014; }
+    </style>
+</head>
+<body>
+    <canvas id="tela" aria-label="Animação: Enzo Games espeta uma almôndega, ela vira um planeta e a câmera mergulha até a Toradolândia, onde o Degustador da Noite vigia sob o batsinal da vírgula."></canvas>
+    <div id="hud">
+        <button type="button" id="play" aria-label="Pausar">⏸</button>
+        <input type="range" id="barra" min="0" max="45" step="0.01" value="0" aria-label="Tempo da animação">
+        <span id="tempo">0.0 s</span>
+        <button type="button" id="gravar" title="Grava a animação inteira em vídeo (.webm)">● Gravar vídeo</button>
+    </div>
+    <script src="abertura.js"></script>
+</body>
+</html>
