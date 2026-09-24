@@ -37,13 +37,30 @@ app.get('/', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sen
 // Banco local em data/local-db/ (PGlite), aberto só na primeira consulta.
 // ENZO_DB=memoria usa um banco temporário na memória (testes).
 let api = null;
+
+/**
+ * Login falso para QA (robôs de teste não passam pelo Google): com
+ * ENZO_LOGIN_FALSO=1 a credencial "teste:<apelido>:<Nome>" entra como
+ * <apelido>@teste.local. Só no servidor local e nunca com NODE_ENV=production;
+ * a Netlify Function não tem isto.
+ */
+function loginFalso() {
+    if (process.env.ENZO_LOGIN_FALSO !== '1') return undefined;
+    if (process.env.NODE_ENV === 'production') throw new Error('ENZO_LOGIN_FALSO não pode ser usado em produção.');
+    console.warn('⚠️  ENZO_LOGIN_FALSO=1: login falso ligado (só para testes locais).');
+    return async (credencial) => {
+        const [prefixo, apelido, nome] = String(credencial).split(':');
+        if (prefixo !== 'teste' || !/^[a-z0-9-]{1,30}$/.test(apelido || '')) throw new Error('credencial falsa inválida');
+        return { sub: `teste-${apelido}`, name: nome || apelido, email: `${apelido}@teste.local` };
+    };
+}
 app.use('/api', express.raw({ type: () => true, limit: '32kb' }), async (req, res, next) => {
     try {
         if (!api) {
             const { createApi } = require('./api/handler.js');
             const { createLocalDb } = require('./api/db-local.js');
             const pasta = process.env.ENZO_DB === 'memoria' ? null : path.join(DATA_DIR, 'local-db');
-            api = createApi({ db: createLocalDb(pasta), env: process.env });
+            api = createApi({ db: createLocalDb(pasta), env: process.env, verificarGoogle: loginFalso() });
         }
         const headers = new Headers();
         for (const [nome, valor] of Object.entries(req.headers)) {

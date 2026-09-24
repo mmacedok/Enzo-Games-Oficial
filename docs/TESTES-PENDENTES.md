@@ -49,3 +49,14 @@ Nada da página foi aberto no navegador ainda.
 - [ ] Criar a variável `ADMIN_EMAILS` no Netlify (Functions/Runtime) e fazer deploy novo.
 - [ ] `https://enzo-games.netlify.app/admin.html` entra como admin; conta comum vê "ACESSO NEGADO".
 - [ ] A tabela `admin_log` foi criada sozinha no primeiro acesso.
+
+## Conquistas Superkid e Torado — criadas em 2026-09-24
+
+Já testado: `test/conquistas.test.js` e `test/api.test.js` (passando).
+
+- [ ] Ler o Superkid até a última página → toast "Herói de Operator Village" e figurinha no álbum.
+- [ ] Ler o Torado até a última página → toast "No Olho do Torado".
+- [ ] Álbum da Ficha mostra 6 conquistas; o progresso "lidos/total" aparece nas duas novas.
+- [ ] Leitor que já tinha lido tudo antes ganha as duas ao abrir o site logado.
+- [ ] Terminal: `achievements` lista as duas; `grant superkid-completo` / `revoke torado-completo` funcionam.
+- [ ] Produção: só depois do deploy (o servidor precisa conhecer os ids novos).

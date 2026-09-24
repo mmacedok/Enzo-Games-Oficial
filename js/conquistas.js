@@ -17,6 +17,8 @@
     const LISTA = Object.freeze([
         { id: 'serie-completa', icone: '📚', imagem: 'conquista-leitor-da-saga', titulo: 'Leitor da Saga', descricao: 'Leia todas as edições de Enzo Games até a última página.', colecao: 'serie' },
         { id: 'degustador-completo', icone: '🦇', imagem: 'conquista-vigilia-completa', titulo: 'Vigília Completa', descricao: 'Leia todas as edições do Degustador da Noite até a última página.', colecao: 'degustador' },
+        { id: 'superkid-completo', icone: '🦸', imagem: 'conquista-heroi-de-operator-village', titulo: 'Herói de Operator Village', descricao: 'Leia todas as edições do Superkid até a última página.', colecao: 'superkid' },
+        { id: 'torado-completo', icone: '🌪️', imagem: 'conquista-olho-do-torado', titulo: 'No Olho do Torado', descricao: 'Leia todas as edições do Torado até a última página.', colecao: 'torado' },
         { id: 'macarronada', icone: '🍝', imagem: 'conquista-macarronada', titulo: 'Caçador de Macarronada', descricao: 'Ache a macarronada escondida numa página.' },
         { id: 'cabo-coco', icone: '🥥', imagem: 'conquista-acesso-confidencial', titulo: 'Acesso Confidencial', descricao: 'Descubra a senha do conteúdo banido em 456 países.' },
     ].map(Object.freeze));
@@ -28,6 +30,8 @@
     const CAPITULOS = Object.freeze({
         serie: (comic) => comic.featured !== false,
         degustador: (comic) => comic.id === 'degustador',
+        superkid: (comic) => comic.id === 'superkid',
+        torado: (comic) => comic.id === 'torado',
     });
 
     const idSecreto = (numero) => `${PREFIXO_SECRETO}${numero}`;

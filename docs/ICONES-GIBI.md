@@ -26,6 +26,8 @@ precisa mexer em mais nada.
 | `medalha-3.png` | 3º lugar no placar | 🥉 | Mesma medalha em bronze, fita laranja |
 | `conquista-leitor-da-saga.png` | Conquista **Leitor da Saga** | 📚 | Pilha de 7 gibis, o de cima aberto com orelhas do Enzo aparecendo |
 | `conquista-vigilia-completa.png` | Conquista **Vigília Completa** | 🦇 | Silhueta do Degustador da Noite (gorro de Teemo, capa) na frente da lua cheia, tons roxos |
+| `conquista-heroi-de-operator-village.png` | Conquista **Herói de Operator Village** (Superkid) | 🦸 | Escudo de herói com a silhueta do Superkid e a placa "Operator Village" |
+| `conquista-olho-do-torado.png` | Conquista **No Olho do Torado** | 🌪️ | Redemoinho de vento em espiral com um gibi girando no meio |
 | `conquista-macarronada.png` | Conquista **Caçador de Macarronada** | 🍝 | Tigela de macarronada com almôndegas e uma auréola dourada em cima |
 | `conquista-acesso-confidencial.png` | Conquista **Acesso Confidencial** (Cabo Côco) | 🥥 | Coco com uma tarja preta de censura e um carimbo vermelho |
 | `cadeado.png` | Conquista ainda bloqueada | 🔒 | Cadeado de ferro fechado, pesado, com um "?" riscado de giz |
