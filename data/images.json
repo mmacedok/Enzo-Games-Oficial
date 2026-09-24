@@ -1201,6 +1201,70 @@
       }
     ]
   },
+  "assets/Spin Offs/Torado/Capitulo 1/Capa/capa.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/bb10238a267a0bb3-640.webp",
+        "bytes": 271346
+      },
+      {
+        "width": 941,
+        "src": "assets/web/bb10238a267a0bb3-941.webp",
+        "bytes": 487510
+      }
+    ]
+  },
+  "assets/Spin Offs/Torado/Capitulo 1/Paginas/pagina-01.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/904809e8e5da03e3-640.webp",
+        "bytes": 232086
+      },
+      {
+        "width": 941,
+        "src": "assets/web/904809e8e5da03e3-941.webp",
+        "bytes": 427744
+      }
+    ]
+  },
+  "assets/Spin Offs/Torado/Capitulo 1/Paginas/pagina-02.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/20beac6ece9b1e4f-640.webp",
+        "bytes": 271812
+      },
+      {
+        "width": 941,
+        "src": "assets/web/20beac6ece9b1e4f-941.webp",
+        "bytes": 499658
+      }
+    ]
+  },
+  "assets/Spin Offs/Torado/Capitulo 1/Paginas/pagina-03.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b063b470bfb6bead-640.webp",
+        "bytes": 282912
+      },
+      {
+        "width": 941,
+        "src": "assets/web/b063b470bfb6bead-941.webp",
+        "bytes": 524362
+      }
+    ]
+  },
   "assets/cursors/mp5k-fogo.png": {
     "width": 32,
     "height": 32,

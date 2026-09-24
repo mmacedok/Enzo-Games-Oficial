@@ -32,6 +32,13 @@
           "title": "O que é você... Inominável"
         }
       }
+    },
+    "torado": {
+      "id": "torado",
+      "title": "Torado",
+      "description": "Direto da Toradolândia, no ZeZoVerso",
+      "order": 110,
+      "featured": false
     }
   },
   "censorship": {
