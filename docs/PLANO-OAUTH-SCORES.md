@@ -1,8 +1,24 @@
 # Plano de Implementação: Google OAuth, Sessões Seguras & Sistema de Recordes (Leaderboards)
 
-Status: **Planejado / Especificação Completa**  
+Status: **Implementado (fases 1–6)**; fase 7 (testes) em andamento  
 Data: 24/09/2026  
 Módulos: `server.js`, `js/flappy.js`, `js/ronda.js`, `js/reader.core.js`, `js/characters.js`, novo `js/auth-widget.js`
+
+> **Como ficou na implementação (diferenças deste plano):**
+> - Produção é o Netlify (site estático), onde não existe servidor Node nem disco para o SQLite.
+>   Decisão do Henrique (24/09): **Netlify Functions + Postgres (Netlify DB/Neon)**. Localmente o
+>   mesmo Postgres roda via PGlite, sem instalar nada. O SQL das seções abaixo virou Postgres
+>   (`BIGINT` para tempos, `BOOLEAN`), em `api/schema.js`.
+> - Código em `api/` (não `routes/`, `middleware/`, `services/`, `data/db.js`): `handler.js` (rotas),
+>   `auth.js`, `games.js`, `user.js`, `anti-cheat.js`, `http.js`, `db-local.js`, `db-neon.js`.
+>   A Netlify Function é `netlify/functions/api.mjs`.
+> - O login usa só o ID Token do Google (GIS): **o client secret e a URI de redirecionamento não são usados**.
+> - `game_scores.verified`: recordes trazidos do localStorage entram como recorde pessoal (`false`)
+>   e ficam fora do ranking. O ranking mostra só primeiro nome + inicial, sem foto.
+> - Anti-cheat: os tetos são calculados a partir do `CONFIG` real de `flappy-core.js` e `ronda-core.js`
+>   (Flappy: 1º ponto após 2,28 s e depois 1 a cada 1,4 s; Ronda: metros na velocidade máxima + bônus
+>   de todos os tiros possíveis com recarga), com folga de 5% + 1,5 s.
+> - Configuração: README, seção "Conta Google, recordes e ranking".
 
 ---
 

@@ -80,6 +80,46 @@ Senha da censura: `copodelagrimas`.
   e, com o site ligado ao repositório no Netlify, um deploy novo.
 - Ficam fora do git: `node_modules/`, `dist/`, `output/`, `shots/` e o catálogo gerado.
 
+## Conta Google, recordes e ranking
+
+Login com Google (botão **🔑 Entrar** no topo das páginas), ranking global do
+Flappy Enzo e da Ronda nos Telhados, conquistas e "continuar de onde parou" no
+leitor. Plano completo: [docs/PLANO-OAUTH-SCORES.md](docs/PLANO-OAUTH-SCORES.md).
+
+- `api/` — a API inteira (rotas `/api/*`). Recebe `Request` e devolve `Response`:
+  o `server.js` usa localmente e `netlify/functions/api.mjs` usa no Netlify.
+- Banco: Postgres. No computador é o PGlite (em `data/local-db/`, fora do git;
+  nada para instalar). No Netlify é o Netlify DB (Neon).
+- Sessão: cookie `sid` HttpOnly/SameSite=Lax; o banco guarda só o HMAC do token.
+- Anti-cheat: cada partida pede um `run_token` ao começar; no fim, o servidor
+  compara os pontos com o máximo possível naquele tempo, calculado com as
+  regras de `js/flappy-core.js` e `js/ronda-core.js` (`api/anti-cheat.js`).
+- Convidado continua jogando com recorde local. No primeiro login os recordes
+  locais viram "recorde pessoal" da conta (não entram no ranking, porque não
+  dá para provar que foram jogados).
+- Sem `GOOGLE_CLIENT_ID`/`SESSION_SECRET` o botão Entrar não aparece e o site
+  funciona como antes.
+
+### Configurar no computador
+
+1. Copie `.env.example` para `.env` e preencha `GOOGLE_CLIENT_ID` e
+   `SESSION_SECRET` (o próprio arquivo mostra como gerar a chave).
+2. No Google Cloud Console, no ID do cliente OAuth (Aplicativo da Web), coloque
+   `http://localhost:3000` em **Origens JavaScript autorizadas**.
+3. `npm start`.
+
+O login usa o Google Identity Services (ID Token): **o client secret não é
+usado** e não precisa ir para lugar nenhum.
+
+### Configurar no Netlify
+
+1. `npx netlify db init` (cria o Postgres e a variável `NETLIFY_DATABASE_URL`).
+2. Em Site configuration → Environment variables: `GOOGLE_CLIENT_ID` e
+   `SESSION_SECRET` (outra chave, diferente da local).
+3. No Google Cloud Console, adicione o domínio do site (ex.:
+   `https://enzogames.com.br`) em **Origens JavaScript autorizadas**.
+4. Faça o deploy. As tabelas são criadas sozinhas na primeira chamada.
+
 ## Estrutura
 
 ```
