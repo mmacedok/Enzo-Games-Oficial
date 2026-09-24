@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260923t">
+    <link rel="stylesheet" href="css/style.css?v=20260923v">
     <link rel="stylesheet" href="css/images.generated.css?v=1">
 </head>
 <body class="theme-zezoverso">
@@ -38,15 +38,32 @@
             </div>
         </section>
 
-        <section class="section" id="operator-village" aria-labelledby="operator-title">
-            <h2 class="section-title section-title--center" id="operator-title">Operator Village</h2>
-            <article class="superkid-card" id="superkid">
-                <img data-original="assets/Personagens/Superkid Ficha.png" src="assets/web/77d918b4b1d05682-640.webp" srcset="assets/web/77d918b4b1d05682-640.webp 640w, assets/web/77d918b4b1d05682-1280.webp 1280w, assets/web/77d918b4b1d05682-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2016" height="2086" alt="Ficha do Superkid" loading="lazy">
-                <div>
-                    <h3>Superkid</h3>
-                    <p>O herói que voa por cima das chaminés de Operator Village. A HQ dele está chegando ao ZeZoVerso.</p>
+        <section class="section" id="torado" aria-labelledby="torado-title">
+            <h2 class="section-title" id="torado-title">Torado</h2>
+            <div class="bookcase" id="comic-shelf" data-colecao="torado">
+                <div class="loading">Carregando edições...</div>
+            </div>
+        </section>
+
+        <section class="section" id="superkid" aria-labelledby="superkid-title">
+            <h2 class="section-title" id="superkid-title">Superkid · Operator Village</h2>
+            <div class="bookcase" id="estante-superkid" data-colecao="superkid">
+                <div class="loading">Carregando edições...</div>
+            </div>
+        </section>
+
+        <section class="section" id="fichas" aria-labelledby="fichas-title">
+            <h2 class="section-title section-title--center" id="fichas-title">Fichas do ZeZoVerso</h2>
+            <div class="characters-roster" aria-label="Fichas de personagens do ZeZoVerso">
+                <div class="character-card">
+                    <img data-original="assets/Personagens/Superkid Ficha.png" src="assets/web/77d918b4b1d05682-640.webp" srcset="assets/web/77d918b4b1d05682-640.webp 640w, assets/web/77d918b4b1d05682-1280.webp 1280w, assets/web/77d918b4b1d05682-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2016" height="2086" alt="Superkid" loading="lazy" decoding="async">
+                    <span class="character-name">Superkid</span>
                 </div>
-            </article>
+                <div class="character-card">
+                    <img data-original="assets/Personagens/Degustador da noite Ficha.png" src="assets/web/ae15609878b0c353-640.webp" srcset="assets/web/ae15609878b0c353-640.webp 640w, assets/web/ae15609878b0c353-1280.webp 1280w, assets/web/ae15609878b0c353-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2048" height="2056" alt="Degustador da Noite" loading="lazy" decoding="async">
+                    <span class="character-name">Degustador da Noite</span>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -56,5 +73,9 @@
 
     <script src="js/images.generated.js?v=1"></script>
     <script src="js/site.js?v=6"></script>
+    <script src="js/shelf.js?v=5"></script>
+    <script src="js/comic-open.js?v=4"></script>
+    <script src="js/main.js?v=26"></script>
+    <script src="js/characters.js?v=3"></script>
 </body>
 </html>
