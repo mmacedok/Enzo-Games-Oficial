@@ -70,6 +70,16 @@ reconstrução. O build é idempotente — rodar duas vezes não muda o arquivo.
 
 Senha da censura: `copodelagrimas`.
 
+## Publicar (GitHub + Netlify)
+
+- `npm run build:deploy` atualiza o catálogo e monta `dist/` só com o que é público
+  (páginas `.html`, `css/`, `js/`, `assets/`, `data/database.json` e `data/images.json`).
+- `netlify.toml` manda o Netlify rodar esse comando e publicar `dist/`.
+- Sem GitHub: rode `npm run build:deploy` e arraste a pasta `dist/` no painel do Netlify (Deploys).
+- Com GitHub: cada push na `main` dispara o CI (`.github/workflows/ci.yml`: build + testes)
+  e, com o site ligado ao repositório no Netlify, um deploy novo.
+- Ficam fora do git: `node_modules/`, `dist/`, `output/`, `shots/` e o catálogo gerado.
+
 ## Estrutura
 
 ```

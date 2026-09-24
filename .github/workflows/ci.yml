@@ -1,0 +1,27 @@
+# Confere cada push e pull request: testes (inclui os robôs das regras dos
+# jogos) e o build de publicação (dist/), igual ao que o Netlify roda.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  testes-e-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # O catálogo (data/database.json) é gerado, não fica no git: build antes dos testes.
+      - run: npm run build:deploy
+      - run: npm test
+      - name: dist/ tem as páginas e o catálogo
+        run: |
+          for f in index.html reader.html degustador.html zezoverso.html personagens.html data/database.json data/images.json; do
+            test -f "dist/$f" || { echo "Faltou dist/$f"; exit 1; }
+          done
