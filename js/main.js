@@ -1,8 +1,9 @@
 // ============================================================================
 // Coleções com estante 3D (js/shelf.js) e destaque do lançamento.
-// A página escolhe a coleção em #comic-shelf[data-colecao]:
+// Cada .bookcase[data-colecao] da página vira uma estante (pode haver várias):
 //   "serie"      -> home: um gibi por capítulo da série principal
-//   "<id>"       -> página de spin-off (ex.: "degustador"): um gibi por capítulo
+//   "<id>"       -> spin-off (ex.: "degustador"): um gibi por capítulo
+// O destaque (#hero-comic) usa a primeira estante da página.
 // Regras: valida o banco ANTES de tocar no DOM e nunca usa HTML interpolado
 // com dados do catálogo (evita quebra de atributo e XSS).
 // ============================================================================
@@ -181,36 +182,39 @@
         });
     }
 
-    let shelf = null;
+    const estantes = () => [...document.querySelectorAll('.bookcase[data-colecao]')];
+    let montadas = [];
 
     function render() {
-        const shelfElement = document.getElementById('comic-shelf');
+        const elementos = estantes();
         const heroSection = document.getElementById('hero-comic');
-        if (!shelfElement) return;
+        if (elementos.length === 0) return;
 
-        const colecao = shelfElement.dataset.colecao || 'serie';
-        const editions = editionsFor(colecao);
-        const latest = editions[editions.length - 1] || null;
-
-        if (heroSection) heroSection.replaceChildren(latest ? buildHero(latest, colecao) : buildComingSoon());
-
-        shelf?.destroy();
-        shelf = null;
-        if (editions.length === 0) {
-            const empty = document.createElement('p');
-            empty.className = 'loading';
-            empty.textContent = 'Sua coleção está vazia. Adicione páginas em "assets/".';
-            shelfElement.replaceChildren(empty);
-            return;
-        }
-        shelf = EnzoShelf.mount(shelfElement, editions, {
-            onOpen: (edition, item) => openEdition(edition, item.querySelector('.book-front')),
-            onIntent: preloadFirstPage,
+        montadas.forEach((estante) => estante.destroy());
+        montadas = [];
+        elementos.forEach((shelfElement, indice) => {
+            const colecao = shelfElement.dataset.colecao || 'serie';
+            const editions = editionsFor(colecao);
+            if (indice === 0 && heroSection) {
+                const latest = editions[editions.length - 1] || null;
+                heroSection.replaceChildren(latest ? buildHero(latest, colecao) : buildComingSoon());
+            }
+            if (editions.length === 0) {
+                const empty = document.createElement('p');
+                empty.className = 'loading';
+                empty.textContent = colecao === 'serie' ? 'Sua coleção está vazia. Adicione páginas em "assets/".' : 'Edições em breve.';
+                shelfElement.replaceChildren(empty);
+                return;
+            }
+            montadas.push(EnzoShelf.mount(shelfElement, editions, {
+                onOpen: (edition, item) => openEdition(edition, item.querySelector('.book-front')),
+                onIntent: preloadFirstPage,
+            }));
         });
     }
 
     function renderError(error) {
-        const grid = document.getElementById('comic-shelf');
+        const grid = estantes()[0];
         if (!grid) return;
         const box = document.createElement('div');
         box.className = 'home-error';
@@ -231,7 +235,7 @@
     }
 
     async function init() {
-        if (!document.getElementById('comic-shelf')) return;
+        if (estantes().length === 0) return;
         try {
             const response = await fetch('data/database.json');
             if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
