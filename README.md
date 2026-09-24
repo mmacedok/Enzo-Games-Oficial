@@ -83,7 +83,7 @@ Senha da censura: `copodelagrimas`.
 ## Conta Google, recordes e ranking
 
 Login com Google (botão **🔑 Entrar** no topo das páginas), ranking global do
-Flappy Enzo e da Ronda nos Telhados, conquistas e "continuar de onde parou" no
+Flappy Enzo e da Degustação Noturna, conquistas e "continuar de onde parou" no
 leitor. Plano completo: [docs/PLANO-OAUTH-SCORES.md](docs/PLANO-OAUTH-SCORES.md).
 
 - `api/` — a API inteira (rotas `/api/*`). Recebe `Request` e devolve `Response`:

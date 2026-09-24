@@ -10,7 +10,7 @@
 (() => {
     'use strict';
 
-    const JOGOS = { 'flappy-enzo': 'Flappy Enzo', 'ronda-noturna': 'Ronda nos Telhados' };
+    const JOGOS = { 'flappy-enzo': 'Flappy Enzo', 'ronda-noturna': 'Degustação Noturna' };
     const RECORDES_LOCAIS = { 'flappy-enzo': 'flappyenzo-recorde', 'ronda-noturna': 'ronda-recorde' };
     const CONQUISTAS_LOCAIS = 'enzo-conquistas';
     const MEDALHAS = { 1: '🥇', 2: '🥈', 3: '🥉' };

@@ -1,5 +1,5 @@
 // ============================================================================
-// Regras puras da "Ronda nos Telhados" (minigame do Degustador da Noite).
+// Regras puras da "Degustação Noturna" (minigame do Degustador da Noite).
 // Runner lateral: o Degustador corre sozinho, o mundo passa por ele.
 // Sem DOM e sem canvas — usado por js/ronda.js e pelos testes
 // (test/ronda-core.test.js é o contrato deste arquivo).

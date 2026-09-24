@@ -1290,7 +1290,7 @@ body.theme-degustador .section-title { color: var(--purple); }
     filter: drop-shadow(0 0 22px rgba(138, 43, 226, 0.45));
     user-select: none;
 }
-/* Easter egg: o título abre a Ronda nos Telhados (js/ronda.js) */
+/* Easter egg: o título abre a Degustação Noturna (js/ronda.js) */
 .batman-title[data-ronda-trigger] { width: fit-content; margin-inline: auto; border-radius: var(--radius-sm); transition: filter 0.2s, scale 0.2s; }
 .batman-title[data-ronda-trigger]:hover { filter: drop-shadow(0 0 14px rgba(255, 140, 0, 0.55)); scale: 1.02; }
 .batman-title[data-ronda-trigger]:focus-visible { outline: 3px solid var(--focus); outline-offset: 6px; }
@@ -1439,7 +1439,7 @@ body.enter-from-comic .reader-viewport { animation: reader-enter 0.6s cubic-bezi
 .game-canvas:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
 body.game-dialog-open { overflow: hidden; }
 
-/* Ronda nos Telhados no celular: botões PULAR / ↻ / ATIRAR abaixo do jogo */
+/* Degustação Noturna no celular: botões PULAR / ↻ / ATIRAR abaixo do jogo */
 .ronda-controles {
     display: grid;
     grid-template-columns: 1fr auto 1fr;

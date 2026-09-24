@@ -1,5 +1,5 @@
 // ============================================================================
-// Ronda nos Telhados — minigame do Degustador da Noite (easter egg).
+// Degustação Noturna — minigame do Degustador da Noite (easter egg).
 // Abre ao clicar no título da página do Degustador, na janela compartilhada
 // (js/game-dialog.js). Regras em js/ronda-core.js; aqui só desenho,
 // controles, telas e recorde. Sprites em assets/ronda/; os retângulos ficam de reserva.
@@ -17,8 +17,8 @@
     const calmo = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const janela = GameDialog.create({
-        titulo: 'Ronda nos Telhados',
-        descricaoCanvas: 'Ronda nos Telhados. Espaço pula, F ou clique atira, R recarrega, P pausa. No celular: botões PULAR, ATIRAR e recarregar abaixo do jogo.',
+        titulo: 'Degustação Noturna',
+        descricaoCanvas: 'Degustação Noturna. Espaço pula, F ou clique atira, R recarrega, P pausa. No celular: botões PULAR, ATIRAR e recarregar abaixo do jogo.',
         largura: W,
         altura: H,
         espacoExtra: toque ? 96 : 0,
@@ -477,7 +477,7 @@
         if (jogo.fase === 'pronto') {
             ctx.fillStyle = 'rgba(7, 4, 26, 0.55)';
             ctx.fillRect(0, 0, W, H);
-            texto('RONDA NOS TELHADOS', W / 2, 110, 46, '#ff6600', 7);
+            texto('DEGUSTAÇÃO NOTURNA', W / 2, 110, 46, '#ff6600', 7);
             texto(toque ? 'Use os botões abaixo: PULAR (segure = mais alto) e ATIRAR' : 'ESPAÇO pula  ·  F ou clique atira  ·  R recarrega', W / 2, 170, 18, '#fff', 4);
             texto('10 balas por pente: economize! E não pule no laser rosa.', W / 2, 198, 16, '#e6d6ff', 4);
             texto(toque ? 'Aperte PULAR para começar' : 'Aperte ESPAÇO para começar', W / 2, 250, 26, '#ffd400', 5);
