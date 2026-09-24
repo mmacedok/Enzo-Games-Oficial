@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal — Enzo Games</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#030603">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <!-- Painel do admin: visual próprio (terminal), sem o css do gibi. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css?v=1">
+</head>
+<body>
+    <div class="crt">
+        <header class="barra">
+            <span class="barra-luzes" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="barra-titulo">enzo-games :: /admin</span>
+            <span class="barra-relogio" id="relogio"></span>
+        </header>
+
+        <div class="corpo">
+            <aside class="painel" id="painel" aria-label="Estado do sistema">
+                <pre class="logo" aria-hidden="true">
+ ___ _  _ _______
+| __| \| |_  / _ \
+| _|| .` |/ / (_) |
+|___|_|\_/___\___/ </pre>
+                <p class="painel-sub">degustação noturna · sysadmin</p>
+                <div id="numeros" class="numeros"></div>
+                <nav class="atalhos" id="atalhos" aria-label="Comandos rápidos"></nav>
+            </aside>
+
+            <main class="terminal" id="terminal">
+                <div class="saida" id="saida" role="log" aria-live="polite"></div>
+                <form class="prompt" id="prompt" autocomplete="off">
+                    <label for="entrada" class="prompt-ps" id="ps">root@enzo:~$</label>
+                    <input id="entrada" class="prompt-entrada" spellcheck="false" autocapitalize="off" aria-label="Comando">
+                </form>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/conquistas.js?v=3"></script>
+    <script src="js/admin.js?v=1"></script>
+</body>
+</html>

@@ -122,7 +122,10 @@ const rotas = [
     },
     {
         metodo: 'GET', caminho: '/api/auth/me',
-        executar: (ctx) => (ctx.usuario ? { loggedIn: true, user: usuarioPublico(ctx.usuario) } : { loggedIn: false }),
+        // admin: abre o link do painel (admin.html); a API confere de novo em cada rota.
+        executar: (ctx) => (ctx.usuario
+            ? { loggedIn: true, user: usuarioPublico(ctx.usuario), admin: ctx.config.admins.has(String(ctx.usuario.email).toLowerCase()) }
+            : { loggedIn: false }),
     },
     {
         metodo: 'POST', caminho: '/api/auth/logout',

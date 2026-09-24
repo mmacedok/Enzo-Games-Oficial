@@ -6,6 +6,7 @@
 //   const response = await api(request);
 //
 // Configuração (env): GOOGLE_CLIENT_ID e SESSION_SECRET (>= 32 caracteres).
+// ADMIN_EMAILS (opcional): e-mails Google que abrem o painel admin.html.
 // Sem eles o site funciona, só que sem login (ranking continua visível).
 // ============================================================================
 const { HttpError, json, lerJson, checarMesmaOrigem, lerCookies } = require('./http.js');
@@ -13,9 +14,10 @@ const auth = require('./auth.js');
 const games = require('./games.js');
 const user = require('./user.js');
 const leitores = require('./leitores.js');
+const admin = require('./admin.js');
 const SCHEMA = require('./schema.js');
 
-const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas];
+const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas];
 
 function acharRota(metodo, caminho) {
     let caminhoExiste = false;
@@ -33,7 +35,11 @@ function acharRota(metodo, caminho) {
 function lerConfig(env) {
     const clientId = String(env.GOOGLE_CLIENT_ID || '').trim();
     const sessionSecret = String(env.SESSION_SECRET || '');
-    return { clientId, sessionSecret, loginAtivo: Boolean(clientId) && sessionSecret.length >= 32 };
+    return {
+        clientId, sessionSecret,
+        loginAtivo: Boolean(clientId) && sessionSecret.length >= 32,
+        admins: admin.lerAdmins(env.ADMIN_EMAILS),
+    };
 }
 
 async function migrar(db) {
@@ -74,6 +80,8 @@ function createApi({ db, env = process.env, verificarGoogle, agora = Date.now } 
             await pronto;
             await auth.carregarSessao(ctx);
             if (rota.login && !ctx.usuario) throw new HttpError(401, 'faça login para continuar');
+            // Rotas de admin não existem para quem não é admin.
+            if (rota.admin && !admin.ehAdmin(config, ctx.usuario)) throw new HttpError(404, 'rota não encontrada');
             return json(200, await rota.executar(ctx), ctx.headers);
         } catch (erro) {
             if (erro instanceof HttpError) return json(erro.status, { error: erro.message, ...erro.extra }, ctx.headers);

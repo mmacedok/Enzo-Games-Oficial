@@ -2037,6 +2037,18 @@ img.conta-chave { padding: 6px; object-fit: contain; }
     cursor: pointer;
 }
 .ficha-sair:hover { color: var(--text); background: var(--ink); }
+/* Atalho do admin para o terminal (admin.html): de propósito, cara de terminal. */
+.ficha-terminal {
+    padding: 5px 10px;
+    font: 700 0.78rem/1.2 ui-monospace, Consolas, monospace;
+    color: #8dffa8;
+    background: #020502;
+    border: 2px solid var(--paper-ink);
+    border-radius: 3px;
+    text-decoration: none;
+    text-shadow: 0 0 6px rgba(141, 255, 168, .6);
+}
+.ficha-terminal:hover { background: #0b1f10; }
 
 /* Placar global (ranking), na mesma página de gibi */
 .ranking-dialog { width: min(500px, calc(100vw - 24px)); }

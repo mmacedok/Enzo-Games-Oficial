@@ -15,7 +15,7 @@
     const CONQUISTAS_LOCAIS = 'enzo-conquistas';
     const MEDALHAS = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-    const estado = { disponivel: false, loginAtivo: false, clientId: null, usuario: null, dados: null };
+    const estado = { disponivel: false, loginAtivo: false, clientId: null, usuario: null, admin: false, dados: null };
     const ouvintes = new Set();
     const avisar = () => { for (const fn of ouvintes) { try { fn(api); } catch (erro) { console.error(erro); } } };
 
@@ -48,8 +48,9 @@
 
     async function carregarConta() {
         const eu = await pedir('/api/auth/me');
-        if (!eu.dados?.loggedIn) { estado.usuario = null; estado.dados = null; return; }
+        if (!eu.dados?.loggedIn) { estado.usuario = null; estado.admin = false; estado.dados = null; return; }
         estado.usuario = eu.dados.user;
+        estado.admin = eu.dados.admin === true;
         const sync = await pedir('/api/user/sync');
         estado.dados = sync.ok ? sync.dados : null;
     }
@@ -106,6 +107,7 @@
         await pedir('/api/auth/logout', {});
         window.google?.accounts.id.disableAutoSelect();
         estado.usuario = null;
+        estado.admin = false;
         estado.dados = null;
         renderizar();
         avisar();
@@ -441,6 +443,12 @@
             const sair = botaoEl('ficha-sair', 'Sair da conta');
             sair.addEventListener('click', () => { ficha.close(); sair.disabled = true; sairDaConta(); });
             rodape.append(el('p', 'pagina-continua', 'Continua na próxima edição...'), sair);
+            // Só admin vê o atalho; o painel confere de novo no servidor.
+            if (estado.admin) {
+                const terminal = el('a', 'ficha-terminal', '>_ terminal');
+                terminal.href = 'admin.html';
+                rodape.appendChild(terminal);
+            }
             // Número de leitor vem do perfil público (ordem de chegada ao site).
             if (!numeroProprio) {
                 pedir(`/api/readers/${estado.usuario.id}`).then(({ ok, dados }) => {

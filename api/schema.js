@@ -63,4 +63,14 @@ module.exports = [
         unlocked_at BIGINT NOT NULL,
         PRIMARY KEY (user_id, achievement_id)
     )`,
+    // Histórico do painel admin (quem mexeu em quê).
+    `CREATE TABLE IF NOT EXISTS admin_log (
+        id TEXT PRIMARY KEY,
+        admin_id TEXT,
+        acao TEXT NOT NULL,
+        alvo TEXT,
+        detalhe TEXT,
+        created_at BIGINT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_admin_log_created ON admin_log(created_at)',
 ];
