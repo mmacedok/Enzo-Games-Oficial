@@ -94,3 +94,36 @@ Já testado: `test/comentarios.test.js` (7 testes da API, passando). A tela não
 - [ ] Censurar de novo: as palavras já tarjadas vêm marcadas; desmarcar tudo e salvar tira a tarja.
 - [ ] ⛔ Banir: não aparece nas cartas do próprio admin; confirma e some com todas as cartas do autor; `unban` no terminal traz de volta.
 - [ ] O terminal (`log`) mostra comment-rm, comment-censor e ban.
+
+## Baralho Enzo (pacotes de cartas) — criado em 2026-09-24
+Servidor: `test/baralho.test.js` (Gemini, tarefa 19). Tela: tarefa 20. Login falso `teste:<apelido>:<Nome>`;
+admin dá créditos/pó/pacotes pela rota `/api/admin/users/:id/baralho` (ou `credits`/`dust`/`pack` no terminal, depois da tarefa 19).
+
+### Aba Baralho (Ficha do Leitor)
+- [ ] A aba "Baralho" só aparece logado; no 1º acesso aparece o aviso do pacote de boas-vindas (e só uma vez).
+- [ ] Carteira mostra créditos e pó; banca mostra os 3 pacotes com preço, chances e garantia.
+- [ ] Botão de compra fica apagado sem saldo (dica "Faltam N"); comprar joga o pacote no inventário e desconta.
+- [ ] Inventário agrupa por tipo: "Abrir" e "Abrir N" (até 10).
+- [ ] Fichário: 7 vagas; as que faltam são "???" com o número; ×N nas repetidas.
+- [ ] "Repetidas": − / + (nunca deixa virar a última), "Virar pó +N" credita o valor certo.
+- [ ] "Transformar todas as repetidas": 1º clique pede certeza (volta sozinho em 4 s), 2º transforma; fica 1 de cada.
+- [ ] Clicar numa carta abre a carta grande; Esc/fundo fecha.
+- [ ] Cabo Côco aparece borrada com "BANIDO" até a conta ter a conquista Acesso Confidencial.
+- [ ] Celular (375×812): 3 abas cabem, sem rolagem para os lados, fichário em 3 colunas.
+
+### Abertura (estilo Balatro)
+- [ ] Abrir fecha a Ficha; fundo de tinta rodando nas cores do pacote (cinza/amarelo, verde/roxo, vermelho/laranja).
+- [ ] Pacote balança e inclina com o mouse; clique: aperta, treme, estoura em confete.
+- [ ] Cartas saem do centro e vão para o lugar com mola; balançam e inclinam com o mouse.
+- [ ] Épico/lendário brilham ainda virados; ao virar: raios atrás, lendário com clarão e tremida.
+- [ ] Selos "Nova!" e "Repetida ×N" com o número certo (inclusive abrindo vários pacotes de uma vez).
+- [ ] "Revelar todas"; "Próximo pacote (2/N)"; resumo no fim com vários pacotes; fechar reabre a Ficha na aba Baralho.
+- [ ] Teclado: Tab/Enter viram cartas; Esc fecha.
+- [ ] `prefers-reduced-motion`: sem animação, cartas aparecem direto e viradas.
+- [ ] Celular: 5 cartas cabem na tela (2 fileiras) sem cortar.
+- [ ] Sem WebGL: fundo em degradê parado nas cores do pacote.
+
+### Créditos e ficha pública
+- [ ] Partida verificada mostra "+N créditos" no aviso do fim do jogo; a carteira sobe o mesmo valor.
+- [ ] Ficha de outro leitor mostra "Baralho Enzo · N/7" com as cartas dele (sem quantidades).
+- [ ] Calibrar: quantos créditos por minuto em cada jogo (alvo: ~5 min por Pacote do Estacionamento).

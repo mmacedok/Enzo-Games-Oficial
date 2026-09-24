@@ -1,6 +1,12 @@
 # Plano: Baralho Enzo — pacotes de cartas colecionáveis (TCG)
 
-Status: **plano aprovado em 2026-09-24 (revisão 2), nada implementado ainda.**
+Status (2026-09-24): **fases 1–4 implementadas** (servidor, aba Baralho, abertura, +créditos e ficha pública).
+Falta: testes do servidor e comandos do terminal (Gemini, tarefa 19), QA de tela e calibração (tarefa 20),
+fase 6 (campos e goons).
+
+Mudança pedida pelo Henrique durante a construção: **pacote e abertura no estilo do Balatro** — pacote
+serrilhado com leque de cartas na capa, fundo de tinta rodando (WebGL pixelado, nas `cores` do pacote),
+tudo balança e inclina com mola, o pacote aperta e estoura em confete, as cartas são distribuídas com mola.
 Este arquivo se sustenta sozinho: o chat vai ser limpo, então tudo o que é preciso para construir está aqui.
 
 ## Contexto

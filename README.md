@@ -150,6 +150,16 @@ no computador à direita da última página; no celular embaixo do botão "Ler
 próximo". Só quem tem login escreve (até 500 letras, sem links, 1 carta a cada
 30 s e 30 por dia); o autor pode apagar a própria. Plano: `docs/PLANO-COMENTARIOS.md`.
 
+### Baralho Enzo (pacotes de cartas)
+
+Aba "Baralho" na Ficha (`js/baralho.js`; cartas, pacotes, preços e chances em
+`js/baralho-dados.js`; sorteio e saldo só no servidor, `api/baralho.js`). Cada
+ponto de partida verificada vira créditos (Flappy ×10, Degustação ×1); créditos
+compram pacotes; abrir mostra as cartas em tela cheia (estilo Balatro).
+Repetidas só viram pó de estrela quando a pessoa pede (sempre fica 1); o pó
+também compra o Pacote do Estacionamento. Plano: `docs/PLANO-BARALHO.md`.
+Carta nova: acrescente em `CARTAS` com o próximo número (e reinicie o servidor).
+
 ### Admin
 
 Os e-mails em `ADMIN_EMAILS` (variável de ambiente) viram admin:
