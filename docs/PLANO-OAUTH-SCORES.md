@@ -1,6 +1,6 @@
 # Plano de Implementação: Google OAuth, Sessões Seguras & Sistema de Recordes (Leaderboards)
 
-Status: **Implementado (fases 1–6)**; fase 7 (testes) em andamento  
+Status: **Implementado (fases 1–7)**: `test/api.test.js`, `test/anti-cheat.test.js` e robôs contra o teto  
 Data: 24/09/2026  
 Módulos: `server.js`, `js/flappy.js`, `js/ronda.js`, `js/reader.core.js`, `js/characters.js`, novo `js/auth-widget.js`
 
