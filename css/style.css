@@ -1682,3 +1682,66 @@ body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%
     .site-header .conta-nome { display: none; }
     .site-header .conta-botao { padding: 4px; }
 }
+
+/* Aba Conquistas no balão da conta (js/conquistas.js é a lista) */
+.conta-balao--conta { width: min(330px, calc(100vw - 32px)); }
+.conta-abas { display: flex; gap: 6px; }
+.conta-aba {
+    flex: 1;
+    padding: 5px 8px;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--text);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+}
+.conta-aba[aria-selected="true"] { background: var(--orange-light); box-shadow: var(--pop-sm); }
+.conta-aba:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.conta-aba-corpo { max-height: min(52vh, 420px); overflow-y: auto; }
+.conta-conquistas { display: flex; flex-direction: column; gap: 12px; }
+.conquistas-lista { display: grid; gap: 6px; list-style: none; }
+.conquista {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: var(--text);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-sm);
+    opacity: 0.75;
+}
+.conquista--feita { background: var(--gold); opacity: 1; box-shadow: var(--pop-sm); }
+.conquista-icone { font-size: 1.6rem; text-align: center; }
+.conquista-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.conquista-titulo { font-family: var(--font-heading); font-size: 1.1rem; letter-spacing: 1px; color: var(--ink); }
+.conquista-descricao { font-size: 0.82rem; line-height: 1.25; }
+.conquista-barra { height: 8px; margin-top: 3px; overflow: hidden; background: var(--silver); border: 1px solid var(--ink); border-radius: var(--radius-pill); }
+.conquista-barra-cheia { display: block; width: 0; height: 100%; background: var(--orange); transition: width 0.4s ease; }
+.conquista-conta { font-size: 0.78rem; font-weight: 700; }
+.conquistas-secretos { display: flex; flex-direction: column; gap: 4px; }
+.secretos-grade { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin-top: 4px; list-style: none; }
+.secreto {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    color: var(--line);
+    background: var(--silver);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+}
+.secreto--achado { color: var(--ink); background: var(--orange-light); }
+
+/* Leitor: Enzo secreto (área invisível sobre a arte; brilha ao ser achado) */
+.enzo-secreto-hotspot { position: absolute; z-index: 10; cursor: pointer; border-radius: 50%; }
+.enzo-secreto-hotspot:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.enzo-secreto-hotspot.is-found { animation: enzo-secreto-brilho 0.9s ease-out; }
+@keyframes enzo-secreto-brilho {
+    0% { box-shadow: 0 0 0 0 rgba(255, 204, 0, 0.9); background: rgba(255, 204, 0, 0.45); }
+    100% { box-shadow: 0 0 0 36px rgba(255, 204, 0, 0); background: rgba(255, 204, 0, 0); }
+}

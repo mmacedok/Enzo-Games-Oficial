@@ -100,6 +100,35 @@ leitor. Plano completo: [docs/PLANO-OAUTH-SCORES.md](docs/PLANO-OAUTH-SCORES.md)
 - Sem `GOOGLE_CLIENT_ID`/`SESSION_SECRET` o botão Entrar não aparece e o site
   funciona como antes.
 
+### Conquistas
+
+A aba **Conquistas** fica no balão da conta (clique no seu nome). A lista é
+única, em `js/conquistas.js`, e o servidor só aceita ids de lá:
+
+| Conquista | Como libera |
+|---|---|
+| Leitor da Saga | Ler até a última página todas as edições da série principal |
+| Vigília Completa | Ler até a última página todas as edições do Degustador da Noite |
+| Caçador de Macarronada | Achar a macarronada escondida |
+| Acesso Confidencial | Descobrir a senha do conteúdo banido (libera o Cabo Côco para sempre) |
+| Enzo secreto 1–50 | Colecionáveis: clicar num Enzo escondido nas páginas |
+
+As de coleção contam o catálogo na hora: se sair o capítulo 8, quem ainda não
+tem a conquista precisa ler o 8 também (quem já tem, continua tendo).
+
+**Esconder um Enzo secreto:** acrescente em `easterEggs` do
+`data/comics.manifest.json` (um número de 1 a 50 para cada, sem repetir) e rode
+`npm run build`:
+
+```json
+{ "comicId": "capitulo-2", "pageIndex": 4, "kind": "enzo-secreto", "numero": 1,
+  "box": { "left": "62%", "top": "18%", "width": "9%", "height": "7%" } }
+```
+
+`pageIndex` começa em 0 (sem contar a capa); `chapterId` é opcional (spin-offs
+com vários capítulos, ex. `"chapterId": "2"` no Degustador). A área é invisível
+e brilha ao ser clicada. Convidado também coleciona; sobe para a conta no login.
+
 ### Configurar no computador
 
 1. Copie `.env.example` para `.env` e preencha `GOOGLE_CLIENT_ID` e

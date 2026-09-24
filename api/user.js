@@ -5,9 +5,8 @@ const crypto = require('node:crypto');
 const { HttpError } = require('./http.js');
 const { jogoValido, PONTOS_MAX } = require('./anti-cheat.js');
 const { usuarioPublico } = require('./auth.js');
-
-/** Conquistas que o navegador pode registrar. */
-const CONQUISTAS = Object.freeze(['macarronada', 'cabo-coco']);
+// Lista única de conquistas (a mesma que o site mostra na aba Conquistas).
+const Conquistas = require('../js/conquistas.js');
 const ID = /^[a-z0-9-]{1,64}$/;
 const MAX_PROGRESSOS = 300;
 
@@ -28,7 +27,7 @@ async function estadoDoUsuario(ctx) {
            FROM game_scores WHERE user_id = $1 GROUP BY game_id`, [id]);
     const progresso = await ctx.db.query(
         `SELECT comic_id, chapter_id, last_page, zoom_level, completed, updated_at
-           FROM reading_progress WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 50`, [id]);
+           FROM reading_progress WHERE user_id = $1 ORDER BY updated_at DESC LIMIT ${MAX_PROGRESSOS}`, [id]);
     const leitura = progresso.map((p) => ({
         comicId: p.comic_id, chapterId: p.chapter_id, page: Number(p.last_page),
         zoom: Number(p.zoom_level), completed: Boolean(p.completed), updatedAt: Number(p.updated_at),
@@ -78,8 +77,8 @@ const rotas = [
                 }
             }
             if (Array.isArray(achievements)) {
-                for (const conquista of achievements.slice(0, 20)) {
-                    if (CONQUISTAS.includes(conquista)) await gravarConquista(ctx, conquista);
+                for (const conquista of achievements.slice(0, 100)) {
+                    if (Conquistas.idValido(conquista)) await gravarConquista(ctx, conquista);
                 }
             }
             if (lastRead && idValido(lastRead.comicId) && idValido(lastRead.chapterId)) {
@@ -123,7 +122,7 @@ const rotas = [
         metodo: 'POST', caminho: '/api/user/achievement', login: true,
         async executar(ctx) {
             const { id } = await ctx.corpo();
-            if (!CONQUISTAS.includes(id)) throw new HttpError(400, 'conquista desconhecida');
+            if (!Conquistas.idValido(id)) throw new HttpError(400, 'conquista desconhecida');
             await gravarConquista(ctx, id);
             const conquistas = await ctx.db.query(
                 'SELECT achievement_id FROM user_achievements WHERE user_id = $1 ORDER BY unlocked_at', [ctx.usuario.id]);
@@ -132,4 +131,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, CONQUISTAS, estadoDoUsuario };
+module.exports = { rotas, estadoDoUsuario };

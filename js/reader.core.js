@@ -187,6 +187,35 @@
         return hotspot;
     }
 
+    /**
+     * Enzo secreto nº N: área invisível sobre um elemento da página
+     * (easter egg `kind: "enzo-secreto"`, `numero` e `box` no manifest).
+     * Clicar coleciona (js/conquistas.js); achar de novo só lembra que já tem.
+     */
+    function buildEnzoSecreto(egg) {
+        const trigger = document.createElement('div');
+        trigger.className = 'enzo-secreto-hotspot';
+        trigger.setAttribute('role', 'button');
+        trigger.tabIndex = 0;
+        trigger.setAttribute('aria-label', 'Algo escondido na página');
+        Object.assign(trigger.style, egg.box || {});
+        const id = window.EnzoConquistas?.idSecreto(egg.numero);
+        const collect = async (event) => {
+            event.stopPropagation();
+            if (!id || !conta()) return;
+            trigger.classList.remove('is-found');
+            void trigger.offsetWidth;
+            trigger.classList.add('is-found');
+            if (await conta().conquista(id)) conta().anunciarConquista(id);
+            else showPopup(`enzo-secreto-${egg.numero}-repetido`, '🐱', 'Enzo secreto', `O Nº ${egg.numero} já está na sua coleção!`);
+        };
+        trigger.addEventListener('click', collect);
+        trigger.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); collect(event); }
+        });
+        return trigger;
+    }
+
     function buildEasterEgg(egg) {
         const trigger = document.createElement('div');
         trigger.className = 'easter-egg-trigger';
@@ -303,6 +332,7 @@
             );
             for (const egg of eggs) {
                 if (egg.kind === 'macarronada') wrapper.appendChild(buildMacarronadaHotspot());
+                else if (egg.kind === 'enzo-secreto') wrapper.appendChild(buildEnzoSecreto(egg));
                 else wrapper.appendChild(buildEasterEgg(egg));
             }
 
@@ -448,7 +478,12 @@
         if (!chapter || !conta()?.usuario) return;
         const { page, total } = currentPage();
         if (!total) return;
-        conta().salvarLeitura({ comicId: state.comic.id, chapterId: chapter.id, page, zoom: state.zoom, completed: page === total - 1 }, leaving);
+        // Leu a edição: chegou à última página (ou ao fim da rolagem, se ela for curta).
+        const atBottom = ui.viewport.scrollTop + ui.viewport.clientHeight >= ui.viewport.scrollHeight - 80;
+        const completed = page === total - 1 || atBottom;
+        conta().salvarLeitura({ comicId: state.comic.id, chapterId: chapter.id, page, zoom: state.zoom, completed }, leaving);
+        // Conquistas "ler todas as edições de X" (js/conquistas.js).
+        if (completed && !leaving) conta().verificarColecoes?.(state.db);
     }
 
     let saveTimer = 0;
@@ -459,6 +494,8 @@
         const account = conta();
         if (!account?.usuario || !state.comic) return;
         if (!state.unlocked && account.temConquista('cabo-coco')) unlockCensorship();
+        // Edições lidas antes desta conquista existir também contam.
+        account.verificarColecoes?.(state.db);
         const chapter = state.comic.chapters?.[state.chapterIndex];
         const key = chapter && `${state.comic.id}/${chapter.id}`;
         if (!key || state.restoredKey === key) return;

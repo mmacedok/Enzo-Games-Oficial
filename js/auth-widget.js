@@ -157,14 +157,91 @@
         }).catch((falha) => mostrarErroLogin(falha.message));
     }
 
-    function balaoDaConta(slot) {
-        const nome = el('p', 'conta-balao-titulo', estado.usuario.name);
+    // Aba aberta por último no balão da conta (Recordes ou Conquistas).
+    let abaDaConta = 'recordes';
+
+    function painelRecordes() {
         const recordes = el('ul', 'conta-recordes');
         for (const [jogo, titulo] of Object.entries(JOGOS)) {
             const item = el('li');
             item.append(el('span', '', titulo), el('strong', '', String(melhorRecorde(jogo))));
             recordes.appendChild(item);
         }
+        return recordes;
+    }
+
+    /** Aba Conquistas: lista (coleções com barra de progresso) + grade dos Enzos secretos. */
+    function painelConquistas() {
+        const C = window.EnzoConquistas;
+        const painel = el('div', 'conta-conquistas');
+        if (!C) return painel;
+        const lista = el('ul', 'conquistas-lista');
+        const barras = [];
+        for (const def of C.LISTA) {
+            const feita = temConquista(def.id);
+            const item = el('li', `conquista${feita ? ' conquista--feita' : ''}`);
+            const texto = el('div', 'conquista-texto');
+            texto.append(el('strong', 'conquista-titulo', def.titulo), el('span', 'conquista-descricao', def.descricao));
+            if (def.colecao && !feita) {
+                const barra = el('span', 'conquista-barra');
+                barra.appendChild(el('span', 'conquista-barra-cheia'));
+                const conta = el('span', 'conquista-conta', '...');
+                texto.append(barra, conta);
+                barras.push({ def, barra, conta });
+            }
+            item.append(el('span', 'conquista-icone', feita ? def.icone : '🔒'), texto);
+            item.setAttribute('aria-label', `${def.titulo}: ${feita ? 'desbloqueada' : 'bloqueada'}. ${def.descricao}`);
+            lista.appendChild(item);
+        }
+
+        const achados = Array.from({ length: C.SECRETOS }, (_, i) => temConquista(C.idSecreto(i + 1)));
+        const secretos = el('div', 'conquistas-secretos');
+        secretos.append(
+            el('p', 'conquista-titulo', `Enzo secreto · ${secretosAchados()}/${C.SECRETOS}`),
+            el('p', 'conquista-descricao', 'Enzos escondidos nas páginas das HQs. Clique neles para colecionar!'),
+        );
+        const grade = el('ol', 'secretos-grade');
+        achados.forEach((achado, i) => {
+            const celula = el('li', `secreto${achado ? ' secreto--achado' : ''}`, achado ? String(i + 1) : '?');
+            celula.title = achado ? `Enzo secreto nº ${i + 1}` : 'Ainda escondido';
+            grade.appendChild(celula);
+        });
+        secretos.appendChild(grade);
+        painel.append(lista, secretos);
+
+        // Progresso das coleções precisa do catálogo (quantas edições existem).
+        if (barras.length) {
+            carregarCatalogo().then((catalogo) => {
+                for (const { def, barra, conta } of barras) {
+                    const { lidos, total } = C.progressoDaColecao(catalogo, def.colecao, estado.dados?.progress);
+                    barra.firstChild.style.width = `${total ? Math.round((lidos / total) * 100) : 0}%`;
+                    conta.textContent = `${lidos}/${total} edições lidas`;
+                }
+            }).catch(() => { for (const { conta } of barras) conta.textContent = ''; });
+        }
+        return painel;
+    }
+
+    function balaoDaConta(slot) {
+        const nome = el('p', 'conta-balao-titulo', estado.usuario.name);
+        const abas = el('div', 'conta-abas');
+        abas.setAttribute('role', 'tablist');
+        const corpo = el('div', 'conta-aba-corpo');
+        corpo.setAttribute('role', 'tabpanel');
+        const mostrar = (aba) => {
+            abaDaConta = aba;
+            for (const botao of abas.children) botao.setAttribute('aria-selected', String(botao.dataset.aba === aba));
+            corpo.replaceChildren(aba === 'conquistas' ? painelConquistas() : painelRecordes());
+        };
+        for (const [aba, titulo] of [['recordes', 'Recordes'], ['conquistas', 'Conquistas']]) {
+            const botao = el('button', 'conta-aba', titulo);
+            botao.type = 'button';
+            botao.setAttribute('role', 'tab');
+            botao.dataset.aba = aba;
+            botao.addEventListener('click', () => mostrar(aba));
+            abas.appendChild(botao);
+        }
+        mostrar(abaDaConta);
         const ranking = el('button', 'btn btn--small', '🏆 Ranking');
         ranking.type = 'button';
         ranking.addEventListener('click', () => { fecharBalao(); abrirRanking(); });
@@ -173,7 +250,8 @@
         sairBtn.addEventListener('click', () => { fecharBalao(); sair(); });
         const acoes = el('div', 'conta-acoes');
         acoes.append(ranking, sairBtn);
-        abrirBalao(slot, [nome, el('p', 'conta-balao-texto', 'Meus recordes'), recordes, acoes]);
+        abrirBalao(slot, [nome, abas, corpo, acoes]);
+        balao.classList.add('conta-balao--conta');
     }
 
     function avatar(usuario) {
@@ -314,24 +392,84 @@
     }
 
     // ---------------------------------------------------------------- leitor e conquistas
-    const temConquista = (id) => Boolean(estado.dados?.achievements?.includes(id));
+    /** Logado: conquistas da conta. Convidado: as guardadas no aparelho (sobem no login). */
+    const temConquista = (id) => (estado.usuario
+        ? Boolean(estado.dados?.achievements?.includes(id))
+        : conquistasLocais().includes(id));
 
-    /** Registra uma conquista: na conta se logado; no aparelho (para migrar depois) se não. */
+    /**
+     * Registra uma conquista: na conta se logado; no aparelho (para migrar depois) se não.
+     * Resolve true quando ela é nova (para o chamador comemorar).
+     */
     async function conquista(id) {
+        if (temConquista(id)) return false;
         if (!estado.usuario) {
-            const locais = conquistasLocais();
-            if (!locais.includes(id)) gravarLocal(CONQUISTAS_LOCAIS, JSON.stringify([...locais, id]));
-            return;
+            gravarLocal(CONQUISTAS_LOCAIS, JSON.stringify([...conquistasLocais(), id]));
+            return true;
         }
-        if (temConquista(id)) return;
-        const { ok, dados } = await pedir('/api/user/achievement', { id });
-        if (ok && estado.dados) { estado.dados.achievements = dados.achievements; avisar(); }
+        // Marca já, para dois cliques seguidos não contarem duas vezes.
+        if (estado.dados) estado.dados.achievements = [...(estado.dados.achievements || []), id];
+        const { ok, dados } = await pedir('/api/user/achievement', { id }).catch(() => ({ ok: false }));
+        if (ok && estado.dados) estado.dados.achievements = dados.achievements;
+        avisar();
+        return true;
+    }
+
+    const secretosAchados = () => {
+        const C = window.EnzoConquistas;
+        return C ? Array.from({ length: C.SECRETOS }, (_, i) => temConquista(C.idSecreto(i + 1))).filter(Boolean).length : 0;
+    };
+
+    /** Balão "Conquista desbloqueada" no rodapé (mesmo visual da macarronada do leitor). */
+    function anunciarConquista(id) {
+        const C = window.EnzoConquistas;
+        const numero = C?.numeroSecreto(id);
+        const def = C?.definicao(id);
+        if (!def && !numero) return;
+        const achados = numero ? secretosAchados() : 0;
+        const popup = el('div', 'achievement-popup');
+        popup.setAttribute('role', 'status');
+        const texto = el('div');
+        texto.append(
+            el('div', 'achievement-label', numero ? `Enzo secreto · ${achados}/${C.SECRETOS}` : 'Conquista desbloqueada'),
+            el('div', '', numero ? `VOCÊ ACHOU O ENZO SECRETO Nº ${numero}!` : `${def.titulo.toUpperCase()}!`),
+        );
+        popup.append(el('div', 'achievement-icon', numero ? '🐱' : def.icone), texto);
+        document.body.appendChild(popup);
+        void popup.offsetWidth;
+        popup.classList.add('show');
+        setTimeout(() => { popup.classList.remove('show'); setTimeout(() => popup.remove(), 600); }, 4000);
+    }
+
+    /**
+     * Confere as conquistas de coleção ("ler todas as edições de X") com o
+     * progresso da conta e libera as que ficaram completas. Precisa do catálogo.
+     */
+    async function verificarColecoes(catalogo) {
+        const C = window.EnzoConquistas;
+        if (!C || !estado.usuario || !estado.dados) return;
+        for (const def of C.LISTA) {
+            if (!def.colecao || temConquista(def.id)) continue;
+            const { lidos, total } = C.progressoDaColecao(catalogo, def.colecao, estado.dados.progress);
+            if (total > 0 && lidos === total && await conquista(def.id)) anunciarConquista(def.id);
+        }
+    }
+
+    let catalogoPronto = null;
+    function carregarCatalogo() {
+        catalogoPronto ??= fetch('data/database.json').then((r) => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        }).catch((erro) => { catalogoPronto = null; throw erro; });
+        return catalogoPronto;
     }
 
     /** Progresso do leitor na nuvem (só logado). `saindo` usa keepalive para sobreviver ao fechar a aba. */
     function salvarLeitura({ comicId, chapterId, page, zoom = 1, completed = false }, saindo = false) {
         if (!estado.usuario) return;
-        const registro = { comicId, chapterId, page, zoom, completed, updatedAt: Date.now() };
+        // Terminar um capítulo vale para sempre, mesmo relendo do começo (igual ao servidor).
+        const anterior = progressoDe(comicId, chapterId);
+        const registro = { comicId, chapterId, page, zoom, completed: completed || Boolean(anterior?.completed), updatedAt: Date.now() };
         if (estado.dados) {
             estado.dados.progress = [registro, ...(estado.dados.progress || []).filter((p) => p.comicId !== comicId || p.chapterId !== chapterId)];
             estado.dados.lastRead = registro;
@@ -356,6 +494,8 @@
         melhorRecorde,
         temConquista,
         conquista,
+        anunciarConquista,
+        verificarColecoes,
         salvarLeitura,
         progressoDe,
     };
