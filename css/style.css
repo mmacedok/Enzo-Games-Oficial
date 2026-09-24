@@ -1166,7 +1166,7 @@ a { color: var(--orange-light); text-decoration: none; }
 
 .next-chapter-container { display: flex; justify-content: center; width: 100%; padding: 30px 0 80px; }
 .next-chapter-btn { padding: 8px 10px 8px 24px; cursor: pointer; }
-.next-chapter-btn .reader-title { margin-right: 14px; font-family: var(--font-heading); font-size: 1.35rem; letter-spacing: 1px; color: #fff; }
+.next-chapter-btn .reader-title { margin-right: 14px; font-family: var(--font-heading); font-size: 1.35rem; letter-spacing: 1px; color: var(--ink); }
 .next-chapter-arrow {
     display: flex;
     align-items: center;
