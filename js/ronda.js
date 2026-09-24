@@ -22,6 +22,7 @@
         largura: W,
         altura: H,
         espacoExtra: toque ? 96 : 0,
+        ranking: 'ronda-noturna',
     });
     const { canvas, ctx } = janela;
 
@@ -550,6 +551,7 @@
             }
             if (jogo.fase === 'fim') terminou();
         }
+        janela.mostrarRanking(jogo.fase !== 'correndo' || visual.pausado);
         desenhar();
         quadro = requestAnimationFrame(laco);
     }
@@ -560,6 +562,7 @@
         const total = core.pontos(jogo);
         visual.novoRecorde = total > recorde;
         if (visual.novoRecorde) { recorde = total; salvarRecorde(recorde); }
+        janela.enviarPartida(total, { metros: Math.floor(jogo.distancia / 20), bonus: jogo.bonus });
     }
 
     // ------------------------------------------------------------- controles
@@ -572,6 +575,7 @@
             visual.novoRecorde = false;
             return;
         }
+        if (jogo.fase === 'pronto') janela.iniciarPartida();
         core.pular(jogo, true);
     }
     const soltarPulo = () => core.pular(jogo, false);
@@ -686,6 +690,8 @@
 
     function abrir() {
         if (janela.aberta) return;
+        // Recorde da conta (outro aparelho) vale mais que o local, se for maior.
+        recorde = Math.max(recorde, window.EnzoConta?.melhorRecorde('ronda-noturna') || 0);
         janela.abrir();
         ultimoQuadro = null;
         desenhar();

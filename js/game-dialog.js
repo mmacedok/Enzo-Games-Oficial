@@ -13,6 +13,7 @@
      * @param {number} opcoes.largura
      * @param {number} opcoes.altura
      * @param {number} [opcoes.espacoExtra] px reservados abaixo do canvas (ex.: botões de toque)
+     * @param {string} [opcoes.ranking] id do jogo no ranking global (mostra o botão 🏆 Ranking)
      */
     function create(opcoes = {}) {
         const {
@@ -21,15 +22,30 @@
             largura = 360,
             altura = 640,
             espacoExtra = 0,
+            ranking = null,
         } = opcoes;
 
         const dialog = document.createElement('dialog');
         dialog.className = 'game-dialog';
         dialog.setAttribute('aria-label', titulo);
         dialog.innerHTML = `
-            <button type="button" class="btn btn--small game-close" aria-label="Fechar o jogo">Fechar ×</button>
+            <div class="game-topo">
+                <p class="game-aviso" aria-live="polite"></p>
+                <button type="button" class="btn btn--small game-ranking" hidden>🏆 Ranking</button>
+                <button type="button" class="btn btn--small game-close" aria-label="Fechar o jogo">Fechar ×</button>
+            </div>
             <canvas class="game-canvas" tabindex="0" role="img"></canvas>`;
         document.body.appendChild(dialog);
+
+        // Ranking global (js/auth-widget.js): só aparece se a API do site respondeu.
+        const botaoRanking = dialog.querySelector('.game-ranking');
+        const aviso = dialog.querySelector('.game-aviso');
+        let rankingPermitido = true;
+        const atualizarRanking = () => {
+            botaoRanking.hidden = !(ranking && window.EnzoConta?.disponivel && rankingPermitido);
+        };
+        window.EnzoConta?.pronto.then(atualizarRanking);
+        botaoRanking.addEventListener('click', () => window.EnzoConta?.abrirRanking(ranking));
 
         const canvas = dialog.querySelector('canvas');
         canvas.setAttribute('aria-label', descricaoCanvas);
@@ -76,6 +92,47 @@
             dialog.close();
         }
 
+        /** O jogo esconde o botão de ranking durante a partida (só aparece no início e no fim). */
+        function mostrarRanking(visivel) {
+            if (rankingPermitido === visivel) return;
+            rankingPermitido = visivel;
+            atualizarRanking();
+        }
+
+        /** Mensagem curta no topo da janela (ex.: posição no ranking). Vazio apaga. */
+        function avisar(texto = '') {
+            if (aviso.textContent !== texto) aviso.textContent = texto;
+        }
+
+        // Partida monitorada para o ranking (só com login; convidado joga igual, sem enviar).
+        let partida = null;
+        let rodada = 0;
+        /** Chame quando a partida começa de fato (primeiro toque). */
+        function iniciarPartida() {
+            rodada++;
+            avisar('');
+            partida = ranking ? window.EnzoConta?.iniciarPartida(ranking) ?? null : null;
+        }
+        /** Chame no fim da partida: envia o placar e mostra a posição no topo da janela. */
+        function enviarPartida(pontos, metadata = {}) {
+            const conta = window.EnzoConta;
+            const enviada = partida;
+            const minha = rodada;
+            partida = null;
+            if (!enviada || pontos <= 0) {
+                const convidado = conta?.loginAtivo && !conta.usuario;
+                avisar(convidado && pontos > 0 ? 'Entre com Google (🔑 Entrar, no topo do site) para ir ao ranking.' : '');
+                return;
+            }
+            avisar('Salvando no ranking...');
+            conta.enviarPartida(enviada, pontos, metadata).then((r) => {
+                if (minha !== rodada) return;   // já começou outra partida
+                if (!r) avisar('');
+                else if (r.accepted) avisar(r.position ? `🏆 ${r.position}º lugar no ranking${r.newRecord ? ' · novo recorde!' : ''}` : 'Placar salvo!');
+                else avisar(`Não entrou no ranking: ${r.error}`);
+            });
+        }
+
         return {
             dialog,
             canvas,
@@ -83,6 +140,10 @@
             abrir,
             fechar,
             aoFechar,
+            mostrarRanking,
+            avisar,
+            iniciarPartida,
+            enviarPartida,
             get aberta() {
                 return dialog.open;
             },

@@ -43,12 +43,21 @@
         if (input.value.toLowerCase().replace(/\s/g, '') !== 'copodelagrimas') {
             error.style.display = 'block'; input.select(); return;
         }
-        lockedCard.dataset.locked = 'false';
-        lockedCard.querySelector('.crime-scene-overlay').hidden = true;
-        lockedCard.querySelector('.character-name').textContent = lockedCard.querySelector('img').alt;
-        lockedCard.setAttribute('aria-label', `Abrir ficha: ${lockedCard.querySelector('img').alt}`);
+        unlock(lockedCard);
+        window.EnzoConta?.conquista('cabo-coco');
         closePassword(); show(lockedCard);
     };
+    function unlock(card) {
+        card.dataset.locked = 'false';
+        card.querySelector('.crime-scene-overlay').hidden = true;
+        card.querySelector('.character-name').textContent = card.querySelector('img').alt;
+        card.setAttribute('aria-label', `Abrir ficha: ${card.querySelector('img').alt}`);
+    }
+    // Quem já descobriu a senha com login: fichas banidas ficam liberadas para sempre.
+    window.EnzoConta?.aoMudar(conta => {
+        if (!conta.temConquista('cabo-coco')) return;
+        document.querySelectorAll('.characters-roster .character-card[data-locked="true"]').forEach(unlock);
+    });
     if (overlay) {
         document.getElementById('password-submit').addEventListener('click', check);
         document.getElementById('password-cancel').addEventListener('click', closePassword);

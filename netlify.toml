@@ -21,3 +21,9 @@
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+# API (login Google, recordes, progresso): netlify/functions/api.mjs responde em /api/*.
+# O código vive em api/ (o mesmo que o server.js usa localmente).
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["google-auth-library"]

@@ -32,7 +32,13 @@
         zoom: readStoredZoom(),
         unlocked: false,
         lastScroll: 0,
+        // Progresso na nuvem (js/auth-widget.js): restaura uma vez por capítulo aberto,
+        // a menos que o leitor já tenha rolado/tocado a página.
+        restoredKey: null,
+        interacted: false,
+        jumped: false,           // já pulou para a página salva
     };
+    const conta = () => window.EnzoConta;
 
     // ---------------------------------------------------------------- helpers
     function readStoredZoom() {
@@ -378,11 +384,8 @@
                 setTimeout(() => { error.style.display = 'none'; }, 2000);
                 return;
             }
-            state.unlocked = true;
-            document.querySelectorAll('.cabo-coco-mask').forEach((mask) => {
-                mask.style.opacity = '0';
-                setTimeout(() => mask.remove(), 500);
-            });
+            unlockCensorship();
+            conta()?.conquista('cabo-coco');
             closePasswordModal();
         };
 
@@ -396,19 +399,25 @@
         });
     }
 
+    /** Tira as tarjas do Cabo Côco (senha certa agora ou conquista já salva na conta). */
+    function unlockCensorship() {
+        state.unlocked = true;
+        document.querySelectorAll('.cabo-coco-mask').forEach((mask) => {
+            mask.style.opacity = '0';
+            setTimeout(() => mask.remove(), 500);
+        });
+    }
+
     // ------------------------------------------------------------ achievement
-    function showAchievement() {
-        if (qs('macarronada-achievement')) return;
+    function showPopup(id, icon, label, text) {
+        if (qs(id)) return;
         const popup = document.createElement('div');
-        popup.id = 'macarronada-achievement';
+        popup.id = id;
         popup.className = 'achievement-popup';
-        popup.innerHTML = `
-            <div class="achievement-icon">🏆</div>
-            <div>
-                <div class="achievement-label">Conquista desbloqueada</div>
-                <div>PARABÉNS! VOCÊ ACHOU 1 DE 999 MACARRONADAS!</div>
-            </div>
-        `;
+        popup.innerHTML = '<div class="achievement-icon"></div><div><div class="achievement-label"></div><div class="achievement-text"></div></div>';
+        popup.querySelector('.achievement-icon').textContent = icon;
+        popup.querySelector('.achievement-label').textContent = label;
+        popup.querySelector('.achievement-text').textContent = text;
         document.body.appendChild(popup);
         void popup.offsetWidth;
         popup.classList.add('show');
@@ -416,6 +425,54 @@
             popup.classList.remove('show');
             setTimeout(() => popup.remove(), 600);
         }, 4000);
+    }
+
+    function showAchievement() {
+        if (qs('macarronada-achievement')) return;
+        showPopup('macarronada-achievement', '🏆', 'Conquista desbloqueada', 'PARABÉNS! VOCÊ ACHOU 1 DE 999 MACARRONADAS!');
+        conta()?.conquista('macarronada');
+    }
+
+    // -------------------------------------------------------- cloud progress
+    /** Página (sem contar a capa) que está no meio da tela agora. */
+    function currentPage() {
+        const pages = ui.imageContainer.querySelectorAll('.page-wrapper:not(.cover-wrapper)');
+        const middle = ui.viewport.getBoundingClientRect().top + ui.viewport.clientHeight / 2;
+        let page = 0;
+        pages.forEach((wrapper, index) => { if (wrapper.getBoundingClientRect().top <= middle) page = index; });
+        return { page, total: pages.length };
+    }
+
+    function saveProgress(leaving = false) {
+        const chapter = state.comic?.chapters?.[state.chapterIndex];
+        if (!chapter || !conta()?.usuario) return;
+        const { page, total } = currentPage();
+        if (!total) return;
+        conta().salvarLeitura({ comicId: state.comic.id, chapterId: chapter.id, page, zoom: state.zoom, completed: page === total - 1 }, leaving);
+    }
+
+    let saveTimer = 0;
+    const saveProgressSoon = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveProgress, 1500); };
+
+    /** Aplica a conta ao capítulo aberto: tarja liberada e "continuar de onde parou". */
+    function applyAccount() {
+        const account = conta();
+        if (!account?.usuario || !state.comic) return;
+        if (!state.unlocked && account.temConquista('cabo-coco')) unlockCensorship();
+        const chapter = state.comic.chapters?.[state.chapterIndex];
+        const key = chapter && `${state.comic.id}/${chapter.id}`;
+        if (!key || state.restoredKey === key) return;
+        state.restoredKey = key;
+        const saved = account.progressoDe(state.comic.id, chapter.id);
+        if (!saved || saved.page <= 0 || saved.completed || state.interacted) return;
+        const target = ui.imageContainer.querySelectorAll('.page-wrapper:not(.cover-wrapper)')[saved.page];
+        if (!target) return;
+        const paddingTop = parseFloat(getComputedStyle(ui.viewport).paddingTop) || 0;
+        const top = ui.imageContainer.offsetTop + target.offsetTop - paddingTop;
+        state.lastScroll = top;
+        state.jumped = true;
+        ui.viewport.scrollTop = top;
+        showPopup('reading-restored', '📖', 'Continuando de onde parou', `Página ${saved.page + 1}`);
     }
 
     // ------------------------------------------------------------------ events
@@ -478,7 +535,16 @@
             if (Math.abs(top - state.lastScroll) < 12) return;
             document.body.classList.toggle('ui-hidden', top > state.lastScroll && top > 120);
             state.lastScroll = top;
+            saveProgressSoon();
         }, { passive: true });
+        // Leitor já mexeu na página: não pula mais para a página salva na conta.
+        for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+            ui.viewport.addEventListener(type, () => { state.interacted = true; }, { passive: true });
+        }
+        document.addEventListener('keydown', () => { state.interacted = true; });
+        // Saindo da página (ou trocando de aba): grava a página atual na conta.
+        window.addEventListener('pagehide', () => { clearTimeout(saveTimer); saveProgress(true); });
+        document.addEventListener('visibilitychange', () => { if (document.hidden) { clearTimeout(saveTimer); saveProgress(true); } });
         window.addEventListener('popstate', () => {
             const { comicId, chapterId } = readUrlState();
             if (comicId) loadComic(comicId, chapterId, 'none');
@@ -493,8 +559,12 @@
             return;
         }
 
+        // Trocou de capítulo: guarda onde parou no anterior antes de redesenhar.
+        if (state.comic) { clearTimeout(saveTimer); saveProgress(); }
         state.comic = comic;
         state.unlocked = false;
+        state.interacted = false;
+        state.jumped = false;
         const casa = qs('back-btn');
         if (casa) casa.dataset.nav = casaDo(comic);
 
@@ -520,6 +590,7 @@
         renderChapter();
         if (navigation === 'push') ui.viewport.scrollTo(0, 0);
         document.title = `${comic.title || 'Leitura'} — Enzo Games`;
+        applyAccount();
     }
 
     function renderMissingComic(comicId) {
@@ -565,8 +636,14 @@
         setupPasswordModal();
         setupEventListeners();
         updateZoomUI();
+        conta()?.aoMudar(applyAccount);
 
-        const { comicId, chapterId } = readUrlState();
+        let { comicId, chapterId } = readUrlState();
+        // Aparelho novo, sem gibi na URL nem no localStorage: usa o último lido na conta.
+        if (!comicId && conta()) {
+            const lastRead = (await conta().pronto).dados?.lastRead;
+            if (lastRead) ({ comicId, chapterId } = lastRead);
+        }
         if (!comicId) {
             renderNoComicSelected();
             return;
@@ -580,7 +657,7 @@
             loadComic(comicId, chapterId);
             if (enteringFromComic) {
                 const pagina = ui.imageContainer.querySelector('.page-wrapper:not(.cover-wrapper)');
-                if (pagina) {
+                if (pagina && !state.jumped) {
                     const paddingTopDoViewport = parseFloat(getComputedStyle(ui.viewport).paddingTop) || 0;
                     const alvo = ui.imageContainer.offsetTop + pagina.offsetTop - paddingTopDoViewport;
                     state.lastScroll = alvo;

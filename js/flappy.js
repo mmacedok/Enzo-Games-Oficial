@@ -21,6 +21,7 @@
         descricaoCanvas: 'Flappy Enzo. Toque, clique, espaço ou seta para cima para voar.',
         largura: W,
         altura: H,
+        ranking: 'flappy-enzo',
     });
     const { dialog, canvas, ctx } = janela;
 
@@ -260,6 +261,7 @@
         const antes = jogo.fase;
         core.avancar(jogo, dt);
         if (antes === 'jogando' && jogo.fase === 'fim') terminou();
+        janela.mostrarRanking(jogo.fase !== 'jogando');
         if (jogo.fase === 'fim') visual.fuga = Math.min(1, visual.fuga + Math.min(dt, 0.25) * 1.2);
         desenhar();
         quadro = requestAnimationFrame(laco);
@@ -269,6 +271,7 @@
         visual.fimEm = visual.tempo;
         visual.novoRecorde = jogo.pontos > recorde;
         if (visual.novoRecorde) { recorde = jogo.pontos; salvarRecorde(recorde); }
+        janela.enviarPartida(jogo.pontos, { talheres: jogo.pontos });
     }
 
     // ------------------------------------------------------------- controles
@@ -280,6 +283,7 @@
             visual.novoRecorde = false;
             return;
         }
+        if (jogo.fase === 'pronto') janela.iniciarPartida();
         core.tocar(jogo);
         visual.ultimoToque = visual.tempo;
     }
@@ -306,6 +310,8 @@
 
     function abrir() {
         if (janela.aberta) return;
+        // Recorde da conta (outro aparelho) vale mais que o local, se for maior.
+        recorde = Math.max(recorde, window.EnzoConta?.melhorRecorde('flappy-enzo') || 0);
         janela.abrir();
         ultimoQuadro = null;
         artesProntas.then(() => { cancelAnimationFrame(quadro); quadro = requestAnimationFrame(laco); });

@@ -25,6 +25,11 @@
     --caution: #ffcc00;
     --focus: #ffcf5c;
 
+    /* Pódio do ranking */
+    --gold: #ffd54a;
+    --silver: #e3e3e3;
+    --bronze: #f0b27a;
+
     /* Tema Degustador da Noite */
     --purple: #8a2be2;
     --purple-deep: #4b0082;
@@ -1419,7 +1424,9 @@ body.enter-from-comic .reader-viewport { animation: reader-enter 0.6s cubic-bezi
 }
 .game-dialog[open] { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
 .game-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
-.game-close { align-self: flex-end; }
+.game-topo { display: flex; align-items: center; justify-content: flex-end; gap: 10px; width: 100%; min-height: 44px; }
+.game-aviso { flex: 1; min-width: 0; font-family: var(--font-sans); font-size: 1.1rem; font-weight: 700; color: var(--caution); text-align: left; }
+.game-ranking[hidden] { display: none; }
 .game-canvas {
     display: block;
     border: var(--stroke-thick);
@@ -1502,3 +1509,176 @@ body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%
 .theme-zezoverso .section { scroll-margin-top: 16px; }
 .theme-zezoverso .characters-roster .character-name { color: var(--text); }
 
+
+/* ============================================ Conta (login Google) e ranking
+   js/auth-widget.js: botão no canto do cabeçalho (ou na ilha do leitor),
+   balão da conta e janela do ranking global dos jogos. */
+.site-header { position: relative; }
+.conta { position: absolute; top: 20px; right: 20px; z-index: 30; }
+.conta[hidden] { display: none; }
+.conta-botao {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 16px 4px 4px;
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--paper);
+    border: var(--stroke);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.conta-botao:hover { transform: translate(-1px, -1px); box-shadow: var(--pop); }
+.conta-botao:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.conta-chave,
+.conta-avatar {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    overflow: hidden;
+    font-size: 1.1rem;
+    color: var(--ink);
+    background: var(--orange-light);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+}
+.conta-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.conta-balao {
+    position: absolute;
+    top: calc(100% + 14px);
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(300px, calc(100vw - 32px));
+    padding: 16px;
+    text-align: left;
+    color: var(--paper-ink);
+    background: var(--paper);
+    border: var(--stroke);
+    border-radius: var(--radius);
+    box-shadow: var(--pop);
+}
+/* Rabinho do balão de fala, apontando para o botão */
+.conta-balao::before {
+    content: '';
+    position: absolute;
+    top: -11px;
+    right: 22px;
+    width: 18px;
+    height: 18px;
+    background: var(--paper);
+    border-top: var(--stroke);
+    border-left: var(--stroke);
+    transform: rotate(45deg);
+}
+.conta-balao-titulo { font-family: var(--font-heading); font-size: 1.35rem; letter-spacing: 1px; line-height: 1.1; color: var(--ink); }
+.conta-balao-texto { font-size: 0.95rem; line-height: 1.35; }
+.conta-google { display: flex; justify-content: center; min-height: 44px; }
+.conta-erro { font-size: 0.9rem; font-weight: 700; color: var(--danger); }
+.conta-recordes { display: grid; gap: 6px; list-style: none; }
+.conta-recordes li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 10px;
+    font-weight: 700;
+    background: var(--text);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-sm);
+}
+.conta-recordes strong { font-family: var(--font-heading); font-size: 1.25rem; letter-spacing: 1px; color: var(--orange-deep); }
+.conta-acoes { display: flex; flex-wrap: wrap; gap: 10px; }
+.conta-acoes .btn { flex: 1; white-space: nowrap; }
+
+/* Leitor: só o avatar (ou a chave) na ilha da direita, sem o nome */
+.conta.conta--ilha {
+    position: relative;
+    top: auto;
+    right: auto;
+    display: flex;
+    align-items: center;
+    margin-left: 4px;
+    padding-left: 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+.conta--ilha .conta-botao { padding: 0; background: transparent; border: 0; box-shadow: none; }
+.conta--ilha .conta-nome { display: none; }
+.conta--ilha .conta-balao { top: calc(100% + 18px); right: -8px; }
+
+/* Ranking global */
+.ranking-dialog {
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 18px;
+    color: var(--paper-ink);
+    background: var(--paper);
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    box-shadow: var(--pop-lg);
+}
+.ranking-dialog[open] { display: flex; flex-direction: column; gap: 12px; }
+.ranking-dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+.ranking-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ranking-titulo { font-family: var(--font-heading); font-size: 1.9rem; font-weight: 400; letter-spacing: 1px; color: var(--ink); }
+.ranking-abas { display: flex; gap: 8px; }
+.ranking-aba {
+    flex: 1;
+    padding: 6px 10px;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--text);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+}
+.ranking-aba[aria-selected="true"] { background: var(--orange-light); box-shadow: var(--pop-sm); }
+.ranking-aba:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.ranking-corpo { display: flex; flex-direction: column; gap: 10px; min-height: 120px; overflow-y: auto; }
+.ranking-podio,
+.ranking-lista { display: grid; gap: 6px; list-style: none; }
+.ranking-linha {
+    display: grid;
+    grid-template-columns: 3em minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: var(--text);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-sm);
+}
+.ranking-podio .ranking-linha { padding: 10px 12px; font-size: 1.1rem; box-shadow: var(--pop-sm); }
+.ranking-linha--1 { background: var(--gold); }
+.ranking-linha--2 { background: var(--silver); }
+.ranking-linha--3 { background: var(--bronze); }
+.ranking-linha--eu { outline: 3px solid var(--orange-deep); outline-offset: -1px; }
+.ranking-pos,
+.ranking-pontos { font-family: var(--font-heading); font-size: 1.3rem; letter-spacing: 1px; }
+.ranking-pos { color: var(--ink); }
+.ranking-pontos { color: var(--orange-deep); }
+.ranking-nome { overflow: hidden; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.ranking-lista--eu { padding-top: 10px; border-top: 2px dashed var(--ink); }
+.ranking-vazio,
+.ranking-convite { padding: 8px; font-weight: 700; text-align: center; }
+.ranking-convite { font-size: 0.95rem; }
+
+@media (max-width: 768px) {
+    .conta { top: 14px; right: 14px; }
+    .game-aviso { font-size: 0.95rem; }
+}
+@media (max-width: 600px) {
+    .site-header .conta-nome { display: none; }
+    .site-header .conta-botao { padding: 4px; }
+}

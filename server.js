@@ -33,6 +33,35 @@ app.get(/^\/([a-z0-9-]+)\.html$/, (req, res, next) => {
     res.sendFile(file);
 });
 app.get('/', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'index.html')); });
+// API (login, recordes, progresso): o mesmo código da Netlify Function (api/handler.js).
+// Banco local em data/local-db/ (PGlite), aberto só na primeira consulta.
+// ENZO_DB=memoria usa um banco temporário na memória (testes).
+let api = null;
+app.use('/api', express.raw({ type: () => true, limit: '32kb' }), async (req, res, next) => {
+    try {
+        if (!api) {
+            const { createApi } = require('./api/handler.js');
+            const { createLocalDb } = require('./api/db-local.js');
+            const pasta = process.env.ENZO_DB === 'memoria' ? null : path.join(DATA_DIR, 'local-db');
+            api = createApi({ db: createLocalDb(pasta), env: process.env });
+        }
+        const headers = new Headers();
+        for (const [nome, valor] of Object.entries(req.headers)) {
+            if (valor !== undefined) headers.set(nome, Array.isArray(valor) ? valor.join(', ') : valor);
+        }
+        const temCorpo = !['GET', 'HEAD'].includes(req.method) && Buffer.isBuffer(req.body) && req.body.length > 0;
+        const resposta = await api(new Request(`${req.protocol}://${req.get('host')}${req.originalUrl}`, {
+            method: req.method, headers, body: temCorpo ? req.body : undefined,
+        }));
+        res.status(resposta.status);
+        resposta.headers.forEach((valor, nome) => { if (nome !== 'set-cookie') res.setHeader(nome, valor); });
+        const cookies = resposta.headers.getSetCookie();
+        if (cookies.length) res.setHeader('Set-Cookie', cookies);
+        res.send(Buffer.from(await resposta.arrayBuffer()));
+    } catch (erro) {
+        next(erro);
+    }
+});
 for (const file of ['database.json', 'images.json']) {
     app.get(`/data/${file}`, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(DATA_DIR, file)); });
 }
@@ -44,4 +73,8 @@ function start() {
 
 module.exports = { app, start };
 
-if (require.main === module) start();
+if (require.main === module) {
+    // Segredos locais (GOOGLE_CLIENT_ID, SESSION_SECRET) ficam em .env, fora do git.
+    try { process.loadEnvFile(path.join(__dirname, '.env')); } catch { /* sem .env: site sem login */ }
+    start();
+}
