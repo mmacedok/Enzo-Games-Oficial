@@ -812,6 +812,22 @@ a { color: var(--orange-light); text-decoration: none; }
 }
 .universe-links .btn { font-size: 1.7rem; padding: 12px 26px; }
 
+/* Mapa do mundo (home): áreas clicáveis invisíveis por cima da imagem */
+.mapa-mundo {
+    position: relative;
+    max-width: 1140px;
+    margin: 18px auto 0;
+    line-height: 0;
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--pop);
+}
+.mapa-mundo-img { display: block; width: 100%; height: auto; }
+.mapa-area { position: absolute; display: block; border-radius: 14px; transition: background-color 0.2s, box-shadow 0.2s; }
+.mapa-area:hover { background: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.55); }
+.mapa-area:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+
 /* ------------------------------------------------------ rodapé / PIX */
 .site-footer {
     margin-top: 70px;
@@ -1448,3 +1464,30 @@ body.game-dialog-open { overflow: hidden; }
 .book-front.cover-letterbox > img,
 .hero-cover-wrapper.cover-letterbox > img,
 .comic-fly .cover-letterbox > img { position: relative; z-index: 1; object-fit: contain; object-position: center; }
+
+/* =============================================================== ZeZoVerso
+   zezoverso.html: spin-offs e o Superkid. Tema cósmico (roxo, rosa e ciano). */
+body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%, #120a2a 45%, #07041a 100%) fixed; color: #fff; }
+.theme-zezoverso .section-title { color: #fff; text-shadow: 3px 3px 0 #000, 0 0 16px rgba(255, 79, 216, 0.7); }
+.theme-zezoverso .back-link { border-color: #ff4fd8; box-shadow: 2px 2px 0 #ff4fd8; }
+.zezoverso-title { padding: 0 0 18px; line-height: 0; text-align: center; }
+.zezoverso-header { display: block; width: min(94vw, 570px); height: auto; margin-inline: auto; filter: drop-shadow(0 0 22px rgba(0, 229, 255, 0.35)); }
+.superkid-card {
+    display: grid;
+    grid-template-columns: minmax(0, 320px) 1fr;
+    gap: 24px;
+    align-items: center;
+    max-width: 900px;
+    margin: 18px auto 0;
+    padding: 18px;
+    color: var(--text);
+    background: var(--surface);
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    box-shadow: var(--pop);
+    scroll-margin-top: 24px;
+}
+.superkid-card img { width: 100%; height: auto; border-radius: var(--radius-sm); }
+.superkid-card h3 { margin: 0 0 8px; font-family: var(--font-heading); font-size: 2rem; letter-spacing: 1px; }
+@media (max-width: 700px) { .superkid-card { grid-template-columns: 1fr; } }
+

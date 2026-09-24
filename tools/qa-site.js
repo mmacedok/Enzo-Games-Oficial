@@ -15,7 +15,11 @@
         check(sizes.size === 1, 'todos os gibis do mesmo tamanho');
         const columns = Number(document.querySelector('#comic-shelf').dataset.columns);
         check(document.querySelectorAll('.shelf-row').length === Math.ceil(6 / columns), 'prateleiras conforme a largura');
-        check(document.querySelectorAll('a[data-nav]').length === 3, 'navegação para extras');
+        check(document.querySelectorAll('a[data-nav]').length === 4, 'navegação para extras (áreas do mapa)');
+        const mapa = document.querySelector('.mapa-mundo-img');
+        check(mapa && mapa.naturalWidth > 0, 'mapa do mundo carregado');
+        check(document.querySelector('.mapa-area[href="degustador.html"]'), 'Toradolândia leva ao Degustador');
+        check(document.querySelectorAll('.mapa-area[href^="zezoverso.html"]').length >= 3, 'Superkid, Operator Village e letreiro levam ao ZeZoVerso');
         const copy = document.querySelector('[data-pix]');
         const original = navigator.clipboard.writeText;
         let copied;
@@ -85,6 +89,12 @@
         document.querySelector('#image-container img').click();
         check(document.body.classList.contains('ui-hidden'), 'toque esconde controles');
         document.querySelector('#image-container img').click();
+    }
+    if (path === '/zezoverso.html') {
+        const topo = document.querySelector('.zezoverso-header');
+        check(topo && topo.naturalWidth > 0, 'letreiro do ZeZoVerso carregado');
+        check(document.querySelector('#spin-offs a[href="degustador.html"]'), 'spin-off do Degustador listado');
+        check(document.querySelector('#superkid img')?.naturalWidth > 0, 'ficha do Superkid carregada');
     }
     if (path === '/degustador.html') {
         const livros = [...document.querySelectorAll('#comic-shelf .shelf-book')];

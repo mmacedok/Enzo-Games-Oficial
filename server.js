@@ -23,7 +23,7 @@ function publicHeaders(res, filePath) {
 for (const directory of ['assets', 'css', 'js']) {
     app.use(`/${directory}`, express.static(path.join(__dirname, directory), { dotfiles: 'deny', setHeaders: publicHeaders }));
 }
-for (const page of ['index.html', 'reader.html', 'personagens.html', 'degustador.html']) {
+for (const page of ['index.html', 'reader.html', 'personagens.html', 'degustador.html', 'zezoverso.html']) {
     app.get(`/${page}`, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, page)); });
 }
 app.get('/', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'index.html')); });

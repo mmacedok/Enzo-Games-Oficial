@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 const base = process.argv[2] || 'http://localhost:3016';
-const pages = ['index.html', 'personagens.html', 'degustador.html', ...[1,2,3,4,5,6].map(n => `reader.html?comic=capitulo-${n}`), 'reader.html?comic=degustador'];
+const pages = ['index.html', 'personagens.html', 'degustador.html', 'zezoverso.html', ...[1,2,3,4,5,6].map(n => `reader.html?comic=capitulo-${n}`), 'reader.html?comic=degustador'];
 const results = [];
 mkdirSync('shots/site-audit', { recursive: true });
 for (const mobile of [false, true]) {
