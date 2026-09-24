@@ -18781,7 +18781,8 @@ var require_auth = __commonJS({
       {
         metodo: "GET",
         caminho: "/api/auth/me",
-        executar: (ctx) => ctx.usuario ? { loggedIn: true, user: usuarioPublico(ctx.usuario) } : { loggedIn: false }
+        // admin: abre o link do painel (admin.html); a API confere de novo em cada rota.
+        executar: (ctx) => ctx.usuario ? { loggedIn: true, user: usuarioPublico(ctx.usuario), admin: ctx.config.admins.has(String(ctx.usuario.email).toLowerCase()) } : { loggedIn: false }
       },
       {
         metodo: "POST",
@@ -19438,6 +19439,8 @@ var require_conquistas = __commonJS({
       const LISTA = Object.freeze([
         { id: "serie-completa", icone: "\u{1F4DA}", imagem: "conquista-leitor-da-saga", titulo: "Leitor da Saga", descricao: "Leia todas as edi\xE7\xF5es de Enzo Games at\xE9 a \xFAltima p\xE1gina.", colecao: "serie" },
         { id: "degustador-completo", icone: "\u{1F987}", imagem: "conquista-vigilia-completa", titulo: "Vig\xEDlia Completa", descricao: "Leia todas as edi\xE7\xF5es do Degustador da Noite at\xE9 a \xFAltima p\xE1gina.", colecao: "degustador" },
+        { id: "superkid-completo", icone: "\u{1F9B8}", imagem: "conquista-heroi-de-operator-village", titulo: "Her\xF3i de Operator Village", descricao: "Leia todas as edi\xE7\xF5es do Superkid at\xE9 a \xFAltima p\xE1gina.", colecao: "superkid" },
+        { id: "torado-completo", icone: "\u{1F32A}\uFE0F", imagem: "conquista-olho-do-torado", titulo: "No Olho do Torado", descricao: "Leia todas as edi\xE7\xF5es do Torado at\xE9 a \xFAltima p\xE1gina.", colecao: "torado" },
         { id: "macarronada", icone: "\u{1F35D}", imagem: "conquista-macarronada", titulo: "Ca\xE7ador de Macarronada", descricao: "Ache a macarronada escondida numa p\xE1gina." },
         { id: "cabo-coco", icone: "\u{1F965}", imagem: "conquista-acesso-confidencial", titulo: "Acesso Confidencial", descricao: "Descubra a senha do conte\xFAdo banido em 456 pa\xEDses." }
       ].map(Object.freeze));
@@ -19445,7 +19448,9 @@ var require_conquistas = __commonJS({
       const PREFIXO_SECRETO = "enzo-secreto-";
       const CAPITULOS = Object.freeze({
         serie: (comic) => comic.featured !== false,
-        degustador: (comic) => comic.id === "degustador"
+        degustador: (comic) => comic.id === "degustador",
+        superkid: (comic) => comic.id === "superkid",
+        torado: (comic) => comic.id === "torado"
       });
       const idSecreto = (numero) => `${PREFIXO_SECRETO}${numero}`;
       function numeroSecreto(id) {
@@ -19736,6 +19741,505 @@ var require_leitores = __commonJS({
   }
 });
 
+// api/admin.js
+var require_admin = __commonJS({
+  "api/admin.js"(exports, module) {
+    var crypto2 = __require("node:crypto");
+    var { HttpError } = require_http();
+    var { jogoValido } = require_anti_cheat();
+    var { limparFala } = require_leitores();
+    var Conquistas = require_conquistas();
+    var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+    var POR_PAGINA = 50;
+    var SEGMENTO = "([^/]{1,64})";
+    function lerAdmins(valor) {
+      return new Set(String(valor || "").split(/[,;\s]+/).map((e2) => e2.trim().toLowerCase()).filter(Boolean));
+    }
+    var ehAdmin = (config2, usuario) => Boolean(usuario?.email) && config2.admins.has(String(usuario.email).toLowerCase());
+    function exigirUuid(id, oque = "conta") {
+      if (!UUID.test(id)) throw new HttpError(404, `${oque} n\xE3o encontrada`);
+      return id;
+    }
+    async function exigirUsuario(ctx, id) {
+      const [usuario] = await ctx.db.query("SELECT id, display_name, email, role FROM users WHERE id = $1", [exigirUuid(id)]);
+      if (!usuario) throw new HttpError(404, "conta n\xE3o encontrada");
+      return usuario;
+    }
+    async function registrar(ctx, acao, alvo, detalhe = null) {
+      await ctx.db.query(
+        "INSERT INTO admin_log (id, admin_id, acao, alvo, detalhe, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+        [crypto2.randomUUID(), ctx.usuario.id, acao, alvo, detalhe === null ? null : String(detalhe).slice(0, 200), ctx.agora()]
+      );
+    }
+    async function ultimasAcoes(db, limite) {
+      const linhas = await db.query(
+        `SELECT l.acao, l.alvo, l.detalhe, l.created_at, a.display_name AS admin, u.display_name AS alvo_nome
+           FROM admin_log l
+           LEFT JOIN users a ON a.id = l.admin_id
+           LEFT JOIN users u ON u.id = l.alvo
+          ORDER BY l.created_at DESC, l.id LIMIT $1`,
+        [limite]
+      );
+      return linhas.map((l) => ({
+        acao: l.acao,
+        alvo: l.alvo,
+        alvoNome: l.alvo_nome || null,
+        detalhe: l.detalhe,
+        admin: l.admin || "?",
+        em: Number(l.created_at)
+      }));
+    }
+    var partida = (s2) => ({
+      id: s2.id,
+      gameId: s2.game_id,
+      score: Number(s2.score),
+      durationMs: Number(s2.duration_ms),
+      verified: Boolean(s2.verified),
+      metadata: s2.client_metadata,
+      em: Number(s2.created_at)
+    });
+    var rotas = [
+      {
+        metodo: "GET",
+        caminho: "/api/admin/overview",
+        admin: true,
+        async executar(ctx) {
+          const agora = ctx.agora();
+          const [n] = await ctx.db.query(
+            `SELECT (SELECT COUNT(*) FROM users) AS contas,
+                        (SELECT COUNT(*) FROM users WHERE role = 'banned') AS banidos,
+                        (SELECT COUNT(*) FROM users WHERE last_login_at > $1) AS ativos_7d,
+                        (SELECT COUNT(*) FROM sessions WHERE expires_at > $2) AS sessoes,
+                        (SELECT COUNT(*) FROM game_scores WHERE verified) AS partidas,
+                        (SELECT COUNT(*) FROM game_scores WHERE NOT verified) AS partidas_fora,
+                        (SELECT COUNT(*) FROM user_achievements) AS conquistas,
+                        (SELECT COUNT(*) FROM reading_progress WHERE completed) AS capitulos_lidos`,
+            [agora - 7 * 24 * 60 * 60 * 1e3, agora]
+          );
+          const numeros = Object.fromEntries(Object.entries(n).map(([k, v]) => [k, Number(v)]));
+          return { agora, numeros, log: await ultimasAcoes(ctx.db, 8) };
+        }
+      },
+      {
+        metodo: "GET",
+        caminho: "/api/admin/users",
+        admin: true,
+        async executar(ctx) {
+          const pagina = Math.max(0, Math.min(1e3, Number.parseInt(ctx.url.searchParams.get("pagina"), 10) || 0));
+          const busca = String(ctx.url.searchParams.get("q") || "").trim().slice(0, 80);
+          const filtro = busca ? `%${busca.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
+          const linhas = await ctx.db.query(
+            `SELECT u.id, u.display_name, u.email, u.role, u.avatar_url, u.fala, u.created_at, u.last_login_at,
+                        (SELECT COUNT(*) FROM user_achievements a
+                          WHERE a.user_id = u.id AND a.achievement_id NOT LIKE 'enzo-secreto-%') AS conquistas,
+                        (SELECT COUNT(*) FROM user_achievements a
+                          WHERE a.user_id = u.id AND a.achievement_id LIKE 'enzo-secreto-%') AS secretos,
+                        (SELECT COUNT(*) FROM game_scores s WHERE s.user_id = u.id) AS partidas
+                   FROM users u
+                  WHERE $1::text IS NULL OR u.display_name ILIKE $1 OR u.email ILIKE $1 OR u.id = $4
+                  ORDER BY u.last_login_at DESC, u.id
+                  LIMIT $2 OFFSET $3`,
+            [filtro, POR_PAGINA + 1, pagina * POR_PAGINA, busca]
+          );
+          return {
+            users: linhas.slice(0, POR_PAGINA).map((l) => ({
+              id: l.id,
+              name: l.display_name,
+              email: l.email,
+              role: l.role,
+              avatarUrl: l.avatar_url || null,
+              fala: l.fala || null,
+              criadoEm: Number(l.created_at),
+              ultimoLogin: Number(l.last_login_at),
+              conquistas: Number(l.conquistas),
+              secretos: Number(l.secretos),
+              partidas: Number(l.partidas),
+              admin: ehAdmin(ctx.config, l)
+            })),
+            pagina,
+            maisPaginas: linhas.length > POR_PAGINA
+          };
+        }
+      },
+      {
+        metodo: "GET",
+        caminho: new RegExp(`^/api/admin/users/${SEGMENTO}$`),
+        admin: true,
+        async executar(ctx) {
+          const id = exigirUuid(ctx.params[0]);
+          const [u] = await ctx.db.query("SELECT * FROM users WHERE id = $1", [id]);
+          if (!u) throw new HttpError(404, "conta n\xE3o encontrada");
+          const conquistas = await ctx.db.query(
+            "SELECT achievement_id, unlocked_at FROM user_achievements WHERE user_id = $1 ORDER BY unlocked_at",
+            [id]
+          );
+          const partidas = await ctx.db.query(
+            "SELECT * FROM game_scores WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100",
+            [id]
+          );
+          const leitura = await ctx.db.query(
+            `SELECT comic_id, chapter_id, last_page, completed, updated_at FROM reading_progress
+                  WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 300`,
+            [id]
+          );
+          const [{ sessoes }] = await ctx.db.query(
+            "SELECT COUNT(*) AS sessoes FROM sessions WHERE user_id = $1 AND expires_at > $2",
+            [id, ctx.agora()]
+          );
+          return {
+            id: u.id,
+            name: u.display_name,
+            email: u.email,
+            role: u.role,
+            avatarUrl: u.avatar_url || null,
+            fala: u.fala || null,
+            criadoEm: Number(u.created_at),
+            ultimoLogin: Number(u.last_login_at),
+            admin: ehAdmin(ctx.config, u),
+            sessoes: Number(sessoes),
+            achievements: conquistas.map((c) => ({ id: c.achievement_id, em: Number(c.unlocked_at) })),
+            scores: partidas.map(partida),
+            reading: leitura.map((p) => ({
+              comicId: p.comic_id,
+              chapterId: p.chapter_id,
+              page: Number(p.last_page),
+              completed: Boolean(p.completed),
+              em: Number(p.updated_at)
+            }))
+          };
+        }
+      },
+      {
+        metodo: "POST",
+        caminho: new RegExp(`^/api/admin/users/${SEGMENTO}/achievement$`),
+        admin: true,
+        async executar(ctx) {
+          const alvo = await exigirUsuario(ctx, ctx.params[0]);
+          const { achievement, unlocked } = await ctx.corpo();
+          if (!Conquistas.idValido(achievement)) throw new HttpError(400, "conquista desconhecida");
+          if (typeof unlocked !== "boolean") throw new HttpError(400, "unlocked deve ser true ou false");
+          const linhas = unlocked ? await ctx.db.query(
+            `INSERT INTO user_achievements (user_id, achievement_id, unlocked_at) VALUES ($1, $2, $3)
+                     ON CONFLICT (user_id, achievement_id) DO NOTHING RETURNING achievement_id`,
+            [alvo.id, achievement, ctx.agora()]
+          ) : await ctx.db.query(
+            "DELETE FROM user_achievements WHERE user_id = $1 AND achievement_id = $2 RETURNING achievement_id",
+            [alvo.id, achievement]
+          );
+          if (linhas.length) await registrar(ctx, unlocked ? "grant" : "revoke", alvo.id, achievement);
+          return { achievement, unlocked, changed: linhas.length > 0 };
+        }
+      },
+      {
+        metodo: "POST",
+        caminho: new RegExp(`^/api/admin/users/${SEGMENTO}/role$`),
+        admin: true,
+        async executar(ctx) {
+          const alvo = await exigirUsuario(ctx, ctx.params[0]);
+          const { role } = await ctx.corpo();
+          if (role !== "player" && role !== "banned") throw new HttpError(400, "role deve ser 'player' ou 'banned'");
+          if (alvo.id === ctx.usuario.id) throw new HttpError(400, "voc\xEA n\xE3o pode banir a pr\xF3pria conta");
+          if (role === "banned" && ehAdmin(ctx.config, alvo)) throw new HttpError(400, "n\xE3o d\xE1 para banir outro admin");
+          await ctx.db.query("UPDATE users SET role = $2 WHERE id = $1", [alvo.id, role]);
+          if (role === "banned") await ctx.db.query("DELETE FROM sessions WHERE user_id = $1", [alvo.id]);
+          if (alvo.role !== role) await registrar(ctx, role === "banned" ? "ban" : "unban", alvo.id);
+          return { role };
+        }
+      },
+      {
+        metodo: "POST",
+        caminho: new RegExp(`^/api/admin/users/${SEGMENTO}/fala$`),
+        admin: true,
+        async executar(ctx) {
+          const alvo = await exigirUsuario(ctx, ctx.params[0]);
+          const fala = limparFala((await ctx.corpo()).fala);
+          await ctx.db.query("UPDATE users SET fala = $2 WHERE id = $1", [alvo.id, fala]);
+          await registrar(ctx, "fala", alvo.id, fala ?? "(fala do Enzo)");
+          return { fala };
+        }
+      },
+      {
+        metodo: "POST",
+        caminho: new RegExp(`^/api/admin/users/${SEGMENTO}/kick$`),
+        admin: true,
+        async executar(ctx) {
+          const alvo = await exigirUsuario(ctx, ctx.params[0]);
+          if (alvo.id === ctx.usuario.id) throw new HttpError(400, 'use "Sair da conta" para derrubar a sua sess\xE3o');
+          const linhas = await ctx.db.query("DELETE FROM sessions WHERE user_id = $1 RETURNING id", [alvo.id]);
+          await registrar(ctx, "kick", alvo.id, `${linhas.length} sess\xE3o(\xF5es)`);
+          return { sessoes: linhas.length };
+        }
+      },
+      {
+        metodo: "GET",
+        caminho: "/api/admin/scores",
+        admin: true,
+        async executar(ctx) {
+          const jogo = ctx.url.searchParams.get("game") || null;
+          if (jogo && !jogoValido(jogo)) throw new HttpError(400, "jogo desconhecido");
+          const linhas = await ctx.db.query(
+            `SELECT s.*, u.display_name FROM game_scores s JOIN users u ON u.id = s.user_id
+                  WHERE $1::text IS NULL OR s.game_id = $1
+                  ORDER BY s.created_at DESC LIMIT 100`,
+            [jogo]
+          );
+          return { scores: linhas.map((s2) => ({ ...partida(s2), userId: s2.user_id, name: s2.display_name })) };
+        }
+      },
+      {
+        metodo: "POST",
+        caminho: new RegExp(`^/api/admin/scores/${SEGMENTO}/verify$`),
+        admin: true,
+        async executar(ctx) {
+          const id = exigirUuid(ctx.params[0], "partida");
+          const { verified } = await ctx.corpo();
+          if (typeof verified !== "boolean") throw new HttpError(400, "verified deve ser true ou false");
+          const [s2] = await ctx.db.query(
+            "UPDATE game_scores SET verified = $2 WHERE id = $1 RETURNING user_id, game_id, score",
+            [id, verified]
+          );
+          if (!s2) throw new HttpError(404, "partida n\xE3o encontrada");
+          await registrar(ctx, verified ? "score-on" : "score-off", s2.user_id, `${s2.game_id} ${s2.score}`);
+          return { id, verified };
+        }
+      },
+      {
+        metodo: "POST",
+        caminho: new RegExp(`^/api/admin/scores/${SEGMENTO}/delete$`),
+        admin: true,
+        async executar(ctx) {
+          const id = exigirUuid(ctx.params[0], "partida");
+          const [s2] = await ctx.db.query(
+            "DELETE FROM game_scores WHERE id = $1 RETURNING user_id, game_id, score",
+            [id]
+          );
+          if (!s2) throw new HttpError(404, "partida n\xE3o encontrada");
+          await registrar(ctx, "rm-score", s2.user_id, `${s2.game_id} ${s2.score}`);
+          return { id, deleted: true };
+        }
+      },
+      {
+        metodo: "GET",
+        caminho: "/api/admin/log",
+        admin: true,
+        executar: async (ctx) => ({ log: await ultimasAcoes(ctx.db, 100) })
+      }
+    ];
+    module.exports = { rotas, lerAdmins, ehAdmin };
+  }
+});
+
+// api/comentarios.js
+var require_comentarios = __commonJS({
+  "api/comentarios.js"(exports, module) {
+    var crypto2 = __require("node:crypto");
+    var fs2 = __require("node:fs");
+    var path = __require("node:path");
+    var { HttpError } = require_http();
+    var { nomePublico } = require_auth();
+    var { ehAdmin } = require_admin();
+    var TEXTO_MAX = 500;
+    var POR_PAGINA = 30;
+    var INTERVALO = 30 * 1e3;
+    var POR_DIA = 30;
+    var TRECHOS_MAX = 50;
+    var TARJA_MAX = 12;
+    var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+    var ID = /^[a-z0-9-]{1,64}$/;
+    var CONTROLE = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f​-‏‪-‮⁠-⁩﻿]/g;
+    var LINK = /(https?:|www\.|\.(com|net|org|br|io|gg|xyz|me)\b)/i;
+    var capitulos = null;
+    var lidoEm = 0;
+    function capitulosValidos() {
+      const embutido = '["capitulo-1/capitulo-1-unico","capitulo-2/capitulo-2-unico","capitulo-3/capitulo-3-unico","capitulo-4/capitulo-4-unico","capitulo-5/capitulo-5-unico","capitulo-6/capitulo-6-unico","capitulo-7/capitulo-7-unico","degustador/1","degustador/2","degustador/3","degustador/4","torado/1","superkid/1"]';
+      if (embutido) return capitulos ??= new Set(JSON.parse(embutido));
+      if (capitulos && Date.now() - lidoEm < 6e4) return capitulos;
+      try {
+        const catalogo = JSON.parse(fs2.readFileSync(path.join(__dirname, "..", "data", "database.json"), "utf8"));
+        capitulos = new Set(catalogo.comics.flatMap((c) => (c.chapters || []).map((cap) => `${c.id}/${cap.id}`)));
+        lidoEm = Date.now();
+      } catch {
+        capitulos = null;
+      }
+      return capitulos;
+    }
+    function exigirCapitulo(comicId, chapterId) {
+      if (typeof comicId !== "string" || typeof chapterId !== "string" || !ID.test(comicId) || !ID.test(chapterId)) {
+        throw new HttpError(400, "gibi ou cap\xEDtulo inv\xE1lido");
+      }
+      const validos = capitulosValidos();
+      if (validos && !validos.has(`${comicId}/${chapterId}`)) throw new HttpError(404, "cap\xEDtulo n\xE3o encontrado");
+      return { comicId, chapterId };
+    }
+    function limparTexto(texto) {
+      if (typeof texto !== "string") throw new HttpError(400, "escreva alguma coisa");
+      const limpo = texto.normalize("NFC").replace(/\r\n?/g, "\n").replace(CONTROLE, " ").split("\n").map((l) => l.replace(/\s+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+      if (!limpo) throw new HttpError(400, "escreva alguma coisa");
+      if ([...limpo].length > TEXTO_MAX) throw new HttpError(400, `o coment\xE1rio tem no m\xE1ximo ${TEXTO_MAX} letras`);
+      if (LINK.test(limpo)) throw new HttpError(400, "sem links nos coment\xE1rios");
+      return limpo;
+    }
+    function normalizarTrechos(trechos, tamanho) {
+      if (!Array.isArray(trechos) || trechos.length > TRECHOS_MAX) throw new HttpError(400, "trechos inv\xE1lidos");
+      const ordenados = trechos.map((t2) => {
+        if (!Array.isArray(t2) || t2.length !== 2 || !t2.every(Number.isSafeInteger)) throw new HttpError(400, "trechos inv\xE1lidos");
+        const [a, b] = t2;
+        if (a < 0 || b > tamanho || a >= b) throw new HttpError(400, "trecho fora do texto");
+        return [a, b];
+      }).sort((x2, y) => x2[0] - y[0]);
+      const juntos = [];
+      for (const [a, b] of ordenados) {
+        const ultimo = juntos[juntos.length - 1];
+        if (ultimo && a <= ultimo[1]) ultimo[1] = Math.max(ultimo[1], b);
+        else juntos.push([a, b]);
+      }
+      return juntos;
+    }
+    function lerTrechos(json) {
+      try {
+        const t2 = JSON.parse(json || "[]");
+        return Array.isArray(t2) ? t2 : [];
+      } catch {
+        return [];
+      }
+    }
+    function pedacos(texto, trechos) {
+      const saida = [];
+      let pos = 0;
+      for (const [a, b] of trechos) {
+        if (a > pos) saida.push({ t: texto.slice(pos, a) });
+        saida.push({ tarja: Math.min(TARJA_MAX, Math.max(2, [...texto.slice(a, b)].length)) });
+        pos = b;
+      }
+      if (pos < texto.length) saida.push({ t: texto.slice(pos) });
+      return saida;
+    }
+    function comentario(ctx, l, admin) {
+      const trechos = lerTrechos(l.censuras);
+      const eu = ctx.usuario?.id === l.user_id;
+      const c = {
+        id: l.id,
+        autor: { id: l.user_id, name: nomePublico(l.display_name), avatarUrl: l.avatar_url || null },
+        pedacos: pedacos(l.texto, trechos),
+        censurado: trechos.length > 0,
+        em: Number(l.created_at),
+        isMe: eu,
+        podeApagar: eu || admin
+      };
+      if (admin) Object.assign(c, { texto: l.texto, trechos, autorAdmin: ehAdmin(ctx.config, { email: l.email }) });
+      return c;
+    }
+    async function registrar(ctx, acao, alvo, detalhe) {
+      await ctx.db.query(
+        "INSERT INTO admin_log (id, admin_id, acao, alvo, detalhe, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+        [crypto2.randomUUID(), ctx.usuario.id, acao, alvo, String(detalhe).slice(0, 200), ctx.agora()]
+      );
+    }
+    var CAMPOS = `c.id, c.user_id, c.texto, c.censuras, c.created_at, u.display_name, u.avatar_url, u.email`;
+    async function buscar(ctx, id) {
+      if (!UUID.test(id)) throw new HttpError(404, "coment\xE1rio n\xE3o encontrado");
+      const [l] = await ctx.db.query(
+        `SELECT ${CAMPOS}, c.comic_id, c.chapter_id FROM comments c JOIN users u ON u.id = c.user_id
+          WHERE c.id = $1 AND c.apagado_em IS NULL`,
+        [id]
+      );
+      if (!l) throw new HttpError(404, "coment\xE1rio n\xE3o encontrado");
+      return l;
+    }
+    var rotas = [
+      {
+        metodo: "GET",
+        caminho: "/api/comments",
+        async executar(ctx) {
+          const busca = ctx.url.searchParams;
+          const { comicId, chapterId } = exigirCapitulo(busca.get("comic"), busca.get("chapter"));
+          const antes = Number.parseInt(busca.get("antes"), 10);
+          const admin = ehAdmin(ctx.config, ctx.usuario);
+          const linhas = await ctx.db.query(
+            `SELECT ${CAMPOS} FROM comments c JOIN users u ON u.id = c.user_id
+                  WHERE c.comic_id = $1 AND c.chapter_id = $2 AND c.apagado_em IS NULL AND u.role <> 'banned'
+                    AND ($3::bigint IS NULL OR c.created_at < $3)
+                  ORDER BY c.created_at DESC, c.id LIMIT $4`,
+            [comicId, chapterId, Number.isSafeInteger(antes) ? antes : null, POR_PAGINA + 1]
+          );
+          const [{ total }] = await ctx.db.query(
+            `SELECT COUNT(*) AS total FROM comments c JOIN users u ON u.id = c.user_id
+                  WHERE c.comic_id = $1 AND c.chapter_id = $2 AND c.apagado_em IS NULL AND u.role <> 'banned'`,
+            [comicId, chapterId]
+          );
+          return {
+            comments: linhas.slice(0, POR_PAGINA).map((l) => comentario(ctx, l, admin)),
+            total: Number(total),
+            maisAntigos: linhas.length > POR_PAGINA,
+            admin
+          };
+        }
+      },
+      {
+        metodo: "POST",
+        caminho: "/api/comments",
+        login: true,
+        async executar(ctx) {
+          const corpo = await ctx.corpo();
+          const { comicId, chapterId } = exigirCapitulo(corpo.comicId, corpo.chapterId);
+          const texto = limparTexto(corpo.texto);
+          const agora = ctx.agora();
+          const [{ ultimo, hoje }] = await ctx.db.query(
+            `SELECT MAX(created_at) AS ultimo, COUNT(*) FILTER (WHERE created_at > $2) AS hoje
+                   FROM comments WHERE user_id = $1`,
+            [ctx.usuario.id, agora - 24 * 60 * 60 * 1e3]
+          );
+          if (ultimo !== null && agora - Number(ultimo) < INTERVALO) {
+            throw new HttpError(429, "calma! espere uns segundos antes de mandar outra carta");
+          }
+          if (Number(hoje) >= POR_DIA) throw new HttpError(429, `limite de ${POR_DIA} cartas por dia`);
+          const id = crypto2.randomUUID();
+          await ctx.db.query(
+            `INSERT INTO comments (id, user_id, comic_id, chapter_id, texto, created_at)
+                 VALUES ($1, $2, $3, $4, $5, $6)`,
+            [id, ctx.usuario.id, comicId, chapterId, texto, agora]
+          );
+          const l = await buscar(ctx, id);
+          return { comment: comentario(ctx, l, ehAdmin(ctx.config, ctx.usuario)) };
+        }
+      },
+      {
+        metodo: "POST",
+        caminho: /^\/api\/comments\/([^/]{1,64})\/delete$/,
+        login: true,
+        async executar(ctx) {
+          const l = await buscar(ctx, ctx.params[0]);
+          const admin = ehAdmin(ctx.config, ctx.usuario);
+          if (l.user_id !== ctx.usuario.id && !admin) throw new HttpError(403, "s\xF3 quem escreveu pode apagar");
+          await ctx.db.query(
+            "UPDATE comments SET apagado_em = $2, apagado_por = $3 WHERE id = $1",
+            [l.id, ctx.agora(), ctx.usuario.id]
+          );
+          if (l.user_id !== ctx.usuario.id) await registrar(ctx, "comment-rm", l.user_id, `${l.comic_id}/${l.chapter_id}: ${l.texto}`);
+          return { id: l.id, deleted: true };
+        }
+      },
+      {
+        metodo: "POST",
+        caminho: /^\/api\/admin\/comments\/([^/]{1,64})\/censor$/,
+        admin: true,
+        async executar(ctx) {
+          const l = await buscar(ctx, ctx.params[0]);
+          const trechos = normalizarTrechos((await ctx.corpo()).trechos, l.texto.length);
+          await ctx.db.query(
+            "UPDATE comments SET censuras = $2 WHERE id = $1",
+            [l.id, trechos.length ? JSON.stringify(trechos) : null]
+          );
+          const escondido = trechos.map(([a, b]) => l.texto.slice(a, b)).join(", ");
+          await registrar(ctx, "comment-censor", l.user_id, trechos.length ? `tarja: ${escondido}` : "sem tarja");
+          return { comment: comentario(ctx, { ...l, censuras: JSON.stringify(trechos) }, true) };
+        }
+      }
+    ];
+    module.exports = { rotas, limparTexto, normalizarTrechos, pedacos, TEXTO_MAX };
+  }
+});
+
 // api/schema.js
 var require_schema = __commonJS({
   "api/schema.js"(exports, module) {
@@ -19797,7 +20301,32 @@ var require_schema = __commonJS({
         achievement_id TEXT NOT NULL,
         unlocked_at BIGINT NOT NULL,
         PRIMARY KEY (user_id, achievement_id)
-    )`
+    )`,
+      // Histórico do painel admin (quem mexeu em quê).
+      `CREATE TABLE IF NOT EXISTS admin_log (
+        id TEXT PRIMARY KEY,
+        admin_id TEXT,
+        acao TEXT NOT NULL,
+        alvo TEXT,
+        detalhe TEXT,
+        created_at BIGINT NOT NULL
+    )`,
+      "CREATE INDEX IF NOT EXISTS idx_admin_log_created ON admin_log(created_at)",
+      // Cartas dos Leitores (api/comentarios.js). censuras = JSON [[inicio, fim], ...];
+      // apagar é "soft delete" (apagado_em), para o histórico saber o que saiu.
+      `CREATE TABLE IF NOT EXISTS comments (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        comic_id TEXT NOT NULL,
+        chapter_id TEXT NOT NULL,
+        texto TEXT NOT NULL,
+        censuras TEXT,
+        apagado_em BIGINT,
+        apagado_por TEXT,
+        created_at BIGINT NOT NULL
+    )`,
+      "CREATE INDEX IF NOT EXISTS idx_comments_capitulo ON comments(comic_id, chapter_id, created_at)",
+      "CREATE INDEX IF NOT EXISTS idx_comments_usuario ON comments(user_id, created_at)"
     ];
   }
 });
@@ -19810,8 +20339,10 @@ var require_handler = __commonJS({
     var games = require_games();
     var user = require_user();
     var leitores = require_leitores();
+    var admin = require_admin();
+    var comentarios = require_comentarios();
     var SCHEMA = require_schema();
-    var ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas];
+    var ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...comentarios.rotas];
     function acharRota(metodo, caminho) {
       let caminhoExiste = false;
       for (const rota of ROTAS) {
@@ -19825,7 +20356,12 @@ var require_handler = __commonJS({
     function lerConfig(env) {
       const clientId = String(env.GOOGLE_CLIENT_ID || "").trim();
       const sessionSecret = String(env.SESSION_SECRET || "");
-      return { clientId, sessionSecret, loginAtivo: Boolean(clientId) && sessionSecret.length >= 32 };
+      return {
+        clientId,
+        sessionSecret,
+        loginAtivo: Boolean(clientId) && sessionSecret.length >= 32,
+        admins: admin.lerAdmins(env.ADMIN_EMAILS)
+      };
     }
     async function migrar(db) {
       for (const comando of SCHEMA) await db.query(comando);
@@ -19863,6 +20399,7 @@ var require_handler = __commonJS({
           await pronto;
           await auth.carregarSessao(ctx);
           if (rota.login && !ctx.usuario) throw new HttpError(401, "fa\xE7a login para continuar");
+          if (rota.admin && !admin.ehAdmin(config2, ctx.usuario)) throw new HttpError(404, "rota n\xE3o encontrada");
           return json(200, await rota.executar(ctx), ctx.headers);
         } catch (erro) {
           if (erro instanceof HttpError) return json(erro.status, { error: erro.message, ...erro.extra }, ctx.headers);
