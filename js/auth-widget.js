@@ -431,8 +431,8 @@
         popup.setAttribute('role', 'status');
         const texto = el('div');
         texto.append(
-            el('div', 'achievement-label', numero ? `Enzo secreto · ${achados}/${C.SECRETOS}` : 'Conquista desbloqueada'),
-            el('div', '', numero ? `VOCÊ ACHOU O ENZO SECRETO Nº ${numero}!` : `${def.titulo.toUpperCase()}!`),
+            el('div', 'achievement-label', numero ? 'Parabéns! Conquista desbloqueada' : 'Conquista desbloqueada'),
+            el('div', '', numero ? `VOCÊ ACHOU ${achados} DE ${C.SECRETOS} ENZOS SECRETOS!` : `${def.titulo.toUpperCase()}!`),
         );
         popup.append(el('div', 'achievement-icon', numero ? '🐱' : def.icone), texto);
         document.body.appendChild(popup);

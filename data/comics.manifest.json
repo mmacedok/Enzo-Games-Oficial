@@ -96,6 +96,7 @@
       "comicId": "capitulo-5",
       "pageIndex": 3,
       "image": "assets/Easter Eggs/Easter egg1.jpg",
+      "numero": 1,
       "box": {
         "left": "53%",
         "top": "52.5%",

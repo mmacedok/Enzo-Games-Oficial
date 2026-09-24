@@ -1745,3 +1745,4 @@ body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%
     0% { box-shadow: 0 0 0 0 rgba(255, 204, 0, 0.9); background: rgba(255, 204, 0, 0.45); }
     100% { box-shadow: 0 0 0 36px rgba(255, 204, 0, 0); background: rgba(255, 204, 0, 0); }
 }
+.easter-egg-trigger.is-found { animation: enzo-secreto-brilho 0.9s ease-out; }

@@ -192,6 +192,17 @@
      * (easter egg `kind: "enzo-secreto"`, `numero` e `box` no manifest).
      * Clicar coleciona (js/conquistas.js); achar de novo só lembra que já tem.
      */
+    /** Coleciona o Enzo secreto nº `numero` (brilho na área + notificação). */
+    async function collectSecret(numero, trigger) {
+        const id = window.EnzoConquistas?.idSecreto(numero);
+        if (!id || !conta()) return;
+        trigger.classList.remove('is-found');
+        void trigger.offsetWidth;
+        trigger.classList.add('is-found');
+        if (await conta().conquista(id)) conta().anunciarConquista(id);
+        else showPopup(`enzo-secreto-${numero}-repetido`, '🐱', 'Enzo secreto', `O Nº ${numero} já está na sua coleção!`);
+    }
+
     function buildEnzoSecreto(egg) {
         const trigger = document.createElement('div');
         trigger.className = 'enzo-secreto-hotspot';
@@ -199,16 +210,7 @@
         trigger.tabIndex = 0;
         trigger.setAttribute('aria-label', 'Algo escondido na página');
         Object.assign(trigger.style, egg.box || {});
-        const id = window.EnzoConquistas?.idSecreto(egg.numero);
-        const collect = async (event) => {
-            event.stopPropagation();
-            if (!id || !conta()) return;
-            trigger.classList.remove('is-found');
-            void trigger.offsetWidth;
-            trigger.classList.add('is-found');
-            if (await conta().conquista(id)) conta().anunciarConquista(id);
-            else showPopup(`enzo-secreto-${egg.numero}-repetido`, '🐱', 'Enzo secreto', `O Nº ${egg.numero} já está na sua coleção!`);
-        };
+        const collect = (event) => { event.stopPropagation(); collectSecret(egg.numero, trigger); };
         trigger.addEventListener('click', collect);
         trigger.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); collect(event); }
@@ -235,6 +237,8 @@
             image.classList.add('show-secret');
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => image.classList.remove('show-secret'), 10000);
+            // Imagem secreta com `numero` no manifest também é um Enzo secreto colecionável.
+            if (egg.numero) collectSecret(egg.numero, trigger);
         };
         trigger.addEventListener('click', (event) => { event.stopPropagation(); reveal(); });
         trigger.addEventListener('keydown', (event) => {
