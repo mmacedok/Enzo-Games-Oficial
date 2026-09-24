@@ -4,6 +4,7 @@
 // - Cache: HTML sempre revalidado; assets versionados podem ser imutáveis.
 // ============================================================================
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -23,9 +24,14 @@ function publicHeaders(res, filePath) {
 for (const directory of ['assets', 'css', 'js']) {
     app.use(`/${directory}`, express.static(path.join(__dirname, directory), { dotfiles: 'deny', setHeaders: publicHeaders }));
 }
-for (const page of ['index.html', 'reader.html', 'personagens.html', 'degustador.html', 'zezoverso.html']) {
-    app.get(`/${page}`, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, page)); });
-}
+// Páginas: qualquer .html da pasta principal (nome simples, sem subpastas).
+// Página nova não precisa ser registrada aqui nem reiniciar o servidor.
+app.get(/^\/([a-z0-9-]+)\.html$/, (req, res, next) => {
+    const file = path.join(__dirname, `${req.params[0]}.html`);
+    if (!fs.existsSync(file)) return next();
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(file);
+});
 app.get('/', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'index.html')); });
 for (const file of ['database.json', 'images.json']) {
     app.get(`/data/${file}`, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(DATA_DIR, file)); });
