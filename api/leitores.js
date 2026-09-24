@@ -3,7 +3,7 @@
 //   GET  /api/readers          lista de leitores (página ?pagina=N, 60 por vez)
 //   GET  /api/readers/:id      perfil público: fala, conquistas e recordes
 //   POST /api/user/profile     { fala } — o dono muda a própria fala
-// Público = nome abreviado ("Henrique M."), sem foto do Google e sem e-mail.
+// Público = nome abreviado ("Henrique M."), foto do Google e nada de e-mail.
 // Recordes públicos são só os verificados (os do ranking).
 // ============================================================================
 const { HttpError } = require('./http.js');
@@ -41,7 +41,7 @@ const rotas = [
         async executar(ctx) {
             const pagina = Math.max(0, Math.min(1000, Number.parseInt(ctx.url.searchParams.get('pagina'), 10) || 0));
             const linhas = await ctx.db.query(
-                `SELECT u.id, u.display_name, u.fala, ${NUMERO} AS numero,
+                `SELECT u.id, u.display_name, u.fala, u.avatar_url, ${NUMERO} AS numero,
                         (SELECT COUNT(*) FROM user_achievements a
                           WHERE a.user_id = u.id AND a.achievement_id NOT LIKE 'enzo-secreto-%') AS conquistas,
                         (SELECT COUNT(*) FROM user_achievements a
@@ -56,6 +56,7 @@ const rotas = [
                     id: l.id,
                     name: nomePublico(l.display_name),
                     fala: l.fala || null,
+                    avatarUrl: l.avatar_url || null,
                     numero: Number(l.numero),
                     conquistas: Number(l.conquistas),
                     secretos: Number(l.secretos),
@@ -71,7 +72,7 @@ const rotas = [
         async executar(ctx) {
             const id = exigirUuid(ctx.params[0]);
             const [leitor] = await ctx.db.query(
-                `SELECT u.id, u.display_name, u.fala, u.created_at, ${NUMERO} AS numero
+                `SELECT u.id, u.display_name, u.fala, u.avatar_url, u.created_at, ${NUMERO} AS numero
                    FROM users u WHERE u.id = $1 AND u.role <> 'banned'`, [id]);
             if (!leitor) throw new HttpError(404, 'leitor não encontrado');
             const conquistas = await ctx.db.query(
@@ -83,6 +84,7 @@ const rotas = [
                 id: leitor.id,
                 name: nomePublico(leitor.display_name),
                 fala: leitor.fala || null,
+                avatarUrl: leitor.avatar_url || null,
                 numero: Number(leitor.numero),
                 desde: Number(leitor.created_at),
                 achievements: conquistas.map((c) => c.achievement_id),

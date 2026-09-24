@@ -276,8 +276,7 @@
     }
 
     function quadroDoLeitor(perfil) {
-        // Foto do Google só na própria ficha; para os outros, o medalhão com a inicial.
-        const retrato = avatar({ firstName: perfil.firstName || perfil.name, avatarUrl: perfil.proprio ? perfil.avatarUrl : null }, 'ficha-retrato');
+        const retrato = avatar({ firstName: perfil.firstName || perfil.name, avatarUrl: perfil.avatarUrl }, 'ficha-retrato');
         return quadro('quadro--leitor', '', retrato, balaoDaFala(perfil), el('p', 'ficha-nome', perfil.name));
     }
 
@@ -377,7 +376,7 @@
                 const selo = el('span', 'leitor-selo');
                 selo.append(el('span', '', 'Nº'), el('strong', '', String(leitor.numero)));
                 const topo = el('span', 'leitor-topo');
-                topo.append(avatar({ firstName: leitor.name }, 'leitor-medalhao'), el('span', 'leitor-nome', leitor.isMe ? `${leitor.name} (você)` : leitor.name), selo);
+                topo.append(avatar({ firstName: leitor.name, avatarUrl: leitor.avatarUrl }, 'leitor-medalhao'), el('span', 'leitor-nome', leitor.isMe ? `${leitor.name} (você)` : leitor.name), selo);
                 const fala = el('span', `leitor-fala${leitor.fala ? '' : ' leitor-fala--vazia'}`, leitor.fala || '...');
                 const numeros = el('span', 'leitor-numeros');
                 const conquistas = el('span', '');

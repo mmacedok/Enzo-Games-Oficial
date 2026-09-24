@@ -2224,6 +2224,8 @@ img.conta-chave { padding: 6px; object-fit: contain; }
     border: var(--stroke);
     border-radius: 50%;
 }
+.leitor-medalhao { overflow: hidden; }
+.leitor-medalhao img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .leitor-medalhao .conta-inicial { font-size: 1.3rem; }
 .leitor-nome { flex: 1; min-width: 0; font-family: var(--font-heading); font-size: 1.15rem; letter-spacing: 1px; line-height: 1.05; color: var(--ink); overflow-wrap: anywhere; }
 .leitor-selo { display: flex; flex-direction: column; align-items: center; padding: 1px 6px; font-size: 0.55rem; font-weight: 700; line-height: 1.1; color: var(--ink); background: var(--text); border: 2px solid var(--ink); }

@@ -139,9 +139,9 @@ Clicar no seu medalhão abre a **Ficha do Leitor** (`js/auth-widget.js`), com du
   ficha pública (`GET /api/readers/:id`): fala, conquistas, Enzos secretos e
   recordes do placar. Os nomes no Placar global também abrem a ficha.
 
-Público é só: nome abreviado ("Henrique M."), número de leitor (ordem de
-chegada), fala, conquistas e recordes verificados. Foto do Google, e-mail e
-progresso de leitura ficam privados.
+Público: nome abreviado ("Henrique M."), foto do Google, número de leitor
+(ordem de chegada), fala, conquistas e recordes verificados. E-mail e progresso
+de leitura ficam privados.
 
 ### Configurar no computador
 
