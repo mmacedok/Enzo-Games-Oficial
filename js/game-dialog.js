@@ -129,7 +129,11 @@
             conta.enviarPartida(enviada, pontos, metadata).then((r) => {
                 if (minha !== rodada) return;   // já começou outra partida
                 if (!r) avisar('');
-                else if (r.accepted) avisar(r.position ? `🏆 ${r.position}º lugar no ranking${r.newRecord ? ' · novo recorde!' : ''}` : 'Placar salvo!');
+                else if (r.accepted) {
+                    const texto = r.position ? `🏆 ${r.position}º lugar no ranking${r.newRecord ? ' · novo recorde!' : ''}` : 'Placar salvo!';
+                    // Pontos viram créditos do Baralho Enzo (api/baralho.js).
+                    avisar(r.credits > 0 ? `${texto} · +${r.credits.toLocaleString('pt-BR')} créditos` : texto);
+                }
                 else avisar(`Não entrou no ranking: ${r.error}`);
             });
         }

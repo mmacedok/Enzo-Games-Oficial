@@ -349,10 +349,25 @@
         return quadro('quadro--secretos', `Enzos secretos · ${achados}/${C.SECRETOS}`, el('p', 'quadro-texto', texto), grade);
     }
 
+    /** Ficha de outro leitor: as cartas do Baralho Enzo que ele já tem. */
+    function quadroDeCartas(perfil) {
+        const B = window.EnzoBaralho;
+        const tem = new Set(perfil.cartas);
+        const fileira = el('ul', 'ficha-cartas');
+        for (const def of B.CARTAS) {
+            const vaga = el('li', 'ficha-cartas-vaga');
+            vaga.appendChild(tem.has(def.id) ? window.EnzoBaralhoUI.carta(def.id) : window.EnzoBaralhoUI.verso(`#${String(def.numero).padStart(3, '0')}`));
+            if (!tem.has(def.id)) vaga.classList.add('ficha-cartas-vaga--falta');
+            fileira.appendChild(vaga);
+        }
+        return quadro('quadro--cartas', `Baralho Enzo · ${tem.size}/${B.CARTAS.length}`, fileira);
+    }
+
     function gradeDoPerfil(perfil) {
         const grade = el('div', 'ficha-grade');
         grade.append(quadroDoLeitor(perfil), quadroDeRecordes(perfil));
         if (window.EnzoConquistas) grade.append(quadroDeConquistas(perfil), quadroDeSecretos(perfil));
+        if (!perfil.proprio && Array.isArray(perfil.cartas) && window.EnzoBaralhoUI) grade.appendChild(quadroDeCartas(perfil));
         return grade;
     }
 

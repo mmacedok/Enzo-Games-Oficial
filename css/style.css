@@ -3086,3 +3086,8 @@ button.ranking-nome:focus-visible { outline: 3px solid var(--focus); outline-off
     .baralho-botao--certeza { animation: none; }
     .abertura-carta-miolo { transition: none; }
 }
+
+/* Ficha de outro leitor: fileira com as cartas do Baralho Enzo dele. */
+.quadro--cartas { grid-column: 1 / -1; }
+.ficha-cartas { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px; list-style: none; }
+.ficha-cartas-vaga--falta .carta-tcg { opacity: 0.4; box-shadow: none; border-style: dashed; }

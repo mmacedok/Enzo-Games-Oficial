@@ -1,11 +1,12 @@
 // ============================================================================
 // Leitores do site: perfis públicos e a fala do balão da Ficha do Leitor.
 //   GET  /api/readers          lista de leitores (página ?pagina=N, 60 por vez)
-//   GET  /api/readers/:id      perfil público: fala, conquistas e recordes
+//   GET  /api/readers/:id      perfil público: fala, conquistas, recordes e cartas do Baralho
 //   POST /api/user/profile     { fala } — o dono muda a própria fala
 // Público = nome abreviado ("Henrique M."), foto do Google e nada de e-mail.
 // Recordes públicos são só os verificados (os do ranking).
 // ============================================================================
+const Baralho = require('../js/baralho-dados.js');
 const { HttpError } = require('./http.js');
 const { nomePublico } = require('./auth.js');
 
@@ -80,6 +81,8 @@ const rotas = [
             const recordes = await ctx.db.query(
                 `SELECT game_id, MAX(score) AS melhor FROM game_scores
                   WHERE user_id = $1 AND verified GROUP BY game_id`, [id]);
+            // Baralho Enzo: só quais cartas tem (a quantidade e a carteira são privadas).
+            const colecao = await ctx.db.query('SELECT card_id FROM colecao WHERE user_id = $1', [id]);
             return {
                 id: leitor.id,
                 name: nomePublico(leitor.display_name),
@@ -89,6 +92,7 @@ const rotas = [
                 desde: Number(leitor.created_at),
                 achievements: conquistas.map((c) => c.achievement_id),
                 records: Object.fromEntries(recordes.map((r) => [r.game_id, Number(r.melhor)])),
+                cartas: colecao.map((c) => c.card_id).filter((cardId) => Baralho.carta(cardId)),
                 isMe: leitor.id === ctx.usuario?.id,
             };
         },
