@@ -12,14 +12,16 @@
     const W = CONFIG.largura;
     const H = CONFIG.altura;
     const RECORDE = 'ronda-recorde';
-    const toque = matchMedia('(pointer: coarse)').matches;
+    // Qualquer tela de toque (inclui celular que também aceita caneta/mouse).
+    const toque = matchMedia('(any-pointer: coarse)').matches;
     const calmo = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const janela = GameDialog.create({
         titulo: 'Ronda nos Telhados',
-        descricaoCanvas: 'Ronda nos Telhados. Espaço pula, F ou clique atira, P pausa. No celular: toque à esquerda pula, à direita atira.',
+        descricaoCanvas: 'Ronda nos Telhados. Espaço pula, F ou clique atira, R recarrega, P pausa. No celular: botões PULAR, ATIRAR e recarregar abaixo do jogo.',
         largura: W,
         altura: H,
+        espacoExtra: toque ? 96 : 0,
     });
     const { canvas, ctx } = janela;
 
@@ -461,7 +463,7 @@
             ctx.fillRect(W - 101, 33, 86 * feito, 5);
             texto('RECARREGANDO', W - 14, 50, 14, '#ffd400', 3, 'right');
         } else if (jogo.balas < 3 && jogo.fase === 'correndo' && Math.floor(visual.tempo * 3) % 2 === 0) {
-            texto(toque ? 'toque aqui: recarregar' : 'R: recarregar', W - 14, 44, 14, '#ff4fd8', 3, 'right');
+            texto(toque ? 'botão ↻: recarregar' : 'R: recarregar', W - 14, 44, 14, '#ff4fd8', 3, 'right');
         }
     }
 
@@ -475,18 +477,11 @@
             ctx.fillStyle = 'rgba(7, 4, 26, 0.55)';
             ctx.fillRect(0, 0, W, H);
             texto('RONDA NOS TELHADOS', W / 2, 110, 46, '#ff6600', 7);
-            texto(toque ? 'Toque à esquerda: PULAR  ·  à direita: ATIRAR' : 'ESPAÇO pula  ·  F ou clique atira  ·  R recarrega', W / 2, 170, 18, '#fff', 4);
+            texto(toque ? 'Use os botões abaixo: PULAR (segure = mais alto) e ATIRAR' : 'ESPAÇO pula  ·  F ou clique atira  ·  R recarrega', W / 2, 170, 18, '#fff', 4);
             texto('10 balas por pente: economize! E não pule no laser rosa.', W / 2, 198, 16, '#e6d6ff', 4);
-            texto(toque ? 'Toque para começar' : 'Aperte ESPAÇO para começar', W / 2, 250, 26, '#ffd400', 5);
+            texto(toque ? 'Aperte PULAR para começar' : 'Aperte ESPAÇO para começar', W / 2, 250, 26, '#ffd400', 5);
             if (recorde > 0) texto(`RECORDE: ${recorde}`, W / 2, 290, 18, '#fff', 4);
             if (toque && innerHeight > innerWidth) texto('↻ Gire o celular para jogar melhor', W / 2, 325, 16, '#e6d6ff', 4);
-            if (toque) {
-                // Divisão das metades da tela.
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-                ctx.setLineDash([6, 6]);
-                ctx.beginPath(); ctx.moveTo(W / 2, 220); ctx.lineTo(W / 2, H); ctx.stroke();
-                ctx.setLineDash([]);
-            }
         }
         if (jogo.fase === 'fim') {
             const t = Math.min(1, (visual.tempo - visual.fimEm) / 0.35);
@@ -513,13 +508,13 @@
             ctx.fillStyle = '#3b3024';
             ctx.fillText(`Recorde: ${recorde}`, W / 2, 250);
             if (visual.novoRecorde) texto('NOVO RECORDE!', W / 2, 295, 24, '#ffd400', 5);
-            if (visual.tempo - visual.fimEm > 0.6) texto(toque ? 'Toque para tentar de novo' : 'ESPAÇO para tentar de novo', W / 2, 330, 20, '#fff', 4);
+            if (visual.tempo - visual.fimEm > 0.6) texto(toque ? 'PULAR para tentar de novo' : 'ESPAÇO para tentar de novo', W / 2, 330, 20, '#fff', 4);
         }
         if (visual.pausado) {
             ctx.fillStyle = 'rgba(7, 4, 26, 0.7)';
             ctx.fillRect(0, 0, W, H);
             texto('PAUSADO', W / 2, H / 2 - 10, 40, '#fff', 6);
-            texto(toque ? 'Toque para continuar' : 'P para continuar', W / 2, H / 2 + 30, 18, '#e6d6ff', 4);
+            texto(toque ? 'PULAR para continuar' : 'P para continuar', W / 2, H / 2 + 30, 18, '#e6d6ff', 4);
         }
     }
 
@@ -638,6 +633,43 @@
     canvas.addEventListener('pointerup', soltar);
     canvas.addEventListener('pointercancel', soltar);
     canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+
+    // Celular: botões de verdade abaixo do jogo (o toque na tela continua valendo).
+    if (toque) {
+        const controles = document.createElement('div');
+        controles.className = 'ronda-controles';
+        controles.innerHTML = `
+            <button type="button" class="ronda-botao ronda-botao--pular" aria-label="Pular (segure para pular mais alto)">PULAR</button>
+            <button type="button" class="ronda-botao ronda-botao--recarregar" aria-label="Recarregar">↻</button>
+            <button type="button" class="ronda-botao ronda-botao--atirar" aria-label="Atirar (segure para rajada)">ATIRAR</button>`;
+        janela.dialog.appendChild(controles);
+        const [botaoPulo, botaoRecarga, botaoTiro] = controles.querySelectorAll('button');
+        // Segurar: pointerdown liga, soltar/cancelar/sair desliga. Captura mantém o dedo no botão.
+        const segurar = (botao, apertar, soltarBotao) => {
+            botao.addEventListener('pointerdown', (event) => {
+                event.preventDefault();
+                botao.setPointerCapture?.(event.pointerId);
+                botao.classList.add('is-apertado');
+                apertar();
+            });
+            for (const tipo of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+                botao.addEventListener(tipo, () => {
+                    if (!botao.classList.contains('is-apertado')) return;
+                    botao.classList.remove('is-apertado');
+                    soltarBotao();
+                });
+            }
+            botao.addEventListener('contextmenu', (event) => event.preventDefault());
+        };
+        segurar(botaoPulo, apertarPulo, soltarPulo);
+        segurar(botaoTiro, () => {
+            if (jogo.fase === 'correndo' && !visual.pausado) entrada.gatilho = true;
+            else apertarPulo(); // fora da corrida, ATIRAR também começa/recomeça
+        }, () => { entrada.gatilho = false; });
+        segurar(botaoRecarga, () => {
+            if (jogo.fase === 'correndo' && !visual.pausado) core.recarregar(jogo);
+        }, () => {});
+    }
 
     janela.aoFechar(() => {
         cancelAnimationFrame(quadro);
