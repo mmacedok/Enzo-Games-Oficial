@@ -316,9 +316,6 @@ a { color: var(--orange-light); text-decoration: none; }
 }
 .site-nav a:hover { background: #000; color: var(--orange-light); transform: translateY(-2px); }
 
-/* Home: um botão só, que desce até "Quem faz a bagunça?" */
-.mundo-btn { font-size: clamp(1.3rem, 4.5vw, 1.8rem); padding: 10px 28px; }
-
 /* ---------------------------------------------------------- seções */
 .section { padding: 34px 0 10px; }
 
