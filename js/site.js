@@ -22,22 +22,12 @@
         if (letterbox) wrapper.style.setProperty('--cover-bg', `url('${new URL(siteImageUrl(source), document.baseURI).href}')`);
         return letterbox;
     };
-    window.playMacaroniTransition = url => {
-        const wipe = document.getElementById('macaroni-wipe');
-        wipe?.classList.remove('is-leaving');
-        wipe?.classList.add('is-active');
-        setTimeout(() => { location.href = url; }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350);
-    };
-    addEventListener('pageshow', () => document.getElementById('macaroni-wipe')?.classList.remove('is-active'));
+    // Navegação direta (a antiga cortina de macarronada foi removida a pedido).
+    window.playMacaroniTransition = url => { location.href = url; };
 
     // Logo: após a entrada das letras, liga os pulinhos em repouso.
     const logo = document.querySelector('.garfield-classic-logo');
     if (logo) setTimeout(() => logo.classList.add('logo-ready'), 1500);
-    document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', (event) => {
-        if (event.defaultPrevented || event.button > 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
-        event.preventDefault();
-        playMacaroniTransition(el.dataset.nav);
-    }));
     const copy = document.querySelector('[data-pix]');
     copy?.addEventListener('click', async () => {
         try {
