@@ -2,7 +2,8 @@
 // Conquistas do site: lista única usada pela aba Conquistas (js/auth-widget.js),
 // pelo leitor e pelo servidor (api/user.js aceita só ids daqui).
 //
-// Para criar uma conquista nova: acrescente um item em LISTA. Conquistas de
+// Para criar uma conquista nova: acrescente um item em LISTA (imagem = arte em
+// assets/ui/<imagem>.png; enquanto ela não existir, aparece o icone emoji). Conquistas de
 // coleção ("ler tudo de X") dizem qual coleção em `colecao` (ver CAPITULOS).
 // Enzos secretos: colecionáveis 1..SECRETOS escondidos nas páginas; cada um é
 // um easter egg `kind: "enzo-secreto"` com `numero` em data/comics.manifest.json.
@@ -14,10 +15,10 @@
     'use strict';
 
     const LISTA = Object.freeze([
-        { id: 'serie-completa', icone: '📚', titulo: 'Leitor da Saga', descricao: 'Leia todas as edições de Enzo Games até a última página.', colecao: 'serie' },
-        { id: 'degustador-completo', icone: '🦇', titulo: 'Vigília Completa', descricao: 'Leia todas as edições do Degustador da Noite até a última página.', colecao: 'degustador' },
-        { id: 'macarronada', icone: '🍝', titulo: 'Caçador de Macarronada', descricao: 'Ache a macarronada escondida numa página.' },
-        { id: 'cabo-coco', icone: '🥥', titulo: 'Acesso Confidencial', descricao: 'Descubra a senha do conteúdo banido em 456 países.' },
+        { id: 'serie-completa', icone: '📚', imagem: 'conquista-leitor-da-saga', titulo: 'Leitor da Saga', descricao: 'Leia todas as edições de Enzo Games até a última página.', colecao: 'serie' },
+        { id: 'degustador-completo', icone: '🦇', imagem: 'conquista-vigilia-completa', titulo: 'Vigília Completa', descricao: 'Leia todas as edições do Degustador da Noite até a última página.', colecao: 'degustador' },
+        { id: 'macarronada', icone: '🍝', imagem: 'conquista-macarronada', titulo: 'Caçador de Macarronada', descricao: 'Ache a macarronada escondida numa página.' },
+        { id: 'cabo-coco', icone: '🥥', imagem: 'conquista-acesso-confidencial', titulo: 'Acesso Confidencial', descricao: 'Descubra a senha do conteúdo banido em 456 países.' },
     ].map(Object.freeze));
 
     const SECRETOS = 99;

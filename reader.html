@@ -6,7 +6,7 @@
     <title>Lendo — Enzo Games</title>
     <meta name="theme-color" content="#e65100">
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="css/style.css?v=20260924f">
+    <link rel="stylesheet" href="css/style.css?v=20260924h">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,40 +22,34 @@
     <!-- Overlay de Transição Macarronada -->
 
     <div class="reader-ui">
-        <!-- Overlay flutuante invisível que guarda as ilhas -->
-        <div class="floating-ui-container">
-            
-            <!-- Ilha da Esquerda: Navegação -->
-            <div class="floating-island island-left">
-                <button type="button" id="back-btn" class="btn-island" data-nav="index.html" title="Voltar ao início" aria-label="Voltar ao início">
-                    <i class="ri-home-4-line"></i>
+        <!-- Tira do topo: cada grupo de controles é um quadro de gibi (css: "Leitor: tira do topo") -->
+        <div class="floating-ui-container tira-topo">
+
+            <!-- Quadro da esquerda: Enzo (volta à coleção) + recordatório do capítulo -->
+            <div class="floating-island island-left tira-quadro">
+                <button type="button" id="back-btn" class="tira-casa" data-nav="index.html" title="Voltar para a coleção" aria-label="Voltar para a coleção">
+                    <img data-original="assets/enzo-cabeca-logo.png" src="assets/web/86ba0c6f0fe68894-600.webp" srcset="assets/web/86ba0c6f0fe68894-600.webp 600w" sizes="(max-width: 600px) 90vw, 420px" width="600" height="542" alt="" draggable="false">
                 </button>
-                <div class="island-divider"></div>
-                <select id="chapter-select" class="island-select" aria-label="Selecione o capítulo">
-                    <!-- Opções preenchidas pelo JS -->
-                </select>
+                <label class="tira-recordatorio">
+                    <span class="tira-recordatorio-sobre">Você está lendo</span>
+                    <select id="chapter-select" class="island-select" aria-label="Escolher o capítulo">
+                        <!-- Opções preenchidas pelo JS -->
+                    </select>
+                </label>
             </div>
 
-            <!-- Ilha da Direita: Controles e Zoom -->
-            <div class="floating-island island-right">
-                <button type="button" id="zoom-out-btn" class="btn-island" title="Reduzir zoom (-)" aria-label="Reduzir zoom">
-                    <i class="ri-zoom-out-line"></i>
-                </button>
-                <button type="button" id="zoom-reset-btn" class="btn-island" title="Zoom original (0)" aria-label="Zoom original">
+            <!-- Quadro da direita: zoom (balão entre − e +), tela cheia e conta -->
+            <div class="floating-island island-right tira-quadro">
+                <button type="button" id="zoom-out-btn" class="tira-botao" title="Reduzir zoom (-)" aria-label="Reduzir zoom">−</button>
+                <button type="button" id="zoom-reset-btn" class="tira-balao" title="Zoom original (0)" aria-label="Zoom original">
                     <span id="zoom-level-text">100%</span>
                 </button>
-                <button type="button" id="zoom-in-btn" class="btn-island" title="Aumentar zoom (+)" aria-label="Aumentar zoom">
-                    <i class="ri-zoom-in-line"></i>
-                </button>
-                <div class="island-divider"></div>
-                <button type="button" id="fullscreen-btn" class="btn-island" title="Tela cheia" aria-label="Tela cheia">
-                    <i class="ri-fullscreen-line"></i>
-                </button>
+                <button type="button" id="zoom-in-btn" class="tira-botao" title="Aumentar zoom (+)" aria-label="Aumentar zoom">+</button>
+                <button type="button" id="fullscreen-btn" class="tira-botao tira-moldura" title="Tela cheia" aria-label="Tela cheia"><span aria-hidden="true"></span></button>
                 <div class="conta conta--ilha" data-conta hidden></div>
             </div>
 
         </div>
-
         <main class="reader-viewport scroll-mode" id="reader-viewport">
             <!-- Imagens do gibi entram aqui -->
             <div class="image-container" id="image-container">
@@ -78,9 +72,9 @@
 
     <!-- Único motor de renderização do leitor -->
     <script src="js/images.generated.js?v=1"></script>
-    <script src="js/site.js?v=7"></script>
-    <script src="js/conquistas.js?v=2"></script>
-    <script src="js/auth-widget.js?v=5"></script>
-    <script src="js/reader.core.js?v=12"></script>
+    <script src="js/site.js?v=8"></script>
+    <script src="js/conquistas.js?v=3"></script>
+    <script src="js/auth-widget.js?v=7"></script>
+    <script src="js/reader.core.js?v=13"></script>
 </body>
 </html>

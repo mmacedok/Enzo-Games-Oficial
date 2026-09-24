@@ -22,6 +22,64 @@
         if (letterbox) wrapper.style.setProperty('--cover-bg', `url('${new URL(siteImageUrl(source), document.baseURI).href}')`);
         return letterbox;
     };
+    /**
+     * Ícone de gibi: usa assets/ui/<nome>.png quando a arte já existe (o build
+     * registra em SiteImages); até lá, mostra o emoji. Lista em docs/ICONES-GIBI.md.
+     */
+    window.siteIcon = (nome, emoji, className = 'ui-icone') => {
+        const source = `assets/ui/${nome}.png`;
+        if (window.SiteImages?.[source]) {
+            const img = document.createElement('img');
+            img.className = className;
+            img.alt = '';
+            img.src = siteImageUrl(source);
+            img.decoding = 'async';
+            return img;
+        }
+        const span = document.createElement('span');
+        span.className = `${className} ui-icone--emoji`;
+        span.setAttribute('aria-hidden', 'true');
+        span.textContent = emoji;
+        return span;
+    };
+
+    /**
+     * Aviso de rodapé no estilo recordatório de gibi (conquistas, leitura retomada).
+     * { id, icon: [nome, emoji], burst: 'CONQUISTA!', label, text }. Mesmo id não repete.
+     */
+    window.siteToast = ({ id, icon, burst = '', label = '', text = '' }) => {
+        if (id && document.getElementById(id)) return;
+        const popup = document.createElement('div');
+        if (id) popup.id = id;
+        popup.className = 'achievement-popup';
+        popup.setAttribute('role', 'status');
+        if (burst) {
+            const estouro = document.createElement('span');
+            estouro.className = 'achievement-burst';
+            estouro.textContent = burst;
+            popup.appendChild(estouro);
+        }
+        const icone = document.createElement('div');
+        icone.className = 'achievement-icon';
+        icone.appendChild(window.siteIcon(icon[0], icon[1]));
+        const corpo = document.createElement('div');
+        const rotulo = document.createElement('div');
+        rotulo.className = 'achievement-label';
+        rotulo.textContent = label;
+        const texto = document.createElement('div');
+        texto.className = 'achievement-text';
+        texto.textContent = text;
+        corpo.append(rotulo, texto);
+        popup.append(icone, corpo);
+        document.body.appendChild(popup);
+        void popup.offsetWidth;
+        popup.classList.add('show');
+        setTimeout(() => {
+            popup.classList.remove('show');
+            setTimeout(() => popup.remove(), 600);
+        }, 4200);
+    };
+
     // Navegação direta (a antiga cortina de macarronada foi removida a pedido).
     window.playMacaroniTransition = url => { location.href = url; };
 

@@ -31,7 +31,7 @@
         dialog.innerHTML = `
             <div class="game-topo">
                 <p class="game-aviso" aria-live="polite"></p>
-                <button type="button" class="btn btn--small game-ranking" hidden>🏆 Ranking</button>
+                <button type="button" class="btn btn--small game-ranking" hidden><span>Ranking</span></button>
                 <button type="button" class="btn btn--small game-close" aria-label="Fechar o jogo">Fechar ×</button>
             </div>
             <canvas class="game-canvas" tabindex="0" role="img"></canvas>`;
@@ -39,6 +39,7 @@
 
         // Ranking global (js/auth-widget.js): só aparece se a API do site respondeu.
         const botaoRanking = dialog.querySelector('.game-ranking');
+        botaoRanking.prepend(window.siteIcon?.('trofeu', '🏆') ?? '🏆');
         const aviso = dialog.querySelector('.game-aviso');
         let rankingPermitido = true;
         const atualizarRanking = () => {

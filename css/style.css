@@ -24,6 +24,13 @@
     --danger-light: #ff6b6b;
     --caution: #ffcc00;
     --focus: #ffcf5c;
+    --caption: #ffe14d;          /* recordatório de gibi */
+
+    /* Retícula (pontinhos de gráfica) por cima das cores chapadas */
+    --halftone: radial-gradient(circle, rgba(17, 17, 17, 0.09) 1px, transparent 1.6px) 0 0 / 7px 7px;
+    --halftone-forte: radial-gradient(circle, rgba(17, 17, 17, 0.22) 1.2px, transparent 1.8px) 0 0 / 6px 6px;
+    /* Contorno de explosão de onomatopeia (clip-path) */
+    --estouro: polygon(50% 0%, 60% 17%, 80% 6%, 77% 29%, 100% 33%, 83% 50%, 100% 67%, 77% 71%, 80% 94%, 60% 83%, 50% 100%, 40% 83%, 20% 94%, 23% 71%, 0% 67%, 17% 50%, 0% 33%, 23% 29%, 20% 6%, 40% 17%);
 
     /* Pódio do ranking */
     --gold: #ffd54a;
@@ -53,7 +60,7 @@
     --radius-pill: 999px;
 
     --reader-page-width: 800px;
-    --reader-bar-space: 84px;
+    --reader-bar-space: 96px;
     --ease-pop: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -895,6 +902,9 @@ a { color: var(--orange-light); text-decoration: none; }
 
 .reader-ui { position: relative; display: flex; flex-direction: column; height: 100dvh; }
 
+/* ---------------------------------------------- Leitor: tira do topo
+   Cada grupo de controles é um quadro de gibi: papel com retícula, contorno
+   de nanquim, sombra chapada e uma leve inclinação, como quadros colados. */
 .floating-ui-container {
     position: absolute;
     top: 0;
@@ -902,9 +912,10 @@ a { color: var(--orange-light); text-decoration: none; }
     right: 0;
     z-index: 100;
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 10px;
-    padding: 16px 20px;
+    gap: 12px;
+    padding: 14px 20px;
     pointer-events: none;
 }
 
@@ -913,52 +924,160 @@ a { color: var(--orange-light); text-decoration: none; }
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 12px;
-    background: rgba(17, 17, 17, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 2px solid var(--ink);
-    border-radius: var(--radius-pill);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    min-height: 58px;
+    padding: 6px 10px;
+    background: var(--halftone), var(--paper);
+    border: var(--stroke);
+    border-radius: 3px;
+    box-shadow: 5px 5px 0 var(--ink);
+    transition: transform 0.3s var(--ease-pop), opacity 0.3s ease;
 }
-.ui-hidden .floating-ui-container .floating-island { transform: translateY(-140%); opacity: 0; pointer-events: none; }
+.island-left { transform: rotate(-0.8deg); }
+.island-right { transform: rotate(0.8deg); }
+.ui-hidden .floating-ui-container .floating-island { transform: translateY(-160%); opacity: 0; pointer-events: none; }
 
-.btn-island {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Cabeça do Enzo: volta para a coleção do gibi */
+.tira-casa {
+    display: grid;
+    place-items: center;
     flex-shrink: 0;
-    width: 42px;
-    height: 42px;
-    font-size: 1.25rem;
-    color: #fff;
+    width: 46px;
+    height: 46px;
+    background: var(--halftone-forte), var(--orange-light);
+    border: var(--stroke);
     border-radius: 50%;
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+    transition: transform 0.15s var(--ease-pop);
 }
-.btn-island:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.08); }
-.btn-island span { font-size: 0.9rem; font-weight: 700; }
-#zoom-reset-btn { width: 56px; border-radius: var(--radius-pill); }
+.tira-casa img { width: 40px; height: auto; margin-top: 2px; pointer-events: none; }
+.tira-casa:hover { transform: rotate(-8deg) scale(1.08); }
 
-.island-divider { width: 1px; height: 24px; margin: 0 4px; background: rgba(255, 255, 255, 0.2); }
-
+/* Recordatório amarelo com o capítulo (o <select> fica dentro, sem cara de formulário) */
+.tira-recordatorio {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 3px 34px 4px 10px;
+    background: var(--caption);
+    border: 2px solid var(--ink);
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+}
+.tira-recordatorio::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    border: 7px solid transparent;
+    border-top: 9px solid var(--ink);
+    border-bottom: 0;
+    transform: translateY(-30%);
+    pointer-events: none;
+}
+.tira-recordatorio-sobre {
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: var(--paper-ink);
+}
 .island-select {
     min-width: 0;
-    max-width: 320px;
-    padding: 4px 30px 4px 8px;
+    max-width: 340px;
+    padding: 0;
     font-family: var(--font-heading);
-    font-size: 1.2rem;
-    letter-spacing: 0.5px;
-    color: #fff;
-    background: transparent url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 2px center;
+    font-size: 1.35rem;
+    letter-spacing: 1px;
+    line-height: 1.15;
+    color: var(--ink);
+    background: transparent;
     border: 0;
     outline: none;
     appearance: none;
     -webkit-appearance: none;
     text-overflow: ellipsis;
+    cursor: pointer;
 }
-.island-select option { font-family: var(--font-sans); color: var(--text); background: var(--surface-2); }
+.tira-recordatorio:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.island-select option { font-family: var(--font-sans); color: var(--paper-ink); background: var(--paper); }
 
+/* Botões − / + / tela cheia: quadradinhos de nanquim */
+.tira-botao {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    font-family: var(--font-sans);
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+    background: var(--text);
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+}
+.tira-botao:hover { background: var(--caption); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.tira-botao:active,
+.tira-balao:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+.tira-botao:focus-visible,
+.tira-balao:focus-visible,
+.tira-casa:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Tela cheia: uma moldura de quadro com as quatro quinas */
+.tira-moldura span {
+    position: relative;
+    width: 20px;
+    height: 16px;
+    background:
+        linear-gradient(var(--ink), var(--ink)) top left / 7px 3px,
+        linear-gradient(var(--ink), var(--ink)) top left / 3px 7px,
+        linear-gradient(var(--ink), var(--ink)) top right / 7px 3px,
+        linear-gradient(var(--ink), var(--ink)) top right / 3px 7px,
+        linear-gradient(var(--ink), var(--ink)) bottom left / 7px 3px,
+        linear-gradient(var(--ink), var(--ink)) bottom left / 3px 7px,
+        linear-gradient(var(--ink), var(--ink)) bottom right / 7px 3px,
+        linear-gradient(var(--ink), var(--ink)) bottom right / 3px 7px;
+    background-repeat: no-repeat;
+}
+
+/* Zoom: porcentagem num balão de fala */
+.tira-balao {
+    position: relative;
+    min-width: 64px;
+    padding: 5px 10px;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--text);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    cursor: pointer;
+}
+.tira-balao::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    bottom: -8px;
+    width: 12px;
+    height: 10px;
+    background: var(--text);
+    border-left: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    transform: skewX(-35deg);
+}
+
+/* Degustador: a mesma tira, na noite roxa */
+.theme-degustador .floating-island { background: var(--halftone), var(--surface); box-shadow: 5px 5px 0 var(--purple); }
+.theme-degustador .tira-casa { background: var(--halftone-forte), var(--purple); }
 .reader-viewport {
     position: relative;
     flex: 1;
@@ -1125,33 +1244,54 @@ a { color: var(--orange-light); text-decoration: none; }
 .cabo-coco-text small,
 .crime-scene-overlay small { display: block; font-size: 0.6em; color: #fff; }
 
+/* Aviso de conquista / leitura: recordatório amarelo com explosão (js/site.js siteToast) */
 .achievement-popup {
     position: fixed;
-    bottom: -120px;
+    bottom: -180px;
     left: 50%;
     z-index: 9999;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 14px;
     width: max-content;
-    max-width: calc(100vw - 24px);
-    padding: 14px 26px;
-    font-family: var(--font-heading);
-    font-size: 1.35rem;
-    letter-spacing: 1px;
-    color: #fff;
-    background: rgba(17, 17, 17, 0.96);
-    border: 2px solid var(--orange);
-    border-radius: var(--radius-pill);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8), 0 0 15px var(--orange);
+    max-width: calc(100vw - 32px);
+    padding: 14px 22px 14px 14px;
+    color: var(--ink);
+    background: var(--halftone), var(--caption);
+    border: var(--stroke-thick);
+    box-shadow: 6px 6px 0 var(--ink);
     opacity: 0;
     pointer-events: none;
-    transform: translateX(-50%);
-    transition: all 0.5s var(--ease-pop);
+    transform: translateX(-50%) rotate(-1.5deg);
+    transition: bottom 0.5s var(--ease-pop), opacity 0.3s ease;
 }
-.achievement-popup.show { bottom: 30px; opacity: 1; }
-.achievement-label { font-size: 0.8rem; color: var(--orange-hover); text-transform: uppercase; }
-.achievement-icon { font-size: 2.4rem; }
+.achievement-popup.show { bottom: 36px; opacity: 1; }
+.achievement-burst {
+    position: absolute;
+    top: -30px;
+    left: -20px;
+    padding: 16px 20px;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    color: var(--text);
+    background: var(--danger);
+    transform: rotate(-8deg);
+}
+.achievement-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 62px;
+    height: 62px;
+    font-size: 2.2rem;
+    background: var(--text);
+    border: var(--stroke);
+    border-radius: 50%;
+}
+.achievement-icon .ui-icone { width: 52px; height: 52px; }
+.achievement-label { font-family: var(--font-heading); font-size: 1.15rem; letter-spacing: 1px; text-transform: uppercase; color: var(--danger); }
+.achievement-text { max-width: 380px; font-size: 1rem; font-weight: 700; line-height: 1.2; text-transform: uppercase; }
 
 /* Transição de macarronada entre páginas (imagem via images.generated.css) */
 .macaroni-wipe {
@@ -1342,12 +1482,14 @@ body.theme-degustador :is(input, textarea, [contenteditable="true"]) { cursor: t
 }
 
 @media (max-width: 600px) {
-    :root { --reader-bar-space: 124px; }
-    .floating-ui-container { flex-wrap: wrap; padding: 10px; gap: 8px; }
-    .floating-island { padding: 4px 8px; gap: 4px; max-width: 100%; }
+    :root { --reader-bar-space: 150px; }
+    .floating-ui-container { flex-wrap: wrap; padding: 10px 12px; gap: 10px; }
+    .floating-island { min-height: 54px; padding: 5px 8px; gap: 6px; max-width: 100%; }
     .island-left { flex: 1 1 100%; min-width: 0; }
-    .island-left .island-select { flex: 1; width: 0; max-width: none; }
+    .island-left .tira-recordatorio { flex: 1; }
+    .island-left .island-select { width: 100%; max-width: none; font-size: 1.2rem; }
     .island-right { margin-left: auto; }
+    .tira-botao { width: 36px; height: 36px; }
     .reader-viewport { padding-inline: 8px; }
     .webtoon-image { border-width: 2px; }
 }
@@ -1510,127 +1652,409 @@ body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%
 .theme-zezoverso .characters-roster .character-name { color: var(--text); }
 
 
-/* ============================================ Conta (login Google) e ranking
-   js/auth-widget.js: botão no canto do cabeçalho (ou na ilha do leitor),
-   balão da conta e janela do ranking global dos jogos. */
+/* ============================ Conta: medalhão, balão de fala e Ficha do Leitor
+   js/auth-widget.js. Nada de "menu": o botão é um medalhão de personagem, entrar
+   é um balão de fala e a conta abre como uma página de gibi com quadros. */
 .site-header { position: relative; }
-.conta { position: absolute; top: 20px; right: 20px; z-index: 30; }
+.conta { position: absolute; top: 18px; right: 20px; z-index: 30; }
 .conta[hidden] { display: none; }
+
+/* Ícones de gibi (js/site.js siteIcon): arte de assets/ui ou emoji até ela existir */
+.ui-icone { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; line-height: 1; object-fit: contain; vertical-align: middle; }
+
+/* Explosão de onomatopeia (PSST!, CONQUISTA!): contorno feito com drop-shadow */
+.conta-balao-estouro,
+.achievement-burst,
+.ficha-estouro {
+    display: inline-grid;
+    place-items: center;
+    clip-path: var(--estouro);
+    filter: drop-shadow(2px 0 0 var(--ink)) drop-shadow(-2px 0 0 var(--ink)) drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 -2px 0 var(--ink));
+}
+
 .conta-botao {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 16px 4px 4px;
+    padding: 0;
     font-family: var(--font-heading);
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     letter-spacing: 1px;
     color: var(--ink);
-    background: var(--paper);
-    border: var(--stroke);
-    border-radius: var(--radius-pill);
-    box-shadow: var(--pop-sm);
+    background: none;
+    border: 0;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.15s var(--ease-pop);
 }
-.conta-botao:hover { transform: translate(-1px, -1px); box-shadow: var(--pop); }
-.conta-botao:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.conta-botao:hover { transform: rotate(-3deg) scale(1.05); }
+.conta-botao:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
 .conta-chave,
 .conta-avatar {
     position: relative;
+    z-index: 1;
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: 34px;
-    height: 34px;
+    width: 50px;
+    height: 50px;
     overflow: hidden;
-    font-size: 1.1rem;
+    font-size: 1.5rem;
     color: var(--ink);
-    background: var(--orange-light);
-    border: 2px solid var(--ink);
+    background: var(--halftone-forte), var(--orange-light);
+    border: var(--stroke);
     border-radius: 50%;
+    box-shadow: var(--pop-sm);
 }
+img.conta-chave { padding: 6px; object-fit: contain; }
 .conta-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.conta-inicial { font-family: var(--font-heading); font-size: 1.5rem; }
+/* Faixa com o nome (ou ENTRAR) presa atrás do medalhão */
+.conta-nome {
+    margin-left: -14px;
+    padding: 4px 14px 4px 22px;
+    background: var(--caption);
+    border: var(--stroke);
+    box-shadow: var(--pop-sm);
+    transform: rotate(-3deg);
+}
+.conta-botao:not(.conta-botao--logado) .conta-nome { color: var(--text); background: var(--danger); }
 
+/* Deslogado: balão de fala com o botão do Google */
 .conta-balao {
     position: absolute;
-    top: calc(100% + 14px);
+    top: calc(100% + 20px);
     right: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    align-items: center;
+    gap: 8px;
     width: min(300px, calc(100vw - 32px));
-    padding: 16px;
-    text-align: left;
-    color: var(--paper-ink);
-    background: var(--paper);
-    border: var(--stroke);
-    border-radius: var(--radius);
-    box-shadow: var(--pop);
-}
-/* Rabinho do balão de fala, apontando para o botão */
-.conta-balao::before {
-    content: '';
-    position: absolute;
-    top: -11px;
-    right: 22px;
-    width: 18px;
-    height: 18px;
-    background: var(--paper);
-    border-top: var(--stroke);
-    border-left: var(--stroke);
-    transform: rotate(45deg);
-}
-.conta-balao-titulo { font-family: var(--font-heading); font-size: 1.35rem; letter-spacing: 1px; line-height: 1.1; color: var(--ink); }
-.conta-balao-texto { font-size: 0.95rem; line-height: 1.35; }
-.conta-google { display: flex; justify-content: center; min-height: 44px; }
-.conta-erro { font-size: 0.9rem; font-weight: 700; color: var(--danger); }
-.conta-recordes { display: grid; gap: 6px; list-style: none; }
-.conta-recordes li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 6px 10px;
-    font-weight: 700;
+    padding: 24px 18px 16px;
+    text-align: center;
+    color: var(--ink);
     background: var(--text);
-    border: 2px solid var(--ink);
-    border-radius: var(--radius-sm);
+    border: var(--stroke);
+    border-radius: 30px;
+    box-shadow: var(--pop);
+    animation: balao-pop 0.3s var(--ease-pop) both;
 }
-.conta-recordes strong { font-family: var(--font-heading); font-size: 1.25rem; letter-spacing: 1px; color: var(--orange-deep); }
-.conta-acoes { display: flex; flex-wrap: wrap; gap: 10px; }
-.conta-acoes .btn { flex: 1; white-space: nowrap; }
+/* Rabinho do balão apontando para o medalhão (nanquim por fora, papel por dentro) */
+.conta-balao::before,
+.conta-balao::after { content: ''; position: absolute; right: 30px; border-style: solid; border-color: transparent; }
+.conta-balao::before { top: -20px; border-width: 0 6px 20px 14px; border-bottom-color: var(--ink); }
+.conta-balao::after { top: -14px; right: 33px; border-width: 0 4px 15px 10px; border-bottom-color: var(--text); }
+.conta-balao-estouro {
+    position: absolute;
+    top: -26px;
+    left: -18px;
+    padding: 16px 20px;
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    color: var(--text);
+    background: var(--danger);
+    transform: rotate(-10deg);
+}
+.conta-balao-titulo { font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px; line-height: 1.05; }
+.conta-balao-texto { font-size: 0.85rem; font-weight: 700; line-height: 1.3; text-transform: uppercase; }
+.conta-google { display: flex; justify-content: center; min-height: 44px; }
+.conta-erro { font-size: 0.85rem; font-weight: 700; color: var(--danger); }
+@keyframes balao-pop { from { opacity: 0; transform: scale(0.6) rotate(-4deg); } }
 
-/* Leitor: só o avatar (ou a chave) na ilha da direita, sem o nome */
-.conta.conta--ilha {
-    position: relative;
-    top: auto;
-    right: auto;
-    display: flex;
-    align-items: center;
-    margin-left: 4px;
-    padding-left: 8px;
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
-}
-.conta--ilha .conta-botao { padding: 0; background: transparent; border: 0; box-shadow: none; }
+/* Leitor: só o medalhão, dentro do quadro da direita */
+.conta.conta--ilha { position: relative; top: auto; right: auto; display: flex; align-items: center; }
 .conta--ilha .conta-nome { display: none; }
-.conta--ilha .conta-balao { top: calc(100% + 18px); right: -8px; }
+.conta--ilha .conta-chave,
+.conta--ilha .conta-avatar { width: 42px; height: 42px; font-size: 1.25rem; }
+.conta--ilha .conta-balao { top: calc(100% + 22px); right: -10px; }
 
-/* Ranking global */
-.ranking-dialog {
-    width: min(480px, calc(100vw - 32px));
-    max-height: calc(100dvh - 32px);
+/* --------------------------------------------- Página de gibi (Ficha e Placar)
+   <dialog class="pagina-gibi">: papel com retícula, contorno grosso, sombra
+   chapada e abertura "virando a página". */
+.pagina-gibi {
+    width: min(720px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
     margin: auto;
-    padding: 18px;
+    padding: 0;
+    overflow: auto;
     color: var(--paper-ink);
+    background: var(--halftone), var(--paper);
+    border: var(--stroke-thick);
+    border-radius: 2px;
+    box-shadow: 10px 10px 0 var(--ink);
+}
+.pagina-gibi[open] { display: flex; flex-direction: column; transform-origin: left center; animation: pagina-virar 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.pagina-gibi::backdrop { background: var(--halftone-forte), rgba(10, 6, 3, 0.78); }
+@keyframes pagina-virar {
+    from { opacity: 0; transform: perspective(1600px) rotateY(-80deg); }
+    60% { opacity: 1; }
+    to { transform: none; }
+}
+.pagina-topo {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px 12px;
+    background: var(--halftone-forte), var(--orange-light);
+    border-bottom: var(--stroke-thick);
+}
+/* Selo de capa (como o "R$ 5,90 / Nº 3" das capas) */
+.pagina-selo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 8px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--text);
+    border: var(--stroke);
+    transform: rotate(-3deg);
+}
+.pagina-selo-numero { font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px; }
+.pagina-sobre { font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--ink); }
+.pagina-manchete {
+    font-family: var(--font-logo);
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 1px;
+    color: var(--caption);
+    -webkit-text-stroke: 2px var(--ink);
+    paint-order: stroke fill;
+    text-shadow: 3px 3px 0 var(--ink);
+}
+.pagina-fechar {
+    align-self: start;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    font-family: var(--font-heading);
+    font-size: 1.9rem;
+    line-height: 1;
+    color: var(--text);
+    background: var(--danger);
+    border: var(--stroke);
+    border-radius: 50%;
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+    transform: rotate(8deg);
+    transition: transform 0.15s var(--ease-pop);
+}
+.pagina-fechar:hover { transform: rotate(-8deg) scale(1.08); }
+.pagina-fechar:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.pagina-rodape { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 0 14px 14px; }
+.pagina-continua {
+    padding: 4px 12px;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--caption);
+    border: var(--stroke);
+    transform: rotate(-1deg);
+}
+
+/* Quadros da ficha: a página branca entre eles faz a calha do gibi */
+.ficha-grade { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 12px; padding: 14px; }
+.quadro { position: relative; min-width: 0; padding: 34px 14px 14px; background: var(--text); border: var(--stroke); }
+.quadro-recordatorio {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    padding: 3px 10px;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--caption);
+    border: var(--stroke);
+}
+.quadro-texto { margin-bottom: 8px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
+.quadro--conquistas,
+.quadro--secretos { grid-column: 1 / -1; }
+
+/* Quadro do leitor: retrato + balão de fala + faixa com o nome, em fundo de ação */
+.quadro--leitor {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px 16px;
+    padding: 16px;
+    background: var(--halftone-forte), radial-gradient(circle at 25% 55%, var(--caption), var(--orange-light) 55%, var(--orange));
+}
+.ficha-retrato {
+    position: relative;
+    grid-row: 1 / 3;
+    display: grid;
+    place-items: center;
+    width: 104px;
+    height: 104px;
+    overflow: hidden;
     background: var(--paper);
     border: var(--stroke-thick);
-    border-radius: var(--radius);
-    box-shadow: var(--pop-lg);
+    border-radius: 50%;
+    box-shadow: var(--pop);
 }
-.ranking-dialog[open] { display: flex; flex-direction: column; gap: 12px; }
-.ranking-dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+.ficha-retrato img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ficha-retrato .conta-inicial { font-size: 3rem; }
+.ficha-fala {
+    position: relative;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--text);
+    border: var(--stroke);
+    border-radius: 22px;
+}
+.ficha-fala::before,
+.ficha-fala::after { content: ''; position: absolute; border-style: solid; border-color: transparent; }
+.ficha-fala::before { left: -17px; bottom: 12px; border-width: 6px 17px 8px 0; border-right-color: var(--ink); }
+.ficha-fala::after { left: -11px; bottom: 14px; border-width: 4px 12px 5px 0; border-right-color: var(--text); }
+.ficha-nome {
+    justify-self: start;
+    max-width: 100%;
+    padding: 4px 14px;
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    background: var(--ink);
+    box-shadow: 3px 3px 0 var(--danger);
+    transform: rotate(-2deg);
+}
+
+/* Recordes: o número estoura como onomatopeia */
+.ficha-recordes { display: grid; gap: 8px; }
+.ficha-recorde { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ficha-recorde-jogo { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; }
+.ficha-estouro {
+    min-width: 84px;
+    padding: 18px 16px;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    color: var(--danger);
+    background: var(--caption);
+}
+.ficha-ranking {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 6px 12px;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--orange-light);
+    border: var(--stroke);
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.ficha-ranking:hover { transform: translate(-1px, -1px); box-shadow: var(--pop); }
+.ficha-ranking .ui-icone { font-size: 1.4rem; }
+
+/* Álbum de conquistas: figurinhas coladas (bloqueada = espaço tracejado "cole aqui") */
+.figurinhas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; list-style: none; }
+.figurinha {
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: var(--paper);
+    border: 2px dashed var(--line);
+    border-radius: 6px;
+    transform: rotate(var(--giro, 0deg));
+}
+.figurinha--feita { background: var(--halftone), var(--text); border: var(--stroke); box-shadow: var(--pop-sm); }
+.figurinha-arte {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    background: var(--halftone-forte), var(--silver);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+}
+.figurinha--feita .figurinha-arte { background: var(--halftone-forte), var(--caption); }
+.figurinha-icone { width: 46px; height: 46px; font-size: 1.9rem; }
+.figurinha:not(.figurinha--feita) .figurinha-icone { opacity: 0.75; }
+.figurinha-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.figurinha-titulo { font-family: var(--font-heading); font-size: 1.1rem; letter-spacing: 1px; line-height: 1.05; color: var(--ink); }
+.figurinha-descricao { font-size: 0.78rem; line-height: 1.25; }
+.figurinha-barra { height: 10px; margin-top: 2px; overflow: hidden; background: var(--text); border: 2px solid var(--ink); }
+.figurinha-barra span {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: repeating-linear-gradient(45deg, var(--orange) 0 6px, var(--orange-light) 6px 12px);
+    transition: width 0.5s ease;
+}
+.figurinha-conta { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+
+/* Álbum dos Enzos secretos: vagas numeradas; achado = figurinha colada */
+.album-secretos { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 5px; list-style: none; }
+.album-vaga {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 3 / 4;
+    background: var(--paper);
+    border: 2px dashed var(--line);
+    border-radius: 3px;
+}
+.album-numero { font-family: var(--font-heading); font-size: 0.85rem; color: var(--line); }
+.album-vaga--achada { background: var(--halftone-forte), var(--orange-light); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); transform: rotate(-3deg); }
+.album-vaga--achada:nth-child(even) { transform: rotate(2deg); }
+.album-vaga--achada .album-numero { position: absolute; right: 3px; bottom: 1px; font-size: 0.7rem; color: var(--ink); }
+.album-icone { width: 80%; height: auto; font-size: 1.15rem; }
+
+.ficha-sair {
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--paper-ink);
+    background: transparent;
+    border: 2px solid var(--paper-ink);
+    border-radius: 3px;
+    cursor: pointer;
+}
+.ficha-sair:hover { color: var(--text); background: var(--ink); }
+
+/* Placar global (ranking), na mesma página de gibi */
+.ranking-dialog { width: min(500px, calc(100vw - 24px)); }
+.ranking-dialog[open] { gap: 12px; padding: 16px; }
 .ranking-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.ranking-titulo { font-family: var(--font-heading); font-size: 1.9rem; font-weight: 400; letter-spacing: 1px; color: var(--ink); }
+.ranking-titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-logo);
+    font-size: clamp(1.7rem, 5vw, 2.2rem);
+    font-weight: 400;
+    letter-spacing: 1px;
+    color: var(--caption);
+    -webkit-text-stroke: 2px var(--ink);
+    paint-order: stroke fill;
+    text-shadow: 3px 3px 0 var(--ink);
+}
+.ranking-trofeu { width: 46px; height: 46px; font-size: 1.9rem; -webkit-text-stroke: 0; text-shadow: none; }
 .ranking-abas { display: flex; gap: 8px; }
 .ranking-aba {
     flex: 1;
@@ -1640,11 +2064,11 @@ body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%
     letter-spacing: 1px;
     color: var(--ink);
     background: var(--text);
-    border: 2px solid var(--ink);
-    border-radius: var(--radius-pill);
+    border: var(--stroke);
+    border-radius: 3px;
     cursor: pointer;
 }
-.ranking-aba[aria-selected="true"] { background: var(--orange-light); box-shadow: var(--pop-sm); }
+.ranking-aba[aria-selected="true"] { background: var(--caption); box-shadow: var(--pop-sm); transform: rotate(-1deg); }
 .ranking-aba:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .ranking-corpo { display: flex; flex-direction: column; gap: 10px; min-height: 120px; overflow-y: auto; }
 .ranking-podio,
@@ -1657,22 +2081,22 @@ body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%
     padding: 6px 12px;
     background: var(--text);
     border: 2px solid var(--ink);
-    border-radius: var(--radius-sm);
 }
-.ranking-podio .ranking-linha { padding: 10px 12px; font-size: 1.1rem; box-shadow: var(--pop-sm); }
-.ranking-linha--1 { background: var(--gold); }
-.ranking-linha--2 { background: var(--silver); }
-.ranking-linha--3 { background: var(--bronze); }
-.ranking-linha--eu { outline: 3px solid var(--orange-deep); outline-offset: -1px; }
+.ranking-podio .ranking-linha { padding: 10px 12px; font-size: 1.1rem; border-width: 3px; box-shadow: var(--pop-sm); }
+.ranking-linha--1 { background: var(--halftone), var(--gold); transform: rotate(-0.6deg); }
+.ranking-linha--2 { background: var(--halftone), var(--silver); }
+.ranking-linha--3 { background: var(--halftone), var(--bronze); transform: rotate(0.6deg); }
+.ranking-linha--eu { outline: 3px solid var(--danger); outline-offset: -1px; }
 .ranking-pos,
 .ranking-pontos { font-family: var(--font-heading); font-size: 1.3rem; letter-spacing: 1px; }
-.ranking-pos { color: var(--ink); }
+.ranking-pos { display: grid; place-items: center start; color: var(--ink); }
+.ranking-medalha { width: 34px; height: 34px; font-size: 1.6rem; }
 .ranking-pontos { color: var(--orange-deep); }
 .ranking-nome { overflow: hidden; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
 .ranking-lista--eu { padding-top: 10px; border-top: 2px dashed var(--ink); }
 .ranking-vazio,
-.ranking-convite { padding: 8px; font-weight: 700; text-align: center; }
-.ranking-convite { font-size: 0.95rem; }
+.ranking-convite { padding: 8px; font-weight: 700; text-align: center; text-transform: uppercase; }
+.ranking-convite { font-size: 0.85rem; }
 
 @media (max-width: 768px) {
     .conta { top: 14px; right: 14px; }
@@ -1680,62 +2104,13 @@ body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%
 }
 @media (max-width: 600px) {
     .site-header .conta-nome { display: none; }
-    .site-header .conta-botao { padding: 4px; }
+    .ficha-grade,
+    .figurinhas { grid-template-columns: minmax(0, 1fr); }
+    .pagina-topo { gap: 10px; padding: 12px; }
+    .pagina-selo { display: none; }
+    .pagina-topo { grid-template-columns: minmax(0, 1fr) auto; }
+    .ficha-retrato { width: 84px; height: 84px; }
 }
-
-/* Aba Conquistas no balão da conta (js/conquistas.js é a lista) */
-.conta-balao--conta { width: min(330px, calc(100vw - 32px)); }
-.conta-abas { display: flex; gap: 6px; }
-.conta-aba {
-    flex: 1;
-    padding: 5px 8px;
-    font-family: var(--font-heading);
-    font-size: 1.05rem;
-    letter-spacing: 1px;
-    color: var(--ink);
-    background: var(--text);
-    border: 2px solid var(--ink);
-    border-radius: var(--radius-pill);
-    cursor: pointer;
-}
-.conta-aba[aria-selected="true"] { background: var(--orange-light); box-shadow: var(--pop-sm); }
-.conta-aba:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.conta-aba-corpo { max-height: min(52vh, 420px); overflow-y: auto; }
-.conta-conquistas { display: flex; flex-direction: column; gap: 12px; }
-.conquistas-lista { display: grid; gap: 6px; list-style: none; }
-.conquista {
-    display: grid;
-    grid-template-columns: 36px minmax(0, 1fr);
-    align-items: center;
-    gap: 10px;
-    padding: 6px 10px;
-    background: var(--text);
-    border: 2px solid var(--ink);
-    border-radius: var(--radius-sm);
-    opacity: 0.75;
-}
-.conquista--feita { background: var(--gold); opacity: 1; box-shadow: var(--pop-sm); }
-.conquista-icone { font-size: 1.6rem; text-align: center; }
-.conquista-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.conquista-titulo { font-family: var(--font-heading); font-size: 1.1rem; letter-spacing: 1px; color: var(--ink); }
-.conquista-descricao { font-size: 0.82rem; line-height: 1.25; }
-.conquista-barra { height: 8px; margin-top: 3px; overflow: hidden; background: var(--silver); border: 1px solid var(--ink); border-radius: var(--radius-pill); }
-.conquista-barra-cheia { display: block; width: 0; height: 100%; background: var(--orange); transition: width 0.4s ease; }
-.conquista-conta { font-size: 0.78rem; font-weight: 700; }
-.conquistas-secretos { display: flex; flex-direction: column; gap: 4px; }
-.secretos-grade { display: grid; grid-template-columns: repeat(11, 1fr); gap: 3px; margin-top: 4px; list-style: none; }
-.secreto {
-    display: grid;
-    place-items: center;
-    aspect-ratio: 1;
-    font-family: var(--font-heading);
-    font-size: 0.8rem;
-    color: var(--line);
-    background: var(--silver);
-    border: 1px solid var(--ink);
-    border-radius: 4px;
-}
-.secreto--achado { color: var(--ink); background: var(--orange-light); }
 
 /* Leitor: Enzo secreto (área invisível sobre a arte; brilha ao ser achado) */
 .enzo-secreto-hotspot { position: absolute; z-index: 10; cursor: pointer; border-radius: 50%; }

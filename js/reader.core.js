@@ -200,8 +200,8 @@
         void trigger.offsetWidth;
         trigger.classList.add('is-found');
         if (await conta().conquista(id)) conta().anunciarConquista(id);
-        else if (conta().temConquista(id)) showPopup(`enzo-secreto-${numero}-repetido`, '🐱', 'Enzo secreto', `O Nº ${numero} já está na sua coleção!`);
-        else showPopup('enzo-secreto-erro', '⚠️', 'Enzo secreto', 'Não deu para salvar agora. Clique de novo daqui a pouco.');
+        else if (conta().temConquista(id)) showPopup(`enzo-secreto-${numero}-repetido`, ['enzo-secreto', '🐱'], 'Enzo secreto', `O Nº ${numero} já está na sua coleção!`);
+        else showPopup('enzo-secreto-erro', ['aviso', '⚠️'], 'Enzo secreto', 'Não deu para salvar agora. Clique de novo daqui a pouco.');
     }
 
     function buildEnzoSecreto(egg) {
@@ -444,27 +444,13 @@
     }
 
     // ------------------------------------------------------------ achievement
-    function showPopup(id, icon, label, text) {
-        if (qs(id)) return;
-        const popup = document.createElement('div');
-        popup.id = id;
-        popup.className = 'achievement-popup';
-        popup.innerHTML = '<div class="achievement-icon"></div><div><div class="achievement-label"></div><div class="achievement-text"></div></div>';
-        popup.querySelector('.achievement-icon').textContent = icon;
-        popup.querySelector('.achievement-label').textContent = label;
-        popup.querySelector('.achievement-text').textContent = text;
-        document.body.appendChild(popup);
-        void popup.offsetWidth;
-        popup.classList.add('show');
-        setTimeout(() => {
-            popup.classList.remove('show');
-            setTimeout(() => popup.remove(), 600);
-        }, 4000);
+    /** Aviso de rodapé (recordatório de gibi, js/site.js). icon = [nome em assets/ui, emoji]. */
+    function showPopup(id, icon, label, text, burst = '') {
+        window.siteToast({ id, icon, label, text, burst });
     }
-
     function showAchievement() {
         if (qs('macarronada-achievement')) return;
-        showPopup('macarronada-achievement', '🏆', 'Conquista desbloqueada', 'PARABÉNS! VOCÊ ACHOU 1 DE 999 MACARRONADAS!');
+        showPopup('macarronada-achievement', ['conquista-macarronada', '🍝'], 'Caçador de Macarronada', 'PARABÉNS! VOCÊ ACHOU 1 DE 999 MACARRONADAS!', 'CONQUISTA!');
         conta()?.conquista('macarronada');
     }
 
@@ -531,7 +517,7 @@
         state.lastScroll = top;
         state.jumped = true;
         ui.viewport.scrollTop = top;
-        showPopup('reading-restored', '📖', 'Continuando de onde parou', `Página ${saved.page + 1}`);
+        showPopup('reading-restored', ['marcador', '📖'], 'Continuando de onde parou', `Página ${saved.page + 1}`);
     }
 
     // ------------------------------------------------------------------ events

@@ -102,7 +102,7 @@
         carregarCatalogo().then(verificarColecoes).catch(() => {});
     }
 
-    async function sair() {
+    async function sairDaConta() {
         await pedir('/api/auth/logout', {});
         window.google?.accounts.id.disableAutoSelect();
         estado.usuario = null;
@@ -112,6 +112,22 @@
     }
 
     // ---------------------------------------------------------------- widget
+    // Visual de gibi: botão do topo = medalhão com faixa de nome; entrar = balão de
+    // fala; conta = "Ficha do Leitor", uma página de HQ com quadros (abre como <dialog>).
+    const el = (tag, classe, texto) => {
+        const e = document.createElement(tag);
+        if (classe) e.className = classe;
+        if (texto !== undefined) e.textContent = texto;
+        return e;
+    };
+    const botaoEl = (classe, ...filhos) => {
+        const b = el('button', classe);
+        b.type = 'button';
+        b.append(...filhos);
+        return b;
+    };
+    const icone = (nome, emoji, classe) => window.siteIcon(nome, emoji, classe);
+
     let balao = null;
     function fecharBalao() {
         balao?.remove();
@@ -125,140 +141,38 @@
     function escFecha(evento) {
         if (evento.key === 'Escape' && balao) { const dono = balao.parentElement?.querySelector('button'); fecharBalao(); dono?.focus(); }
     }
-    function abrirBalao(slot, conteudo) {
-        fecharBalao();
-        balao = document.createElement('div');
-        balao.className = 'conta-balao';
-        balao.setAttribute('role', 'dialog');
-        balao.append(...conteudo);
-        slot.appendChild(balao);
-        document.addEventListener('pointerdown', cliqueFora, true);
-        document.addEventListener('keydown', escFecha, true);
-    }
     function mostrarErroLogin(texto) {
         const erro = balao?.querySelector('.conta-erro');
         if (erro) { erro.textContent = texto; erro.hidden = !texto; }
     }
 
-    const el = (tag, classe, texto) => {
-        const e = document.createElement(tag);
-        if (classe) e.className = classe;
-        if (texto !== undefined) e.textContent = texto;
-        return e;
-    };
-
+    /** Deslogado: balão de fala saindo do botão, com o botão oficial do Google. */
     function balaoDeEntrada(slot) {
-        const titulo = el('p', 'conta-balao-titulo', 'Entre para salvar seus recordes');
-        const texto = el('p', 'conta-balao-texto', 'Com a conta Google você aparece no ranking dos jogos e continua o gibi de onde parou em qualquer aparelho.');
+        fecharBalao();
+        balao = el('div', 'conta-balao');
+        balao.setAttribute('role', 'dialog');
+        balao.setAttribute('aria-label', 'Entrar com Google');
         const alvo = el('div', 'conta-google');
-        const erro = el('p', 'conta-erro'); erro.hidden = true; erro.setAttribute('role', 'alert');
-        abrirBalao(slot, [titulo, texto, alvo, erro]);
+        const erro = el('p', 'conta-erro');
+        erro.hidden = true;
+        erro.setAttribute('role', 'alert');
+        balao.append(
+            el('span', 'conta-balao-estouro', 'PSST!'),
+            el('p', 'conta-balao-titulo', 'Quer salvar seus recordes?'),
+            el('p', 'conta-balao-texto', 'Entre com o Google para aparecer no ranking, colecionar conquistas e continuar o gibi de onde parou.'),
+            alvo, erro,
+        );
+        slot.appendChild(balao);
+        document.addEventListener('pointerdown', cliqueFora, true);
+        document.addEventListener('keydown', escFecha, true);
         carregarGoogle().then((google) => {
-            google.accounts.id.renderButton(alvo, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with', locale: 'pt-BR', width: 240 });
+            google.accounts.id.renderButton(alvo, { theme: 'filled_black', size: 'large', shape: 'rectangular', text: 'signin_with', locale: 'pt-BR', width: 250 });
         }).catch((falha) => mostrarErroLogin(falha.message));
     }
 
-    // Aba aberta por último no balão da conta (Recordes ou Conquistas).
-    let abaDaConta = 'recordes';
-
-    function painelRecordes() {
-        const recordes = el('ul', 'conta-recordes');
-        for (const [jogo, titulo] of Object.entries(JOGOS)) {
-            const item = el('li');
-            item.append(el('span', '', titulo), el('strong', '', String(melhorRecorde(jogo))));
-            recordes.appendChild(item);
-        }
-        return recordes;
-    }
-
-    /** Aba Conquistas: lista (coleções com barra de progresso) + grade dos Enzos secretos. */
-    function painelConquistas() {
-        const C = window.EnzoConquistas;
-        const painel = el('div', 'conta-conquistas');
-        if (!C) return painel;
-        const lista = el('ul', 'conquistas-lista');
-        const barras = [];
-        for (const def of C.LISTA) {
-            const feita = temConquista(def.id);
-            const item = el('li', `conquista${feita ? ' conquista--feita' : ''}`);
-            const texto = el('div', 'conquista-texto');
-            texto.append(el('strong', 'conquista-titulo', def.titulo), el('span', 'conquista-descricao', def.descricao));
-            if (def.colecao && !feita) {
-                const barra = el('span', 'conquista-barra');
-                barra.appendChild(el('span', 'conquista-barra-cheia'));
-                const conta = el('span', 'conquista-conta', '...');
-                texto.append(barra, conta);
-                barras.push({ def, barra, conta });
-            }
-            item.append(el('span', 'conquista-icone', feita ? def.icone : '🔒'), texto);
-            item.setAttribute('aria-label', `${def.titulo}: ${feita ? 'desbloqueada' : 'bloqueada'}. ${def.descricao}`);
-            lista.appendChild(item);
-        }
-
-        const achados = Array.from({ length: C.SECRETOS }, (_, i) => temConquista(C.idSecreto(i + 1)));
-        const secretos = el('div', 'conquistas-secretos');
-        secretos.append(
-            el('p', 'conquista-titulo', `Enzo secreto · ${secretosAchados()}/${C.SECRETOS}`),
-            el('p', 'conquista-descricao', 'Enzos escondidos nas páginas das HQs. Clique neles para colecionar!'),
-        );
-        const grade = el('ol', 'secretos-grade');
-        achados.forEach((achado, i) => {
-            const celula = el('li', `secreto${achado ? ' secreto--achado' : ''}`, achado ? String(i + 1) : '?');
-            celula.title = achado ? `Enzo secreto nº ${i + 1}` : 'Ainda escondido';
-            grade.appendChild(celula);
-        });
-        secretos.appendChild(grade);
-        painel.append(lista, secretos);
-
-        // Progresso das coleções precisa do catálogo (quantas edições existem).
-        if (barras.length) {
-            carregarCatalogo().then((catalogo) => {
-                for (const { def, barra, conta } of barras) {
-                    const { lidos, total } = C.progressoDaColecao(catalogo, def.colecao, estado.dados?.progress);
-                    barra.firstChild.style.width = `${total ? Math.round((lidos / total) * 100) : 0}%`;
-                    conta.textContent = `${lidos}/${total} edições lidas`;
-                }
-            }).catch(() => { for (const { conta } of barras) conta.textContent = ''; });
-        }
-        return painel;
-    }
-
-    function balaoDaConta(slot) {
-        const nome = el('p', 'conta-balao-titulo', estado.usuario.name);
-        const abas = el('div', 'conta-abas');
-        abas.setAttribute('role', 'tablist');
-        const corpo = el('div', 'conta-aba-corpo');
-        corpo.setAttribute('role', 'tabpanel');
-        const mostrar = (aba) => {
-            abaDaConta = aba;
-            for (const botao of abas.children) botao.setAttribute('aria-selected', String(botao.dataset.aba === aba));
-            corpo.replaceChildren(aba === 'conquistas' ? painelConquistas() : painelRecordes());
-        };
-        for (const [aba, titulo] of [['recordes', 'Recordes'], ['conquistas', 'Conquistas']]) {
-            const botao = el('button', 'conta-aba', titulo);
-            botao.type = 'button';
-            botao.setAttribute('role', 'tab');
-            botao.dataset.aba = aba;
-            botao.addEventListener('click', () => mostrar(aba));
-            abas.appendChild(botao);
-        }
-        mostrar(abaDaConta);
-        const ranking = el('button', 'btn btn--small', '🏆 Ranking');
-        ranking.type = 'button';
-        ranking.addEventListener('click', () => { fecharBalao(); abrirRanking(); });
-        const sairBtn = el('button', 'btn btn--small btn--muted', 'Sair');
-        sairBtn.type = 'button';
-        sairBtn.addEventListener('click', () => { fecharBalao(); sair(); });
-        const acoes = el('div', 'conta-acoes');
-        acoes.append(ranking, sairBtn);
-        abrirBalao(slot, [nome, abas, corpo, acoes]);
-        balao.classList.add('conta-balao--conta');
-    }
-
-    function avatar(usuario) {
-        const caixa = el('span', 'conta-avatar');
-        const inicial = el('span', 'conta-inicial', (usuario.firstName || '?')[0].toUpperCase());
-        caixa.appendChild(inicial);
+    function avatar(usuario, classe = 'conta-avatar') {
+        const caixa = el('span', classe);
+        caixa.appendChild(el('span', 'conta-inicial', (usuario.firstName || '?')[0].toUpperCase()));
         if (usuario.avatarUrl) {
             const img = el('img');
             img.alt = '';
@@ -270,6 +184,127 @@
         return caixa;
     }
 
+    // ---------------------------------------------------------------- ficha do leitor
+    const FALAS = [
+        'BORA LER MAIS UMA EDIÇÃO?',
+        'ODEIO QUARTAS-FEIRAS... MAS GOSTO DE VOCÊ AQUI!',
+        'CADÊ A MINHA MACARRONADA?',
+        'TEM ENZO ESCONDIDO NAS PÁGINAS... ACHA ELE!',
+        'RECORDE BOM É RECORDE BATIDO!',
+    ];
+
+    /** Quadro de gibi com recordatório amarelo no canto. */
+    function quadro(classe, recordatorio, ...conteudo) {
+        const secao = el('section', `quadro ${classe}`);
+        if (recordatorio) secao.appendChild(el('p', 'quadro-recordatorio', recordatorio));
+        secao.append(...conteudo);
+        return secao;
+    }
+
+    function quadroDoLeitor() {
+        const fala = el('p', 'ficha-fala', FALAS[Math.floor(Math.random() * FALAS.length)]);
+        const nome = el('p', 'ficha-nome', estado.usuario.name);
+        return quadro('quadro--leitor', '', avatar(estado.usuario, 'ficha-retrato'), fala, nome);
+    }
+
+    function quadroDeRecordes() {
+        const lista = el('div', 'ficha-recordes');
+        for (const [jogo, titulo] of Object.entries(JOGOS)) {
+            const item = el('div', 'ficha-recorde');
+            item.append(el('span', 'ficha-recorde-jogo', titulo), el('strong', 'ficha-estouro', String(melhorRecorde(jogo))));
+            lista.appendChild(item);
+        }
+        const ranking = botaoEl('ficha-ranking', icone('trofeu', '🏆'), el('span', '', 'Ranking global'));
+        ranking.addEventListener('click', () => { ficha.close(); abrirRanking(); });
+        return quadro('quadro--recordes', 'Recordes', lista, ranking);
+    }
+
+    function quadroDeConquistas() {
+        const C = window.EnzoConquistas;
+        const feitas = C.LISTA.filter((def) => temConquista(def.id)).length;
+        const album = el('ul', 'figurinhas');
+        const barras = [];
+        C.LISTA.forEach((def, i) => {
+            const feita = temConquista(def.id);
+            const card = el('li', `figurinha${feita ? ' figurinha--feita' : ''}`);
+            card.style.setProperty('--giro', `${i % 2 ? 1.2 : -1.2}deg`);
+            const arte = el('div', 'figurinha-arte');
+            arte.appendChild(feita ? icone(def.imagem, def.icone, 'figurinha-icone') : icone('cadeado', '🔒', 'figurinha-icone'));
+            const texto = el('div', 'figurinha-texto');
+            texto.append(el('strong', 'figurinha-titulo', def.titulo), el('span', 'figurinha-descricao', def.descricao));
+            if (def.colecao && !feita) {
+                const barra = el('span', 'figurinha-barra');
+                barra.appendChild(el('span'));
+                const conta = el('span', 'figurinha-conta', '...');
+                texto.append(barra, conta);
+                barras.push({ def, barra, conta });
+            }
+            card.append(arte, texto);
+            card.setAttribute('aria-label', `${def.titulo}: ${feita ? 'desbloqueada' : 'bloqueada'}. ${def.descricao}`);
+            album.appendChild(card);
+        });
+        // Progresso das coleções precisa do catálogo (quantas edições existem).
+        if (barras.length) {
+            carregarCatalogo().then((catalogo) => {
+                for (const { def, barra, conta } of barras) {
+                    const { lidos, total } = C.progressoDaColecao(catalogo, def.colecao, estado.dados?.progress);
+                    barra.firstChild.style.width = `${total ? Math.round((lidos / total) * 100) : 0}%`;
+                    conta.textContent = `${lidos} de ${total} edições`;
+                }
+            }).catch(() => { for (const { conta } of barras) conta.textContent = ''; });
+        }
+        return quadro('quadro--conquistas', `Álbum de conquistas · ${feitas}/${C.LISTA.length}`, album);
+    }
+
+    function quadroDeSecretos() {
+        const C = window.EnzoConquistas;
+        const grade = el('ol', 'album-secretos');
+        for (let n = 1; n <= C.SECRETOS; n++) {
+            const achado = temConquista(C.idSecreto(n));
+            const vaga = el('li', `album-vaga${achado ? ' album-vaga--achada' : ''}`);
+            if (achado) vaga.appendChild(icone('enzo-secreto', '🐱', 'album-icone'));
+            vaga.appendChild(el('span', 'album-numero', String(n)));
+            vaga.title = achado ? `Enzo secreto nº ${n}` : `Nº ${n}: ainda escondido`;
+            grade.appendChild(vaga);
+        }
+        return quadro('quadro--secretos', `Enzos secretos · ${secretosAchados()}/${C.SECRETOS}`,
+            el('p', 'quadro-texto', 'Enzos escondidos nas páginas das HQs. Clique neles para colar no álbum!'), grade);
+    }
+
+    let ficha = null;
+    function abrirFicha() {
+        fecharBalao();
+        if (!ficha) {
+            ficha = el('dialog', 'ficha pagina-gibi');
+            ficha.setAttribute('aria-label', 'Ficha do leitor');
+            ficha.addEventListener('click', (evento) => { if (evento.target === ficha) ficha.close(); });
+            document.body.appendChild(ficha);
+        }
+        const fechar = botaoEl('pagina-fechar', '×');
+        fechar.setAttribute('aria-label', 'Fechar a ficha');
+        fechar.addEventListener('click', () => ficha.close());
+        const selo = el('div', 'pagina-selo');
+        // "Nº" em fonte de texto: a Bangers não tem o "º" (sai "NO").
+        selo.append(el('span', '', 'Nº'), el('span', 'pagina-selo-numero', '1'), el('span', '', 'Edição do leitor'));
+        const titulo = el('div', 'pagina-titulo');
+        titulo.append(el('p', 'pagina-sobre', 'Enzo Games apresenta'), el('h2', 'pagina-manchete', 'Ficha do Leitor'));
+        const topo = el('header', 'pagina-topo');
+        topo.append(selo, titulo, fechar);
+
+        const grade = el('div', 'ficha-grade');
+        grade.append(quadroDoLeitor(), quadroDeRecordes());
+        if (window.EnzoConquistas) grade.append(quadroDeConquistas(), quadroDeSecretos());
+
+        const sair = botaoEl('ficha-sair', 'Sair da conta');
+        sair.addEventListener('click', () => { ficha.close(); sair.disabled = true; sairDaConta(); });
+        const rodape = el('footer', 'pagina-rodape');
+        rodape.append(el('p', 'pagina-continua', 'Continua na próxima edição...'), sair);
+
+        ficha.replaceChildren(topo, grade, rodape);
+        if (!ficha.open) ficha.showModal();
+        fechar.focus();
+    }
+
     function renderizar() {
         for (const slot of document.querySelectorAll('[data-conta]')) {
             slot.replaceChildren();
@@ -279,11 +314,12 @@
             botao.type = 'button';
             botao.setAttribute('aria-haspopup', 'dialog');
             if (estado.usuario) {
+                botao.classList.add('conta-botao--logado');
                 botao.append(avatar(estado.usuario), el('span', 'conta-nome', estado.usuario.firstName));
-                botao.setAttribute('aria-label', `Conta de ${estado.usuario.firstName}: recordes, ranking e sair`);
-                botao.addEventListener('click', () => (balao ? fecharBalao() : balaoDaConta(slot)));
+                botao.setAttribute('aria-label', `Ficha do leitor ${estado.usuario.firstName}: recordes, conquistas e sair`);
+                botao.addEventListener('click', abrirFicha);
             } else {
-                botao.append(el('span', 'conta-chave', '🔑'), el('span', 'conta-nome', 'Entrar'));
+                botao.append(icone('chave', '🔑', 'conta-chave'), el('span', 'conta-nome', 'Entrar'));
                 botao.setAttribute('aria-label', 'Entrar com Google');
                 botao.addEventListener('click', () => (balao ? fecharBalao() : balaoDeEntrada(slot)));
             }
@@ -294,12 +330,12 @@
     // ---------------------------------------------------------------- ranking
     let dialogoRanking = null;
     function criarDialogoRanking() {
-        const dialogo = el('dialog', 'ranking-dialog');
+        const dialogo = el('dialog', 'ranking-dialog pagina-gibi');
         dialogo.setAttribute('aria-label', 'Ranking global');
         dialogo.innerHTML = `
             <div class="ranking-topo">
-                <h2 class="ranking-titulo">🏆 Ranking Global</h2>
-                <button type="button" class="btn btn--small ranking-fechar" aria-label="Fechar ranking">Fechar ×</button>
+                <h2 class="ranking-titulo">Placar global</h2>
+                <button type="button" class="pagina-fechar ranking-fechar" aria-label="Fechar ranking">×</button>
             </div>
             <div class="ranking-abas" role="tablist"></div>
             <div class="ranking-corpo" aria-live="polite"></div>`;
@@ -312,6 +348,7 @@
             aba.addEventListener('click', () => mostrarRanking(jogo));
             abas.appendChild(aba);
         }
+        dialogo.querySelector('.ranking-titulo').prepend(icone('trofeu', '🏆', 'ranking-trofeu'));
         dialogo.querySelector('.ranking-fechar').addEventListener('click', () => dialogo.close());
         dialogo.addEventListener('click', (evento) => { if (evento.target === dialogo) dialogo.close(); });
         document.body.appendChild(dialogo);
@@ -320,7 +357,11 @@
 
     function linhaRanking(item, classe = '') {
         const linha = el('li', `ranking-linha ${classe}${item.isMe ? ' ranking-linha--eu' : ''}`);
-        linha.append(el('span', 'ranking-pos', `${item.position}º`), el('span', 'ranking-nome', item.isMe ? `${item.name} (você)` : item.name), el('strong', 'ranking-pontos', String(item.score)));
+        const posicao = el('span', 'ranking-pos');
+        // Pódio com medalha (arte em assets/ui quando existir); o resto só o número.
+        if (MEDALHAS[item.position]) posicao.appendChild(icone(`medalha-${item.position}`, MEDALHAS[item.position], 'ranking-medalha'));
+        else posicao.textContent = `${item.position}.`;
+        linha.append(posicao, el('span', 'ranking-nome', item.isMe ? `${item.name} (você)` : item.name), el('strong', 'ranking-pontos', String(item.score)));
         return linha;
     }
 
@@ -430,19 +471,9 @@
         const numero = C?.numeroSecreto(id);
         const def = C?.definicao(id);
         if (!def && !numero) return;
-        const achados = numero ? secretosAchados() : 0;
-        const popup = el('div', 'achievement-popup');
-        popup.setAttribute('role', 'status');
-        const texto = el('div');
-        texto.append(
-            el('div', 'achievement-label', numero ? 'Parabéns! Conquista desbloqueada' : 'Conquista desbloqueada'),
-            el('div', '', numero ? `VOCÊ ACHOU ${achados} DE ${C.SECRETOS} ENZOS SECRETOS!` : `${def.titulo.toUpperCase()}!`),
-        );
-        popup.append(el('div', 'achievement-icon', numero ? '🐱' : def.icone), texto);
-        document.body.appendChild(popup);
-        void popup.offsetWidth;
-        popup.classList.add('show');
-        setTimeout(() => { popup.classList.remove('show'); setTimeout(() => popup.remove(), 600); }, 4000);
+        window.siteToast(numero
+            ? { icon: ['enzo-secreto', '🐱'], burst: 'PARABÉNS!', label: 'Conquista desbloqueada', text: `VOCÊ ACHOU ${secretosAchados()} DE ${C.SECRETOS} ENZOS SECRETOS!` }
+            : { icon: [def.imagem, def.icone], burst: 'CONQUISTA!', label: def.titulo, text: def.descricao });
     }
 
     /**
