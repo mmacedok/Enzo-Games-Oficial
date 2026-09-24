@@ -1610,6 +1610,30 @@ body.game-dialog-open { overflow: hidden; }
 .ronda-botao--recarregar { min-width: 64px; background: #2a2a3a; font-size: 1.8rem; }
 .ronda-botao.is-apertado { transform: translateY(3px) scale(0.97); filter: brightness(1.25); box-shadow: none; }
 
+/* Caçada ao Inominável: ◀ ▶ ▼ à esquerda, TIRO e PULAR à direita */
+.cacada-controles {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    width: min(100%, 720px);
+    padding: 0 8px;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+.cacada-controles__lado { display: flex; gap: 8px; align-items: stretch; }
+.cacada-botao { min-width: 64px; min-height: 76px; padding: 0 10px; }
+.cacada-botao[data-tecla="esquerda"], .cacada-botao[data-tecla="direita"] { background: #2a2a3a; font-size: 1.8rem; }
+.cacada-botao--baixo { min-width: 48px; background: #1d1d2b; font-size: 1.2rem; }
+.cacada-botao[data-tecla="pulo"] { min-width: 96px; }
+@media (max-width: 560px) {
+    .cacada-controles { gap: 8px; padding: 0 4px; }
+    .cacada-controles__lado { gap: 6px; flex: 1; }
+    .cacada-botao, .cacada-botao[data-tecla="pulo"] { flex: 1; min-width: 0; padding: 0 4px; font-size: 1.15rem; }
+    .cacada-botao--baixo { flex: 0.7; }
+}
+
 /* Estante no tema do Degustador: luz roxa, lombadas pretas e roxas, detalhes MP5K */
 .theme-degustador .bookcase {
     background:

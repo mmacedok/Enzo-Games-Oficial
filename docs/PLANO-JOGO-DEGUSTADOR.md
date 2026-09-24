@@ -1,5 +1,8 @@
 # Plano: minigame do Degustador da Noite — "Ronda nos Telhados"
 
+> **Substituído (24/09/2026)** pelo jogo de plataforma "Caçada ao Inominável" (docs/PLANO-CACADA.md).
+> O runner continua no código (`js/ronda*.js`), mas o título da página agora abre a Caçada.
+
 Status: **v1 jogável com placeholders** (fases 1 a 4 feitas em 23/09/2026).
 Falta a fase 5 (ajuste da sensação jogando) e a 6 (sprites). Easter egg simples; a v1 usa **só retângulos coloridos** no lugar
 das artes. Os sprites vêm depois (lista na seção 7).

@@ -262,7 +262,7 @@
     // Cada easter egg: scripts em ordem e o objeto global que abre o jogo.
     const JOGOS = {
         flappy: { scripts: ['js/game-dialog.js?v=4', 'js/flappy-core.js?v=1', 'js/flappy.js?v=4'], global: 'FlappyEnzo' },
-        ronda: { scripts: ['js/game-dialog.js?v=4', 'js/ronda-core.js?v=2', 'js/ronda.js?v=7'], global: 'RondaDegustador' },
+        ronda: { scripts: ['js/game-dialog.js?v=4', 'js/cacada-core.js?v=1', 'js/cacada-fases.js?v=1', 'js/cacada.js?v=1'], global: 'CacadaInominavel' },
     };
     const carregando = {};
     function abrirJogo(nome) {
@@ -273,7 +273,7 @@
             .catch((error) => { console.error('[jogo]', error); carregando[nome] = null; });
     }
 
-    // Logo da home abre o Flappy; título do Degustador abre a Ronda.
+    // Logo da home abre o Flappy; título do Degustador abre a Caçada ao Inominável.
     for (const [seletor, nome] of [['[data-flappy-trigger]', 'flappy'], ['[data-ronda-trigger]', 'ronda']]) {
         const gatilho = document.querySelector(seletor);
         if (!gatilho) continue;
