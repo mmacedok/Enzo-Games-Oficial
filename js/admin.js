@@ -9,8 +9,17 @@
     'use strict';
 
     const C = window.EnzoConquistas;
+    const B = window.EnzoBaralho;
     const JOGOS = { 'flappy-enzo': 'Flappy Enzo', 'ronda-noturna': 'Degustação Noturna' };
     const APELIDOS_JOGO = { flappy: 'flappy-enzo', 'flappy-enzo': 'flappy-enzo', degustacao: 'ronda-noturna', ronda: 'ronda-noturna', 'ronda-noturna': 'ronda-noturna' };
+    const APELIDOS_PACOTE = {
+        est: 'estacionamento',
+        estacionamento: 'estacionamento',
+        tor: 'toradolandia',
+        toradolandia: 'toradolandia',
+        pis: 'piscina-de-macarronada',
+        'piscina-de-macarronada': 'piscina-de-macarronada',
+    };
     const calmo = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const $ = (id) => document.getElementById(id);
@@ -220,6 +229,42 @@
             caixa.dataset.conquista = d.id;
             caixa.addEventListener('click', () => rodar(`${caixa.getAttribute('aria-checked') === 'true' ? 'revoke' : 'grant'} ${d.id}`));
             return [caixa, d.id, d.titulo, ligada ? data(tem.get(d.id)) : span('apagado', 'bloqueada')];
+        }));
+
+        const bInfo = c.baralho || { carteira: { creditos: 0, po: 0 }, pacotes: [], colecao: {}, diferentes: 0, total: 7 };
+        const diferentes = bInfo.diferentes ?? (bInfo.colecao ? Object.keys(bInfo.colecao).length : 0);
+        const totalCartas = bInfo.total ?? (B?.CARTAS?.length || 7);
+        secao(`baralho ${diferentes}/${totalCartas}`);
+
+        const contagemPacotes = {};
+        for (const p of (bInfo.pacotes || [])) {
+            contagemPacotes[p.tipo] = (contagemPacotes[p.tipo] || 0) + 1;
+        }
+        const pacotesLista = (B?.PACOTES || [])
+            .filter((p) => contagemPacotes[p.id])
+            .map((p) => `${contagemPacotes[p.id]}× ${p.id}`);
+        for (const tipo of Object.keys(contagemPacotes)) {
+            if (!B?.PACOTES?.some((p) => p.id === tipo)) {
+                pacotesLista.push(`${contagemPacotes[tipo]}× ${tipo}`);
+            }
+        }
+        const pacotesTexto = pacotesLista.length ? pacotesLista.join(', ') : 'nenhum';
+
+        tabela(['campo', 'valor'], [
+            ['créditos', String(bInfo.carteira?.creditos ?? 0)],
+            ['pó', String(bInfo.carteira?.po ?? 0)],
+            ['pacotes fechados', pacotesTexto],
+        ]);
+
+        const todasCartas = B?.CARTAS || [];
+        tabela(['#', 'carta', 'raridade', 'qtd'], todasCartas.map((carta) => {
+            const qtd = bInfo.colecao?.[carta.id];
+            return [
+                String(carta.numero),
+                carta.nome,
+                carta.raridade,
+                qtd ? String(qtd) : span('apagado', '·'),
+            ];
         }));
 
         const secretos = c.achievements.filter((a) => C.numeroSecreto(a.id) !== null).length;
@@ -464,6 +509,63 @@
                 ok(fala ? `fala agora: "${fala}"` : 'fala voltou para a do Enzo.');
             },
         },
+        credits: {
+            uso: 'credits <n>',
+            desc: 'soma ou tira créditos da conta aberta',
+            async fn(args) {
+                const alvo = exigirAlvo();
+                if (!args[0]) throw new Error('uso: credits <n> (número inteiro).');
+                const n = Number(args[0]);
+                if (!Number.isInteger(n)) throw new Error('créditos: número inteiro.');
+                if (n === 0) throw new Error('créditos: valor diferente de zero.');
+                const aplicar = async () => {
+                    const novo = await pedir(`/api/admin/users/${alvo.id}/baralho`, { creditos: n });
+                    ok(`créditos de ${primeiroNome(alvo.name)}: ${novo.carteira.creditos} (${n > 0 ? '+' : ''}${n}).`);
+                    await COMANDOS.open.fn([alvo.id]);
+                };
+                if (n < 0) {
+                    pedirConfirmacao(`tirar ${Math.abs(n)} créditos de ${alvo.name}?`, aplicar);
+                } else {
+                    await aplicar();
+                }
+            },
+        },
+        dust: {
+            uso: 'dust <n>',
+            desc: 'soma ou tira pó da conta aberta',
+            async fn(args) {
+                const alvo = exigirAlvo();
+                if (!args[0]) throw new Error('uso: dust <n> (número inteiro).');
+                const n = Number(args[0]);
+                if (!Number.isInteger(n)) throw new Error('pó: número inteiro.');
+                if (n === 0) throw new Error('pó: valor diferente de zero.');
+                const aplicar = async () => {
+                    const novo = await pedir(`/api/admin/users/${alvo.id}/baralho`, { po: n });
+                    ok(`pó de ${primeiroNome(alvo.name)}: ${novo.carteira.po} (${n > 0 ? '+' : ''}${n}).`);
+                    await COMANDOS.open.fn([alvo.id]);
+                };
+                if (n < 0) {
+                    pedirConfirmacao(`tirar ${Math.abs(n)} pó de ${alvo.name}?`, aplicar);
+                } else {
+                    await aplicar();
+                }
+            },
+        },
+        pack: {
+            uso: 'pack <tipo> [qtd]',
+            desc: 'dá pacotes à conta aberta (est, tor, pis)',
+            async fn(args) {
+                const alvo = exigirAlvo();
+                if (!args[0]) throw new Error('uso: pack <tipo> [quantidade].');
+                const tipo = APELIDOS_PACOTE[args[0].toLowerCase()];
+                if (!tipo) throw new Error('pacote: est, tor ou pis (ou nome completo).');
+                const qtd = args[1] !== undefined ? Number(args[1]) : 1;
+                if (!Number.isInteger(qtd) || qtd < 1 || qtd > 10) throw new Error('quantidade: de 1 a 10.');
+                const novo = await pedir(`/api/admin/users/${alvo.id}/baralho`, { pacote: tipo, quantidade: qtd });
+                ok(`+ ${qtd}× ${tipo} para ${primeiroNome(alvo.name)} (${novo.pacotes.length} pacote(s) fechado(s)).`);
+                await COMANDOS.open.fn([alvo.id]);
+            },
+        },
         scores: {
             uso: 'scores [flappy|degustacao]',
             desc: 'últimas 100 partidas de todo mundo',
@@ -582,6 +684,9 @@
         } else if (partes[0] === 'scores' && partes.length === 2) {
             prefixo = 'scores ';
             opcoes = ['flappy', 'degustacao'].filter((j) => j.startsWith(partes[1]));
+        } else if (partes[0] === 'pack' && partes.length === 2) {
+            prefixo = 'pack ';
+            opcoes = ['estacionamento', 'toradolandia', 'piscina-de-macarronada', 'est', 'tor', 'pis'].filter((p) => p.startsWith(partes[1].toLowerCase()));
         } else return;
         if (opcoes.length === 1) entrada.value = `${prefixo}${opcoes[0]} `;
         else if (opcoes.length > 1) apagado(opcoes.join('   '));
