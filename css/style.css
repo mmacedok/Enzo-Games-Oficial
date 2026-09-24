@@ -3123,3 +3123,6 @@ button.ranking-nome:focus-visible { outline: 3px solid var(--focus); outline-off
 @media (max-width: 600px) {
     .abertura-pilha { --carta-largura: clamp(150px, min(70vw, (100dvh - 260px) * 0.72), 290px); }
 }
+
+/* Carta grande: o dedo inclina a carta em vez de rolar a tela. */
+.carta-zoom .juice-balanca { touch-action: none; }

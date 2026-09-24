@@ -107,7 +107,7 @@ admin dá créditos/pó/pacotes pela rota `/api/admin/users/:id/baralho` (ou `cr
 - [ ] Fichário: 7 vagas; as que faltam são "???" com o número; ×N nas repetidas.
 - [ ] "Repetidas": − / + (nunca deixa virar a última), "Virar pó +N" credita o valor certo.
 - [ ] "Transformar todas as repetidas": 1º clique pede certeza (volta sozinho em 4 s), 2º transforma; fica 1 de cada.
-- [ ] Clicar numa carta abre a carta grande; Esc/fundo fecha.
+- [ ] Cartas do fichário balançam e inclinam em 3D com o mouse; clicar abre a carta grande com tranco, que inclina em 3D seguindo o mouse/dedo; Esc/fundo fecha.
 - [ ] Cabo Côco aparece borrada com "BANIDO" até a conta ter a conquista Acesso Confidencial.
 - [ ] Celular (375×812): 3 abas cabem, sem rolagem para os lados, fichário em 3 colunas.
 

@@ -463,7 +463,8 @@
             }
             const abrirGrande = botao('fichario-carta');
             abrirGrande.setAttribute('aria-label', `${def.nome} (${B.raridade(def.raridade).nome}), você tem ${qtd}. Ver carta grande`);
-            abrirGrande.appendChild(carta(def.id));
+            // Balança na página e inclina em 3D com o mouse (mesma mola da abertura).
+            abrirGrande.appendChild(vivo(carta(def.id), { forca: 14 }).raiz);
             abrirGrande.addEventListener('click', () => verCarta(def.id, qtd));
             celula.appendChild(abrirGrande);
             if (qtd > 1) {
@@ -557,12 +558,15 @@
         fechar.setAttribute('aria-label', 'Fechar a carta');
         fechar.addEventListener('click', () => janela.close());
         const legenda = el('p', 'carta-zoom-legenda', `Você tem ${qtd} ${qtd === 1 ? 'cópia' : 'cópias'}`);
-        janela.append(fechar, carta(cardId), legenda);
+        // Carta grande "viva": inclina em 3D seguindo o mouse (ou o dedo) e dá um tranco ao abrir.
+        const { raiz, mola: m } = vivo(carta(cardId), { forca: 20 });
+        janela.append(fechar, raiz, legenda);
         janela.addEventListener('click', (evento) => { if (evento.target === janela) janela.close(); });
         janela.addEventListener('close', () => janela.remove());
         document.body.appendChild(janela);
         janela.showModal();
         fechar.focus();
+        m.tranco(0.08, 6);
     }
 
     // ------------------------------------------------------------ abertura em tela cheia
