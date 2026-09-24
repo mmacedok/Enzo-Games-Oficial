@@ -6,6 +6,10 @@
     'use strict';
 
     const qs = (id) => document.getElementById(id);
+
+    /** Botão de casa: volta para a página da coleção do gibi aberto. */
+    const CASA = { degustador: 'degustador.html', torado: 'zezoverso.html#torado', superkid: 'zezoverso.html#superkid' };
+    const casaDo = (comic) => CASA[comic?.id] || (comic?.featured === false ? 'zezoverso.html' : 'index.html');
     const ZOOM_MIN = 0.5;
     const ZOOM_MAX = 3;
     const ZOOM_STEP = 0.25;
@@ -491,6 +495,8 @@
 
         state.comic = comic;
         state.unlocked = false;
+        const casa = qs('back-btn');
+        if (casa) casa.dataset.nav = casaDo(comic);
 
         document.body.classList.toggle('theme-degustador', comic.id === 'degustador');
 
@@ -538,6 +544,7 @@
     }
 
     async function init() {
+        qs('back-btn')?.addEventListener('click', (event) => { window.location.href = event.currentTarget.dataset.nav || 'index.html'; });
         const wipe = qs('macaroni-wipe');
         // Veio da animação de abrir o gibi na home: entra direto, sem macarronada.
         let enteringFromComic = false;
