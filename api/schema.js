@@ -73,4 +73,19 @@ module.exports = [
         created_at BIGINT NOT NULL
     )`,
     'CREATE INDEX IF NOT EXISTS idx_admin_log_created ON admin_log(created_at)',
+    // Cartas dos Leitores (api/comentarios.js). censuras = JSON [[inicio, fim], ...];
+    // apagar é "soft delete" (apagado_em), para o histórico saber o que saiu.
+    `CREATE TABLE IF NOT EXISTS comments (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        comic_id TEXT NOT NULL,
+        chapter_id TEXT NOT NULL,
+        texto TEXT NOT NULL,
+        censuras TEXT,
+        apagado_em BIGINT,
+        apagado_por TEXT,
+        created_at BIGINT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_comments_capitulo ON comments(comic_id, chapter_id, created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_comments_usuario ON comments(user_id, created_at)',
 ];

@@ -60,3 +60,37 @@ Já testado: `test/conquistas.test.js` e `test/api.test.js` (passando).
 - [ ] Leitor que já tinha lido tudo antes ganha as duas ao abrir o site logado.
 - [ ] Terminal: `achievements` lista as duas; `grant superkid-completo` / `revoke torado-completo` funcionam.
 - [ ] Produção: só depois do deploy (o servidor precisa conhecer os ids novos).
+
+## Cartas dos Leitores (comentários) — criadas em 2026-09-24
+
+Já testado: `test/comentarios.test.js` (7 testes da API, passando). A tela não foi aberta ainda.
+
+### Lugar na tela
+- [ ] Computador 1920×1080: cartas à direita da última página, grudadas enquanto a página rola; "Ler próximo" embaixo da página.
+- [ ] Computador 1366×768: ainda ao lado (as páginas andam um pouco para a esquerda), nada cortado nas bordas.
+- [ ] 1024 e 800 de largura: cartas descem para baixo do "Ler próximo".
+- [ ] Zoom do leitor acima de 100%: cartas embaixo; voltar ao 100% põe de novo ao lado.
+- [ ] Celular 375×812: última página → "Ler próximo" → cartas; sem rolagem para os lados.
+- [ ] Último capítulo sem próximo (ex.: capítulo 7): as cartas aparecem mesmo sem o botão.
+- [ ] Gibis de 1 página só, Degustador (4 capítulos: cada capítulo tem a sua conversa), Superkid e Torado.
+- [ ] "Continuar de onde parou" ainda cai na página certa (inclusive a última).
+- [ ] O capítulo continua sendo marcado como lido ao chegar na última página.
+
+### Usar
+- [ ] Sem login: convite "Entrar para comentar" abre o balão do Google no topo.
+- [ ] Logado: escrever, contador de letras, "Mandar carta!", a carta aparece no topo e o número no estouro sobe.
+- [ ] Erros aparecem em vermelho: link, texto vazio, 2 cartas em menos de 30 s.
+- [ ] Autor: "apagar" pede "apagar mesmo?" e some.
+- [ ] Clicar no nome/foto abre a ficha do leitor (a sua abre "Minha ficha").
+- [ ] "Cartas mais antigas" com mais de 30 cartas.
+- [ ] Trocar de capítulo pelo seletor ou pelo "Ler próximo" carrega a conversa certa.
+- [ ] Texto com quebras de linha, emojis e 500 letras não estoura o balão.
+
+### Admin (três botões em cada carta)
+- [ ] Conta comum não vê nenhum dos três botões.
+- [ ] ✂ Apagar: primeiro clique "Apagar mesmo?", segundo apaga; sem o segundo clique volta ao normal em 4 s.
+- [ ] ▇ Censurar: palavras viram botões, marcar/desmarcar, "Salvar tarjas" → barras pretas tortas; "Cancelar" não muda nada.
+- [ ] A palavra censurada não aparece para conta comum/visitante nem no "inspecionar elemento" nem na aba Rede (resposta de /api/comments).
+- [ ] Censurar de novo: as palavras já tarjadas vêm marcadas; desmarcar tudo e salvar tira a tarja.
+- [ ] ⛔ Banir: não aparece nas cartas do próprio admin; confirma e some com todas as cartas do autor; `unban` no terminal traz de volta.
+- [ ] O terminal (`log`) mostra comment-rm, comment-censor e ban.

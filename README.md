@@ -143,6 +143,24 @@ Público: nome abreviado ("Henrique M."), foto do Google, número de leitor
 (ordem de chegada), fala, conquistas e recordes verificados. E-mail e progresso
 de leitura ficam privados.
 
+### Cartas dos Leitores (comentários)
+
+No fim de cada capítulo (`js/comentarios.js`, API em `api/comentarios.js`):
+no computador à direita da última página; no celular embaixo do botão "Ler
+próximo". Só quem tem login escreve (até 500 letras, sem links, 1 carta a cada
+30 s e 30 por dia); o autor pode apagar a própria. Plano: `docs/PLANO-COMENTARIOS.md`.
+
+### Admin
+
+Os e-mails em `ADMIN_EMAILS` (variável de ambiente) viram admin:
+- em cada carta aparecem **Apagar**, **Censurar** (clicar nas palavras que levam
+  tarja preta; a palavra nunca sai do servidor) e **Banir** o autor;
+- a Ficha ganha o atalho `>_ terminal` para o painel `admin.html` (contas,
+  conquistas, partidas e o histórico de tudo o que o admin fez).
+
+Testes com robô/navegador sem Google: `ENZO_LOGIN_FALSO=1 node server.js` aceita a
+credencial `teste:<apelido>:<Nome>` (só local; recusado com `NODE_ENV=production`).
+
 ### Configurar no computador
 
 1. Copie `.env.example` para `.env` e preencha `GOOGLE_CLIENT_ID` e
@@ -159,8 +177,8 @@ usado** e não precisa ir para lugar nenhum.
 1. `netlify link` e `netlify db init` (escolha **Direct SQL**): instala o
    `@netlify/database`; o banco (`NETLIFY_DB_URL`) é criado no próximo deploy.
    O código usa `api/db-netlify.js`; `NETLIFY_DATABASE_URL` (Neon) também serve.
-2. Em Site configuration → Environment variables: `GOOGLE_CLIENT_ID` e
-   `SESSION_SECRET` (outra chave, diferente da local).
+2. Em Site configuration → Environment variables: `GOOGLE_CLIENT_ID`,
+   `SESSION_SECRET` (outra chave, diferente da local) e `ADMIN_EMAILS`.
 3. No Google Cloud Console, adicione o domínio do site (ex.:
    `https://enzogames.com.br`) em **Origens JavaScript autorizadas**.
 4. Faça o deploy. As tabelas são criadas sozinhas na primeira chamada.

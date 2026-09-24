@@ -714,6 +714,11 @@
         get loginAtivo() { return estado.loginAtivo; },
         get usuario() { return estado.usuario; },
         get dados() { return estado.dados; },
+        get admin() { return estado.admin; },
+        /** Abre o balão "Entrar com Google" no espaço da conta da página. */
+        pedirLogin() { const slot = document.querySelector('[data-conta]:not([hidden])'); if (slot) balaoDeEntrada(slot); },
+        abrirFicha,
+        avatar,
         aoMudar(fn) { ouvintes.add(fn); return () => ouvintes.delete(fn); },
         abrirRanking,
         iniciarPartida,

@@ -1,6 +1,12 @@
 # Plano: comentários nos gibis ("Cartas dos Leitores")
 
-Status: **plano, nada implementado ainda.** Escrito em 2026-09-24.
+Status: **fases 1–3 implementadas em 2026-09-24** (API, seção no leitor, moderação no site),
+aguardando os testes do Gemini (tarefa 18 da Bridge). Fase 4 (terminal) ficou para depois.
+
+Decisões do Henrique (2026-09-24):
+- celular: última página → "Ler próximo" → comentários (confirmado);
+- a moderação fica **embutida em cada comentário**, sem precisar do terminal: três botões
+  só para admin — **Apagar**, **Censurar** e **Banir** o autor.
 
 ## O que o Henrique pediu
 - Uma seção de comentários no fim de cada gibi.
@@ -52,7 +58,9 @@ mesmo recuo de 16px do resto do site.
 - Comentário apagado some da lista. Opcional: "✂ carta removida pela redação".
 
 ### Só o admin vê
-Uma faixa pequena em cima de cada comentário: `✂ apagar` · `▇ censurar`.
+Uma faixa pequena em cima de cada comentário: `✂ Apagar` · `▇ Censurar` · `⛔ Banir`.
+Apagar e Banir pedem um segundo clique ("Certeza?") em até 4 s. Banir esconde todas as
+cartas do autor (e derruba a sessão dele); dá para desbanir no terminal (`unban`).
 - **Apagar:** pede confirmação e some na hora.
 - **Censurar:** o texto vira palavras clicáveis. Clicar liga ou desliga a tarja de cada palavra, e "Salvar" grava. Dá para tirar a tarja depois do mesmo jeito.
 

@@ -2274,3 +2274,184 @@ button.ranking-nome:focus-visible { outline: 3px solid var(--focus); outline-off
     100% { box-shadow: 0 0 0 36px rgba(255, 204, 0, 0); background: rgba(255, 204, 0, 0); }
 }
 .easter-egg-trigger.is-found { animation: enzo-secreto-brilho 0.9s ease-out; }
+
+/* ------------------------------------------------------------------
+   Cartas dos Leitores (js/comentarios.js): fim de cada capítulo.
+   Celular / tela estreita: embaixo do botão "Ler próximo".
+   Computador (.fim-capitulo--lado): coluna à direita da última página,
+   grudada na tela enquanto a página rola.
+   ------------------------------------------------------------------ */
+.fim-capitulo { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; }
+.fim-capitulo .next-chapter-container { padding-bottom: 30px; }
+.cartas { width: 100%; max-width: 640px; margin: 0 auto 80px; color: var(--ink); text-align: left; }
+.fim-capitulo--lado .cartas {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(100% + 28px);
+    width: var(--cartas-largura, 340px);
+    max-width: none;
+    margin: 0;
+}
+.cartas-painel {
+    position: relative;
+    padding: 0 14px 14px;
+    background: var(--halftone), var(--paper);
+    border: var(--stroke-thick);
+    box-shadow: var(--pop-lg);
+}
+.fim-capitulo--lado .cartas-painel {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100dvh - var(--reader-bar-space) - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+.cartas-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin: -3px -3px 12px -17px; }
+/* No painel lateral (que rola sozinho) a manchete fica presa no topo. */
+.fim-capitulo--lado .cartas-topo { position: sticky; top: 0; z-index: 2; margin-top: 0; padding: 0 0 6px; background: var(--paper); }
+.cartas-manchete {
+    margin: 0;
+    padding: 4px 12px;
+    font: 1.35rem/1.1 var(--font-heading);
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--caption);
+    border: var(--stroke);
+}
+.cartas-total:not(:empty) {
+    display: grid;
+    place-items: center;
+    min-width: 40px;
+    height: 40px;
+    margin: 4px 0 0;
+    padding: 0 8px;
+    font: 1.1rem/1 var(--font-heading);
+    color: var(--text);
+    background: var(--danger);
+    border: var(--stroke);
+    clip-path: var(--estouro);
+}
+
+/* Escrever */
+.cartas-escrever { margin-bottom: 14px; }
+.cartas-convite { margin: 0 0 8px; font-weight: 700; }
+.cartas-entrar,
+.cartas-enviar,
+.cartas-mais {
+    padding: 6px 14px;
+    font: 1rem/1.1 var(--font-heading);
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--orange-light);
+    border: var(--stroke);
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+}
+.cartas-entrar:hover, .cartas-enviar:hover, .cartas-mais:hover { background: var(--orange-hover); }
+.cartas-entrar:active, .cartas-enviar:active, .cartas-mais:active { transform: translate(2px, 2px); box-shadow: none; }
+.cartas-enviar:disabled, .cartas-mais:disabled { opacity: 0.6; cursor: progress; }
+.cartas-form { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: start; }
+.cartas-campo {
+    width: 100%;
+    min-height: 72px;
+    padding: 8px 10px;
+    font: 700 0.95rem/1.3 var(--font-sans);
+    color: var(--ink);
+    background: var(--text);
+    border: var(--stroke);
+    border-radius: 16px;
+    resize: vertical;
+}
+.cartas-campo:focus { outline: 3px solid var(--focus); outline-offset: 1px; }
+.cartas-form-rodape { grid-column: 2; display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.cartas-contador { margin-right: auto; font-size: 0.75rem; font-weight: 700; color: var(--paper-ink); }
+.cartas-erro { grid-column: 1 / -1; margin: 4px 0 0; font-weight: 700; color: var(--danger); }
+.cartas-aviso { margin: 4px 0 10px; font-weight: 700; color: var(--paper-ink); }
+.cartas-mais { display: block; margin: 12px auto 0; background: var(--text); }
+
+/* Uma carta */
+.cartas-lista { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.carta { position: relative; min-width: 0; }
+.carta-medalhao {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    overflow: hidden;
+    color: var(--ink);
+    background: var(--halftone-forte), var(--orange-light);
+    border: var(--stroke);
+    border-radius: 50%;
+}
+.carta-medalhao img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.carta-medalhao .conta-inicial { font-size: 1.1rem; }
+.carta-cabeca { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.carta-autor { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 0; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.carta-nome { overflow: hidden; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.carta-autor:hover .carta-nome { text-decoration: underline; }
+.carta--minha .carta-nome { color: var(--orange-deep); }
+.carta-data { margin-left: auto; flex-shrink: 0; font-size: 0.75rem; color: var(--paper-ink); }
+.carta-balao {
+    position: relative;
+    margin: 0 0 0 18px;
+    padding: 8px 12px;
+    font: 700 0.95rem/1.35 var(--font-sans);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    background: var(--text);
+    border: var(--stroke);
+    border-radius: 16px;
+}
+/* Rabinho do balão apontando para o medalhão */
+.carta-balao::before,
+.carta-balao::after { content: ''; position: absolute; border-style: solid; border-color: transparent; }
+.carta-balao::before { left: 8px; top: -14px; border-width: 0 8px 14px 4px; border-bottom-color: var(--ink); }
+.carta-balao::after { left: 11px; top: -9px; border-width: 0 5px 10px 2px; border-bottom-color: var(--text); }
+
+/* A tarja: barra preta torta do tamanho da palavra. Nada por baixo dela. */
+.carta-tarja {
+    display: inline-block;
+    width: calc(var(--letras, 5) * 0.62em);
+    height: 1.05em;
+    margin: 0 1px;
+    vertical-align: -0.12em;
+    background: var(--ink);
+    transform: rotate(-1.5deg) skewX(-6deg);
+    user-select: none;
+}
+.carta-tarja:nth-of-type(even) { transform: rotate(1.2deg) skewX(4deg); }
+
+/* Só admin: faixa em cima da carta */
+.carta-admin { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 4px 18px; }
+.carta-acao {
+    padding: 2px 8px;
+    font: 700 0.72rem/1.4 var(--font-sans);
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--ink);
+    border: 2px solid var(--ink);
+    cursor: pointer;
+}
+.carta-acao:hover { color: var(--ink); background: var(--caption); }
+.carta-acao--banir { background: var(--danger); border-color: var(--ink); }
+.carta-acao--certeza { color: var(--ink); background: var(--caution); animation: carta-treme 0.3s; }
+.carta-acao--salvar { background: var(--orange-deep); }
+.carta-acao:disabled { opacity: 0.6; cursor: progress; }
+@keyframes carta-treme { 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+.carta-apagar-minha { padding: 0; font: 700 0.72rem var(--font-sans); color: var(--paper-ink); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+.carta-apagar-minha.carta-acao--certeza { color: var(--danger); background: none; }
+
+/* Modo censura: cada palavra é um botão; marcada = tarja */
+.carta-censura { margin-left: 18px; }
+.carta-censura .carta-balao { margin-left: 0; }
+.carta-censura-dica { margin: 0 0 6px; font-size: 0.78rem; font-weight: 700; color: var(--danger); }
+.carta-palavra { padding: 0 1px; font: inherit; color: inherit; background: none; border: 0; border-radius: 3px; cursor: pointer; }
+.carta-palavra:hover { outline: 2px dashed var(--ink); }
+.carta-palavra[aria-pressed='true'] { color: var(--text); background: var(--ink); }
+.carta-censura-acoes { display: flex; gap: 6px; margin-top: 6px; }
+
+@media (prefers-reduced-motion: reduce) { .carta-acao--certeza { animation: none; } }

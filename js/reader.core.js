@@ -297,6 +297,39 @@
         return container;
     }
 
+    /**
+     * Fim do capítulo: última página + "Ler próximo" + Cartas dos Leitores (js/comentarios.js).
+     * No computador as cartas ficam à direita da última página; no celular, embaixo do botão.
+     */
+    function buildChapterEnd(chapter) {
+        const pages = ui.imageContainer.querySelectorAll('.page-wrapper:not(.cover-wrapper)');
+        const lastPage = pages[pages.length - 1];
+        const nextCard = buildNextChapterCard();
+        const letters = window.EnzoComentarios?.criar({ comicId: state.comic.id, chapterId: chapter.id });
+        if (!lastPage || !letters) {
+            if (nextCard) ui.imageContainer.appendChild(nextCard);
+            return;
+        }
+        const end = document.createElement('div');
+        end.className = 'fim-capitulo';
+        lastPage.replaceWith(end);
+        end.append(lastPage, ...(nextCard ? [nextCard] : []), letters);
+    }
+
+    /** Cartas ao lado da página quando cabem (empurra as páginas um pouco para a esquerda se precisar). */
+    function placeLetters() {
+        const end = ui.imageContainer.querySelector('.fim-capitulo');
+        ui.imageContainer.style.translate = '';
+        if (!end) return;
+        const free = (ui.viewport.clientWidth - ui.imageContainer.offsetWidth) / 2;
+        const width = Math.min(380, Math.max(280, free - 44));
+        const shift = Math.max(0, width + 44 - free);
+        const side = window.innerWidth >= 1024 && state.zoom <= 1 && shift <= free - 16;
+        end.classList.toggle('fim-capitulo--lado', side);
+        end.style.setProperty('--cartas-largura', `${width}px`);
+        if (side && shift) ui.imageContainer.style.translate = `${-Math.ceil(shift)}px 0`;
+    }
+
     function renderChapter() {
         const chapter = state.comic.chapters[state.chapterIndex];
         ui.imageContainer.innerHTML = '';
@@ -344,8 +377,7 @@
             ui.imageContainer.appendChild(wrapper);
         });
 
-        const nextCard = buildNextChapterCard();
-        if (nextCard) ui.imageContainer.appendChild(nextCard);
+        buildChapterEnd(chapter);
 
         ui.viewport.scrollTop = 0;
         ui.viewport.classList.toggle('zoomed', state.zoom > 1);
@@ -358,6 +390,7 @@
         const width = Math.min(800, ui.viewport.clientWidth - 40) * state.zoom;
         ui.imageContainer.style.width = `${Math.max(120, width)}px`;
         ui.imageContainer.querySelectorAll('.webtoon-image').forEach(img => { img.sizes = `${Math.round(width)}px`; });
+        placeLetters();
         ui.zoomText.textContent = `${Math.round(state.zoom * 100)}%`;
         ui.viewport.classList.toggle('zoomed', state.zoom > 1);
     }
@@ -513,7 +546,8 @@
         const target = ui.imageContainer.querySelectorAll('.page-wrapper:not(.cover-wrapper)')[saved.page];
         if (!target) return;
         const paddingTop = parseFloat(getComputedStyle(ui.viewport).paddingTop) || 0;
-        const top = ui.imageContainer.offsetTop + target.offsetTop - paddingTop;
+        // Pelas caixas na tela: a última página fica dentro de .fim-capitulo (offsetTop mudaria de referência).
+        const top = target.getBoundingClientRect().top - ui.viewport.getBoundingClientRect().top + ui.viewport.scrollTop - paddingTop;
         state.lastScroll = top;
         state.jumped = true;
         ui.viewport.scrollTop = top;
