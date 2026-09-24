@@ -26,4 +26,4 @@
 # O código vive em api/ (o mesmo que o server.js usa localmente).
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["google-auth-library"]
+  external_node_modules = ["google-auth-library", "@netlify/database"]

@@ -156,7 +156,7 @@ usado** e não precisa ir para lugar nenhum.
 
 ### Configurar no Netlify
 
-1. `npx netlify db init` (cria o Postgres e a variável `NETLIFY_DATABASE_URL`).
+1. `netlify link` e `netlify db init` (escolha **Direct SQL**): instala o\n   `@netlify/database`; o banco (`NETLIFY_DB_URL`) é criado no próximo deploy.\n   O código usa `api/db-netlify.js`; `NETLIFY_DATABASE_URL` (Neon) também serve.
 2. Em Site configuration → Environment variables: `GOOGLE_CLIENT_ID` e
    `SESSION_SECRET` (outra chave, diferente da local).
 3. No Google Cloud Console, adicione o domínio do site (ex.:

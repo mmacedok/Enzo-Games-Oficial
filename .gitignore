@@ -25,3 +25,6 @@ output/
 # Segredos locais (GOOGLE_CLIENT_ID, SESSION_SECRET) e banco local da API (PGlite)
 .env
 data/local-db/
+
+# Local Netlify folder
+.netlify
