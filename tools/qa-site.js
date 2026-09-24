@@ -5,16 +5,19 @@
     const path = location.pathname;
     check(document.documentElement.scrollWidth <= innerWidth + 2, 'sem overflow horizontal da página');
     if (path === '/' || path === '/index.html') {
+        // Série principal = gibis que não são spin-off (featured !== false), lida do catálogo.
+        const catalogo = await fetch('data/database.json').then((r) => r.json());
+        const totalSerie = catalogo.comics.filter((c) => c.featured !== false).length;
         check(document.querySelectorAll('#hero-comic .hero-banner').length === 1, 'um hero');
-        check(document.querySelector('#hero-comic .hero-kicker')?.textContent.includes('Capítulo 6'), 'destaque correto');
+        check(document.querySelector('#hero-comic .hero-kicker')?.textContent.includes(`Capítulo ${totalSerie}`), 'destaque correto');
         const books = [...document.querySelectorAll('#comic-shelf .shelf-book')];
-        check(books.length === 6, 'seis capítulos na estante');
+        check(books.length === totalSerie, 'todos os capítulos da série na estante');
         check(!books.some(b => b.dataset.comicId === 'degustador'), 'Degustador fora da home');
         check(!document.querySelector('#spinoffs'), 'sem seção de spin-off na home');
         const sizes = new Set(books.map(b => { return Math.round(b.querySelector('.book').offsetWidth) + 'x' + Math.round(b.querySelector('.book').offsetHeight); }));
         check(sizes.size === 1, 'todos os gibis do mesmo tamanho');
         const columns = Number(document.querySelector('#comic-shelf').dataset.columns);
-        check(document.querySelectorAll('.shelf-row').length === Math.ceil(6 / columns), 'prateleiras conforme a largura');
+        check(document.querySelectorAll('.shelf-row').length === Math.ceil(totalSerie / columns), 'prateleiras conforme a largura');
         check(document.querySelectorAll('a[data-nav]').length === 5, 'navegação para extras (áreas do mapa)');
         const mapa = document.querySelector('.mapa-mundo-img');
         check(mapa && mapa.naturalWidth > 0, 'mapa do mundo carregado');
@@ -110,9 +113,10 @@
         check(getComputedStyle(document.body).cursor.includes('mp5k'), 'cursor do tema ativo');
     }
     // Load every image, including below-the-fold panels, to catch broken assets.
-    const images = [...document.images];
+    const images = [...document.images].filter(img => img.currentSrc || img.getAttribute('src') || img.srcset);
     await Promise.all(images.map(async img => {
         img.loading = 'eager';
+        img.scrollIntoView?.();
         await Promise.race([img.decode().catch(() => {}), wait(10000)]);
         check(img.complete && img.naturalWidth > 0, `imagem carregada: ${img.alt || img.src}`);
     }));
