@@ -52,16 +52,20 @@
     /**
      * Pacotes. `chances` em % por carta (somam 100). `garantia` = raridade
      * mínima de pelo menos uma carta do pacote (null = sem garantia).
-     * `preco.po` ausente = não se compra com pó.
+     * `preco.po` ausente = não se compra com pó. `capa` = cartas no desenho do
+     * pacote; `cores` = [principal, destaque, escuro] do pacote e do fundo da abertura.
      */
     const PACOTES = congelar([
         { id: 'estacionamento', nome: 'Pacote do Estacionamento', cartas: 3,
+            capa: ['hatsune-neves', 'italolol', 'superkid'], cores: ['#3d4a52', '#ffcc00', '#15191c'],
             preco: { creditos: 100, po: 60 },
             chances: { comum: 72, raro: 22, epico: 5, lendario: 1 }, garantia: null },
         { id: 'toradolandia', nome: 'Pacote da Toradolândia', cartas: 5,
+            capa: ['superkid', 'degustador-da-noite', 'hatsune-neves'], cores: ['#1f9e90', '#6a2bd9', '#120a24'],
             preco: { creditos: 300 },
             chances: { comum: 60, raro: 28, epico: 10, lendario: 2 }, garantia: 'raro' },
         { id: 'piscina-de-macarronada', nome: 'Pacote da Piscina de Macarronada', cartas: 5,
+            capa: ['o-inominavel', 'enzo-games', 'degustador-da-noite'], cores: ['#e0301e', '#ff9900', '#2a0804'],
             preco: { creditos: 900 },
             chances: { comum: 40, raro: 35, epico: 19, lendario: 6 }, garantia: 'epico' },
     ]);

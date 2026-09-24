@@ -405,7 +405,7 @@
     let ficha = null;
     let vistaAtual = 'minha';
 
-    /** vista: 'minha' | 'leitores' | { leitorId } */
+    /** vista: 'minha' | 'baralho' | 'leitores' | { leitorId } */
     async function mostrarVista(vista) {
         vistaAtual = vista;
         const deOutro = typeof vista === 'object';
@@ -414,7 +414,7 @@
         fechar.addEventListener('click', () => ficha.close());
         const selo = el('div', 'pagina-selo');
         const titulo = el('div', 'pagina-titulo');
-        const manchete = el('h2', 'pagina-manchete', vista === 'leitores' ? 'Leitores do site' : 'Ficha do Leitor');
+        const manchete = el('h2', 'pagina-manchete', vista === 'leitores' ? 'Leitores do site' : vista === 'baralho' ? 'Baralho Enzo' : 'Ficha do Leitor');
         titulo.append(el('p', 'pagina-sobre', 'Enzo Games apresenta'), manchete);
         const topo = el('header', 'pagina-topo');
         topo.append(selo, titulo, fechar);
@@ -422,13 +422,14 @@
             // "Nº" em fonte de texto: a Bangers não tem o "º" (sai "NO").
             selo.replaceChildren(el('span', '', 'Nº'), el('span', 'pagina-selo-numero', numero ? String(numero) : '?'), el('span', '', vista === 'leitores' ? 'Leitores' : 'Leitor do site'));
         };
-        setSelo(vista === 'minha' ? numeroProprio : null);
+        setSelo(vista === 'minha' || vista === 'baralho' ? numeroProprio : null);
 
         // Abas de papel no topo da página (como marcadores de um fichário).
         const abas = el('nav', 'pagina-abas');
         abas.setAttribute('aria-label', 'Páginas da ficha');
-        for (const [id, rotulo] of [['minha', 'Minha ficha'], ['leitores', 'Leitores do site']]) {
-            if (id === 'minha' && !estado.usuario) continue;
+        for (const [id, rotulo] of [['minha', 'Minha ficha'], ['baralho', 'Baralho'], ['leitores', 'Leitores do site']]) {
+            if ((id === 'minha' || id === 'baralho') && !estado.usuario) continue;
+            if (id === 'baralho' && !window.EnzoBaralhoUI) continue;
             const aba = botaoEl('pagina-aba', rotulo);
             const ativa = vista === id || (id === 'leitores' && deOutro);
             if (ativa) aba.setAttribute('aria-current', 'page');
@@ -455,6 +456,10 @@
                     if (ok) { numeroProprio = dados.numero; if (vistaAtual === 'minha') setSelo(numeroProprio); }
                 }).catch(() => {});
             }
+        } else if (vista === 'baralho') {
+            // Aba do Baralho Enzo (js/baralho.js): carteira, pacotes, fichário.
+            corpo.appendChild(window.EnzoBaralhoUI.aba());
+            rodape.appendChild(el('p', 'pagina-continua', 'Tem que pegar todas!'));
         } else if (vista === 'leitores') {
             corpo.appendChild(listaDeLeitores((total, mais) => { if (vistaAtual === 'leitores') setSelo(mais ? `${total}+` : total); }));
             rodape.appendChild(el('p', 'pagina-continua', 'Todos os leitores, numa edição só!'));
@@ -490,6 +495,7 @@
         }
         // Sem login dá para ver fichas de outros leitores (vindo do placar), mas não "Minha ficha".
         if (!estado.usuario && typeof vista !== 'object') return;
+        if (vista === 'baralho' && !window.EnzoBaralhoUI) vista = 'minha';
         mostrarVista(vista);
     }
 
@@ -718,6 +724,7 @@
         /** Abre o balão "Entrar com Google" no espaço da conta da página. */
         pedirLogin() { const slot = document.querySelector('[data-conta]:not([hidden])'); if (slot) balaoDeEntrada(slot); },
         abrirFicha,
+        fecharFicha() { if (ficha?.open) ficha.close(); },
         avatar,
         aoMudar(fn) { ouvintes.add(fn); return () => ouvintes.delete(fn); },
         abrirRanking,

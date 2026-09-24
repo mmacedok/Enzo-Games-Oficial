@@ -2455,3 +2455,634 @@ button.ranking-nome:focus-visible { outline: 3px solid var(--focus); outline-off
 .carta-censura-acoes { display: flex; gap: 6px; margin-top: 6px; }
 
 @media (prefers-reduced-motion: reduce) { .carta-acao--certeza { animation: none; } }
+
+/* ==========================================================================
+   Baralho Enzo (js/baralho.js): cartas colecionáveis, pacotes e a abertura.
+   A carta é um "container": letras e bordas em cqw crescem com ela, então o
+   mesmo desenho serve no fichário (pequena), na abertura e na carta grande.
+   ========================================================================== */
+.carta-tcg {
+    --carta-cor: #cfd8dc;        /* tarja do nome */
+    --carta-borda: #78909c;      /* moldura e faixa da raridade */
+    --carta-fundo: #f4f6f7;      /* papel de dentro */
+    --carta-moldura: var(--carta-borda);
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 63 / 88;
+    container-type: inline-size;
+    isolation: isolate;
+    overflow: hidden;
+    font-family: var(--font-sans);
+    color: var(--ink);
+    text-align: left;
+    background: var(--carta-moldura);
+    border: 3px solid var(--ink);
+    border-radius: 7px;
+    box-shadow: var(--pop);
+}
+.carta-tcg--raro { --carta-cor: #8cc8ff; --carta-borda: #1565c0; --carta-fundo: #e8f2fd; }
+.carta-tcg--epico { --carta-cor: #e1b5ff; --carta-borda: var(--purple); --carta-fundo: #f6ebfd; }
+.carta-tcg--lendario {
+    --carta-cor: var(--gold);
+    --carta-borda: #b8860b;
+    --carta-fundo: #fff8dc;
+    --carta-moldura: linear-gradient(135deg, #fff3b0, #ffd54a 22%, #b8860b 45%, #ffe680 62%, #c98a00 82%, #fff3b0);
+}
+.carta-tcg-moldura {
+    position: absolute;
+    inset: 4.5cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5cqw;
+    padding: 3cqw;
+    background: var(--halftone), var(--carta-fundo);
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+}
+.carta-tcg-topo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2cqw;
+    padding: 1.2cqw 3cqw;
+    background: var(--carta-cor);
+    border: 2px solid var(--ink);
+    transform: rotate(-1deg);
+}
+.carta-tcg-nome {
+    min-width: 0;
+    overflow: hidden;
+    font-family: var(--font-heading);
+    font-size: 11cqw;
+    line-height: 1.05;
+    letter-spacing: 0.4cqw;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text);
+    -webkit-text-stroke: 0.7cqw var(--ink);
+    paint-order: stroke fill;
+}
+.carta-tcg-numero { flex: none; font-family: var(--font-heading); font-size: 6cqw; letter-spacing: 0.3cqw; }
+.carta-tcg-arte { position: relative; flex: 1; min-height: 0; overflow: hidden; background: var(--text); border: 2px solid var(--ink); }
+.carta-tcg-arte img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.carta-tcg-faixa {
+    position: relative;
+    z-index: 1;
+    align-self: center;
+    margin-top: -6.5cqw;
+    padding: 0.8cqw 4cqw;
+    font-family: var(--font-heading);
+    font-size: 6.5cqw;
+    letter-spacing: 0.5cqw;
+    white-space: nowrap;
+    color: var(--text);
+    background: var(--carta-borda);
+    border: 2px solid var(--ink);
+    box-shadow: var(--pop-sm);
+    transform: rotate(1.5deg);
+}
+.carta-tcg-frase {
+    display: -webkit-box;
+    min-height: 2.3em;
+    overflow: hidden;
+    font-size: 5.4cqw;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+/* Pequena demais para ler: some a frase, a arte ganha o espaço. */
+@container (max-width: 150px) {
+    .carta-tcg-frase { display: none; }
+    .carta-tcg-numero { display: none; }
+}
+
+/* Épico: foil holográfico que corre com o mouse (mesmo arco-íris da estante). */
+.carta-tcg-foil,
+.carta-tcg-brilho { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; }
+.carta-tcg-foil {
+    background: linear-gradient(115deg,
+        transparent 20%,
+        rgba(255, 0, 170, 0.55) 34%,
+        rgba(0, 255, 230, 0.55) 44%,
+        rgba(255, 240, 0, 0.5) 54%,
+        rgba(130, 80, 255, 0.55) 64%,
+        transparent 80%);
+    background-size: 300% 300%;
+    background-position: var(--mx, 50%) var(--my, 50%);
+    mix-blend-mode: color-dodge;
+}
+.carta-tcg--epico .carta-tcg-foil { opacity: 0.55; animation: foil-drift 6s linear infinite alternate; }
+.carta-tcg--epico:hover .carta-tcg-foil { animation: none; opacity: 0.75; }
+/* Lendário: ouro com reflexo que atravessa a carta e um brilho que segue o mouse. */
+.carta-tcg--lendario .carta-tcg-foil {
+    opacity: 0.5;
+    background: radial-gradient(circle at var(--mx, 30%) var(--my, 20%), rgba(255, 255, 255, 0.85), rgba(255, 213, 74, 0.25) 35%, transparent 60%);
+    mix-blend-mode: overlay;
+}
+.carta-tcg--lendario .carta-tcg-brilho {
+    opacity: 1;
+    background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.85) 48%, rgba(255, 244, 190, 0.6) 52%, transparent 62%);
+    background-size: 250% 100%;
+    mix-blend-mode: overlay;
+    animation: carta-reflexo 3.2s ease-in-out infinite;
+}
+@keyframes carta-reflexo { from { background-position: 130% 0; } 55%, to { background-position: -30% 0; } }
+
+/* Cabo Côco sem a senha: arte borrada e carimbo de banido. */
+.carta-tcg--censurada .carta-tcg-arte img { filter: blur(3cqw) grayscale(1) contrast(1.3); transform: scale(1.15); }
+.carta-tcg-carimbo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    padding: 1cqw 4cqw;
+    font-family: var(--font-heading);
+    font-size: 11cqw;
+    letter-spacing: 1cqw;
+    text-transform: uppercase;
+    color: var(--danger);
+    border: 1.2cqw solid var(--danger);
+    border-radius: 2cqw;
+    background: rgba(255, 245, 209, 0.85);
+    transform: translate(-50%, -50%) rotate(-14deg);
+}
+
+/* Costas: laranja de retícula com o selo do baralho (carta virada ou vaga vazia). */
+.carta-tcg--verso { --carta-moldura: var(--halftone-forte), var(--orange-light); }
+.carta-tcg-verso {
+    position: absolute;
+    inset: 4.5cqw;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 6cqw;
+    background:
+        repeating-linear-gradient(45deg, rgba(17, 17, 17, 0.08) 0 3cqw, transparent 3cqw 6cqw),
+        var(--orange);
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+}
+.carta-tcg-verso-marca {
+    padding: 1cqw 4cqw;
+    font-family: var(--font-heading);
+    font-size: 9cqw;
+    letter-spacing: 0.6cqw;
+    color: var(--ink);
+    background: var(--caption);
+    border: 2px solid var(--ink);
+    transform: rotate(-4deg);
+}
+.carta-tcg-verso-selo {
+    display: grid;
+    place-items: center;
+    width: 46cqw;
+    aspect-ratio: 1;
+    font-family: var(--font-heading);
+    font-size: 15cqw;
+    color: var(--danger);
+    background: var(--text);
+    clip-path: var(--estouro);
+}
+
+/* Pacote (à la booster do Balatro): embalagem serrilhada, leque de 3 cartas
+   na capa e o rótulo embaixo. O contorno de tinta vem do filtro no .pacote-tcg,
+   porque o clip-path da serrilha cortaria uma borda comum. */
+.pacote-tcg {
+    --pacote-cor: #3d4a52;
+    --pacote-destaque: #ffcc00;
+    --pacote-escuro: #15191c;
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 5 / 7;
+    container-type: inline-size;
+    filter: drop-shadow(2px 0 0 var(--ink)) drop-shadow(-2px 0 0 var(--ink)) drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 -2px 0 var(--ink)) drop-shadow(5px 6px 0 rgba(17, 17, 17, 0.85));
+}
+.pacote-tcg-corpo {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2cqw;
+    padding: 10cqw 6cqw 9cqw;
+    overflow: hidden;
+    background:
+        var(--halftone-forte),
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.07) 0 5cqw, transparent 5cqw 10cqw),
+        radial-gradient(circle at 50% 42%, var(--pacote-destaque) 0 14%, transparent 52%),
+        linear-gradient(170deg, var(--pacote-cor), var(--pacote-escuro));
+}
+/* Faixas prensadas em cima e embaixo, com ranhuras. */
+.pacote-tcg-corpo::before,
+.pacote-tcg-corpo::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 7cqw;
+    background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.45) 0 1.5cqw, rgba(255, 255, 255, 0.28) 1.5cqw 3cqw), var(--pacote-escuro);
+}
+.pacote-tcg-corpo::before { top: 0; border-bottom: 0.8cqw solid var(--ink); }
+.pacote-tcg-corpo::after { bottom: 0; border-top: 0.8cqw solid var(--ink); }
+.pacote-tcg-sobre {
+    position: relative;
+    z-index: 3;
+    padding: 0.4cqw 4cqw;
+    font-family: var(--font-heading);
+    font-size: 8cqw;
+    letter-spacing: 0.6cqw;
+    color: var(--ink);
+    background: var(--caption);
+    border: 0.8cqw solid var(--ink);
+    transform: rotate(-3deg);
+}
+.pacote-tcg-leque { position: relative; flex: 1; width: 100%; }
+.pacote-tcg-capa {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 42cqw;
+    box-shadow: 1.5cqw 1.5cqw 0 rgba(17, 17, 17, 0.55);
+    transform: translate(-50%, -50%) translate(calc(var(--i) * 20cqw), calc(var(--y) * 4cqw)) rotate(calc(var(--i) * 13deg));
+}
+.pacote-tcg-rotulo {
+    position: relative;
+    z-index: 3;
+    display: grid;
+    justify-items: center;
+    width: 100%;
+    padding: 1.6cqw 3cqw 2cqw;
+    text-align: center;
+    background: var(--ink);
+    border-radius: 2.5cqw;
+    box-shadow: 0 0 0 1cqw var(--pacote-destaque), 1.5cqw 2cqw 0 1cqw var(--ink);
+    transform: rotate(-2deg);
+}
+.pacote-tcg-nome { font-family: var(--font-heading); font-size: 10.5cqw; line-height: 1; letter-spacing: 0.5cqw; color: var(--text); }
+.pacote-tcg-cartas { font-family: var(--font-heading); font-size: 6.5cqw; letter-spacing: 0.6cqw; color: var(--pacote-destaque); }
+.pacote-tcg-brilho {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.32) 44%, transparent 56%);
+    background-size: 250% 100%;
+    pointer-events: none;
+    animation: carta-reflexo 5s ease-in-out infinite;
+}
+
+/* ---- "Juice" (à la Balatro): balanço contínuo + inclinação 3D com mola (js) ---- */
+.juice-balanca {
+    position: relative;
+    perspective: 900px;
+    animation: juice-balanca 3.8s ease-in-out infinite;
+    animation-delay: var(--fase, 0s);
+}
+@keyframes juice-balanca {
+    0%, 100% { transform: translateY(0) rotate(-1.4deg); }
+    50% { transform: translateY(-4px) rotate(1.4deg); }
+}
+.juice-inclina { position: relative; transform-style: preserve-3d; will-change: transform; }
+
+/* ---- Aba Baralho da Ficha ---- */
+.baralho-grade { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 12px; padding: 14px; }
+.baralho-carregando { padding: 24px 14px; }
+.baralho-aviso {
+    grid-column: 1 / -1;
+    padding: 6px 12px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--caption);
+    border: var(--stroke);
+    box-shadow: var(--pop-sm);
+    transform: rotate(-0.5deg);
+}
+.baralho-aviso--erro { color: var(--text); background: var(--danger); }
+.quadro--loja,
+.quadro--fichario { grid-column: 1 / -1; }
+.baralho-saldo { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-bottom: 10px; }
+.baralho-moeda { display: grid; justify-items: center; gap: 4px; }
+.baralho-moeda .ficha-estouro { min-width: 92px; }
+.baralho-moeda--po .ficha-estouro { color: var(--text); background: var(--purple); }
+.baralho-moeda-rotulo { font-family: var(--font-heading); font-size: 0.95rem; letter-spacing: 1px; }
+.baralho-regras { font-size: 0.78rem; line-height: 1.3; opacity: 0.85; }
+.baralho-botao {
+    padding: 5px 12px;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--orange-light);
+    border: var(--stroke);
+    box-shadow: var(--pop-sm);
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.baralho-botao:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: var(--pop); }
+.baralho-botao:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.baralho-botao:disabled { opacity: 0.5; cursor: not-allowed; }
+.baralho-botao--po { color: var(--text); background: var(--purple); }
+.baralho-botao--abrir { background: var(--caption); }
+.baralho-botao--certeza { color: var(--text); background: var(--danger); animation: carta-treme 0.3s 2; }
+.baralho-produto-acoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+.baralho-loja { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; list-style: none; }
+.baralho-produto { display: grid; grid-template-rows: auto 1fr; gap: 8px; }
+.baralho-produto > .juice-balanca { width: min(150px, 100%); justify-self: center; }
+.baralho-produto-info { display: flex; flex-direction: column; gap: 3px; }
+.baralho-produto-nome { font-family: var(--font-heading); font-size: 1.1rem; letter-spacing: 0.5px; line-height: 1.1; }
+.baralho-produto-chances,
+.baralho-produto-garantia { font-size: 0.74rem; line-height: 1.25; }
+.baralho-produto-garantia { font-weight: 700; color: var(--danger); }
+
+.baralho-inventario { display: grid; gap: 10px; list-style: none; }
+.baralho-item { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 10px; }
+.baralho-item-info { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.baralho-item-nome { font-family: var(--font-heading); font-size: 1.05rem; letter-spacing: 0.5px; line-height: 1.1; }
+.baralho-item-qtd { font-family: var(--font-heading); font-size: 1.3rem; color: var(--danger); }
+.baralho-item .baralho-produto-acoes { flex-basis: 100%; margin-top: 0; }
+
+.fichario { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 14px 12px; margin-bottom: 12px; list-style: none; }
+.fichario-vaga { position: relative; display: flex; flex-direction: column; gap: 6px; }
+.fichario-vaga--falta .carta-tcg { opacity: 0.45; filter: grayscale(0.6); box-shadow: none; border-style: dashed; }
+.fichario-rotulo { font-family: var(--font-heading); letter-spacing: 1px; text-align: center; opacity: 0.6; }
+.fichario-carta { display: block; padding: 0; background: none; border: 0; cursor: zoom-in; transition: transform 0.15s var(--ease-pop); }
+.fichario-carta:hover { transform: translateY(-3px) rotate(-1deg); }
+.fichario-carta:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.fichario-qtd {
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    z-index: 3;
+    padding: 1px 7px;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    color: var(--text);
+    background: var(--danger);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--pop-sm);
+    transform: rotate(8deg);
+}
+.fichario-acao {
+    padding: 3px 6px;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    color: var(--text);
+    background: var(--purple);
+    border: 2px solid var(--ink);
+    cursor: pointer;
+}
+.fichario-acao:focus-visible,
+.fichario-po button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.fichario-po { display: grid; gap: 4px; }
+.fichario-po-passos { display: flex; align-items: center; gap: 4px; }
+.fichario-po-passo,
+.fichario-po-cancelar { width: 28px; height: 28px; font-weight: 700; background: var(--text); border: 2px solid var(--ink); cursor: pointer; }
+.fichario-po-passo:disabled { opacity: 0.4; cursor: default; }
+.fichario-po-cancelar { margin-left: auto; color: var(--danger); }
+.fichario-po-conta { min-width: 24px; font-family: var(--font-heading); font-size: 1.2rem; text-align: center; }
+.fichario-po .baralho-botao { padding: 3px 6px; font-size: 0.85rem; }
+.fichario-todas { margin-bottom: 6px; }
+
+/* Carta grande (clicar no fichário). */
+.carta-zoom {
+    width: min(340px, calc(100vw - 48px));
+    margin: auto;
+    padding: 0;
+    overflow: visible;
+    background: none;
+    border: 0;
+}
+.carta-zoom::backdrop { background: var(--halftone-forte), rgba(10, 6, 3, 0.8); }
+.carta-zoom[open] { animation: balao-pop 0.3s var(--ease-pop) both; }
+.carta-zoom .pagina-fechar { position: absolute; top: -14px; right: -14px; z-index: 5; }
+.carta-zoom .carta-tcg { box-shadow: 10px 10px 0 var(--ink); }
+.carta-zoom-legenda { margin-top: 12px; font-family: var(--font-heading); font-size: 1.2rem; letter-spacing: 1px; text-align: center; color: var(--text); }
+
+/* ---- Abertura em tela cheia (à la Balatro) ---- */
+.abertura {
+    --tinta-a: var(--orange-deep);
+    --tinta-b: var(--ink);
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 16px;
+    overflow: hidden auto;
+    color: var(--text);
+    /* Sem WebGL, fica este fundo parado nas cores do pacote. */
+    background: radial-gradient(circle at 50% 45%, var(--tinta-a), var(--tinta-b) 75%);
+    border: 0;
+}
+.abertura[open] { display: flex; flex-direction: column; align-items: center; }
+.abertura::backdrop { background: rgba(6, 4, 2, 0.93); animation: abertura-escurece 0.45s ease both; }
+@keyframes abertura-escurece { from { opacity: 0; } }
+.abertura-tinta {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    animation: abertura-escurece 0.6s ease both;
+}
+.abertura-vinheta {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(0, 0, 0, 0.55) 100%);
+    pointer-events: none;
+}
+.abertura > :not(.abertura-tinta, .abertura-vinheta) { position: relative; z-index: 1; }
+.abertura--flash::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: radial-gradient(circle, rgba(255, 244, 190, 0.95), rgba(255, 213, 74, 0.6) 40%, transparent 75%);
+    pointer-events: none;
+    animation: abertura-clarao 0.7s ease-out both;
+}
+@keyframes abertura-clarao { from { opacity: 1; } to { opacity: 0; } }
+.abertura-topo { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; width: min(1100px, 100%); }
+.abertura-titulo {
+    justify-self: center;
+    padding: 4px 16px;
+    font-family: var(--font-heading);
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    font-weight: 400;
+    letter-spacing: 1px;
+    text-align: center;
+    color: var(--ink);
+    background: var(--caption);
+    border: var(--stroke);
+    box-shadow: var(--pop);
+    transform: rotate(-1.5deg);
+    animation: juice-balanca 4.4s ease-in-out infinite;
+}
+.abertura-contador { min-height: 1.4em; margin-top: 10px; font-family: var(--font-heading); font-size: 1.15rem; letter-spacing: 1px; text-shadow: 2px 2px 0 var(--ink); }
+.abertura-palco { position: relative; display: grid; flex: 1; place-items: center; width: min(1100px, 100%); padding: 18px 0; }
+.abertura-rodape { display: flex; justify-content: center; min-height: 48px; padding-bottom: 8px; }
+.abertura-rodape .baralho-botao { padding: 8px 22px; font-size: 1.35rem; animation: balao-pop 0.3s var(--ease-pop) both; }
+.abertura-dica {
+    margin-top: 18px;
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    text-align: center;
+    text-shadow: 2px 2px 0 var(--ink);
+    animation: abertura-pisca 1.2s ease-in-out infinite;
+}
+@keyframes abertura-pisca { 50% { opacity: 0.45; } }
+
+.abertura-pacote {
+    position: relative;
+    width: min(260px, 58vw);
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    animation: abertura-chega 0.6s var(--ease-pop) both;
+}
+.abertura-pacote:focus-visible { outline: 4px solid var(--focus); outline-offset: 10px; }
+@keyframes abertura-chega { from { opacity: 0; transform: translateY(120px) scale(0.6) rotate(-10deg); } }
+/* Aperta: estica e amassa, tremendo cada vez mais rápido. */
+.abertura-pacote--apertando { animation: abertura-aperta 0.65s ease-in both; }
+@keyframes abertura-aperta {
+    0% { transform: scale(1, 1); }
+    20% { transform: scale(1.08, 0.92) rotate(-3deg); }
+    40% { transform: scale(0.94, 1.07) rotate(3deg); }
+    55% { transform: scale(1.1, 0.9) rotate(-4deg); }
+    65% { transform: scale(0.92, 1.1) rotate(4deg); }
+    75% { transform: scale(1.12, 0.88) rotate(-5deg); }
+    83% { transform: scale(0.9, 1.12) rotate(5deg); }
+    90% { transform: scale(1.14, 0.86) rotate(-6deg); }
+    100% { transform: scale(1.2, 1.2) rotate(0); }
+}
+.abertura-pacote--estourou { animation: abertura-estoura 0.26s ease-out both; }
+@keyframes abertura-estoura { from { transform: scale(1.2); opacity: 1; filter: brightness(2.2); } to { transform: scale(1.6); opacity: 0; filter: brightness(3); } }
+.abertura-confete {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--tam);
+    height: var(--tam);
+    border: 2px solid var(--ink);
+    pointer-events: none;
+    animation: abertura-confete 1s cubic-bezier(0.1, 0.8, 0.3, 1) both;
+}
+@keyframes abertura-confete {
+    from { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
+    75% { opacity: 1; }
+    to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 60px)) rotate(var(--giro)) scale(0.6); opacity: 0; }
+}
+
+.abertura-mesa {
+    /* Cabe na largura e também na altura (5 cartas = 2 fileiras no celular). */
+    --carta-largura: clamp(96px, min(17vw, (100dvh - 250px) * 0.72), 200px);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(14px, 2.5vw, 28px);
+}
+.abertura-carta {
+    position: relative;
+    isolation: isolate;
+    width: var(--carta-largura);
+    aspect-ratio: 63 / 88;
+    border-radius: 7px;
+    cursor: pointer;
+}
+.abertura-carta > .juice-balanca,
+.abertura-carta .juice-inclina { width: 100%; height: 100%; }
+.abertura-carta--virada { cursor: default; }
+.abertura-carta:focus-visible { outline: 4px solid var(--focus); outline-offset: 6px; }
+/* Sombra que fica na mesa enquanto a carta "flutua". */
+.abertura-sombra { position: absolute; inset: 6% -2% -6% 6%; background: rgba(0, 0, 0, 0.45); border-radius: 10px; filter: blur(6px); }
+.abertura-carta-miolo { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.abertura-carta--virada .abertura-carta-miolo { transform: rotateY(180deg); }
+.abertura-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.abertura-face--frente { transform: rotateY(180deg); }
+/* Suspense: épico e lendário brilham ainda virados. */
+.abertura-carta--epico:not(.abertura-carta--virada) .carta-tcg--verso { animation: abertura-aura-epica 1.4s ease-in-out infinite; }
+.abertura-carta--lendario:not(.abertura-carta--virada) .carta-tcg--verso { animation: abertura-aura-lendaria 1s ease-in-out infinite; }
+@keyframes abertura-aura-epica { 50% { box-shadow: 0 0 26px 6px rgba(190, 110, 255, 0.85), var(--pop); } }
+@keyframes abertura-aura-lendaria { 50% { box-shadow: 0 0 36px 10px rgba(255, 213, 74, 0.95), var(--pop); } }
+.abertura-raio {
+    position: absolute;
+    inset: -30%;
+    z-index: -1;
+    background: repeating-conic-gradient(from 0deg, rgba(255, 213, 74, 0.9) 0 10deg, transparent 10deg 20deg);
+    clip-path: var(--estouro);
+    pointer-events: none;
+    animation: abertura-raio-gira 9s linear infinite, balao-pop 0.4s var(--ease-pop) both;
+}
+.abertura-carta--epico .abertura-raio { inset: -18%; background: repeating-conic-gradient(from 0deg, rgba(190, 110, 255, 0.85) 0 10deg, transparent 10deg 20deg); }
+@keyframes abertura-raio-gira { to { rotate: 360deg; } }
+.abertura-selo {
+    position: absolute;
+    z-index: 4;
+    font-family: var(--font-heading);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+.abertura-selo--nova {
+    top: -14px;
+    right: -14px;
+    display: grid;
+    place-items: center;
+    width: 66px;
+    aspect-ratio: 1;
+    font-size: 1rem;
+    color: var(--danger);
+    background: var(--caption);
+    clip-path: var(--estouro);
+    transform: rotate(12deg);
+}
+.abertura-selo--repetida {
+    bottom: -12px;
+    left: 50%;
+    padding: 2px 10px;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 2px solid var(--ink);
+    transform: translateX(-50%) rotate(-2deg);
+}
+.abertura-carta--virada .abertura-selo { animation: balao-pop 0.35s 0.45s var(--ease-pop) both; }
+
+.abertura-resumo { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 18px; width: min(900px, 100%); list-style: none; }
+.abertura-resumo-item { position: relative; }
+.abertura-resumo-item .abertura-selo--nova { width: 54px; font-size: 0.85rem; }
+
+@media (max-width: 600px) {
+    .baralho-grade,
+    .baralho-loja { grid-template-columns: minmax(0, 1fr); }
+    .baralho-produto { grid-template-columns: 96px minmax(0, 1fr); grid-template-rows: none; align-items: center; }
+    .fichario { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; }
+    .pagina-abas { gap: 4px; padding: 0 10px; }
+    .pagina-aba { padding: 6px 9px 5px; font-size: 0.98rem; }
+    .abertura { padding: 12px; }
+    .abertura-mesa { --carta-largura: min(calc((100vw - 64px) / 3), calc((100dvh - 250px) / 2 * 0.72)); gap: 10px; }
+    .abertura-selo--nova { width: 50px; font-size: 0.8rem; top: -10px; right: -10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .carta-tcg--epico .carta-tcg-foil,
+    .carta-tcg--lendario .carta-tcg-brilho,
+    .abertura-dica,
+    .abertura-raio,
+    .juice-balanca,
+    .pacote-tcg-brilho,
+    .abertura-titulo,
+    .abertura-tinta,
+    .abertura-carta .carta-tcg--verso,
+    .abertura-carta--virada .abertura-selo,
+    .abertura::backdrop,
+    .baralho-botao--certeza { animation: none; }
+    .abertura-carta-miolo { transition: none; }
+}
