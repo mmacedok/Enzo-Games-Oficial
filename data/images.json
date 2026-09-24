@@ -449,66 +449,50 @@
     ]
   },
   "assets/Capitulo 7/Paginas/PAG1.png": {
-    "width": 941,
-    "height": 1672,
+    "width": 900,
+    "height": 1594,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/a3b827d808a4e5ff-640.webp",
-        "bytes": 214662
+        "src": "assets/web/0b71bf3c30208816-640.webp",
+        "bytes": 227400
       },
       {
-        "width": 941,
-        "src": "assets/web/a3b827d808a4e5ff-941.webp",
-        "bytes": 405606
+        "width": 900,
+        "src": "assets/web/0b71bf3c30208816-900.webp",
+        "bytes": 396286
       }
     ]
   },
   "assets/Capitulo 7/Paginas/PAG2.png": {
-    "width": 1062,
-    "height": 1480,
+    "width": 914,
+    "height": 1510,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/617e46d83be1ae64-640.webp",
-        "bytes": 185242
+        "src": "assets/web/3df4f6a9eaef4a4a-640.webp",
+        "bytes": 282748
       },
       {
-        "width": 1062,
-        "src": "assets/web/617e46d83be1ae64-1062.webp",
-        "bytes": 440574
+        "width": 914,
+        "src": "assets/web/3df4f6a9eaef4a4a-914.webp",
+        "bytes": 504168
       }
     ]
   },
   "assets/Capitulo 7/Paginas/PAG3.png": {
-    "width": 941,
-    "height": 1672,
+    "width": 906,
+    "height": 1603,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/184d44303f342040-640.webp",
-        "bytes": 296474
+        "src": "assets/web/496dc944fa2a0a2a-640.webp",
+        "bytes": 241434
       },
       {
-        "width": 941,
-        "src": "assets/web/184d44303f342040-941.webp",
-        "bytes": 555542
-      }
-    ]
-  },
-  "assets/Capitulo 7/Paginas/PAG4.png": {
-    "width": 941,
-    "height": 1672,
-    "variants": [
-      {
-        "width": 640,
-        "src": "assets/web/9dc31baa3427485e-640.webp",
-        "bytes": 233616
-      },
-      {
-        "width": 941,
-        "src": "assets/web/9dc31baa3427485e-941.webp",
-        "bytes": 405400
+        "width": 906,
+        "src": "assets/web/496dc944fa2a0a2a-906.webp",
+        "bytes": 391382
       }
     ]
   },
