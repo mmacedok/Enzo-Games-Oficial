@@ -1405,6 +1405,27 @@
       }
     ]
   },
+  "assets/mundo-enzo-games.png": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0b054c076b75be8d-640.webp",
+        "bytes": 114752
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/0b054c076b75be8d-1280.webp",
+        "bytes": 400034
+      },
+      {
+        "width": 1672,
+        "src": "assets/web/0b054c076b75be8d-1672.webp",
+        "bytes": 604008
+      }
+    ]
+  },
   "assets/qrcode.png": {
     "width": 280,
     "height": 280,
@@ -1413,6 +1434,17 @@
         "width": 280,
         "src": "assets/web/96739b00bd79b687-280.webp",
         "bytes": 12678
+      }
+    ]
+  },
+  "assets/zezoverso-header.png": {
+    "width": 570,
+    "height": 222,
+    "variants": [
+      {
+        "width": 570,
+        "src": "assets/web/414efe45283b759a-570.webp",
+        "bytes": 39628
       }
     ]
   }
