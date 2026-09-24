@@ -200,7 +200,8 @@
         void trigger.offsetWidth;
         trigger.classList.add('is-found');
         if (await conta().conquista(id)) conta().anunciarConquista(id);
-        else showPopup(`enzo-secreto-${numero}-repetido`, '🐱', 'Enzo secreto', `O Nº ${numero} já está na sua coleção!`);
+        else if (conta().temConquista(id)) showPopup(`enzo-secreto-${numero}-repetido`, '🐱', 'Enzo secreto', `O Nº ${numero} já está na sua coleção!`);
+        else showPopup('enzo-secreto-erro', '⚠️', 'Enzo secreto', 'Não deu para salvar agora. Clique de novo daqui a pouco.');
     }
 
     function buildEnzoSecreto(egg) {
@@ -477,14 +478,18 @@
         return { page, total: pages.length };
     }
 
+    /** Leu a edição: chegou à última página (ou ao fim da rolagem, se ela for curta). */
+    function readToEnd() {
+        const { page, total } = currentPage();
+        const atBottom = ui.viewport.scrollTop + ui.viewport.clientHeight >= ui.viewport.scrollHeight - 80;
+        return { page, total, completed: total > 0 && (page === total - 1 || atBottom) };
+    }
+
     function saveProgress(leaving = false) {
         const chapter = state.comic?.chapters?.[state.chapterIndex];
         if (!chapter || !conta()?.usuario) return;
-        const { page, total } = currentPage();
+        const { page, total, completed } = readToEnd();
         if (!total) return;
-        // Leu a edição: chegou à última página (ou ao fim da rolagem, se ela for curta).
-        const atBottom = ui.viewport.scrollTop + ui.viewport.clientHeight >= ui.viewport.scrollHeight - 80;
-        const completed = page === total - 1 || atBottom;
         conta().salvarLeitura({ comicId: state.comic.id, chapterId: chapter.id, page, zoom: state.zoom, completed }, leaving);
         // Conquistas "ler todas as edições de X" (js/conquistas.js).
         if (completed && !leaving) conta().verificarColecoes?.(state.db);
@@ -492,6 +497,19 @@
 
     let saveTimer = 0;
     const saveProgressSoon = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveProgress, 1500); };
+
+    /**
+     * Chegou ao fim da edição: grava NA HORA (sem esperar a pausa na rolagem),
+     * senão quem sai logo depois de terminar perde a edição lida.
+     */
+    function saveIfFinished() {
+        const chapter = state.comic?.chapters?.[state.chapterIndex];
+        const key = chapter && `${state.comic.id}/${chapter.id}`;
+        if (!key || state.finishedKey === key || !conta()?.usuario || !readToEnd().completed) return;
+        state.finishedKey = key;
+        clearTimeout(saveTimer);
+        saveProgress();
+    }
 
     /** Aplica a conta ao capítulo aberto: tarja liberada e "continuar de onde parou". */
     function applyAccount() {
@@ -577,6 +595,7 @@
             document.body.classList.toggle('ui-hidden', top > state.lastScroll && top > 120);
             state.lastScroll = top;
             saveProgressSoon();
+            saveIfFinished();
         }, { passive: true });
         // Leitor já mexeu na página: não pula mais para a página salva na conta.
         for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {

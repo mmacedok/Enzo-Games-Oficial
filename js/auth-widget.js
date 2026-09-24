@@ -99,6 +99,7 @@
         fecharBalao();
         renderizar();
         avisar();
+        carregarCatalogo().then(verificarColecoes).catch(() => {});
     }
 
     async function sair() {
@@ -410,9 +411,12 @@
         // Marca já, para dois cliques seguidos não contarem duas vezes.
         if (estado.dados) estado.dados.achievements = [...(estado.dados.achievements || []), id];
         const { ok, dados } = await pedir('/api/user/achievement', { id }).catch(() => ({ ok: false }));
-        if (ok && estado.dados) estado.dados.achievements = dados.achievements;
+        if (estado.dados) {
+            // Servidor recusou (ou sem rede): desfaz, para a tela não mostrar o que não foi salvo.
+            estado.dados.achievements = ok ? dados.achievements : estado.dados.achievements.filter((a) => a !== id);
+        }
         avisar();
-        return true;
+        return ok;
     }
 
     const secretosAchados = () => {
@@ -501,5 +505,10 @@
     };
     window.EnzoConta = api;
 
-    pronto.then(() => { renderizar(); avisar(); });
+    pronto.then(() => {
+        renderizar();
+        avisar();
+        // Coleções completas em qualquer página (ex.: leu tudo antes da conquista existir).
+        if (estado.usuario) carregarCatalogo().then(verificarColecoes).catch(() => {});
+    });
 })();
