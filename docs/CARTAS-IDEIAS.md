@@ -212,4 +212,4 @@ Cartas de campo são **paisagem dentro de retrato**: o lugar ocupa o quadro, sem
 1. Chorão e Cabo Côco são cartas diferentes.
 2. O Feiticeiro de Terno é um Stand do Degustador.
 3. Campos têm moldura própria (feita: papel de mapa, placa de madeira com pregos, janela com rosa dos ventos; classe `.carta-tcg--campo`).
-4. Ainda aberto: capas dos pacotes com as cartas novas.
+4. Capas dos pacotes com as cartas novas: Estacionamento (Cara de Coração, Estacionamento Noturno, Drone Vigia), Toradolândia (Stand do Joinha, Toradolândia, Sombra do Degustador), Piscina (Degustador, Piscina de Macarronada, Enzo Games).
