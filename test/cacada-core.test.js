@@ -197,7 +197,7 @@ test('pulo duplo só com os Parênteses', () => {
     assert.ok(com > sem + 40, `com ${com} × sem ${sem}`);
 });
 
-test('agarra a quina de uma parede de 5 tiles e sobe com ↑', () => {
+test('sem agarrar beirada: parede de 5 tiles só se sobe com as Luvas', () => {
     const mapa = [
         '##############################',
         '#............................#',
@@ -216,16 +216,36 @@ test('agarra a quina de uma parede de 5 tiles e sobe com ↑', () => {
         '#..S......####################',
         '##############################',
     ];
-    const jogo = jogoDe(mapa);
+    const tentar = (habilidades) => {
+        const jogo = jogoDe(mapa, {}, habilidades);
+        const j = jogo.jogador;
+        rodar(jogo, 3, (i, jj) => ({ direita: true, cima: true, pulo: true, puloPedido: jj.jogador.noChao || jj.jogador.grudado !== 0 }));
+        assert.equal(j.estado === 'normal' || j.estado === 'dash', true, `estado ${j.estado}`);
+        return j.y + A <= 9 * T + 0.5;
+    };
+    assert.equal(tentar([]), false, 'sem as Luvas não sobe');
+    assert.equal(tentar(['parede']), true, 'com as Luvas escala a parede');
+});
+
+test('troca de sala vertical tem folga: perto da divisa não fica indo e voltando', () => {
+    const vazia = '#' + '.'.repeat(30) + '#';
+    const cima = { id: 'cima', area: 'a', x: 0, y: 0, mapa: [...Array(17).fill(vazia), vazia] };
+    cima.mapa[0] = '#'.repeat(32);
+    const baixo = { id: 'baixo', area: 'a', x: 0, y: 1, mapa: [vazia, ...Array(16).fill(vazia), '#'.repeat(32)] };
+    baixo.mapa[16] = '#..S' + '.'.repeat(27) + '#';
+    const jogo = C.criarJogo({ areas: { a: { nome: 'A', cor: '#fff' } }, salas: [cima, baixo] });
+    C.iniciar(jogo);
     const j = jogo.jogador;
-    let agarrou = false;
-    rodar(jogo, 1.5, (i, jj) => {
-        if (jj.jogador.estado === 'agarrado') agarrou = true;
-        if (agarrou) return { cima: true };
-        return { direita: true, pulo: true, puloPedido: jj.jogador.noChao && jj.jogador.x > 6.5 * T };
-    });
-    assert.ok(agarrou, 'agarrou');
-    assert.ok(j.y + A <= 9 * T + 0.5 && j.x >= 10 * T - 2, `subiu (${j.x}, ${j.y})`);
+    const divisa = 18 * T;
+    const trocas = () => jogo.eventos.filter((e) => e.tipo === 'sala').length;
+    const por = (centroY) => { j.y = centroY - A / 2; j.vy = 0; jogo.eventos = []; C.passo(jogo, {}, DT); return trocas(); };
+    assert.equal(jogo.sala.id, 'baixo');
+    assert.equal(por(divisa - 5), 0, 'passou só um pouquinho: continua na sala de baixo');
+    assert.equal(jogo.sala.id, 'baixo');
+    assert.equal(por(divisa - 20), 1, 'passou de verdade: troca');
+    assert.equal(jogo.sala.id, 'cima');
+    assert.equal(por(divisa + 5), 0, 'voltou um pouquinho: não troca de novo');
+    assert.equal(jogo.sala.id, 'cima');
 });
 
 // ------------------------------------------------------------------ combate

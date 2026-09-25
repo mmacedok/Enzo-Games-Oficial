@@ -52,12 +52,6 @@
         paredeImpulsoY: -520,
         travaParede: 0.1,
         coiotaParede: 0.08,
-        // Beirada (sempre)
-        agarrarAcima: 5,
-        agarrarAbaixo: 16,
-        agarrarVyMin: -140,
-        tempoSubir: 0.16,
-        largarBeirada: 0.3,
         // Dash (Capa Janky)
         dashVelocidade: 470,
         dashTempo: 0.18,         // ~85 px
@@ -340,8 +334,8 @@
             coiote: 0, antecipado: 0,
             parede: 0, grudado: 0, coiotaParede: 0, ultimaParede: 0,
             trava: 0, travaLado: 0, semCorte: false,
-            estado: 'normal',    // 'normal' | 'agarrado' | 'subindo' | 'dash' | 'degustando'
-            lado: 0, subir: null, largou: 0, plataforma: -1, descendo: 0,
+            estado: 'normal',    // 'normal' | 'dash' | 'degustando'
+            lado: 0, plataforma: -1, descendo: 0,
             dashT: 0, dashLado: 1, dashRecarga: 0, dashDisponivel: true, puloDuploUsado: false,
             recuo: 0, recuoVx: 0, atordoado: 0,
             vida: CONFIG.vidaInicial, pontuacao: 0, invencivel: 0,
@@ -350,7 +344,7 @@
         };
     }
 
-    const clonarJogador = (j) => ({ ...j, subir: j.subir && { ...j.subir }, golpe: null, seguro: j.seguro });
+    const clonarJogador = (j) => ({ ...j, golpe: null, seguro: j.seguro });
     const caixa = (j) => ({ x: j.x, y: j.y, w: L, h: A });
     const caixaPerigo = (j) => {
         const f = CONFIG.folgaPerigo;
@@ -423,32 +417,6 @@
         return paredeNaColuna(mundo, tx, j.y + 4, j.y + A - 4);
     }
 
-    function tentarAgarrar(mundo, j, lado) {
-        const tx = lado > 0 ? Math.floor((j.x + L + 1) / T) : Math.floor((j.x - 1) / T);
-        const tyMin = Math.floor((j.y - CONFIG.agarrarAbaixo) / T);
-        const tyMax = Math.floor((j.y + CONFIG.agarrarAcima) / T) + 1;
-        for (let ty = tyMin; ty <= tyMax; ty++) {
-            const quina = ty * T;
-            if (j.y < quina - CONFIG.agarrarAcima || j.y > quina + CONFIG.agarrarAbaixo) continue;
-            if (!solido(mundo, tx, ty) || solido(mundo, tx, ty - 1)) continue;
-            const c = tileEm(mundo.nivel, tx, ty);
-            if (c === 'Q' || c === '|') continue;
-            const minhaColuna = lado > 0 ? Math.floor((j.x + L - 1) / T) : Math.floor(j.x / T);
-            if (solido(mundo, minhaColuna, ty - 1)) continue;
-            j.estado = 'agarrado';
-            j.lado = lado;
-            j.olhando = lado;
-            j.x = lado > 0 ? tx * T - L : (tx + 1) * T;
-            j.y = quina - 2;
-            j.vx = 0;
-            j.vy = 0;
-            j.quinaX = tx;
-            j.quinaY = ty;
-            return true;
-        }
-        return false;
-    }
-
     function pularDaParede(j, lado) {
         j.grudado = 0;
         j.vx = -lado * CONFIG.paredeImpulsoX;
@@ -474,15 +442,6 @@
         return marquise;
     }
 
-    function subir(j, ev) {
-        const x1 = j.lado > 0 ? j.quinaX * T + 1 : (j.quinaX + 1) * T - L - 1;
-        j.estado = 'subindo';
-        j.subir = { t: 0, x0: j.x, y0: j.y, x1, y1: j.quinaY * T - A };
-        j.vx = 0;
-        j.vy = 0;
-        ev.push('subindo');
-    }
-
     function renovarAr(j) {
         j.dashDisponivel = true;
         j.puloDuploUsado = false;
@@ -492,50 +451,18 @@
      * Um passo de física do Degustador.
      * entrada: { esquerda, direita, cima, baixo, pulo, puloPedido, dashPedido }.
      * mundo.habilidades: Set com 'dash', 'parede', 'pulo2'…
-     * Devolve os acontecimentos do passo ('pulo', 'pulo2', 'parede', 'dash', 'mola', 'agarrou', 'subiu').
+     * Devolve os acontecimentos do passo ('pulo', 'pulo2', 'parede', 'dash', 'mola', 'grudou').
      */
     function passoJogador(mundo, j, e, dt, t) {
         const ev = [];
         const hab = mundo.habilidades || VAZIO;
         if (e.puloPedido) j.antecipado = CONFIG.tempoAntecipado;
         let dir = (e.direita ? 1 : 0) - (e.esquerda ? 1 : 0);
-        j.largou = Math.max(0, j.largou - dt);
         j.descendo = Math.max(0, j.descendo - dt);
         j.dashRecarga = Math.max(0, j.dashRecarga - dt);
         j.atordoado = Math.max(0, j.atordoado - dt);
         j.recuo = Math.max(0, j.recuo - dt);
         if (j.atordoado > 0) dir = 0;
-
-        if (j.estado === 'subindo') {
-            const s = j.subir;
-            s.t += dt;
-            const k = Math.min(1, s.t / CONFIG.tempoSubir);
-            const ky = Math.min(1, k * 1.6);
-            const kx = Math.max(0, (k - 0.4) / 0.6);
-            j.y = s.y0 + (s.y1 - s.y0) * ky;
-            j.x = s.x0 + (s.x1 - s.x0) * kx;
-            if (k >= 1) { j.estado = 'normal'; j.noChao = true; j.coiote = CONFIG.tempoCoiote; j.subir = null; renovarAr(j); ev.push('subiu'); }
-            j.antecipado = Math.max(0, j.antecipado - dt);
-            return ev;
-        }
-
-        if (j.estado === 'agarrado') {
-            if (!solido(mundo, j.quinaX, j.quinaY)) { j.estado = 'normal'; return ev; }
-            if (e.baixo) {
-                j.estado = 'normal';
-                j.largou = CONFIG.largarBeirada;
-            } else if (j.antecipado > 0) {
-                j.antecipado = 0;
-                if (dir === -j.lado) { pularDaParede(j, j.lado); ev.push('parede'); } else subir(j, ev);
-            } else if (e.cima) {
-                subir(j, ev);
-            } else if (e.dashPedido && hab.has('dash') && j.dashRecarga <= 0) {
-                j.estado = 'normal';
-                comecarDash(j, -j.lado, ev);
-                return ev;
-            }
-            if (j.estado === 'agarrado') return ev;
-        }
 
         if (j.estado === 'dash') {
             j.dashT -= dt;
@@ -661,7 +588,7 @@
         ev.push('dash');
     }
 
-    /** Parede encostada, deslizar e agarrar quina (só no ar). */
+    /** Parede encostada: com as Luvas, gruda e desliza (só no ar). */
     function detectarParede(mundo, j, hab, dir, e, ev) {
         j.parede = 0;
         if (j.noChao) { j.grudado = 0; return; }
@@ -678,10 +605,6 @@
         }
         if (j.grudado !== 0) { j.olhando = -j.grudado; j.vx = 0; }
         if (j.parede !== 0 && hab.has('parede') && (dir === j.parede || j.grudado !== 0)) renovarAr(j);
-        if (dir !== 0 && !e.baixo && j.largou <= 0 && j.vy >= CONFIG.agarrarVyMin && tentarAgarrar(mundo, j, dir)) {
-            renovarAr(j);
-            ev.push('agarrou');
-        }
     }
 
     /** Chão (sólido ou marquise) a até `dist` px embaixo dos pés? */
@@ -862,7 +785,10 @@
         jogo.cameos = jogo.nivel.cameos
             .filter((c) => c.sala === sala.idx && (c.final || !jogo.progresso.fugas.has(c.id)))
             .map((c) => ({ ...c, estado: 'parado', t: 0 }));
-        jogo.eventos.push({ tipo: 'sala', de: anterior ? anterior.id : null, para: sala.id, areaNova: !anterior || anterior.area !== sala.area });
+        // Vertical: a nova sala fica em cima ou embaixo da anterior (o jogo não congela).
+        const j = jogo.jogador;
+        const vertical = !!anterior && !!j && (j.y + A / 2 < anterior.px.y || j.y + A / 2 > anterior.px.y + anterior.px.h);
+        jogo.eventos.push({ tipo: 'sala', de: anterior ? anterior.id : null, para: sala.id, vertical, areaNova: !anterior || anterior.area !== sala.area });
     }
 
     function inimigosDaSala(jogo, sala) {
@@ -882,10 +808,21 @@
         return lista;
     }
 
+    /** Folga para trocar de sala: evita ficar trocando para lá e para cá bem na divisa. */
+    const FOLGA_SALA = 12;
+
     function verificarSala(jogo) {
         const j = jogo.jogador;
-        const idx = salaEm(jogo.nivel, j.x + L / 2, j.y + A / 2);
-        if (idx >= 0 && idx !== jogo.sala.idx) entrarSala(jogo, jogo.nivel.salas[idx]);
+        const cx = j.x + L / 2;
+        const cy = j.y + A / 2;
+        const idx = salaEm(jogo.nivel, cx, cy);
+        if (idx < 0 || idx === jogo.sala.idx) return;
+        // Só troca quando o centro já passou da divisa com folga (pulo de parede
+        // perto da divisa não fica indo e voltando entre as duas salas).
+        const s = jogo.sala.px;
+        const fora = cx < s.x - FOLGA_SALA || cx > s.x + s.w + FOLGA_SALA || cy < s.y - FOLGA_SALA || cy > s.y + s.h + FOLGA_SALA;
+        if (!fora) return;
+        entrarSala(jogo, jogo.nivel.salas[idx]);
     }
 
     function contexto(jogo, mundo, novos) {
@@ -1024,7 +961,7 @@
         j.vx = j.recuoVx;
         j.vy = -300;
         j.noChao = false;
-        if (j.estado !== 'normal') { j.estado = 'normal'; j.subir = null; }
+        if (j.estado !== 'normal') j.estado = 'normal';
         j.golpe = null;
         j.degustarT = 0;
         jogo.eventos.push({ tipo: 'dano', x: j.x + L / 2, y: j.y + A / 2 });
@@ -1462,7 +1399,6 @@
                     j.vx = 0;
                     j.vy = 0;
                     j.estado = 'normal';
-                    j.subir = null;
                     j.golpe = null;
                     j.noChao = true;
                     jogo.caidas.clear();

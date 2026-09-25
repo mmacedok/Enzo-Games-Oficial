@@ -93,7 +93,7 @@ perto e longe** para bagunçar o tempo do seu golpe, e ataques podem **perseguir
 | Paredes falsas | paredes rachadas que quebram na coronhada |
 | Alavancas e portões | alavanca abre o portão da sala (atalhos) |
 | Mapa | mapa das salas visitadas (Tab ou M) |
-| Silksong: escalar beirada | o Degustador **agarra a quina** (já existia) |
+| Silksong: escalar beirada | ficou de fora: como em Hollow Knight 1, sobe-se com pulo e com as Luvas (pulo de parede) |
 | Inimigos | capanga (Crawlid), **Ping** (Vengefly), **Emoji Raivoso** (Gruzzer), **Drone** (Aspid), **Bug** (Tiktik), **Troll** (Mosscharger), **Spam Saltitante** (Leaping Husk), **Moderador** com escudo (Husk Sentry), **Feiticeira** (Soul Twister) |
 | False Knight | **Capanga-Mor**: salto com ondas de choque, investida que derruba entulho, marretada |
 | Chefe final | **O Opressor do Chat** (o Stand) com o **Inominável** gritando palavras de bueiro |

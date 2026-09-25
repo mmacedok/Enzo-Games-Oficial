@@ -72,8 +72,6 @@
         pular: ['degustador/pular.png'],
         cair: ['degustador/cair.png'],
         parede: ['degustador/parede.png'],
-        agarrado: ['degustador/agarrado.png'],
-        subir: serie('degustador/subir', 2),
         dash: serie('degustador/dash', 2),
         puloDuplo: ['degustador/pulo-duplo.png'],
         atirar: serie('degustador/rajada', 2),
@@ -87,7 +85,6 @@
         drone: serie('inimigos/drone', 2),
         droneMirar: ['inimigos/drone-mirar.png'],
         feiticeira: serie('inimigos/feiticeira', 4),
-        feiticeiraConjurar: ['inimigos/feiticeira-conjurar.png'],
         feiticeiraSumir: ['inimigos/feiticeira-sumir.png'],
         ping: serie('inimigos/ping', 2),
         trollAndar: serie('inimigos/troll-andar', 4),
@@ -458,7 +455,9 @@
         cam.olhar += (j.olhando * 40 - cam.olhar) * Math.min(1, dt * 2.5);
         const a = alvoCamera();
         if (instantaneo) { cam.x = a.x; cam.y = a.y; return; }
-        const k = 1 - Math.exp(-dt * 10);
+        // Logo depois de uma troca de sala vertical, a câmera corre mais para alcançar a sala nova.
+        visual.suave = Math.max(0, (visual.suave || 0) - dt);
+        const k = 1 - Math.exp(-dt * (visual.suave > 0 ? 7 : 10));
         cam.x += (a.x - cam.x) * k;
         cam.y += (a.y - cam.y) * k;
     }
@@ -929,8 +928,6 @@
         const j = jogo.jogador;
         if (jogo.fase === 'morto') return ['morrer', 0];
         if (jogo.fase === 'sentado') return ['sentado', 0];
-        if (j.estado === 'subindo') return ['subir', j.subir && j.subir.t > CONFIG.tempoSubir * 0.5 ? 1 : 0];
-        if (j.estado === 'agarrado') return ['agarrado', 0];
         if (j.golpe && j.golpe.t < 0.14) {
             const g = j.golpe;
             if (g.dir === 'cima') return ['golpeCima', 0];
@@ -962,11 +959,9 @@
         const [pose, i] = poseDoJogador();
         let olhando = j.olhando;
         if (pose === 'parede') olhando = -(j.grudado || j.parede);
-        if (pose === 'agarrado' || pose === 'subir') olhando = j.lado || j.olhando;
         if (pose.startsWith('golpe')) olhando = j.golpe.lado;
         const cx = j.x + JL / 2 - cam.x;
         let base = j.y + JA - cam.y;
-        if (pose === 'agarrado') base += 10;
         const img = quadroDe(pose, i);
         if (j.estado === 'dash') {
             // Rastro da capa.
@@ -1094,7 +1089,17 @@
 
     const DESENHOS = {
         capanga(e, cx, cy, flash) {
-            if (!spriteInimigo('capanga', visual.tempo * 8 + e.fase * 4, cx, e.y + e.h - visual.cam.y, 34, 125, e.dir < 0, flash)) {
+            // Passo: os quadros mudam conforme ele anda, e o corpo sobe e desce a cada passada
+            // (os quadros atuais têm quase a mesma pose de pernas).
+            const passo = e.x / 7 + e.fase * 4;
+            const pulinho = Math.abs(Math.sin(passo * Math.PI / 2)) * 1.6;
+            ctx.save();
+            ctx.translate(cx, e.y + e.h - visual.cam.y);
+            ctx.rotate(Math.sin(passo * Math.PI / 2) * 0.05 * (e.dir < 0 ? -1 : 1));
+            ctx.translate(-cx, -(e.y + e.h - visual.cam.y));
+            const ok = spriteInimigo('capanga', passo, cx, e.y + e.h - visual.cam.y - pulinho, 34, 125, e.dir < 0, flash);
+            ctx.restore();
+            if (!ok) {
                 contorno(flash, '#e0245e');
                 ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
             }
@@ -1238,7 +1243,8 @@
                 ctx.fillStyle = 'rgba(255, 79, 216, 0.4)';
                 ctx.beginPath(); ctx.arc(cx + e.dir * 10, cy - 4, 6 + e.t * 10, 0, Math.PI * 2); ctx.fill();
             }
-            const quadro = e.estado === 'conjurar' ? ['feiticeiraConjurar', 0] : e.estado === 'sumir' || e.estado === 'aparecer' ? ['feiticeiraSumir', 0] : ['feiticeira', visual.tempo * 6];
+            // Conjurando: os quadros com a mão acesa (a arte "feiticeira-conjurar" veio com outro personagem).
+            const quadro = e.estado === 'conjurar' ? ['feiticeira', 2 + (Math.floor(visual.tempo * 8) % 2)] : e.estado === 'sumir' || e.estado === 'aparecer' ? ['feiticeiraSumir', 0] : ['feiticeira', visual.tempo * 6];
             if (!spriteInimigo(quadro[0], quadro[1], cx, cy, 42, 64, OLHA_ESQUERDA.has('feiticeira') ? olhaDireita : !olhaDireita, flash)) {
                 contorno(flash, '#b04dff');
                 ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
@@ -1620,7 +1626,10 @@
                 case 'rebateu': particulas(e.x, e.y, 8, COR.rosa, 100); textoFlutuante('TOC!', e.x, e.y - 10, COR.rosa, 12); break;
                 case 'alerta': textoFlutuante('!', e.x, e.y - 8, '#ff3b3b', 14); break;
                 case 'sala':
-                    if (e.de) {
+                    if (e.de && e.vertical) {
+                        // Para cima ou para baixo: o jogo continua e a câmera só desliza.
+                        visual.suave = 0.45;
+                    } else if (e.de) {
                         visual.transicao = { de: { x: visual.cam.x, y: visual.cam.y }, t: 0 };
                     } else {
                         ajustarCamera(0, true);

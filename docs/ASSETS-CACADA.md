@@ -17,9 +17,19 @@ continuam sendo o ideal, mas não são obrigatórios.
 **Ainda faltam** (hoje desenhados por código):
 - Inimigos: **Emoji Raivoso** (`inimigos/emoji-01.png`, `emoji-02.png`) e o quadro
   `inimigos/ping-caca.png` (Ping perseguindo; hoje usa os quadros normais com um brilho vermelho).
+- **Capanga andando de verdade** (`inimigos/capanga-01..04.png`): os 4 quadros atuais têm a
+  mesma pose de pernas, então ele parece deslizar (hoje o jogo disfarça com um balanço). Precisa
+  de um ciclo de caminhada: 01 perna direita na frente tocando o chão, 02 pernas passando
+  (juntas), 03 perna esquerda na frente, 04 pernas passando; braços balançando ao contrário das
+  pernas. Mesmo tamanho (128×128, pés na linha 125).
+- **Feiticeira conjurando** (`inimigos/feiticeira-conjurar.png`): a arte que chegou é de outro
+  personagem. Precisa ser a mesma feiticeira (cabelo roxo/rosa, casaco escuro), com as duas mãos
+  para a frente e uma esfera de magia rosa se formando. Hoje o jogo usa os quadros normais dela.
 - **Moderador olhando para a esquerda**: o jogo espelha a arte, e aí "MOD" e "BAN" ficam
   "DOM" e "NAB". Mande `moderador-*-esq.png` (as mesmas 5 poses viradas, com o texto normal) ou
   as poses sem texto no escudo e no martelo.
+- Não precisa mais: `degustador/agarrado.png` e `subir-01..02.png` (o agarrar beirada saiu do
+  jogo).
 - ItaloLOL da tela da loja, balão de fala, ícones da loja, caixa das placas.
 - Quadros extras que deixariam as animações mais suaves: `virar`, `frear`, `pousar`, `topo`,
   mais quadros de `parado`/`golpe`/`dash`, `sentar`, `interagir`, `pegou-item`.
@@ -303,8 +313,6 @@ verde com orelhinhas e **óculos de aviador** na testa; óculos de grau; barba; 
 | `pulo-duplo-01..03` | 3 | 18 | 1× | **Parênteses** | Cambalhota no ar: 01 encolhido, 02 de cabeça para baixo, 03 abrindo. (Os parênteses de energia são efeito à parte, 9.3.) |
 | `parede-01..02` | 2 | 8 | loop | **grudado e deslizando** (Luvas de Fita) | **Parede à ESQUERDA do desenho**, costas nela, as duas mãos com fita presas, corpo olhando para a direita (para longe da parede), pernas dobradas. Alterna mão de cima. |
 | `pulo-parede` | 1 | — | 1× (0,1 s) | impulso da parede | Empurrando com os pés, corpo saindo para a direita. |
-| `agarrado` | 1 | — | parado | pendurado na beirada | Quina no **canto superior direito**, as duas mãos segurando na linha ~40, corpo pendurado. |
-| `subir-01..03` | 3 | 18 | 1× | subindo a beirada | Cotovelo em cima, joelho em cima, de pé. |
 | `rajada-01..03` | 3 | 20 | 1× | **Rajada da MP5K** | 01 arma apontada, 02 **recuo** (clarão sai do cano: efeito 9.2), 03 volta. |
 | `degustar-01..04` | 4 | 8 | loop | **Degustar** (cura, segurando) | Parado, tira uma coxinha do cinto, mastiga (02–04 alternam boca), olhos fechados de prazer. |
 | `curou` | 1 | — | 1× | cogumelo recuperado | Braço para cima, satisfeito. |
@@ -554,7 +562,7 @@ Pasta `assets/cacada/areas/<area>/` · cores e temas na tabela 1.5 · **tiles 80
 | `meio` | Parede/maciço por dentro (sem nada exposto). Textura bem discreta. |
 | `teto` | Maciço com a parte de baixo exposta (tetos, sombra embaixo). |
 | `lado-esq`, `lado-dir` | Parede com o lado esquerdo/direito exposto. |
-| `canto-sup-esq`, `canto-sup-dir` | Quinas de cima (as **beiradas** que o Degustador agarra: deixe a quina bem legível). |
+| `canto-sup-esq`, `canto-sup-dir` | Quinas de cima. |
 | `canto-inf-esq`, `canto-inf-dir` | Quinas de baixo. |
 | `topo-variacao-01..02`, `meio-variacao-01..03` | Variações para quebrar a repetição (rachadura, planta, pichação pequena). |
 | `caixa` | 80×80 · **caixa de metal** sólida (tile `X`), igual em todas as áreas (pode ficar só em `comum/`). |
