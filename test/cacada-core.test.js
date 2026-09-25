@@ -77,8 +77,8 @@ test('cada habilidade aparece uma vez no mundo e os dois chefes existem', () => 
     assert.deepEqual(habs, ['dash', 'parede', 'pulo2', 'rajada']);
     const chefes = nivel.salas.filter((s) => s.chefeDef).map((s) => s.chefeDef.tipo).sort();
     assert.deepEqual(chefes, ['capangaMor', 'opressor']);
-    // Fragmentos no mundo + 1 na loja dão pelo menos um cogumelo a mais.
-    assert.ok(nivel.itens.filter((i) => i.tipo === 'fragmento').length + 1 >= 4);
+    // Os fragmentos espalhados pelo mundo completam pelo menos um cogumelo.
+    assert.ok(nivel.itens.filter((i) => i.tipo === 'fragmento').length >= 4);
 });
 
 test('erros de desenho viram erro na hora de carregar', () => {
@@ -558,8 +558,11 @@ test('loja: sem vírgulas não compra; Fita Reforçada dobra o dano', () => {
     e.vida = 5;
     rodar(jogo, 0.05, (i) => ({ golpePedido: i === 0 }));
     assert.equal(e.vida, 3);
-    assert.equal(C.comprar(jogo, 'fragmento'), 'ok');
-    assert.equal(jogo.progresso.fragmentos, 1);
+    const vidaMax = jogo.progresso.vidaMax;
+    jogo.jogador.vida = 1;
+    assert.equal(C.comprar(jogo, 'cogumelo'), 'ok');
+    assert.equal(jogo.progresso.vidaMax, vidaMax + 1, 'Cogumelo Inteiro dá +1 de vida máxima');
+    assert.equal(jogo.jogador.vida, vidaMax + 1, 'e enche a vida');
 });
 
 test('save: exportar e importar devolve o mesmo progresso', () => {

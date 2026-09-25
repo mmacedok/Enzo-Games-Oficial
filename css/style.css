@@ -1645,6 +1645,43 @@ body.game-dialog-open { overflow: hidden; }
 .cacada-direcional [data-tecla="cima direita"] { grid-column: 3; grid-row: 1; }
 .cacada-direcional [data-tecla="baixo esquerda"] { grid-column: 1; grid-row: 3; }
 .cacada-direcional [data-tecla="baixo direita"] { grid-column: 3; grid-row: 3; }
+.cacada-analogico {
+    position: relative;
+    width: 160px;
+    height: 150px;
+    flex: none;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    border-radius: 18px;
+    background: radial-gradient(circle at 50% 50%, rgba(123, 44, 191, 0.18), rgba(123, 44, 191, 0) 70%);
+}
+.cacada-analogico__base {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 112px;
+    height: 112px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 3px solid rgba(230, 214, 255, 0.55);
+    background: rgba(20, 10, 40, 0.45);
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+.cacada-analogico__pino {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 50px;
+    height: 50px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 3px solid #111;
+    background: radial-gradient(circle at 35% 30%, #ffb36b, #ff6600 60%, #b84a00);
+    box-shadow: 0 3px 0 #111;
+}
+.cacada-analogico.is-ativo .cacada-analogico__base { border-color: rgba(255, 210, 63, 0.8); }
 .cacada-acoes {
     display: grid;
     grid-template-columns: repeat(3, auto);
@@ -1664,6 +1701,16 @@ body.game-dialog-open { overflow: hidden; }
         z-index: 2;
     }
     .cacada-controles--v2 .cacada-botao { pointer-events: auto; opacity: 0.78; }
+    .cacada-controles--v2 { align-items: flex-end; }
+    .cacada-controles--v2 .cacada-analogico {
+        pointer-events: auto;
+        width: 42vw;
+        height: 62vh;
+        background: none;
+        opacity: 0.85;
+    }
+    .cacada-controles--v2 .cacada-analogico__base { left: 90px; top: calc(100% - 80px); width: 104px; height: 104px; }
+    .cacada-controles--v2 .cacada-analogico:not(.is-ativo) .cacada-analogico__base { opacity: 0.6; }
     .cacada-controles--v2 .cacada-direcional { grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 38px); }
     .cacada-controles--v2 .cacada-acoes { grid-template-rows: 32px 54px; gap: 5px; }
     .cacada-controles--v2 .cacada-botao--menor { min-width: 54px; font-size: 0.8rem; }

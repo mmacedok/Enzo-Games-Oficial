@@ -194,6 +194,25 @@
     }
     const quadroDe = (nome, i = 0) => ARTE[nome][Math.abs(Math.floor(i)) % ARTE[nome].length];
 
+    /** Sprite com uma camada de cor por cima, mantendo o desenho (em cache). */
+    function tingidoLeve(img, cor) {
+        const chave = `leve|${img.src}|${cor}`;
+        let c = tintas.get(chave);
+        if (c) return c;
+        c = document.createElement('canvas');
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        const g = c.getContext('2d');
+        g.drawImage(img, 0, 0);
+        g.globalCompositeOperation = 'source-atop';
+        g.fillStyle = cor;
+        g.fillRect(0, 0, c.width, c.height);
+        c.naturalWidth = c.width;
+        c.naturalHeight = c.height;
+        tintas.set(chave, c);
+        return c;
+    }
+
     /** Sprite pintado de uma cor (piscar de dano, sombra, chefe). Guardado em cache. */
     const tintas = new Map();
     function tingido(img, cor) {
@@ -1015,7 +1034,9 @@
             const d = 14;
             const tam = 50;
             ctx.globalAlpha = 1 - k * k * 0.7;
-            pintar(arco, cx + Math.cos(ang) * d, cy + Math.sin(ang) * d, tam / 96, 48, 48, 1, ang);
+            // Com a Fita Reforçada, o arco fica dourado.
+            const img = jogo.progresso.loja.has('fita') ? tingidoLeve(arco, 'rgba(255, 200, 40, 0.55)') : arco;
+            pintar(img, cx + Math.cos(ang) * d, cy + Math.sin(ang) * d, tam / 96, 48, 48, 1, ang);
             ctx.globalAlpha = 1;
             return;
         }
@@ -1583,6 +1604,7 @@
                 case 'pogo': particulas(e.x, e.y + 6, 6, '#fff', 70); break;
                 case 'acerto':
                     efeito('acerto', e.x, e.y, e.chefe ? 40 : 30, 0.18);
+                    if (jogo.progresso.loja.has('fita') && e.golpe) textoFlutuante('×2', e.x + 8, e.y - 14, COR.amarelo, 13);
                     particulas(e.x, e.y, 6, '#fff', 110);
                     parar(e.chefe ? 0.03 : 0.045);
                     break;
@@ -1805,6 +1827,10 @@
         // Vírgulas.
         virgula(66, 46, 0.9);
         texto(`${p.virgulas}`, 76, 47, 16, COR.amarelo, 4, 'left');
+        // Itens comprados na loja.
+        let ix = 66;
+        if (p.loja.has('lanche')) { texto('LANCHE', ix - 6, 67, 11, '#ff8ca0', 3, 'left'); ix += 50; }
+        if (p.loja.has('fita')) texto('FITA ×2', ix - 6, 67, 11, COR.amarelo, 3, 'left');
         // Salvando…
         if (visual.tempo - visual.salvouEm < 1.2) texto('salvo', W - 12, H - 14, 12, COR.verde, 3, 'right');
         // Chefe.
@@ -2150,7 +2176,8 @@
     function comprarSelecionado() {
         const item = LOJA[visual.lojaSel];
         const r = core.comprar(jogo, item.id);
-        visual.lojaMsg = r === 'ok' ? `Comprou ${item.nome}!` : r === 'caro' ? 'Vírgulas insuficientes.' : 'Você já tem isso.';
+        const efeitoItem = { cogumelo: '+1 cogumelo de vida!', lanche: 'Agora você degusta bem mais rápido.', fita: 'Sua coronhada agora tira o dobro!' };
+        visual.lojaMsg = r === 'ok' ? `${item.nome}: ${efeitoItem[item.id] || 'comprado!'}` : r === 'caro' ? `Faltam ${item.preco - jogo.progresso.virgulas} vírgulas.` : 'Você já tem isso.';
         tratarEventos();
     }
 
@@ -2343,20 +2370,13 @@
     });
     canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
-    // Celular: direcional à esquerda e botões de ação à direita.
+    // Celular: controle analógico virtual à esquerda e botões de ação à direita.
     if (toque) {
         const controles = document.createElement('div');
         controles.className = 'cacada-controles cacada-controles--v2';
         controles.innerHTML = `
-            <div class="cacada-direcional">
-                <button type="button" class="ronda-botao cacada-botao" data-tecla="cima" aria-label="Cima (mirar, subir, sentar)">▲</button>
-                <button type="button" class="ronda-botao cacada-botao" data-tecla="esquerda" aria-label="Esquerda">◀</button>
-                <button type="button" class="ronda-botao cacada-botao" data-tecla="direita" aria-label="Direita">▶</button>
-                <button type="button" class="ronda-botao cacada-botao" data-tecla="baixo" aria-label="Baixo (mirar para baixo, soltar)">▼</button>
-                <button type="button" class="ronda-botao cacada-botao cacada-botao--diagonal" data-tecla="cima esquerda" aria-label="Diagonal cima e esquerda">◤</button>
-                <button type="button" class="ronda-botao cacada-botao cacada-botao--diagonal" data-tecla="cima direita" aria-label="Diagonal cima e direita">◥</button>
-                <button type="button" class="ronda-botao cacada-botao cacada-botao--diagonal" data-tecla="baixo esquerda" aria-label="Diagonal baixo e esquerda">◣</button>
-                <button type="button" class="ronda-botao cacada-botao cacada-botao--diagonal" data-tecla="baixo direita" aria-label="Diagonal baixo e direita">◢</button>
+            <div class="cacada-analogico" aria-label="Controle: arraste o dedo para andar e mirar">
+                <div class="cacada-analogico__base"><div class="cacada-analogico__pino"></div></div>
             </div>
             <div class="cacada-acoes">
                 <button type="button" class="ronda-botao cacada-botao cacada-botao--menor" data-tecla="degustar" aria-label="Curar (segure)">CURA</button>
@@ -2408,6 +2428,85 @@
             }
             botao.addEventListener('contextmenu', (event) => event.preventDefault());
         }
+
+        // Analógico: onde o dedo encosta vira o centro; arrastar mira em 8 direções.
+        const analogico = controles.querySelector('.cacada-analogico');
+        const base = analogico.querySelector('.cacada-analogico__base');
+        const pino = analogico.querySelector('.cacada-analogico__pino');
+        const RAIO = 44;          // até onde o pino anda (px)
+        const MORTA = 0.32;       // zona morta no meio
+        let dedo = null;
+        let centro = null;
+        let atual = { esquerda: false, direita: false, cima: false, baixo: false };
+        const emMenu = () => jogo.fase === 'titulo' || jogo.fase === 'final' || visual.pausado || jogo.fase === 'pegou' || visual.mapa || jogo.fase === 'loja';
+        function aplicarDirecao(novo) {
+            if (emMenu()) {
+                // Nos menus, empurrar para cima/baixo anda uma opção por vez.
+                if (novo.cima && !atual.cima) {
+                    if (jogo.fase === 'loja') visual.lojaSel = (visual.lojaSel + LOJA.length - 1) % LOJA.length;
+                    else if (!visual.mapa) navegarMenu(-1, totalMenu());
+                } else if (novo.baixo && !atual.baixo) {
+                    if (jogo.fase === 'loja') visual.lojaSel = (visual.lojaSel + 1) % LOJA.length;
+                    else if (!visual.mapa) navegarMenu(1, totalMenu());
+                }
+                atual = novo;
+                for (const t of ['esquerda', 'direita', 'cima', 'baixo']) entrada[t] = false;
+                return;
+            }
+            if (novo.cima && !atual.cima) entrada.cimaPedido = true;
+            for (const t of ['esquerda', 'direita', 'cima', 'baixo']) entrada[t] = novo[t];
+            atual = novo;
+        }
+        function posicionarBase(x, y) {
+            const caixa = analogico.getBoundingClientRect();
+            base.style.left = `${x - caixa.left}px`;
+            base.style.top = `${y - caixa.top}px`;
+        }
+        function moverPino(event) {
+            let dx = event.clientX - centro.x;
+            let dy = event.clientY - centro.y;
+            const d = Math.hypot(dx, dy);
+            if (d > RAIO) { dx = (dx / d) * RAIO; dy = (dy / d) * RAIO; }
+            pino.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            if (d < RAIO * MORTA) { aplicarDirecao({ esquerda: false, direita: false, cima: false, baixo: false }); return; }
+            // 8 setores de 45°; o ângulo zero é para a direita.
+            const setor = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
+            const s8 = ((setor % 8) + 8) % 8; // 0 dir, 1 dir-baixo, 2 baixo, 3 esq-baixo, 4 esq, 5 esq-cima, 6 cima, 7 dir-cima
+            aplicarDirecao({
+                direita: s8 === 0 || s8 === 1 || s8 === 7,
+                esquerda: s8 === 3 || s8 === 4 || s8 === 5,
+                baixo: s8 === 1 || s8 === 2 || s8 === 3,
+                cima: s8 === 5 || s8 === 6 || s8 === 7,
+            });
+        }
+        analogico.addEventListener('pointerdown', (event) => {
+            event.preventDefault();
+            if (visual.mapa) { visual.mapa = false; return; }
+            // O analógico segue sempre o último dedo que encostou nele.
+            dedo = event.pointerId;
+            analogico.setPointerCapture?.(event.pointerId);
+            centro = { x: event.clientX, y: event.clientY };
+            posicionarBase(event.clientX, event.clientY);
+            analogico.classList.add('is-ativo');
+            moverPino(event);
+        });
+        analogico.addEventListener('pointermove', (event) => {
+            if (event.pointerId !== dedo) return;
+            event.preventDefault();
+            moverPino(event);
+        });
+        for (const tipo of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+            analogico.addEventListener(tipo, (event) => {
+                if (event.pointerId !== dedo) return;
+                dedo = null;
+                analogico.classList.remove('is-ativo');
+                pino.style.transform = 'translate(-50%, -50%)';
+                base.style.left = '';
+                base.style.top = '';
+                aplicarDirecao({ esquerda: false, direita: false, cima: false, baixo: false });
+            });
+        }
+        analogico.addEventListener('contextmenu', (event) => event.preventDefault());
     }
 
     janela.aoFechar(() => {

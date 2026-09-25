@@ -15,7 +15,7 @@ Dois esquemas de teclado; troque em **CONTROLES** na tela inicial ou na pausa (f
 
 | Ação | Padrão (WASD) | Hollow Knight (opcional) | Celular |
 |---|---|---|---|
-| Andar / mirar | W A S D (ou setas) | ← → ↑ ↓ | direcional (com diagonais ◤◥◣◢) |
+| Andar / mirar | W A S D (ou setas) | ← → ↑ ↓ | analógico virtual (encoste o dedo à esquerda e arraste; 8 direções) |
 | Pular (segurar = mais alto) | Espaço | Z | PULAR |
 | Coronhada em 8 direções (↓ no ar quica, ↓ no chão é rasteira) | E | X | GOLPE |
 | Dash (Capa Janky) | C (ou Shift) | C | DASH |
@@ -46,8 +46,9 @@ As placas e as dicas mostram as teclas do esquema escolhido (no celular, os nome
 - **Bancos:** curam, salvam e fazem os inimigos voltarem.
 - **Segredos:** paredes rachadas quebram com 3 golpes e revelam salas escondidas; alavancas abrem
   portões (atalhos).
-- **Loja do ItaloLOL** (na Praça): Fragmento de Cogumelo, Lanche Turbinado (cura mais rápida),
-  Fita Reforçada (coronhada tira o dobro).
+- **Loja do ItaloLOL** (na Praça): Cogumelo Inteiro (+1 de vida na hora), Lanche Turbinado (cura
+  mais rápida) e Fita Reforçada (coronhada tira o dobro; o arco fica dourado). Os itens comprados
+  aparecem no HUD. Os 4 fragmentos de cogumelo estão espalhados pelo mundo (um é segredo da Fábrica).
 
 ## Mundo e progressão
 | Área | Salas | O que tem |

@@ -110,7 +110,7 @@
     const HAB_POR_DIGITO = { 1: 'rajada', 2: 'dash', 3: 'parede', 4: 'pulo2' };
 
     const LOJA = Object.freeze([
-        Object.freeze({ id: 'fragmento', nome: 'Fragmento de Cogumelo', preco: 120, texto: '4 fragmentos = +1 cogumelo de vida.' }),
+        Object.freeze({ id: 'cogumelo', nome: 'Cogumelo Inteiro', preco: 150, texto: '+1 cogumelo de vida na hora (e enche todos).' }),
         Object.freeze({ id: 'lanche', nome: 'Lanche Turbinado', preco: 160, texto: 'Degustar fica bem mais rápido.' }),
         Object.freeze({ id: 'fita', nome: 'Fita Reforçada', preco: 220, texto: 'A coronhada tira o dobro de vida.' }),
     ]);
@@ -908,7 +908,7 @@
 
     // ------------------------------------------------------------ combate
 
-    function ferirInimigo(jogo, en, dano, dx, dy) {
+    function ferirInimigo(jogo, en, dano, dx, dy, golpe = false) {
         en.vida -= dano;
         en.flash = 0.12;
         const peso = Inimigos.TIPOS[en.tipo].peso || 1;
@@ -918,7 +918,7 @@
         } else if (dx) {
             en.kx = (dx * 230) / peso;
         }
-        jogo.eventos.push({ tipo: 'acerto', x: en.x + en.w / 2, y: en.y + en.h / 2, chefe: en.chefe });
+        jogo.eventos.push({ tipo: 'acerto', x: en.x + en.w / 2, y: en.y + en.h / 2, chefe: en.chefe, golpe });
         if (en.vida <= 0) matarInimigo(jogo, en);
     }
 
@@ -1055,7 +1055,7 @@
                 j.recuoVx = -g.lado * 260;
                 continue;
             }
-            ferirInimigo(jogo, en, danoGolpe(jogo), dx, dy);
+            ferirInimigo(jogo, en, danoGolpe(jogo), dx, dy, true);
             j.pontuacao = Math.min(CONFIG.pontuacaoMax, j.pontuacao + CONFIG.pontuacaoPorGolpe);
             if (quica) pogo = true;
             else if (g.gy === 0) { j.recuo = CONFIG.recuoTempo; j.recuoVx = -g.lado * CONFIG.recuoGolpe; }
@@ -1277,7 +1277,11 @@
         if (p.virgulas < item.preco) return 'caro';
         p.virgulas -= item.preco;
         p.loja.add(id);
-        if (id === 'fragmento') adicionarFragmento(jogo, jogo.jogador.x, jogo.jogador.y);
+        if (id === 'cogumelo') {
+            p.vidaMax = Math.min(CONFIG.vidaMaxima, p.vidaMax + 1);
+            jogo.jogador.vida = p.vidaMax;
+            jogo.eventos.push({ tipo: 'cogumeloNovo', x: jogo.jogador.x + L / 2, y: jogo.jogador.y });
+        }
         jogo.eventos.push({ tipo: 'comprou', item: id });
         return 'ok';
     }
