@@ -55,35 +55,133 @@
     };
 
     // ------------------------------------------------------------- artes
-    // Temporárias: sprites da Ronda. Os nomes finais estão em docs/ASSETS-CACADA.md.
+    // Artes definitivas (docs/ASSETS-CACADA.md). O que ainda não tem arte continua
+    // desenhado por código (Ping, Emoji, Troll, Spam, Moderador, Sombra).
+    const serie = (base, n) => Array.from({ length: n }, (_, i) => `${base}-${String(i + 1).padStart(2, '0')}.png`);
+    const AREAS_ARTE = ['telhados', 'beco', 'fabrica', 'torre', 'covil'];
     const ARQUIVOS = {
-        parado: ['ronda/degustador/correr-01.png'],
-        correr: ['ronda/degustador/correr-01.png', 'ronda/degustador/correr-02.png', 'ronda/degustador/correr-03.png', 'ronda/degustador/correr-04.png'],
-        golpe: ['ronda/degustador/atirar-01.png', 'ronda/degustador/atirar-02.png'],
-        pular: ['ronda/degustador/pular.png'],
-        cair: ['ronda/degustador/cair.png'],
-        parede: ['ronda/degustador/cair.png'],
-        agarrado: ['ronda/degustador/pular.png'],
-        morrer: ['ronda/degustador/tropecar.png'],
-        capanga: ['ronda/inimigos/coracao-01.png', 'ronda/inimigos/coracao-02.png', 'ronda/inimigos/coracao-03.png', 'ronda/inimigos/coracao-04.png'],
+        // Degustador (quadros 128×128, pés na linha 125, corpo na coluna 64).
+        parado: serie('degustador/parado', 2),
+        correr: serie('degustador/correr', 6),
+        golpeFrente: serie('degustador/golpe-frente', 2),
+        golpeCima: ['degustador/golpe-cima.png'],
+        golpeBaixo: ['degustador/golpe-baixo.png'],
+        golpeDiagCima: ['degustador/golpe-diagonal-cima.png'],
+        golpeDiagBaixo: ['degustador/golpe-diagonal-baixo.png'],
+        golpeRasteira: ['degustador/golpe-rasteira.png'],
+        pular: ['degustador/pular.png'],
+        cair: ['degustador/cair.png'],
+        parede: ['degustador/parede.png'],
+        agarrado: ['degustador/agarrado.png'],
+        subir: serie('degustador/subir', 2),
+        dash: serie('degustador/dash', 2),
+        puloDuplo: ['degustador/pulo-duplo.png'],
+        atirar: serie('degustador/rajada', 2),
+        degustar: serie('degustador/degustar', 2),
+        sentado: ['degustador/sentado.png'],
+        dano: ['degustador/dano.png'],
+        morrer: ['degustador/morrer.png'],
+        // Inimigos.
+        capanga: serie('inimigos/capanga', 4),
+        bug: serie('inimigos/bug', 2),
+        drone: serie('inimigos/drone', 2),
+        droneMirar: ['inimigos/drone-mirar.png'],
         feiticeira: ['ronda/inimigos/feiticeira-01.png', 'ronda/inimigos/feiticeira-02.png', 'ronda/inimigos/feiticeira-03.png', 'ronda/inimigos/feiticeira-04.png'],
-        drone: ['ronda/objetos/drone-01.png', 'ronda/objetos/drone-02.png'],
-        projetil: ['ronda/objetos/projetil.png'],
-        ceu: ['ronda/cidade-distante.png'],
-        cidade: ['ronda/cidade-proxima.png'],
-        sinal: ['ronda/sinal-virgula.png'],
+        // Chefes.
+        cmOcioso: serie('chefes/capanga-mor-ocioso', 2),
+        cmPreparar: ['chefes/capanga-mor-preparar.png'],
+        cmSalto: ['chefes/capanga-mor-salto.png'],
+        cmCorrida: serie('chefes/capanga-mor-corrida', 3),
+        cmAtordoado: serie('chefes/capanga-mor-atordoado', 2),
+        cmMarreta: serie('chefes/capanga-mor-marreta', 2),
+        cmDerrotado: ['chefes/capanga-mor-derrotado.png'],
+        opFlutuar: serie('chefes/opressor-flutuar', 4),
+        opJoinha: ['chefes/opressor-joinha.png'],
+        opGrito: ['chefes/opressor-grito.png'],
+        opGlitch: ['chefes/opressor-glitch.png'],
+        opDerrotado: ['chefes/opressor-derrotado.png'],
+        punho: ['chefes/punho.png'],
+        // O Inominável (parado, gritar e derrotado olham para a esquerda; fugir, para a direita).
+        inoParado: serie('inominavel/parado', 4),
+        inoFugir: serie('inominavel/fugir', 4),
+        inoGritar: serie('inominavel/gritar', 2),
+        inoDerrotado: ['inominavel/derrotado.png'],
+        // Efeitos e projéteis.
+        golpeArco: serie('efeitos/golpe', 3),
+        acerto: serie('efeitos/acerto', 3),
+        bolaVerde: ['efeitos/bola-verde.png'],
+        glitch: serie('efeitos/glitch', 2),
+        magia: serie('efeitos/magia', 2),
+        onda: serie('efeitos/onda', 2),
+        palavraCaixa: ['efeitos/palavra-caixa.png'],
+        pedra: ['efeitos/pedra.png'],
+        poeira: serie('efeitos/poeira', 3),
+        rajada: serie('efeitos/rajada', 2),
+        respingo: serie('efeitos/respingo', 4),
+        // Objetos.
+        alavanca: serie('objetos/alavanca', 2),
+        banco: ['objetos/banco.png'],
+        barraca: ['objetos/barraca-italolol.png'],
+        espinhos: ['objetos/espinhos.png'],
+        fragmento: ['objetos/fragmento.png'],
+        gradeArena: ['objetos/grade-arena.png'],
+        orbe: ['objetos/habilidade-orbe.png'],
+        marquise: ['objetos/marquise.png'],
+        mola: serie('objetos/mola', 2),
+        rachada: serie('objetos/parede-rachada', 3),
+        placa: ['objetos/placa.png'],
+        plataforma: ['objetos/plataforma.png'],
+        portao: ['objetos/portao.png'],
+        serra: ['objetos/serra.png'],
+        telha: ['objetos/telha.png'],
+        telhaRachada: ['objetos/telha-rachada.png'],
+        trilho: ['objetos/trilho.png'],
+        saco: ['objetos/virgulas-saco.png'],
+        // Interface.
+        cogCheio: ['ui/cogumelo-cheio.png'],
+        cogVazio: ['ui/cogumelo-vazio.png'],
+        habDash: ['ui/habilidade-dash.png'],
+        habParede: ['ui/habilidade-parede.png'],
+        habPulo2: ['ui/habilidade-pulo2.png'],
+        habRajada: ['ui/habilidade-rajada.png'],
+        logo: ['ui/logo.png'],
+        mapaBanco: ['ui/mapa-banco.png'],
+        mapaChefe: ['ui/mapa-chefe.png'],
+        mapaSombra: ['ui/mapa-sombra.png'],
+        tituloFundo: ['ui/titulo-fundo.jpg'],
+        vaso: ['ui/vaso-pontuacao.png'],
     };
-    // Os sprites temporários olham para a direita, menos a feiticeira.
+    for (const a of AREAS_ARTE) {
+        ARQUIVOS[`topo_${a}`] = [`areas/${a}/topo.png`];
+        ARQUIVOS[`meio_${a}`] = [`areas/${a}/meio.png`];
+        ARQUIVOS[`fundo_${a}`] = [`areas/${a}/fundo.jpg`];
+    }
+    // As artes olham para a direita, menos a feiticeira antiga da Ronda.
     const OLHA_ESQUERDA = new Set(['feiticeira']);
     const ARTE = {};
     for (const [nome, lista] of Object.entries(ARQUIVOS)) {
         ARTE[nome] = lista.map((arquivo) => {
             const img = new Image();
-            img.src = window.CACADA_ARTES?.[arquivo] || `assets/${arquivo}?v=1`;
+            img.src = window.CACADA_ARTES?.[arquivo] || `assets/${arquivo}?v=2`;
             return img;
         });
     }
     const pronta = (img) => img && img.complete && img.naturalWidth > 0;
+    /** Quadro `i` da arte `nome`, ou null se ainda não carregou (aí o jogo desenha por código). */
+    const arte = (nome, i = 0) => {
+        const l = ARTE[nome];
+        const img = l && l[Math.abs(Math.floor(i)) % l.length];
+        return pronta(img) ? img : null;
+    };
+    /** Desenha a arte com o ponto (ax, ay) da imagem em (x, y), na escala k, virada se lado < 0. */
+    function pintar(img, x, y, k, ax, ay, lado = 1, ang = 0) {
+        ctx.save();
+        ctx.translate(Math.round(x), Math.round(y));
+        if (ang) ctx.rotate(ang);
+        if (lado < 0) ctx.scale(-1, 1);
+        ctx.drawImage(img, -ax * k, -ay * k, img.naturalWidth * k, img.naturalHeight * k);
+        ctx.restore();
+    }
     const quadroDe = (nome, i = 0) => ARTE[nome][Math.abs(Math.floor(i)) % ARTE[nome].length];
 
     /** Sprite pintado de uma cor (piscar de dano, sombra, chefe). Guardado em cache. */
@@ -146,6 +244,10 @@
         salvouEm: -9,
         fimEm: 0,
         morteEm: 0,
+        molas: new Map(),   // "tx,ty" → quando o Degustador quicou nela
+        fx: [],             // efeitos com arte (acerto, poeira, explosão…)
+        puloDuploEm: -9,
+        cadaveres: [],      // chefes derrotados caindo
     };
     let ultimoQuadro = null;
     let quadro = 0;
@@ -351,9 +453,49 @@
     // ------------------------------------------------------------- cenário
     const temaAtual = () => TEMAS[jogo.sala?.area] || TEMAS.telhados;
 
+    /**
+     * Pintura de fundo da área já desfocada e escurecida (como a profundidade de
+     * Hollow Knight), feita uma vez só para não pesar a cada quadro.
+     */
+    const fundosProntos = {};
+    function fundoPronto(area) {
+        if (fundosProntos[area]) return fundosProntos[area];
+        const img = arte(`fundo_${area}`);
+        if (!img) return null;
+        const c = document.createElement('canvas');
+        c.width = Math.round(W * 1.2);
+        c.height = Math.round(H * 1.2);
+        const g = c.getContext('2d');
+        g.filter = 'blur(1.2px) saturate(0.85)';
+        g.drawImage(img, 0, 0, c.width, c.height);
+        g.filter = 'none';
+        g.fillStyle = 'rgba(7, 4, 26, 0.46)';
+        g.fillRect(0, 0, c.width, c.height);
+        fundosProntos[area] = c;
+        return c;
+    }
+
     function desenharFundo() {
         const tema = temaAtual();
         const cam = visual.cam;
+        const pintura = fundoPronto(jogo.sala.area);
+        if (pintura) {
+            // Pintura da área, maior que a tela, deslizando devagar com a câmera (paralaxe).
+            const s = jogo.sala.px;
+            const kx = s.w > W ? (cam.x - s.x) / (s.w - W) : 0.5;
+            const ky = s.h > H ? (cam.y - s.y) / (s.h - H) : 0.5;
+            const fw = W * 1.2;
+            const fh = H * 1.2;
+            ctx.drawImage(pintura, -(fw - W) * kx, -(fh - H) * ky, fw, fh);
+            if (jogo.sala.area === 'covil') {
+                for (let i = 0; i < 6; i++) {
+                    const y = (i * 67 + visual.tempo * 40) % H;
+                    ctx.fillStyle = i % 2 ? 'rgba(160, 70, 255, 0.06)' : 'rgba(90, 255, 120, 0.05)';
+                    ctx.fillRect(0, y, W, 6);
+                }
+            }
+            return;
+        }
         const ceu = ctx.createLinearGradient(0, 0, 0, H);
         ceu.addColorStop(0, tema.ceu[0]);
         ceu.addColorStop(0.6, tema.ceu[1]);
@@ -361,21 +503,6 @@
         ctx.fillStyle = ceu;
         ctx.fillRect(0, 0, W, H);
         if (tema.fora) {
-            if (pronta(ARTE.ceu[0])) {
-                ctx.globalAlpha = jogo.sala.area === 'covil' ? 0.45 : 1;
-                ctx.drawImage(ARTE.ceu[0], 0, 0, W, H);
-                ctx.globalAlpha = 1;
-            }
-            if (pronta(ARTE.sinal[0]) && jogo.sala.area === 'telhados') ctx.drawImage(ARTE.sinal[0], 430 - (cam.x * 0.02) % 80, 10, 120, 120);
-            if (pronta(ARTE.cidade[0])) {
-                const img = ARTE.cidade[0];
-                const desloc = ((cam.x * 0.3) % W + W) % W;
-                const y = H - 300 + (jogo.sala.px.y + jogo.sala.px.h - H - cam.y) * 0.25;
-                if (jogo.sala.area === 'covil') ctx.globalAlpha = 0.5;
-                ctx.drawImage(img, -desloc, y, W, 320);
-                ctx.drawImage(img, W - desloc, y, W, 320);
-                ctx.globalAlpha = 1;
-            }
             if (jogo.sala.area === 'covil') {
                 // Céu corrompido: faixas de glitch.
                 for (let i = 0; i < 6; i++) {
@@ -429,7 +556,10 @@
                 const tiles = TILES_AREA[area] || TILES_AREA.telhados;
                 if (c === '#') {
                     const acima = ty > 0 ? nivel.grade[ty - 1][tx] : '#';
-                    ctx.drawImage(acima === '#' || acima === 'X' || acima === 'r' || acima === 'B' ? tiles.meio : tiles.topo, x, y);
+                    const dentro = acima === '#' || acima === 'X' || acima === 'r' || acima === 'B';
+                    const img = arte(`${dentro ? 'meio' : 'topo'}_${area}`);
+                    if (img) ctx.drawImage(img, x, y, TL, TL);
+                    else ctx.drawImage(dentro ? tiles.meio : tiles.topo, x, y);
                 } else if (c === 'r') {
                     ctx.fillStyle = '#050308';
                     ctx.fillRect(x, y, TL, TL);
@@ -438,21 +568,51 @@
                     if (p.quebrados.has(id)) continue;
                     const vida = jogo.vidaParedes.get(id) ?? CONFIG.vidaParede;
                     const treme = vida < CONFIG.vidaParede && !calmo ? Math.sin(visual.tempo * 50) * 0.6 : 0;
-                    ctx.drawImage(tiles.rachada, x + treme, y);
+                    const rach = area === 'telhados' && arte('rachada', CONFIG.vidaParede - Math.max(1, vida));
+                    const meio = arte(`meio_${area}`);
+                    if (rach) ctx.drawImage(rach, x + treme, y, TL, TL);
+                    else if (meio) {
+                        // Outras áreas: o tijolo da área com rachaduras por cima.
+                        ctx.drawImage(meio, x + treme, y, TL, TL);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(x + treme + 4, y + 2); ctx.lineTo(x + treme + 9, y + 9); ctx.lineTo(x + treme + 6, y + 14); ctx.lineTo(x + treme + 11, y + 19);
+                        if (vida < CONFIG.vidaParede) { ctx.moveTo(x + treme + 9, y + 9); ctx.lineTo(x + treme + 16, y + 7); }
+                        if (vida < CONFIG.vidaParede - 1) { ctx.moveTo(x + treme + 6, y + 14); ctx.lineTo(x + treme + 1, y + 17); ctx.moveTo(x + treme + 13, y + 3); ctx.lineTo(x + treme + 17, y + 12); }
+                        ctx.stroke();
+                    } else ctx.drawImage(tiles.rachada, x + treme, y);
                 } else if (c === 'P') {
-                    if (!p.abertos.has(nivel.salas[idx].id)) ctx.drawImage(TILES.portao, x, y);
+                    if (!p.abertos.has(nivel.salas[idx].id)) ctx.drawImage(arte('portao') || TILES.portao, x, y, TL, TL);
                 } else if (c === '|') {
-                    if (jogo.arena === idx) {
+                    const grade = arte('gradeArena');
+                    if (jogo.arena === idx && grade) {
+                        ctx.globalAlpha = 0.85 + Math.sin(visual.tempo * 6) * 0.15;
+                        ctx.drawImage(grade, x, y, TL, TL);
+                        ctx.globalAlpha = 1;
+                    } else if (jogo.arena === idx) {
                         ctx.fillStyle = 'rgba(160, 70, 255, 0.35)';
                         ctx.fillRect(x, y, TL, TL);
                         ctx.fillStyle = '#c77dff';
                         for (let k = 3; k < TL; k += 7) ctx.fillRect(x + k, y, 2, TL);
                     }
                 } else if (c === 'X') ctx.drawImage(TILES.caixa, x, y);
-                else if (c === '=') ctx.drawImage(TILES.marquise, x, y);
-                else if (c === 'T') ctx.drawImage(TILES.mola, x, y);
-                else if (c === '^') ctx.drawImage(TILES.espinho, x, y);
-                else if (c === 'v') ctx.drawImage(TILES.espinhoTeto, x, y);
+                else if (c === '=') {
+                    // Só o telhadinho da marquise (a mão-francesa fica de fora).
+                    const img = arte('marquise');
+                    if (img) ctx.drawImage(img, 0, 0, 64, 22, x, y - 1, TL, 8);
+                    else ctx.drawImage(TILES.marquise, x, y);
+                } else if (c === 'T') {
+                    const pulou = visual.tempo - (visual.molas.get(`${tx},${ty}`) ?? -9) < 0.25;
+                    const img = arte('mola', pulou ? 1 : 0);
+                    if (img) ctx.drawImage(img, x, y, TL, TL);
+                    else ctx.drawImage(TILES.mola, x, y);
+                } else if (c === '^' || c === 'v') {
+                    const img = arte('espinhos');
+                    if (!img) ctx.drawImage(c === '^' ? TILES.espinho : TILES.espinhoTeto, x, y);
+                    else if (c === '^') ctx.drawImage(img, x, y, TL, TL);
+                    else { ctx.save(); ctx.translate(x, y + TL); ctx.scale(1, -1); ctx.drawImage(img, 0, 0, TL, TL); ctx.restore(); }
+                }
                 else if (c === 'Q') desenharTelha(tx, ty, x, y);
             }
         }
@@ -460,21 +620,27 @@
 
     function desenharTelha(tx, ty, x, y) {
         const estado = jogo.caidas.get(`${tx},${ty}`);
-        if (!estado) { ctx.drawImage(TILES.telha, x, y); return; }
+        const inteira = arte('telha');
+        const telha = (px, py, rachada) => {
+            const img = rachada ? arte('telhaRachada') || inteira : inteira;
+            if (img) ctx.drawImage(img, px, py - 4, TL, TL + 4);
+            else ctx.drawImage(TILES.telha, px, py);
+        };
+        if (!estado) { telha(x, y, false); return; }
         if (estado.caiu) {
             const t = estado.t - CONFIG.tempoTelha;
             if (t < 0.4) {
                 ctx.globalAlpha = 1 - t / 0.4;
-                ctx.drawImage(TILES.telha, x, y + t * 120);
+                telha(x, y + t * 120, true);
                 ctx.globalAlpha = 1;
             } else if (t > CONFIG.voltaTelha - 0.4) {
                 ctx.globalAlpha = 0.3;
-                ctx.drawImage(TILES.telha, x, y);
+                telha(x, y, false);
                 ctx.globalAlpha = 1;
             }
             return;
         }
-        ctx.drawImage(TILES.telha, x + (calmo ? 0 : Math.sin(visual.tempo * 60) * 1.5), y);
+        telha(x + (calmo ? 0 : Math.sin(visual.tempo * 60) * 1.5), y, true);
     }
 
     const naTela = (x, y, margem = 60) => x > visual.cam.x - margem && x < visual.cam.x + W + margem && y > visual.cam.y - margem && y < visual.cam.y + H + margem;
@@ -483,7 +649,14 @@
         const cam = visual.cam;
         for (const s of nivel.serras) {
             if (!naTela(s.cx, s.cy, 120)) continue;
-            if (s.tipo !== 'O') {
+            const trilho = arte('trilho');
+            if (s.tipo !== 'O' && trilho) {
+                const A = CONFIG.amplitude;
+                for (let d = -A - TL / 2; d < A + TL / 2; d += TL) {
+                    if (s.tipo === 'H') ctx.drawImage(trilho, s.cx + d - cam.x, s.cy - TL / 2 - cam.y, TL, TL);
+                    else pintar(trilho, s.cx - cam.x, s.cy + d + TL / 2 - cam.y, TL / 64, 32, 32, 1, Math.PI / 2);
+                }
+            } else if (s.tipo !== 'O') {
                 ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
                 ctx.lineWidth = 4;
                 ctx.lineCap = 'round';
@@ -498,6 +671,8 @@
     }
 
     function desenharSerra(x, y, r, giro) {
+        const img = arte('serra');
+        if (img) { pintar(img, x, y, (r * 2 + 4) / 56, 30, 32, 1, giro); return; }
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(giro);
@@ -527,6 +702,11 @@
             if (!naTela(q.x, q.y, 100)) continue;
             const x = q.x - cam.x;
             const y = q.y - cam.y;
+            const img = arte('plataforma');
+            if (img) {
+                ctx.drawImage(img, 62, 2, 69, 20, x - 2, y - 1, q.w + 4, Math.min(16, (q.w + 4) * 20 / 69));
+                continue;
+            }
             ctx.fillStyle = '#6d7482';
             ctx.fillRect(x, y, q.w, q.h);
             ctx.fillStyle = '#aab2c0';
@@ -584,6 +764,17 @@
             if (it.premioDe && !p.chefes.has(it.premioDe)) continue;
             const x = it.x + it.w / 2 - cam.x;
             const y = it.y + it.h / 2 - cam.y + Math.sin(visual.tempo * 3 + it.x) * 2;
+            const img = arte({ virgulas: 'saco', fragmento: 'fragmento', habilidade: 'orbe' }[it.tipo]);
+            if (img) {
+                const tam = it.tipo === 'habilidade' ? 26 : it.tipo === 'fragmento' ? 20 : 18;
+                const brilho = ctx.createRadialGradient(x, y, 2, x, y, tam);
+                brilho.addColorStop(0, it.tipo === 'fragmento' ? 'rgba(255, 140, 160, 0.45)' : 'rgba(255, 210, 63, 0.45)');
+                brilho.addColorStop(1, 'rgba(255, 210, 63, 0)');
+                ctx.fillStyle = brilho;
+                ctx.beginPath(); ctx.arc(x, y, tam, 0, Math.PI * 2); ctx.fill();
+                ctx.drawImage(img, x - tam / 2, y - tam / 2, tam, tam);
+                continue;
+            }
             if (it.tipo === 'virgulas') {
                 // Saquinho de vírgulas.
                 ctx.fillStyle = '#8a5a2b';
@@ -623,6 +814,12 @@
             if (b.sala !== jogo.sala.idx) continue;
             const x = b.x - cam.x;
             const y = b.y - cam.y;
+            const img = arte('banco');
+            if (img) {
+                if (!(jogo.fase === 'sentado' && jogo.progresso.banco === b.id)) pintar(img, x + b.w / 2, y + b.h, 0.62, 48, 46);
+                if (jogo.progresso.banco === b.id) virgula(x + b.w / 2, y - 20, 0.5, COR.laranja);
+                continue;
+            }
             ctx.fillStyle = '#6b4a2b';
             ctx.strokeStyle = COR.tinta;
             ctx.lineWidth = 1.5;
@@ -636,6 +833,8 @@
             if (pl.sala !== jogo.sala.idx) continue;
             const x = pl.x + pl.w / 2 - cam.x;
             const y = pl.y - cam.y;
+            const img = arte('placa');
+            if (img) { pintar(img, x, y + pl.h, 0.47, 32, 71); continue; }
             ctx.fillStyle = '#5a3d22';
             ctx.fillRect(x - 2, y + 12, 4, pl.h - 12);
             ctx.fillStyle = '#c9a36a';
@@ -654,6 +853,8 @@
             const aberta = jogo.progresso.abertos.has(jogo.sala.id);
             const x = a.x + a.w / 2 - cam.x;
             const y = a.y + a.h - cam.y;
+            const img = arte('alavanca', aberta ? 1 : 0);
+            if (img) { pintar(img, x, y, 0.38, 24, 62); continue; }
             ctx.fillStyle = '#444';
             ctx.fillRect(x - 6, y - 4, 12, 4);
             ctx.strokeStyle = '#aab2c0';
@@ -666,6 +867,8 @@
 
     /** Barraca do ItaloLOL (provisória). */
     function desenharLoja(x, y, l) {
+        const img = arte('barraca');
+        if (img) { pintar(img, x + l.w / 2, y + l.h, 0.52, 64, 110); return; }
         ctx.fillStyle = '#3a2a1a';
         ctx.fillRect(x - 10, y + 12, l.w + 20, l.h - 12);
         for (let i = 0; i < 6; i++) {
@@ -697,7 +900,11 @@
             if (cx > sg.x && cx < sg.x + sg.w && cy > sg.y && cy < sg.y + sg.h) { revelados.add(i); return; }
             const tiles = TILES_AREA[jogo.sala.area] || TILES_AREA.telhados;
             for (let y = sg.y; y < sg.y + sg.h; y += TL) {
-                for (let x = sg.x; x < sg.x + sg.w; x += TL) ctx.drawImage(tiles.meio, Math.round(x - visual.cam.x), Math.round(y - visual.cam.y));
+                const meio = arte(`meio_${jogo.sala.area}`);
+                for (let x = sg.x; x < sg.x + sg.w; x += TL) {
+                    if (meio) ctx.drawImage(meio, Math.round(x - visual.cam.x), Math.round(y - visual.cam.y), TL, TL);
+                    else ctx.drawImage(tiles.meio, Math.round(x - visual.cam.x), Math.round(y - visual.cam.y));
+                }
             }
         });
     }
@@ -706,14 +913,30 @@
     function poseDoJogador() {
         const j = jogo.jogador;
         if (jogo.fase === 'morto') return ['morrer', 0];
-        if (j.estado === 'agarrado' || j.estado === 'subindo') return ['agarrado', 0];
-        if (j.golpe && j.golpe.t < 0.14) return ['golpe', j.golpe.dir === 'frente' ? 1 : 0];
-        if (j.estado === 'dash') return ['correr', 2];
+        if (jogo.fase === 'sentado') return ['sentado', 0];
+        if (j.estado === 'subindo') return ['subir', j.subir && j.subir.t > CONFIG.tempoSubir * 0.5 ? 1 : 0];
+        if (j.estado === 'agarrado') return ['agarrado', 0];
+        if (j.golpe && j.golpe.t < 0.14) {
+            const g = j.golpe;
+            if (g.dir === 'cima') return ['golpeCima', 0];
+            if (g.dir === 'baixo') return [g.noChao ? 'golpeRasteira' : 'golpeBaixo', 0];
+            if (g.dir === 'cimaDiag') return ['golpeDiagCima', 0];
+            if (g.dir === 'baixoDiag') return ['golpeDiagBaixo', 0];
+            return ['golpeFrente', g.t < 0.05 ? 0 : 1];
+        }
+        if (j.recargaMagia > CONFIG.rajadaRecarga - 0.2) return ['atirar', j.recargaMagia > CONFIG.rajadaRecarga - 0.08 ? 1 : 0];
+        if (j.estado === 'dash') return ['dash', j.dashT > CONFIG.dashTempo * 0.5 ? 0 : 1];
+        if (j.estado === 'degustando') return ['degustar', visual.tempo * 5];
+        if (j.invencivel > CONFIG.invencivel - 0.25 && jogo.fase === 'jogando') return ['dano', 0];
         if (j.grudado || (!j.noChao && j.parede !== 0 && j.vy > 0 && jogo.progresso.habilidades.has('parede'))) return ['parede', 0];
+        if (!j.noChao && visual.tempo - visual.puloDuploEm < 0.3) return ['puloDuplo', 0];
         if (!j.noChao) return [j.vy < 0 ? 'pular' : 'cair', 0];
-        if (Math.abs(j.vx) > 20) return ['correr', (j.x / 11) | 0];
-        return ['parado', 0];
+        if (Math.abs(j.vx) > 20) return ['correr', (j.x / 9) | 0];
+        return ['parado', visual.tempo * 3];
     }
+
+    // Tamanho do Degustador na tela: o quadro de 128 px vira 44 px (corpo de pé ≈ 40 px).
+    const TAM_JOGADOR = 44;
 
     function desenharJogador() {
         const j = jogo.jogador;
@@ -724,11 +947,11 @@
         const [pose, i] = poseDoJogador();
         let olhando = j.olhando;
         if (pose === 'parede') olhando = -(j.grudado || j.parede);
-        if (pose === 'agarrado') olhando = j.lado || j.olhando;
-        if (pose === 'golpe') olhando = j.golpe.lado;
+        if (pose === 'agarrado' || pose === 'subir') olhando = j.lado || j.olhando;
+        if (pose.startsWith('golpe')) olhando = j.golpe.lado;
         const cx = j.x + JL / 2 - cam.x;
         let base = j.y + JA - cam.y;
-        if (jogo.fase === 'sentado') base += 4;
+        if (pose === 'agarrado') base += 10;
         const img = quadroDe(pose, i);
         if (j.estado === 'dash') {
             // Rastro da capa.
@@ -740,13 +963,8 @@
             ctx.globalAlpha = 1;
         }
         if (pronta(img)) {
-            const tam = 44;
-            const k = tam / 128;
-            ctx.save();
-            ctx.translate(Math.round(cx), Math.round(base + (pose === 'agarrado' ? 6 : 0)));
-            if (olhando < 0) ctx.scale(-1, 1);
-            ctx.drawImage(img, -76 * k, -123 * k, tam, tam);
-            ctx.restore();
+            const k = TAM_JOGADOR / 128;
+            pintar(img, cx, base, k, 64, 125, olhando);
         } else {
             ctx.fillStyle = '#e040fb';
             ctx.fillRect(cx - 7, base - 26, 14, 26);
@@ -780,6 +998,17 @@
         const gy = g.gy ?? 0;
         let ang = Math.atan2(gy, gx);
         if (g.dir === 'baixo' && g.noChao) ang = g.lado > 0 ? 0.35 : Math.PI - 0.35;   // rasteira
+        const arco = arte('golpeArco', Math.min(2, k * 3));
+        if (arco) {
+            ctx.restore();
+            // A meia-lua abre para a direita; gira para a direção do golpe.
+            const d = 14;
+            const tam = 50;
+            ctx.globalAlpha = 1 - k * k * 0.7;
+            pintar(arco, cx + Math.cos(ang) * d, cy + Math.sin(ang) * d, tam / 96, 48, 48, 1, ang);
+            ctx.globalAlpha = 1;
+            return;
+        }
         ctx.rotate(ang);
         ctx.globalAlpha = 1 - k * k;
         const raio = 22 + k * 10;
@@ -799,6 +1028,18 @@
     // ------------------------------------------------------------- inimigos
     function desenharInimigos() {
         const cam = visual.cam;
+        // Chefes derrotados: ficam no chão uns segundos e somem.
+        visual.cadaveres = visual.cadaveres.filter((c) => c.sala === jogo.sala.idx && visual.tempo - c.inicio < 6);
+        for (const c of visual.cadaveres) {
+            const img = arte(c.nome);
+            if (!img) continue;
+            const t = visual.tempo - c.inicio;
+            ctx.save();
+            ctx.globalAlpha = Math.min(1, (6 - t) / 1.5);
+            if (c.voa) pintar(img, c.x - cam.x, c.base - cam.y - 20 + Math.min(1, t) * 20, 116 / 256, 128, 205, c.lado);
+            else pintar(img, c.x - cam.x, c.base - cam.y + 2, 76 / 192, 96, 187, c.lado);
+            ctx.restore();
+        }
         for (const e of jogo.inimigos) {
             if (!e.vivo) continue;
             const cx = e.x + e.w / 2 - cam.x;
@@ -819,15 +1060,17 @@
         let fonte = img;
         if (flash) fonte = tingido(img, '#ffffff');
         else if (tinta) fonte = tingido(img, tinta);
-        const k = tam / 128;
+        const q = img.naturalWidth;
+        const k = tam / q;
         ctx.save();
         ctx.translate(Math.round(cx), Math.round(base));
         if (virar) ctx.scale(-1, 1);
+        const h = img.naturalHeight * k;
         if (tinta && !flash) {
-            ctx.drawImage(img, -64 * k, -ancoraY * k, tam, tam);
+            ctx.drawImage(img, -tam / 2, -ancoraY * k, tam, h);
             ctx.globalAlpha *= 0.45;
         }
-        ctx.drawImage(fonte, -64 * k, -ancoraY * k, tam, tam);
+        ctx.drawImage(fonte, -tam / 2, -ancoraY * k, tam, h);
         ctx.restore();
         return true;
     }
@@ -836,7 +1079,7 @@
 
     const DESENHOS = {
         capanga(e, cx, cy, flash) {
-            if (!spriteInimigo('capanga', visual.tempo * 8 + e.fase * 4, cx, e.y + e.h - visual.cam.y, 32, 125, e.dir < 0, flash)) {
+            if (!spriteInimigo('capanga', visual.tempo * 8 + e.fase * 4, cx, e.y + e.h - visual.cam.y, 34, 125, e.dir < 0, flash)) {
                 contorno(flash, '#e0245e');
                 ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
             }
@@ -875,7 +1118,8 @@
                 ctx.fillStyle = 'rgba(90, 255, 120, 0.35)';
                 ctx.beginPath(); ctx.arc(cx, cy, 16, 0, Math.PI * 2); ctx.fill();
             }
-            if (!spriteInimigo('drone', visual.tempo * 20, cx, cy + 8, 30, 80, e.dir < 0, flash)) {
+            const mirando = e.estado === 'mirar';
+            if (!spriteInimigo(mirando ? 'droneMirar' : 'drone', visual.tempo * 20, cx, cy, 34, 64, e.dir < 0, flash)) {
                 contorno(flash, '#2ecc71');
                 ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
             }
@@ -915,6 +1159,14 @@
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(Math.atan2(e.ny ?? -1, e.nx ?? 0) + Math.PI / 2);
+            const img = quadroDe('bug', visual.tempo * 8);
+            if (pronta(img)) {
+                // Pés do besouro (linha ~40 do quadro de 48) encostados na superfície.
+                const k = 22 / 48;
+                ctx.drawImage(flash ? tingido(img, '#ffffff') : img, -24 * k, e.h / 2 - 40 * k, 48 * k, 48 * k);
+                ctx.restore();
+                return;
+            }
             const perna = Math.sin(visual.tempo * 20) * 2;
             ctx.strokeStyle = COR.tinta;
             ctx.lineWidth = 1.5;
@@ -973,7 +1225,7 @@
                 ctx.save();
                 ctx.translate(cx, e.y + e.h - visual.cam.y);
                 if (e.dir < 0) ctx.scale(-1, 1);
-                ctx.drawImage(tingido(img, flash ? '#ffffff' : '#12051f'), -76 * k, -123 * k, 44, 44);
+                ctx.drawImage(tingido(img, flash ? '#ffffff' : '#12051f'), -64 * k, -125 * k, 44, 44);
                 ctx.restore();
             }
             ctx.fillStyle = COR.roxo;
@@ -981,23 +1233,22 @@
         },
         capangaMor(e, cx, cy, flash) {
             const base = e.y + e.h - visual.cam.y;
-            const olhos = e.estado === 'atordoado';
-            if (!spriteInimigo('capanga', e.estado === 'corrida' ? visual.tempo * 12 : 0, cx, base + 2, 84, 125, e.dir < 0, flash, 'rgba(120, 0, 30, 1)')) {
+            const est = e.estado;
+            const quadro = est === 'corrida' ? ['cmCorrida', visual.tempo * 12]
+                : est === 'atordoado' ? ['cmAtordoado', visual.tempo * 4]
+                : est === 'marretaPrep' ? ['cmMarreta', 0]
+                : est === 'marreta' || est === 'recuperar' ? ['cmMarreta', 1]
+                : est === 'saltoPrep' || est === 'corridaPrep' ? ['cmPreparar', 0]
+                : est === 'salto' || est === 'inicio' ? ['cmSalto', 0]
+                : ['cmOcioso', visual.tempo * 3];
+            const fase2 = e.vida <= e.vidaMax / 2 && !flash ? 'rgba(200, 0, 40, 1)' : null;
+            if (spriteInimigo(quadro[0], quadro[1], cx, base + 2, 76, 187, e.dir < 0, flash, fase2 && Math.sin(visual.tempo * 8) > 0.6 ? fase2 : null)) return;
+            // Sem arte: o capanga normal tingido e a marreta desenhada.
+            if (!spriteInimigo('capanga', est === 'corrida' ? visual.tempo * 12 : 0, cx, base + 2, 84, 125, e.dir < 0, flash, 'rgba(120, 0, 30, 1)')) {
                 contorno(flash, '#8a1030');
                 ctx.fillRect(e.x - visual.cam.x, e.y - visual.cam.y, e.w, e.h);
             }
-            // Marreta.
-            const ang = e.estado === 'marretaPrep' ? -2.4 : e.estado === 'marreta' ? 0.9 : e.estado === 'saltoPrep' ? -1.8 : -0.4;
-            ctx.save();
-            ctx.translate(cx + e.dir * 12, base - 36);
-            ctx.scale(e.dir, 1);
-            ctx.rotate(ang);
-            ctx.fillStyle = '#5a3d22';
-            ctx.fillRect(0, -3, 34, 6);
-            contorno(flash, '#6d7482');
-            ctx.beginPath(); ctx.roundRect(28, -11, 16, 22, 3); ctx.fill(); ctx.stroke();
-            ctx.restore();
-            if (olhos) {
+            if (est === 'atordoado') {
                 for (let k = 0; k < 3; k++) {
                     const a = visual.tempo * 5 + (k * Math.PI * 2) / 3;
                     texto('★', cx + Math.cos(a) * 16, e.y - visual.cam.y - 6 + Math.sin(a) * 4, 10, COR.amarelo, 2);
@@ -1005,6 +1256,17 @@
             }
         },
         opressor(e, cx, cy, flash) {
+            if (e.aviso) {
+                // Mira do punho: marca no chão e coluna de onde ele desce.
+                const a = e.aviso;
+                ctx.fillStyle = `rgba(255, 59, 59, ${0.3 + a.t * 0.5})`;
+                ctx.fillRect(a.x - visual.cam.x, a.y - visual.cam.y, a.w, a.h);
+                ctx.fillStyle = `rgba(160, 70, 255, ${0.08 + a.t * 0.12})`;
+                ctx.fillRect(a.x - visual.cam.x, jogo.sala.px.y - visual.cam.y, a.w, a.y - jogo.sala.px.y);
+            }
+            const nome = { joinha: 'opJoinha', grito: 'opGrito', invocar: 'opGrito', glitch: 'opGlitch' }[e.estado] || 'opFlutuar';
+            const fase2 = e.vida <= e.vidaMax / 2 && !flash && Math.sin(visual.tempo * 10) > 0.7 ? 'rgba(90, 255, 120, 1)' : null;
+            if (spriteInimigo(nome, visual.tempo * 6, cx, cy, 116, 128, e.dir < 0, flash, fase2)) return;
             // O Stand "Opressor do Chat": sombra de código com olhos roxos e joinha.
             const pulso = 0.5 + 0.5 * Math.sin(visual.tempo * 4);
             const aura = ctx.createRadialGradient(cx, cy, 10, cx, cy, 70);
@@ -1054,6 +1316,18 @@
                 }
                 continue;
             }
+            const giro = Math.atan2(p.vy || 0, p.vx || 1);
+            const img = arte({ bola: 'bolaVerde', magia: 'magia', glitch: 'glitch', pedra: 'pedra', onda: 'onda', punho: 'punho' }[p.tipo], visual.tempo * 10);
+            if (img && p.tipo === 'bola') { pintar(img, x, y, (p.r * 2 + 10) / 24, 16, 12, 1, giro); continue; }
+            if (img && p.tipo === 'magia') { pintar(img, x, y, (p.r * 2 + 12) / 32, 16, 16); continue; }
+            if (img && p.tipo === 'glitch') { pintar(img, x, y, (p.r * 2 + 6) / 16, 8, 8); continue; }
+            if (img && p.tipo === 'pedra') { pintar(img, x, y, (p.r * 2 + 8) / 32, 16, 16, 1, visual.tempo * 6); continue; }
+            if (img && p.tipo === 'onda') { pintar(img, x + p.w / 2, y + p.h, (p.h + 12) / 32, 24, 40, Math.sign(p.vx) || 1); continue; }
+            if (img && p.tipo === 'punho') {
+                // O braço de sombra desce do teto; o punho de joinha fica embaixo.
+                ctx.drawImage(img, x - 6, y, p.w + 12, p.h);
+                continue;
+            }
             if (p.tipo === 'bola') {
                 ctx.fillStyle = 'rgba(120, 255, 90, 0.35)';
                 ctx.beginPath(); ctx.arc(x, y, p.r + 3, 0, Math.PI * 2); ctx.fill();
@@ -1086,10 +1360,14 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             } else if (p.tipo === 'palavra') {
-                ctx.fillStyle = '#1b1b1b';
-                ctx.strokeStyle = '#ff3b3b';
-                ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.roundRect(x, y, p.w, p.h, 4); ctx.fill(); ctx.stroke();
+                const caixa = arte('palavraCaixa');
+                if (caixa) ctx.drawImage(caixa, 34, 6, 61, 20, x - 2, y - 1, p.w + 4, p.h + 2);
+                else {
+                    ctx.fillStyle = '#1b1b1b';
+                    ctx.strokeStyle = '#ff3b3b';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.roundRect(x, y, p.w, p.h, 4); ctx.fill(); ctx.stroke();
+                }
                 ctx.font = "bold 13px Bangers, 'Arial Black', sans-serif";
                 ctx.fillStyle = '#ff5b5b';
                 ctx.textAlign = 'center';
@@ -1106,26 +1384,35 @@
             }
         }
         // Rajada da MP5K.
-        const img = ARTE.projetil[0];
         for (const b of jogo.tiros) {
             const x = b.x - cam.x;
             const y = b.y + b.h / 2 - cam.y;
+            const img = arte('rajada', visual.tempo * 16);
+            if (img) { pintar(img, x + b.w / 2, y, 46 / 96, 48, 16, Math.sign(b.vx) || 1); continue; }
             ctx.fillStyle = 'rgba(255, 140, 40, 0.35)';
             ctx.beginPath(); ctx.ellipse(x + b.w / 2, y, b.w / 2 + 6, 9, 0, 0, Math.PI * 2); ctx.fill();
             for (let k = 0; k < 3; k++) {
-                const by = y - 5 + k * 5;
-                if (pronta(img)) {
-                    ctx.save();
-                    ctx.translate(x + b.w / 2 + (k - 1) * 6, by);
-                    if (b.vx < 0) ctx.scale(-1, 1);
-                    ctx.drawImage(img, 9, 50, 93, 19, -12, -2.5, 24, 5);
-                    ctx.restore();
-                } else {
-                    ctx.fillStyle = '#ffb347';
-                    ctx.fillRect(x + 4 + k * 6, by - 2, 12, 4);
-                }
+                ctx.fillStyle = '#ffb347';
+                ctx.fillRect(x + 4 + k * 6, y - 7 + k * 5, 12, 4);
             }
         }
+    }
+
+    /**
+     * O Inominável com arte: pose ('parado', 'fugir', 'gritar', 'derrotado') e o lado
+     * para onde ele deve olhar. Devolve false se a arte ainda não carregou.
+     */
+    function inominavelArte(x, base, pose, lado, alpha = 1) {
+        // [arte, fps, para que lado a arte olha]
+        const nomes = { parado: ['inoParado', 4, -1], fugir: ['inoFugir', 12, 1], gritar: ['inoGritar', 8, -1], derrotado: ['inoDerrotado', 1, -1] };
+        const [nome, fps, olha] = nomes[pose];
+        const img = arte(nome, visual.tempo * fps);
+        if (!img) return false;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        pintar(img, x, base, 0.43, 80, 155, lado * olha);
+        ctx.restore();
+        return true;
     }
 
     /** O Inominável (desenhado por código a partir da ficha). */
@@ -1175,9 +1462,11 @@
             if (c.estado === 'sumiu') continue;
             const x = c.x + c.w / 2 - cam.x;
             const base = c.y + c.h - cam.y;
+            const ladoJogador = j.x + JL / 2 - cam.x < x ? -1 : 1;
             if (c.final) {
                 const derrotado = jogo.progresso.final || jogo.progresso.chefes.has(jogo.sala.chefeDef?.id);
-                inominavel(x, base, 1, derrotado);
+                const pose = derrotado ? 'derrotado' : jogo.arena != null ? 'gritar' : 'parado';
+                if (!inominavelArte(x, base, pose, ladoJogador)) inominavel(x, base, 1, derrotado);
                 if (!derrotado && jogo.arena != null) {
                     const i = Math.floor(visual.tempo / 3) % Math.max(1, c.falas.length);
                     if (c.falas[i]) balao(c.falas[i], x, base - 60);
@@ -1185,7 +1474,8 @@
                 continue;
             }
             const alpha = c.estado === 'fugindo' ? Math.max(0, 1 - c.t) : 1;
-            inominavel(x, base, alpha);
+            const fugindo = c.estado === 'fugindo';
+            if (!inominavelArte(x, base, fugindo ? 'fugir' : 'parado', fugindo ? 1 : ladoJogador, alpha)) inominavel(x, base, alpha);
             const perto = Math.abs(j.x - c.x) < 280 && Math.abs(j.y - c.y) < 140;
             if (perto && c.estado === 'parado' && c.falas[0]) balao(c.falas[0], x, base - 60);
             if (c.estado === 'fugindo' && c.t < 0.6) balao('Fui!', x, base - 60);
@@ -1222,6 +1512,12 @@
         }
     }
 
+    /** Efeito com arte animada (acerto, poeira, explosão) no ponto do mundo (x, y). */
+    function efeito(nome, x, y, tam, duracao = 0.25, lado = 1, ang = 0) {
+        if (!ARTE[nome] || calmo && nome === 'poeira') return;
+        visual.fx.push({ nome, x, y, tam, duracao, lado, ang, inicio: visual.tempo });
+    }
+
     function textoFlutuante(conteudo, x, y, cor = COR.amarelo, tamanho = 16) {
         visual.textos.push({ conteudo, x, y, cor, tamanho, inicio: visual.tempo });
     }
@@ -1232,16 +1528,22 @@
     function tratarEventos() {
         for (const e of jogo.eventos) {
             switch (e.tipo) {
-                case 'pulo': case 'subiu': particulas(e.x, e.y, 4, 'rgba(230, 214, 255, 0.8)', 50); break;
+                case 'pulo': case 'subiu': particulas(e.x, e.y, 4, 'rgba(230, 214, 255, 0.8)', 50); efeito('poeira', e.x, e.y - 5, 22); break;
                 case 'pulo2':
+                    visual.puloDuploEm = visual.tempo;
                     textoFlutuante('( )', e.x, e.y, COR.lilas, 14);
                     particulas(e.x, e.y, 8, COR.lilas, 70);
                     break;
                 case 'parede': particulas(e.x, e.y - 12, 5, 'rgba(230, 214, 255, 0.8)', 60); break;
                 case 'dash': particulas(e.x, e.y - 12, 6, 'rgba(40, 40, 60, 0.8)', 60); break;
-                case 'mola': particulas(e.x, e.y, 8, COR.amarelo, 90); textoFlutuante('BOING!', e.x, e.y - 20); break;
+                case 'mola':
+                    visual.molas.set(`${Math.floor(e.x / TL)},${Math.floor((e.y + 2) / TL)}`, visual.tempo);
+                    particulas(e.x, e.y, 8, COR.amarelo, 90);
+                    textoFlutuante('BOING!', e.x, e.y - 20);
+                    break;
                 case 'pogo': particulas(e.x, e.y + 6, 6, '#fff', 70); break;
                 case 'acerto':
+                    efeito('acerto', e.x, e.y, e.chefe ? 40 : 30, 0.18);
                     particulas(e.x, e.y, 6, '#fff', 110);
                     parar(e.chefe ? 0.03 : 0.045);
                     break;
@@ -1251,6 +1553,7 @@
                     parar(0.05);
                     break;
                 case 'derrubou':
+                    efeito('respingo', e.x, e.y, 40, 0.35);
                     particulas(e.x, e.y, 14, '#ff3b3b', 130);
                     if (e.virgulas) textoFlutuante(`+${e.virgulas} ,`, e.x, e.y - 12, COR.amarelo, 14);
                     break;
@@ -1270,13 +1573,14 @@
                 case 'perigo': textoFlutuante('AI!', e.x, e.y - 20, '#ff4f4f'); break;
                 case 'morte':
                     visual.morteEm = visual.tempo;
+                    efeito('respingo', e.x, e.y - 10, 64, 0.5);
                     particulas(e.x, e.y, 30, '#b04dff', 200);
                     particulas(e.x, e.y, 12, COR.laranja, 160);
                     tremer(0.35);
                     salvar();
                     break;
                 case 'curou': textoFlutuante('+1', e.x, e.y - 20, '#ff8ca0'); particulas(e.x, e.y, 8, '#ff8ca0', 60); break;
-                case 'impacto': tremer(e.forte ? 0.25 : 0.12); particulas(e.x, e.y, 10, '#d8c4a0', 120); break;
+                case 'impacto': tremer(e.forte ? 0.25 : 0.12); particulas(e.x, e.y, 10, '#d8c4a0', 120); efeito('poeira', e.x, e.y - 8, e.forte ? 48 : 34, 0.3); break;
                 case 'tiroInimigo': case 'magia': break;
                 case 'rajada': particulas(e.x, e.y, 8, COR.laranja, 90); tremer(0.06); break;
                 case 'faisca': particulas(e.x, e.y, 5, COR.amarelo, 80); break;
@@ -1295,7 +1599,12 @@
                     visual.chefeNome = core.Inimigos.TIPOS[e.chefe].nome;
                     tremer(0.3);
                     break;
-                case 'chefeDerrotado':
+                case 'chefeDerrotado': {
+                    // O chefe fica caído no chão da arena (arte de derrotado), sumindo devagar.
+                    const nome = e.chefe === 'capangaMor' ? 'cmDerrotado' : e.chefe === 'opressor' ? 'opDerrotado' : null;
+                    const ch = jogo.inimigos.find((i) => i.tipo === e.chefe);
+                    if (nome && ch) visual.cadaveres.push({ nome, x: ch.x + ch.w / 2, base: ch.y + ch.h, voa: e.chefe === 'opressor', lado: ch.dir, inicio: visual.tempo, sala: jogo.sala.idx });
+                    efeito('respingo', e.x, e.y, 90, 0.6);
                     parar(0.35);
                     tremer(0.6);
                     visual.flashBranco = 0.5;
@@ -1303,6 +1612,7 @@
                     textoFlutuante('DERROTADO!', e.x, e.y - 30, COR.amarelo, 26);
                     salvar();
                     break;
+                }
                 case 'sombraDerrotada': textoFlutuante(`+${e.virgulas} , de volta!`, e.x, e.y - 12); particulas(e.x, e.y, 20, COR.roxo, 140); salvar(); break;
                 case 'comprou': salvar(); break;
                 case 'invocou': particulas(e.x, e.y, 12, COR.roxo, 100); break;
@@ -1315,6 +1625,14 @@
 
     function desenharEfeitos(dt) {
         const cam = visual.cam;
+        visual.fx = visual.fx.filter((f) => visual.tempo - f.inicio < f.duracao);
+        for (const f of visual.fx) {
+            const lista = ARTE[f.nome];
+            const k = (visual.tempo - f.inicio) / f.duracao;
+            const img = arte(f.nome, Math.min(lista.length - 1, k * lista.length));
+            if (!img) continue;
+            pintar(img, f.x - cam.x, f.y - cam.y, f.tam / img.naturalWidth, img.naturalWidth / 2, img.naturalHeight / 2, f.lado, f.ang);
+        }
         for (const p of visual.particulas) {
             p.vida -= dt;
             p.vy += 500 * dt;
@@ -1386,6 +1704,27 @@
         // Vaso de Pontuação (a "alma").
         const vx = 32;
         const vy = 34;
+        const vaso = arte('vaso');
+        if (vaso) {
+            // Moldura de 128 px (miolo preto: círculo de raio 40 em 64,65) desenhada em 56 px.
+            const k = 56 / 128;
+            ctx.drawImage(vaso, vx - 64 * k, vy - 64 * k, 128 * k, 128 * k);
+            const mx = vx + 0.5 * k;
+            const my = vy + 1 * k;
+            const r = 38 * k;
+            ctx.save();
+            ctx.beginPath(); ctx.arc(mx, my, r, 0, Math.PI * 2); ctx.clip();
+            const nivelTinta = j.pontuacao / CONFIG.pontuacaoMax;
+            const topo = my + r - nivelTinta * r * 2;
+            ctx.fillStyle = j.pontuacao >= CONFIG.custoMagia ? '#fff5d1' : '#b9a6d9';
+            ctx.beginPath();
+            ctx.moveTo(mx - r - 2, my + r + 2);
+            for (let x = -r - 2; x <= r + 2; x += 3) ctx.lineTo(mx + x, topo + Math.sin(visual.tempo * 4 + x * 0.3) * 1.5);
+            ctx.lineTo(mx + r + 2, my + r + 2);
+            ctx.fill();
+            ctx.restore();
+            virgula(mx, my, 1.1, j.pontuacao >= CONFIG.custoMagia ? COR.laranja : 'rgba(255, 255, 255, 0.3)');
+        } else {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
         ctx.beginPath(); ctx.arc(vx, vy, 22, 0, Math.PI * 2); ctx.fill();
         ctx.save();
@@ -1406,8 +1745,13 @@
         ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.arc(vx, vy, 23, 0, Math.PI * 2); ctx.stroke();
         virgula(vx, vy + 1, 1.3, j.pontuacao >= CONFIG.custoMagia ? COR.laranja : 'rgba(255, 255, 255, 0.35)');
+        }
         // Cogumelos (vida).
-        for (let i = 0; i < p.vidaMax; i++) cogumelo(66 + i * 20, 24, i < j.vida, 1);
+        for (let i = 0; i < p.vidaMax; i++) {
+            const img = arte(i < j.vida ? 'cogCheio' : 'cogVazio');
+            if (img) ctx.drawImage(img, 66 + i * 20 - 9, 24 - 11, 19, 19);
+            else cogumelo(66 + i * 20, 24, i < j.vida, 1);
+        }
         // Fragmentos.
         if (p.fragmentos > 0) {
             const fx = 66 + p.vidaMax * 20 + 2;
@@ -1500,15 +1844,23 @@
             ctx.strokeStyle = s === jogo.sala ? COR.amarelo : 'rgba(230, 214, 255, 0.5)';
             ctx.lineWidth = s === jogo.sala ? 2 : 1;
             ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
-            if (s.chefeDef && !p.chefes.has(s.chefeDef.id)) texto('☠', x + w / 2, y + h / 2, 12, '#ff5b5b', 3);
+            if (s.chefeDef && !p.chefes.has(s.chefeDef.id)) {
+                const img = arte('mapaChefe');
+                if (img) ctx.drawImage(img, x + w / 2 - 8, y + h / 2 - 8, 16, 16);
+                else texto('☠', x + w / 2, y + h / 2, 12, '#ff5b5b', 3);
+            }
         }
         for (const b of nivel.bancos) {
             if (!p.visitadas.has(nivel.salas[b.sala].id)) continue;
-            texto('b', ox + (b.x / TL) * escala, oy + (b.y / TL) * escala - 3, 12, COR.verde, 3);
+            const img = arte('mapaBanco');
+            if (img) ctx.drawImage(img, ox + (b.x / TL) * escala - 6, oy + (b.y / TL) * escala - 10, 12, 12);
+            else texto('b', ox + (b.x / TL) * escala, oy + (b.y / TL) * escala - 3, 12, COR.verde, 3);
         }
         if (p.sombra) {
             const s = nivel.salaPorId.get(p.sombra.sala);
-            if (s) texto('✦', ox + (p.sombra.x / TL) * escala, oy + (p.sombra.y / TL) * escala, 12, COR.roxo, 3);
+            const img = arte('mapaSombra');
+            if (s && img) ctx.drawImage(img, ox + (p.sombra.x / TL) * escala - 7, oy + (p.sombra.y / TL) * escala - 7, 14, 14);
+            else if (s) texto('✦', ox + (p.sombra.x / TL) * escala, oy + (p.sombra.y / TL) * escala, 12, COR.roxo, 3);
         }
         const j = jogo.jogador;
         if (Math.floor(visual.tempo * 3) % 2) {
@@ -1527,15 +1879,25 @@
         if (!hab) return;
         ctx.fillStyle = 'rgba(7, 4, 26, 0.86)';
         ctx.fillRect(0, 0, W, H);
-        texto('NOVA HABILIDADE', W / 2, 80, 20, COR.lilas, 4);
-        texto(hab.nome.toUpperCase(), W / 2, 125, 44, COR.laranja, 7);
+        const icone = arte({ rajada: 'habRajada', dash: 'habDash', parede: 'habParede', pulo2: 'habPulo2' }[jogo.pegou]);
+        if (icone) {
+            const brilho = ctx.createRadialGradient(W / 2, 62, 4, W / 2, 62, 60);
+            brilho.addColorStop(0, 'rgba(255, 210, 63, 0.5)');
+            brilho.addColorStop(1, 'rgba(255, 210, 63, 0)');
+            ctx.fillStyle = brilho;
+            ctx.fillRect(W / 2 - 60, 2, 120, 120);
+            ctx.drawImage(icone, W / 2 - 36, 26, 72, 72);
+        }
+        const dy = icone ? 34 : 0;
+        texto('NOVA HABILIDADE', W / 2, (icone ? 16 : 80), icone ? 14 : 20, COR.lilas, 4);
+        texto(hab.nome.toUpperCase(), W / 2, 100 + dy, icone ? 36 : 44, COR.laranja, 7);
         ctx.fillStyle = '#fff';
-        ctx.fillRect(W / 2 - 150, 156, 300, 2);
-        paragrafo(hab.texto, W / 2, 186, 440, 16, '#fff');
+        ctx.fillRect(W / 2 - 150, 126 + dy, 300, 2);
+        paragrafo(hab.texto, W / 2, 152 + dy, 440, 16, '#fff');
         const tecla = textoTeclas(hab.tecla);
-        texto(`Botão: ${tecla}`, W / 2, 238, 20, COR.amarelo, 4);
+        texto(`Botão: ${tecla}`, W / 2, 206 + dy, 20, COR.amarelo, 4);
         areas = [];
-        botaoTela('CONTINUAR', W / 2 - 80, 272, 160, 40, COR.laranja, 'continuar');
+        botaoTela('CONTINUAR', W / 2 - 80, 276 + (icone ? 20 : 0) - (icone ? 20 : 0), 160, 40, COR.laranja, 'continuar');
     }
 
     function desenharLojaTela() {
@@ -1580,9 +1942,15 @@
 
     function desenharTitulo() {
         desenharFundoTitulo();
-        texto('CAÇADA AO', W / 2, 48, 30, '#fff', 6);
-        texto('INOMINÁVEL', W / 2, 88, 54, COR.laranja, 8);
-        texto('um metroidvania do Degustador da Noite', W / 2, 122, 15, COR.lilas, 4);
+        const logo = arte('logo');
+        if (logo) {
+            // Logo 1024×256 (conteúdo de 128 a 894 na horizontal).
+            ctx.drawImage(logo, 128, 0, 766, 256, W / 2 - 165, 6, 330, 110);
+        } else {
+            texto('CAÇADA AO', W / 2, 48, 30, '#fff', 6);
+            texto('INOMINÁVEL', W / 2, 88, 54, COR.laranja, 8);
+        }
+        texto('um metroidvania do Degustador da Noite', W / 2, 128, 15, COR.lilas, 4);
         const save = lerSave();
         const opcoes = opcoesTitulo();
         areas = [];
@@ -1606,12 +1974,21 @@
         ceu.addColorStop(1, '#3a1a6b');
         ctx.fillStyle = ceu;
         ctx.fillRect(0, 0, W, H);
-        if (pronta(ARTE.ceu[0])) ctx.drawImage(ARTE.ceu[0], 0, 0, W, H);
+        const fundo = arte('tituloFundo');
+        if (fundo) {
+            ctx.drawImage(fundo, 0, 0, W, H);
+            // Véu no meio, onde ficam o logo e os botões.
+            const veu = ctx.createLinearGradient(0, 0, 0, H);
+            veu.addColorStop(0, 'rgba(7, 4, 26, 0.35)');
+            veu.addColorStop(0.55, 'rgba(7, 4, 26, 0.45)');
+            veu.addColorStop(1, 'rgba(7, 4, 26, 0.2)');
+            ctx.fillStyle = veu;
+            ctx.fillRect(0, 0, W, H);
+            return;
+        }
         ctx.fillStyle = 'rgba(7, 4, 26, 0.55)';
         ctx.fillRect(0, 0, W, H);
         inominavel(W - 90, H - 60, 0.9);
-        const img = quadroDe('parado', 0);
-        if (pronta(img)) ctx.drawImage(img, 30, H - 150, 110, 110);
     }
 
     function desenharMorte() {

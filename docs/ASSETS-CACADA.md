@@ -7,6 +7,22 @@ precisa ser desenhado: personagens, animações quadro a quadro, inimigos, chefe
 objetos, tiles, fundos, interface e telas. Cada item diz **resolução, quantos quadros, a
 velocidade da animação, onde aparece no jogo e o que desenhar**.
 
+## Status (setembro de 2026)
+A primeira leva de artes chegou e **já está no jogo**. Ela veio no formato da versão
+anterior deste guia: Degustador em quadros de 128 px, tiles de 64 px, fundos de 1280×720, direto
+em `assets/<pasta>/` (sem a subpasta `cacada/`). O código se adaptou a isso. **As próximas
+artes podem seguir as mesmas pastas e tamanhos da primeira leva**; os tamanhos 4× abaixo
+continuam sendo o ideal, mas não são obrigatórios.
+
+**Ainda faltam** (hoje desenhados por código):
+- Inimigos: **Ping**, **Emoji Raivoso**, **Troll**, **Spam Saltitante**, **Moderador**,
+  **Feiticeira** (a atual é a antiga da Ronda) e a **Sombra do Degustador** (hoje é o Degustador
+  pintado de roxo).
+- ItaloLOL da tela da loja, balão de fala, ícones da loja, caixa das placas.
+- Quadros extras que deixariam as animações mais suaves: `virar`, `frear`, `pousar`, `topo`,
+  mais quadros de `parado`/`golpe`/`dash`, `sentar`, `interagir`, `pegou-item`.
+- Kit completo de tiles por área (cantos, lados, teto e variações) e fundos em camadas.
+
 Leia antes de desenhar:
 - A **direção de arte** (seção 1). Ela é o que garante que todos os assets pareçam do mesmo jogo.
 - As **regras técnicas** (seção 2).

@@ -1,6 +1,6 @@
 # Caçada ao Inominável — metroidvania do Degustador da Noite
 
-Status: **v2 jogável com artes temporárias** (25/09/2026). Inspirado em Hollow Knight e
+Status: **v2 jogável com a primeira leva de artes definitivas** (Degustador, Inominável, chefes, Capanga, Drone, Bug, cenários, objetos e HUD; o que falta está em `docs/ASSETS-CACADA.md`). Inspirado em Hollow Knight e
 Silksong (pesquisa em `docs/PESQUISA-HOLLOW-KNIGHT.md`). Abre ao clicar no título da página do
 Degustador. A v1 (6 fases soltas, estilo Super Meat Boy) virou o mundo de salas abaixo.
 
@@ -89,6 +89,6 @@ O save fica no navegador (`localStorage`, chave `cacada-save-v2`).
 
 ## Próximos passos
 1. Henrique jogar e ajustar a sensação (valores em `CONFIG`, no topo de `js/cacada-core.js`).
-2. Artes definitivas (`docs/ASSETS-CACADA.md`).
+2. Artes que faltam (lista no topo de `docs/ASSETS-CACADA.md`).
 3. Sons e música.
 4. Mais áreas, amuletos (os "charms" de HK) e chefes; ranking de tempo.
