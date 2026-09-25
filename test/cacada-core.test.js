@@ -133,6 +133,57 @@ test('parede: sem as Luvas cai direto; com as Luvas desliza e pula dela', () => 
     assert.ok(com.vx < -150, 'pula para longe da parede');
 });
 
+test('parede estilo Hollow Knight: gruda sem segurar e escala uma parede só', () => {
+    // Uma parede alta à direita, sem outra parede perto para quicar.
+    const mapa = [
+        '##############################',
+        ...Array.from({ length: 26 }, () => '#.........####################'),
+        '#......S..####################',
+        '##############################',
+    ];
+    const jogo = jogoDe(mapa, {}, ['parede']);
+    const j = jogo.jogador;
+    // Encosta pulando e solta a seta: continua grudado, deslizando devagar.
+    rodar(jogo, 0.5, (i) => ({ direita: true, pulo: true, puloPedido: i === 0 }));
+    assert.equal(j.grudado, 1, 'grudou na parede');
+    rodar(jogo, 0.3, {});
+    assert.equal(j.grudado, 1, 'continua grudado sem segurar');
+    assert.ok(j.vy <= CONFIG.quedaParede + 1, `desliza devagar (${j.vy})`);
+    // Pula e segura de volta para a mesma parede, várias vezes: tem que subir.
+    const y0 = j.y;
+    let pulos = 0;
+    rodar(jogo, 3, (i, jj) => {
+        const g = jj.jogador.grudado === 1;
+        if (g) pulos++;
+        return { direita: true, pulo: true, puloPedido: g };
+    });
+    assert.ok(pulos >= 4, `pulou ${pulos} vezes`);
+    assert.ok(y0 - j.y > 5 * T, `subiu ${Math.round(y0 - j.y)} px na mesma parede`);
+    // Segurando para fora, solta.
+    rodar(jogo, 0.2, {});
+    rodar(jogo, 0.1, { esquerda: true });
+    assert.equal(j.grudado, 0, 'soltou ao segurar para fora');
+});
+
+test('coronhada em 8 direções: diagonais e para baixo no chão', () => {
+    const jogo = jogoDe(SALA_LIVRE);
+    const j = jogo.jogador;
+    const dir = (entrada) => {
+        j.recargaGolpe = 0;
+        j.golpe = null;
+        rodar(jogo, DT, { ...entrada, golpePedido: true });
+        return j.golpe && j.golpe.dir;
+    };
+    assert.equal(dir({}), 'frente');
+    assert.equal(dir({ cima: true }), 'cima');
+    assert.equal(dir({ cima: true, direita: true }), 'cimaDiag');
+    assert.equal(dir({ baixo: true }), 'baixo', 'para baixo também no chão');
+    assert.equal(dir({ baixo: true, esquerda: true }), 'baixoDiag');
+    assert.equal(j.golpe.gx, -1);
+    const caixa = C.caixaGolpe(j, j.golpe);
+    assert.ok(caixa.x + caixa.w <= j.x + 12 && caixa.y > j.y, 'diagonal baixa fica embaixo e à esquerda');
+});
+
 test('pulo duplo só com os Parênteses', () => {
     const alturaMax = (habilidades) => {
         const jogo = jogoDe(SALA_LIVRE, {}, habilidades);

@@ -54,9 +54,11 @@ preto no peito; capa preta rasgada; cinto marrom; **gorro do Teemo** verde com o
 | `golpe-frente-01..02` | 2 | **Coronhada**: bate com a coronha da MP5K para a frente (o ataque corpo a corpo). |
 | `golpe-cima` | 1 | Coronhada para cima. |
 | `golpe-baixo` | 1 | No ar, coronhada para baixo (usada para quicar/pogo). |
+| `golpe-diagonal-cima`, `golpe-diagonal-baixo` | 2 | Coronhada na diagonal (para cima-frente e para baixo-frente). |
+| `golpe-rasteira` | 1 | No chão, coronhada para baixo: rasteira na altura dos pés. |
 | `dash-01..02` | 2 | **Capa Janky**: corpo esticado para a frente, capa em rastro. |
 | `pulo-duplo` | 1 | Cambalhota no ar com dois "parênteses" ( ) de energia dos lados. |
-| `parede` | 1 | Deslizando na parede (parede à **esquerda** do desenho), faíscas das Luvas de Fita. |
+| `parede` | 1 | Grudado e deslizando na parede (parede à **esquerda** do desenho), mãos com fita presas nela, faíscas das Luvas de Fita. É a pose de toda a escalada. |
 | `agarrado` | 1 | Pendurado na quina pelas duas mãos (quina no canto superior direito, mãos na linha ~30). |
 | `subir-01..02` | 2 | Subindo a beirada (cotovelo, depois joelho em cima). |
 | `rajada-01..02` | 2 | Atirando a **Rajada da MP5K** para a frente, com clarão laranja. |
@@ -114,7 +116,7 @@ Pasta `assets/cacada/efeitos/`.
 
 | Arquivo(s) | Tamanho | Descrição |
 |---|---|---|
-| `golpe-01..03` | 96×96 | **Arco branco** da coronhada (meia-lua branca com borda laranja), apontando para a direita. O jogo gira para cima/baixo. |
+| `golpe-01..03` | 96×96 | **Arco branco** da coronhada (meia-lua branca com borda laranja), apontando para a direita. O jogo gira para as 8 direções. |
 | `rajada-01..02` | 96×32 | Rajada da MP5K: três balas com rastro laranja e um brilho em volta. |
 | `bola-verde` | 24×24 | Cuspe do drone (verde ácido). |
 | `magia-01..02` | 32×32 | Bola de magia rosa da feiticeira. |

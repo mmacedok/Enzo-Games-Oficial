@@ -709,7 +709,7 @@
         if (j.estado === 'agarrado' || j.estado === 'subindo') return ['agarrado', 0];
         if (j.golpe && j.golpe.t < 0.14) return ['golpe', j.golpe.dir === 'frente' ? 1 : 0];
         if (j.estado === 'dash') return ['correr', 2];
-        if (!j.noChao && j.parede !== 0 && j.vy > 0 && jogo.progresso.habilidades.has('parede')) return ['parede', 0];
+        if (j.grudado || (!j.noChao && j.parede !== 0 && j.vy > 0 && jogo.progresso.habilidades.has('parede'))) return ['parede', 0];
         if (!j.noChao) return [j.vy < 0 ? 'pular' : 'cair', 0];
         if (Math.abs(j.vx) > 20) return ['correr', (j.x / 11) | 0];
         return ['parado', 0];
@@ -723,7 +723,7 @@
         if (j.invencivel > 0 && jogo.fase === 'jogando' && Math.floor(visual.tempo * 16) % 2 === 0) return;
         const [pose, i] = poseDoJogador();
         let olhando = j.olhando;
-        if (pose === 'parede') olhando = -j.parede;
+        if (pose === 'parede') olhando = -(j.grudado || j.parede);
         if (pose === 'agarrado') olhando = j.lado || j.olhando;
         if (pose === 'golpe') olhando = j.golpe.lado;
         const cx = j.x + JL / 2 - cam.x;
@@ -776,9 +776,10 @@
         const cy = j.y + JA / 2 - cam.y;
         ctx.save();
         ctx.translate(cx, cy);
-        let ang = g.lado > 0 ? 0 : Math.PI;
-        if (g.dir === 'cima') ang = -Math.PI / 2;
-        if (g.dir === 'baixo') ang = Math.PI / 2;
+        const gx = g.gx ?? g.lado;
+        const gy = g.gy ?? 0;
+        let ang = Math.atan2(gy, gx);
+        if (g.dir === 'baixo' && g.noChao) ang = g.lado > 0 ? 0.35 : Math.PI - 0.35;   // rasteira
         ctx.rotate(ang);
         ctx.globalAlpha = 1 - k * k;
         const raio = 22 + k * 10;
@@ -1591,7 +1592,7 @@
         }
         const ajuda = toque
             ? 'Botões: ◀▶▲▼ andam · PULAR · GOLPE · DASH · RAJADA · CURA (segure)'
-            : '←→ andam · ESPAÇO/Z pula · X golpeia (↑/↓ mira) · C dash · F rajada · segure Q cura · ↑ senta/fala · TAB mapa · P pausa';
+            : '←→ andam · ESPAÇO/Z pula · X golpeia (setas miram em 8 direções) · C dash · F rajada · segure Q cura · ↑ senta/fala · TAB mapa · P pausa';
         texto(ajuda, W / 2, H - 22, toque ? 13 : 11, '#fff', 3);
     }
 
@@ -1870,6 +1871,10 @@
                 <button type="button" class="ronda-botao cacada-botao" data-tecla="esquerda" aria-label="Esquerda">◀</button>
                 <button type="button" class="ronda-botao cacada-botao" data-tecla="direita" aria-label="Direita">▶</button>
                 <button type="button" class="ronda-botao cacada-botao" data-tecla="baixo" aria-label="Baixo (mirar para baixo, soltar)">▼</button>
+                <button type="button" class="ronda-botao cacada-botao cacada-botao--diagonal" data-tecla="cima esquerda" aria-label="Diagonal cima e esquerda">◤</button>
+                <button type="button" class="ronda-botao cacada-botao cacada-botao--diagonal" data-tecla="cima direita" aria-label="Diagonal cima e direita">◥</button>
+                <button type="button" class="ronda-botao cacada-botao cacada-botao--diagonal" data-tecla="baixo esquerda" aria-label="Diagonal baixo e esquerda">◣</button>
+                <button type="button" class="ronda-botao cacada-botao cacada-botao--diagonal" data-tecla="baixo direita" aria-label="Diagonal baixo e direita">◢</button>
             </div>
             <div class="cacada-acoes">
                 <button type="button" class="ronda-botao cacada-botao cacada-botao--menor" data-tecla="degustar" aria-label="Curar (segure)">CURA</button>
@@ -1886,6 +1891,8 @@
                 botao.setPointerCapture?.(event.pointerId);
                 botao.classList.add('is-apertado');
                 const emMenu = jogo.fase === 'titulo' || jogo.fase === 'final' || visual.pausado || jogo.fase === 'pegou' || visual.mapa || jogo.fase === 'loja';
+                const teclas = tecla.split(' ');
+                if (emMenu && teclas.length > 1) return;
                 if (emMenu) {
                     if (visual.mapa) { visual.mapa = false; return; }
                     if (jogo.fase === 'loja') {
@@ -1905,7 +1912,7 @@
                 else if (tecla === 'dash') entrada.dashPedido = true;
                 else if (tecla === 'magia') entrada.magiaPedido = true;
                 else {
-                    entrada[tecla] = true;
+                    for (const t of teclas) entrada[t] = true;
                     if (tecla === 'cima') entrada.cimaPedido = true;
                 }
             });
@@ -1914,7 +1921,7 @@
                     if (!botao.classList.contains('is-apertado')) return;
                     botao.classList.remove('is-apertado');
                     if (tecla === 'pulo') entrada.pulo = false;
-                    else if (tecla in entrada) entrada[tecla] = false;
+                    else for (const t of tecla.split(' ')) if (t in entrada) entrada[t] = false;
                 });
             }
             botao.addEventListener('contextmenu', (event) => event.preventDefault());

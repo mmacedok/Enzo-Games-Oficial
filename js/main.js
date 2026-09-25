@@ -262,7 +262,7 @@
     // Cada easter egg: scripts em ordem e o objeto global que abre o jogo.
     const JOGOS = {
         flappy: { scripts: ['js/game-dialog.js?v=5', 'js/flappy-core.js?v=1', 'js/flappy.js?v=4'], global: 'FlappyEnzo' },
-        ronda: { scripts: ['js/game-dialog.js?v=5', 'js/cacada-inimigos.js?v=1', 'js/cacada-core.js?v=2', 'js/cacada-mundo.js?v=1', 'js/cacada.js?v=3'], global: 'CacadaInominavel' },
+        ronda: { scripts: ['js/game-dialog.js?v=5', 'js/cacada-inimigos.js?v=1', 'js/cacada-core.js?v=3', 'js/cacada-mundo.js?v=1', 'js/cacada.js?v=4'], global: 'CacadaInominavel' },
     };
     const carregando = {};
     function abrirJogo(nome) {

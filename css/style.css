@@ -1640,6 +1640,11 @@ body.game-dialog-open { overflow: hidden; }
 .cacada-direcional [data-tecla="esquerda"] { grid-column: 1; grid-row: 2; }
 .cacada-direcional [data-tecla="direita"] { grid-column: 3; grid-row: 2; }
 .cacada-direcional [data-tecla="baixo"] { grid-column: 2; grid-row: 3; }
+.cacada-direcional .cacada-botao--diagonal { font-size: 0.95rem; background: #1f1f2c; opacity: 0.85; }
+.cacada-direcional [data-tecla="cima esquerda"] { grid-column: 1; grid-row: 1; }
+.cacada-direcional [data-tecla="cima direita"] { grid-column: 3; grid-row: 1; }
+.cacada-direcional [data-tecla="baixo esquerda"] { grid-column: 1; grid-row: 3; }
+.cacada-direcional [data-tecla="baixo direita"] { grid-column: 3; grid-row: 3; }
 .cacada-acoes {
     display: grid;
     grid-template-columns: repeat(3, auto);

@@ -13,9 +13,9 @@ as vírgulas no lugar da queda.
 ## Controles
 | Ação | Teclado | Celular |
 |---|---|---|
-| Andar / mirar | ← → ↑ ↓ (ou WASD) | direcional |
+| Andar / mirar | ← → ↑ ↓ (ou WASD) | direcional (com diagonais ◤◥◣◢) |
 | Pular (segurar = mais alto) | Espaço ou Z | PULAR |
-| Coronhada (↑/↓ + golpe mira; no ar, ↓ quica) | X ou J | GOLPE |
+| Coronhada em 8 direções (setas miram; ↓ no ar quica, ↓ no chão é rasteira) | X ou J | GOLPE |
 | Dash (Capa Janky) | C, K ou Shift | DASH |
 | Rajada da MP5K | F ou L | RAJADA |
 | Degustar (segurar: cura) | Q ou V | CURA |
@@ -27,7 +27,13 @@ as vírgulas no lugar da queda.
   1,2 s de invencibilidade. Espinho e serra tiram 1 e devolvem ao último lugar seguro.
 - **Pontuação** (a alma de HK): +11 por golpe que acerta, até 99. **Degustar** gasta 33 e cura 1
   cogumelo (segurando ~1 s, parado no chão). A **Rajada** gasta 33.
-- **Pogo:** golpe para baixo no ar em inimigo, espinho, serra ou parede rachada faz quicar e
+- **Coronhada em 8 direções:** frente, cima, baixo e as quatro diagonais (segure as setas ao
+  golpear). Para baixo no chão vira uma rasteira na altura dos pés.
+- **Parede (Luvas de Fita), igual à Garra de Louva-a-Deus:** no ar, encoste na parede segurando
+  para o lado dela e ele gruda; depois fica grudado sem segurar, deslizando devagar. Segurar para
+  fora solta. O pulo da parede empurra pouco para fora: segurando de volta, ele gruda de novo na
+  **mesma** parede, mais alto — dá para escalar uma parede só.
+- **Pogo:** golpe para baixo (ou diagonal para baixo) no ar em inimigo, espinho, serra ou parede rachada faz quicar e
   renova o dash e o pulo duplo.
 - **Morte:** renasce no último banco com vida cheia; as vírgulas ficam com a **Sombra**, que
   aparece onde você caiu; derrote-a para pegar de volta.

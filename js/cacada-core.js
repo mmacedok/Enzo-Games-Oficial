@@ -42,11 +42,15 @@
         tempoCoiote: 0.09,
         tempoAntecipado: 0.12,
         impulsoDuplo: -480,      // Parênteses: +~64 px
-        // Parede (Luvas de Fita)
+        // Parede (Luvas de Fita), como a Garra de Louva-a-Deus de Hollow Knight:
+        // encostou segurando para o lado da parede, gruda e fica grudado sem segurar;
+        // o pulo empurra pouco para fora, então segurando de volta ele gruda de novo
+        // na mesma parede, mais alto (dá para escalar uma parede só).
         quedaParede: 105,
-        paredeImpulsoX: 215,
-        paredeImpulsoY: -500,
-        travaParede: 0.13,
+        grudarVyMin: -60,        // subindo mais rápido que isso, passa raspando sem grudar
+        paredeImpulsoX: 190,
+        paredeImpulsoY: -520,
+        travaParede: 0.1,
         coiotaParede: 0.08,
         // Beirada (sempre)
         agarrarAcima: 5,
@@ -106,7 +110,7 @@
     const HABILIDADES = Object.freeze({
         rajada: Object.freeze({ nome: 'Rajada da MP5K', tecla: 'F', texto: 'Gaste 33 de Pontuação para disparar uma rajada que atravessa os inimigos.' }),
         dash: Object.freeze({ nome: 'Capa Janky', tecla: 'C', texto: 'Dê um dash para a frente, no chão ou no ar.' }),
-        parede: Object.freeze({ nome: 'Luvas de Fita', tecla: 'PULAR', texto: 'Grude nas paredes, deslize e pule de uma parede para outra.' }),
+        parede: Object.freeze({ nome: 'Luvas de Fita', tecla: 'PULAR', texto: 'Encoste numa parede no ar para grudar e deslizar. Pule e segure de volta para a mesma parede: dá para escalar uma parede só.' }),
         pulo2: Object.freeze({ nome: 'Parênteses', tecla: 'PULAR no ar', texto: 'Pule de novo no meio do ar.' }),
     });
     const HAB_POR_DIGITO = { 1: 'rajada', 2: 'dash', 3: 'parede', 4: 'pulo2' };
@@ -334,7 +338,7 @@
             x: pos.x, y: pos.y, vx: 0, vy: 0,
             noChao: true, olhando: 1,
             coiote: 0, antecipado: 0,
-            parede: 0, coiotaParede: 0, ultimaParede: 0,
+            parede: 0, grudado: 0, coiotaParede: 0, ultimaParede: 0,
             trava: 0, travaLado: 0, semCorte: false,
             estado: 'normal',    // 'normal' | 'agarrado' | 'subindo' | 'dash' | 'degustando'
             lado: 0, subir: null, largou: 0, plataforma: -1, descendo: 0,
@@ -446,6 +450,7 @@
     }
 
     function pularDaParede(j, lado) {
+        j.grudado = 0;
         j.vx = -lado * CONFIG.paredeImpulsoX;
         j.vy = CONFIG.paredeImpulsoY;
         j.trava = CONFIG.travaParede;
@@ -618,7 +623,7 @@
         if (j.vy >= 0) j.semCorte = false;
 
         j.vy = Math.min(j.vy + CONFIG.gravidade * dt, CONFIG.quedaMax);
-        if (podeParede && !j.noChao && j.parede !== 0 && dir === j.parede && j.vy > CONFIG.quedaParede) j.vy = CONFIG.quedaParede;
+        if (podeParede && !j.noChao && j.parede !== 0 && (dir === j.parede || j.grudado === j.parede) && j.vy > CONFIG.quedaParede) j.vy = CONFIG.quedaParede;
 
         if (j.plataforma >= 0) {
             const p = mundo.nivel.plataformas[j.plataforma];
@@ -640,11 +645,12 @@
         if (j.noChao) renovarAr(j);
 
         if (!travado && j.atordoado <= 0) detectarParede(mundo, j, hab, dir, e, ev);
-        else j.parede = 0;
+        else { j.parede = 0; j.grudado = 0; }
         return ev;
     }
 
     function comecarDash(j, lado, ev) {
+        j.grudado = 0;
         j.estado = 'dash';
         j.dashT = CONFIG.dashTempo;
         j.dashLado = lado;
@@ -658,10 +664,20 @@
     /** Parede encostada, deslizar e agarrar quina (só no ar). */
     function detectarParede(mundo, j, hab, dir, e, ev) {
         j.parede = 0;
-        if (j.noChao) return;
+        if (j.noChao) { j.grudado = 0; return; }
         if (tocandoParede(mundo, j, 1)) j.parede = 1;
         else if (tocandoParede(mundo, j, -1)) j.parede = -1;
-        if (j.parede !== 0 && hab.has('parede') && dir === j.parede) renovarAr(j);
+        if (j.parede === 0 || !hab.has('parede')) j.grudado = 0;
+        else if (j.grudado === j.parede) {
+            if (dir === -j.parede) j.grudado = 0;          // segurou para fora: solta
+        } else if (dir === j.parede && j.vy >= CONFIG.grudarVyMin) {
+            j.grudado = j.parede;
+            j.vx = 0;
+            if (j.vy > CONFIG.quedaParede) j.vy = CONFIG.quedaParede;
+            ev.push('grudou');
+        }
+        if (j.grudado !== 0) { j.olhando = -j.grudado; j.vx = 0; }
+        if (j.parede !== 0 && hab.has('parede') && (dir === j.parede || j.grudado !== 0)) renovarAr(j);
         if (dir !== 0 && !e.baixo && j.largou <= 0 && j.vy >= CONFIG.agarrarVyMin && tentarAgarrar(mundo, j, dir)) {
             renovarAr(j);
             ev.push('agarrou');
@@ -715,11 +731,25 @@
     }
 
     /** Caixa da coronhada. */
+    /**
+     * Área da coronhada. g.gx/g.gy é a direção (8 direções): frente, cima, baixo
+     * e as diagonais. Para baixo no chão vira uma rasteira na altura dos pés.
+     */
     function caixaGolpe(j, g) {
         const R = CONFIG.golpeAlcance;
-        if (g.dir === 'cima') return { x: j.x - 9, y: j.y - R, w: L + 18, h: R + 4 };
-        if (g.dir === 'baixo') return { x: j.x - 8, y: j.y + A - 4, w: L + 16, h: R };
-        return g.lado > 0 ? { x: j.x + L - 4, y: j.y - 4, w: R + 4, h: A + 4 } : { x: j.x - R, y: j.y - 4, w: R + 4, h: A + 4 };
+        const gx = g.gx ?? (g.dir === 'frente' ? g.lado : 0);
+        const gy = g.gy ?? (g.dir === 'cima' ? -1 : g.dir === 'baixo' ? 1 : 0);
+        if (gx === 0 && gy < 0) return { x: j.x - 9, y: j.y - R, w: L + 18, h: R + 4 };
+        if (gx === 0 && gy > 0) {
+            if (g.noChao) return { x: j.x - 16, y: j.y + A - 16, w: L + 32, h: 20 };
+            return { x: j.x - 8, y: j.y + A - 4, w: L + 16, h: R };
+        }
+        if (gy === 0) return gx > 0 ? { x: j.x + L - 4, y: j.y - 4, w: R + 4, h: A + 4 } : { x: j.x - R, y: j.y - 4, w: R + 4, h: A + 4 };
+        // Diagonal: um quadrado encostado no canto do corpo.
+        const D = R - 2;
+        const x = gx > 0 ? j.x + L - 10 : j.x - D + 10;
+        const y = gy < 0 ? j.y - D + 8 : j.y + A - 12;
+        return { x, y, w: D, h: D };
     }
 
     // ------------------------------------------------------------ partida
@@ -1049,14 +1079,17 @@
 
     function iniciarGolpe(jogo, e) {
         const j = jogo.jogador;
-        let dir = 'frente';
-        if (e.cima) dir = 'cima';
-        else if (e.baixo && !j.noChao) dir = 'baixo';
         let lado = j.olhando;
         if (!j.noChao && j.parede !== 0 && jogo.progresso.habilidades.has('parede')) lado = -j.parede;
-        j.golpe = { dir, lado, t: 0, atingidos: new Set(), paredes: new Set(), pogou: false };
+        const h = (e.direita ? 1 : 0) - (e.esquerda ? 1 : 0);
+        const gy = e.cima ? -1 : e.baixo ? 1 : 0;
+        // Grudado na parede não dá para bater nela: a direção vira para fora.
+        const gx = gy === 0 ? lado : (h === 0 || (j.parede !== 0 && h === j.parede && !j.noChao) ? 0 : h);
+        if (gx !== 0) lado = gx;
+        const dir = gy === 0 ? 'frente' : gx === 0 ? (gy < 0 ? 'cima' : 'baixo') : (gy < 0 ? 'cimaDiag' : 'baixoDiag');
+        j.golpe = { dir, gx, gy, lado, noChao: j.noChao, t: 0, atingidos: new Set(), paredes: new Set(), pogou: false };
         j.recargaGolpe = CONFIG.golpeRecarga;
-        jogo.eventos.push({ tipo: 'golpe', dir, lado, x: j.x + L / 2, y: j.y + A / 2 });
+        jogo.eventos.push({ tipo: 'golpe', dir, gx, gy, lado, x: j.x + L / 2, y: j.y + A / 2 });
     }
 
     const danoGolpe = (jogo) => CONFIG.danoGolpe * (jogo.progresso.loja.has('fita') ? 2 : 1);
@@ -1071,13 +1104,14 @@
         if (g.t > CONFIG.golpeAtivo) return false;
         const hb = caixaGolpe(j, g);
         let pogo = false;
-        const dx = g.dir === 'frente' ? g.lado : 0;
-        const dy = g.dir === 'cima' ? -1 : g.dir === 'baixo' ? 1 : 0;
+        const dx = g.gx;
+        const dy = g.gy;
+        const quica = g.gy > 0 && !g.noChao;   // golpe para baixo (ou diagonal baixa) no ar faz pogo
         for (const en of jogo.inimigos) {
             if (!en.vivo || en.intangivel || g.atingidos.has(en) || !colide(hb, en)) continue;
             if (en.chefe && jogo.arena == null) continue;
             g.atingidos.add(en);
-            const bloqueio = en.escudo && g.dir === 'frente' && Math.sign(j.x + L / 2 - (en.x + en.w / 2)) === en.dir;
+            const bloqueio = en.escudo && g.gx !== 0 && g.gy <= 0 && Math.sign(j.x + L / 2 - (en.x + en.w / 2)) === en.dir;
             if (bloqueio) {
                 jogo.eventos.push({ tipo: 'bloqueio', x: en.x + en.w / 2 + en.dir * 10, y: en.y + en.h / 2 });
                 j.recuo = 0.15;
@@ -1086,8 +1120,8 @@
             }
             ferirInimigo(jogo, en, danoGolpe(jogo), dx, dy);
             j.pontuacao = Math.min(CONFIG.pontuacaoMax, j.pontuacao + CONFIG.pontuacaoPorGolpe);
-            if (g.dir === 'baixo') pogo = true;
-            else if (g.dir === 'frente') { j.recuo = CONFIG.recuoTempo; j.recuoVx = -g.lado * CONFIG.recuoGolpe; }
+            if (quica) pogo = true;
+            else if (g.gy === 0) { j.recuo = CONFIG.recuoTempo; j.recuoVx = -g.lado * CONFIG.recuoGolpe; }
         }
         for (const p of jogo.projeteis) {
             if (p.tipo === 'magia' && !p.fim && colideCirculo(hb, p.x, p.y, p.r)) {
@@ -1095,7 +1129,7 @@
                 jogo.eventos.push({ tipo: 'rebateu', x: p.x, y: p.y });
             }
         }
-        if (g.dir === 'baixo' && !g.pogou && perigoNaCaixa(jogo.nivel, hb, jogo.tempo, true)) pogo = true;
+        if (quica && !g.pogou && perigoNaCaixa(jogo.nivel, hb, jogo.tempo, true)) pogo = true;
         // Paredes rachadas.
         const nivel = jogo.nivel;
         for (let ty = Math.floor(hb.y / T); ty <= Math.floor((hb.y + hb.h) / T); ty++) {
@@ -1106,8 +1140,8 @@
                 g.paredes.add(id);
                 const vida = (jogo.vidaParedes.get(id) ?? CONFIG.vidaParede) - 1;
                 jogo.vidaParedes.set(id, vida);
-                if (g.dir === 'frente') { j.recuo = CONFIG.recuoTempo; j.recuoVx = -g.lado * CONFIG.recuoGolpe; }
-                if (g.dir === 'baixo') pogo = true;
+                if (g.gy === 0) { j.recuo = CONFIG.recuoTempo; j.recuoVx = -g.lado * CONFIG.recuoGolpe; }
+                if (quica) pogo = true;
                 if (vida <= 0) {
                     jogo.progresso.quebrados.add(id);
                     jogo.eventos.push({ tipo: 'paredeQuebrou', x: tx * T + T / 2, y: ty * T + T / 2 });
