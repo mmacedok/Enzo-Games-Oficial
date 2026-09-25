@@ -496,6 +496,406 @@
       }
     ]
   },
+  "assets/Cartas/bug-do-discord.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/191e0bb8427c2b29-640.webp",
+        "bytes": 198658
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/191e0bb8427c2b29-1024.webp",
+        "bytes": 448098
+      }
+    ]
+  },
+  "assets/Cartas/cabo-coco.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/92c14fb5431fef9d-640.webp",
+        "bytes": 191242
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/92c14fb5431fef9d-1024.webp",
+        "bytes": 429570
+      }
+    ]
+  },
+  "assets/Cartas/cara-de-coracao.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e1876295ddfa5889-640.webp",
+        "bytes": 139106
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/e1876295ddfa5889-1024.webp",
+        "bytes": 270562
+      }
+    ]
+  },
+  "assets/Cartas/casa-do-enzo-games.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/92b5e52d033c3f35-640.webp",
+        "bytes": 222310
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/92b5e52d033c3f35-1024.webp",
+        "bytes": 485022
+      }
+    ]
+  },
+  "assets/Cartas/chorao.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/915d479a609c9e04-640.webp",
+        "bytes": 236218
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/915d479a609c9e04-1024.webp",
+        "bytes": 518906
+      }
+    ]
+  },
+  "assets/Cartas/degustador-da-noite.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b8858fdcb3024200-640.webp",
+        "bytes": 175246
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/b8858fdcb3024200-1024.webp",
+        "bytes": 378528
+      }
+    ]
+  },
+  "assets/Cartas/drone-vigia.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0d66059dafe4b155-640.webp",
+        "bytes": 191062
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/0d66059dafe4b155-1024.webp",
+        "bytes": 400174
+      }
+    ]
+  },
+  "assets/Cartas/emoji-pistola.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a449cb8d6305af1c-640.webp",
+        "bytes": 161640
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/a449cb8d6305af1c-1024.webp",
+        "bytes": 330226
+      }
+    ]
+  },
+  "assets/Cartas/encantadora.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a02a03aba7a219a2-640.webp",
+        "bytes": 213120
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/a02a03aba7a219a2-1024.webp",
+        "bytes": 484346
+      }
+    ]
+  },
+  "assets/Cartas/enzo-games.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/697bab9bdc27e12d-640.webp",
+        "bytes": 234762
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/697bab9bdc27e12d-1024.webp",
+        "bytes": 490454
+      }
+    ]
+  },
+  "assets/Cartas/estacionamento-noturno.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/7c347218abda745e-640.webp",
+        "bytes": 203480
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/7c347218abda745e-1024.webp",
+        "bytes": 454310
+      }
+    ]
+  },
+  "assets/Cartas/feiticeiro-de-terno.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/76e7c76dee4431d5-640.webp",
+        "bytes": 190814
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/76e7c76dee4431d5-1024.webp",
+        "bytes": 432496
+      }
+    ]
+  },
+  "assets/Cartas/hatsune-neves.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/65c63b507a08e7ef-640.webp",
+        "bytes": 212426
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/65c63b507a08e7ef-1024.webp",
+        "bytes": 460272
+      }
+    ]
+  },
+  "assets/Cartas/italolol.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/21ff2078737d2291-640.webp",
+        "bytes": 180412
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/21ff2078737d2291-1024.webp",
+        "bytes": 405594
+      }
+    ]
+  },
+  "assets/Cartas/mansao-do-inominavel.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ff7448eaefb6a4bb-640.webp",
+        "bytes": 225526
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/ff7448eaefb6a4bb-1024.webp",
+        "bytes": 495494
+      }
+    ]
+  },
+  "assets/Cartas/marreteiro-do-coracao.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b6aeecc8f5786f09-640.webp",
+        "bytes": 190792
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/b6aeecc8f5786f09-1024.webp",
+        "bytes": 448228
+      }
+    ]
+  },
+  "assets/Cartas/moderador-do-ban.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/2ce232ee24541b4e-640.webp",
+        "bytes": 182250
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/2ce232ee24541b4e-1024.webp",
+        "bytes": 386402
+      }
+    ]
+  },
+  "assets/Cartas/notificacao-morcego.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f7164c6094b32cfa-640.webp",
+        "bytes": 86766
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/f7164c6094b32cfa-1024.webp",
+        "bytes": 158916
+      }
+    ]
+  },
+  "assets/Cartas/o-inominavel.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/064ddfb737b1ed54-640.webp",
+        "bytes": 176040
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/064ddfb737b1ed54-1024.webp",
+        "bytes": 383754
+      }
+    ]
+  },
+  "assets/Cartas/piscina-de-macarronada.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/83283fedbb56a41d-640.webp",
+        "bytes": 260482
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/83283fedbb56a41d-1024.webp",
+        "bytes": 575266
+      }
+    ]
+  },
+  "assets/Cartas/sao-joao-do-butico.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/265ba6605eed3074-640.webp",
+        "bytes": 265164
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/265ba6605eed3074-1024.webp",
+        "bytes": 576294
+      }
+    ]
+  },
+  "assets/Cartas/sombra-do-degustador.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/474ef404e833ecbe-640.webp",
+        "bytes": 174410
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/474ef404e833ecbe-1024.webp",
+        "bytes": 398392
+      }
+    ]
+  },
+  "assets/Cartas/stand-do-joinha.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/02d06cb3bf56391d-640.webp",
+        "bytes": 209816
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/02d06cb3bf56391d-1024.webp",
+        "bytes": 471312
+      }
+    ]
+  },
+  "assets/Cartas/superkid.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e244e4c22cc0db07-640.webp",
+        "bytes": 207168
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/e244e4c22cc0db07-1024.webp",
+        "bytes": 476130
+      }
+    ]
+  },
+  "assets/Cartas/toradolandia.png": {
+    "width": 1024,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/9aa0d0e618fee7aa-640.webp",
+        "bytes": 224620
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/9aa0d0e618fee7aa-1024.webp",
+        "bytes": 510812
+      }
+    ]
+  },
   "assets/Easter Eggs/Easter egg1.jpg": {
     "width": 4080,
     "height": 2296,

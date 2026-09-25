@@ -14,6 +14,8 @@
     if (!B) return;
 
     const ESTRELAS = { comum: '★', raro: '★★', epico: '★★★', lendario: '★★★★' };
+    /** Rótulo do tipo na faixa (personagem não leva rótulo). */
+    const TIPOS = { campo: 'Campo', goon: 'Capanga' };
     const NOMES_JOGOS = { 'flappy-enzo': 'Flappy Enzo', 'ronda-noturna': 'Degustação Noturna' };
     const CONFIRMAR_MS = 4000;
 
@@ -87,7 +89,7 @@
         }
 
         const moldura = el('div', 'carta-tcg-moldura');
-        moldura.append(topo, arte, el('p', 'carta-tcg-faixa', `${ESTRELAS[def.raridade]} ${r.nome}`),
+        moldura.append(topo, arte, el('p', 'carta-tcg-faixa', `${ESTRELAS[def.raridade]} ${r.nome}${TIPOS[def.tipo] ? ` · ${TIPOS[def.tipo]}` : ''}`),
             el('p', 'carta-tcg-frase', def.frase));
         card.append(moldura, el('div', 'carta-tcg-foil'), el('div', 'carta-tcg-brilho'));
         if (def.raridade === 'epico' || def.raridade === 'lendario') seguirMouse(card);
