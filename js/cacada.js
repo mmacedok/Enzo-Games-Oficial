@@ -26,7 +26,7 @@
 
     const janela = GameDialog.create({
         titulo: 'Caçada ao Inominável',
-        descricaoCanvas: 'Caçada ao Inominável: setas andam e miram, Z pula, X golpeia, C dash, A tocado lança a rajada e segurado cura, F rajada, segure Tab para o mapa, Esc pausa.',
+        descricaoCanvas: 'Caçada ao Inominável: WASD anda e mira, Espaço pula, E golpeia, C dash, F rajada, segure Q para curar, segure Tab para o mapa, Esc pausa. Há também o esquema de Hollow Knight no menu.',
         largura: W,
         altura: H,
         // Celular deitado: os botões ficam por cima, nas laterais (sem roubar altura).
@@ -1455,14 +1455,13 @@
         }
         // Dica de ↑ perto de banco ou loja.
         const perto = [...nivel.bancos, ...nivel.lojas].find((b) => b.sala === jogo.sala.idx && core.colide({ x: j.x, y: j.y, w: JL, h: JA }, core.zonaDeUso(b)));
-        if (perto && jogo.fase === 'jogando') texto(toque ? '▲' : '↑', j.x + JL / 2 - visual.cam.x, j.y - 14 - visual.cam.y + Math.sin(visual.tempo * 6) * 2, 16, COR.amarelo, 3);
+        if (perto && jogo.fase === 'jogando') texto(textoTeclas('[CIMA]'), j.x + JL / 2 - visual.cam.x, j.y - 14 - visual.cam.y + Math.sin(visual.tempo * 6) * 2, 16, COR.amarelo, 3);
     }
 
-    /** No celular, troca nomes de teclas por nomes de botões. */
+    /** Troca [PULO], [GOLPE]… pelo nome da tecla do esquema atual (ou do botão, no celular). */
     function textoTeclas(t) {
-        if (!toque) return t;
-        return t.replace(/← → anda/g, '◀ ▶ anda').replace(/\bZ pula/g, 'PULAR pula').replace(/Setas \+ X/g, 'Direcional + GOLPE').replace(/↓ \+ X/g, '▼ + GOLPE')
-            .replace(/\bX golpeia/g, 'GOLPE golpeia').replace(/Segure A/g, 'Segure CURA').replace(/aperte ↑/g, 'aperte ▲').replace(/↑ ou PULAR/g, '▲ ou PULAR');
+        const nomes = toque ? NOMES_TOQUE : esquema.nomes;
+        return t.replace(/\[([A-Z]+)\]/g, (m, k) => nomes[k] ?? m);
     }
 
     function desenharMapa() {
@@ -1533,7 +1532,7 @@
         ctx.fillStyle = '#fff';
         ctx.fillRect(W / 2 - 150, 156, 300, 2);
         paragrafo(hab.texto, W / 2, 186, 440, 16, '#fff');
-        const tecla = toque ? { rajada: 'RAJADA', dash: 'DASH', parede: 'PULAR', pulo2: 'PULAR no ar' }[jogo.pegou] : hab.tecla;
+        const tecla = textoTeclas(hab.tecla);
         texto(`Botão: ${tecla}`, W / 2, 238, 20, COR.amarelo, 4);
         areas = [];
         botaoTela('CONTINUAR', W / 2 - 80, 272, 160, 40, COR.laranja, 'continuar');
@@ -1564,7 +1563,7 @@
         });
         if (visual.lojaMsg) texto(visual.lojaMsg, W / 2, H - 50, 16, COR.amarelo, 4);
         botaoTela('SAIR', W / 2 - 60, H - 36, 120, 30, '#2a2a3a', 'sairLoja');
-        if (!toque) texto('↑↓ escolhe · Z compra · ↓ no fim ou ESC sai', W / 2, H - 70, 12, COR.lilas, 3);
+        if (!toque) texto(textoTeclas('[CIMA]/[BAIXO] escolhe · [CONFIRMA] compra · [BAIXO] no fim ou ESC sai'), W / 2, H - 70, 12, COR.lilas, 3);
     }
 
     function desenharPausa() {
@@ -1572,9 +1571,11 @@
         ctx.fillRect(0, 0, W, H);
         texto('PAUSADO', W / 2, 80, 44, '#fff', 7);
         areas = [];
-        const opcoes = [['▶ CONTINUAR', 'continuar'], ['MAPA', 'mapa'], ['TELA INICIAL', 'titulo']];
-        opcoes.forEach(([rotulo, id], i) => botaoTela(rotulo, W / 2 - 100, 124 + i * 50, 200, 40, i === 0 ? COR.laranja : '#2a2a3a', id, visual.opcao === i));
-        if (!toque) texto('↑↓ escolhe · Z confirma · ESC continua', W / 2, 290, 14, COR.lilas, 3);
+        const opcoes = opcoesPausa();
+        const passo = opcoes.length > 3 ? 44 : 50;
+        opcoes.forEach(([rotulo, id], i) => botaoTela(rotulo, W / 2 - 150, 118 + i * passo, 300, 38, i === 0 ? COR.laranja : '#2a2a3a', id, visual.opcao === i));
+        if (!toque) texto(textoTeclas('[CIMA]/[BAIXO] escolhe · [CONFIRMA] confirma · ESC continua'), W / 2, 118 + opcoes.length * passo + 14, 14, COR.lilas, 3);
+        if (!toque) texto(textoTeclas('[MIRA] anda/mira · [PULO] pula · [GOLPE] golpe · [DASH] dash · [MAGIA] rajada · segure [CURA] cura · segure TAB mapa'), W / 2, H - 22, 11, '#fff', 3);
     }
 
     function desenharTitulo() {
@@ -1583,16 +1584,19 @@
         texto('INOMINÁVEL', W / 2, 88, 54, COR.laranja, 8);
         texto('um metroidvania do Degustador da Noite', W / 2, 122, 15, COR.lilas, 4);
         const save = lerSave();
-        const opcoes = save ? [['CONTINUAR', 'continuarSave'], ['NOVO JOGO', 'novo']] : [['NOVO JOGO', 'novo']];
+        const opcoes = opcoesTitulo();
         areas = [];
-        opcoes.forEach(([rotulo, id], i) => botaoTela(rotulo, W / 2 - 100, 146 + i * 48, 200, 40, i === 0 ? COR.laranja : '#2a2a3a', id, visual.opcao === i));
+        const passo = opcoes.length > 2 ? 44 : 48;
+        opcoes.forEach(([rotulo, id], i) => botaoTela(rotulo, W / 2 - 150, 142 + i * passo, 300, 38, i === 0 ? COR.laranja : '#2a2a3a', id, visual.opcao === i));
         if (save) {
             const habs = (save.habilidades || []).length;
-            texto(`${tempoTexto(save.tempo || 0)} · ${habs}/4 habilidades · ${save.mortes || 0} mortes`, W / 2, 146 + opcoes.length * 48 + 6, 12, COR.lilas, 3);
+            texto(`${tempoTexto(save.tempo || 0)} · ${habs}/4 habilidades · ${save.mortes || 0} mortes`, W / 2, 142 + opcoes.length * passo + 4, 12, COR.lilas, 3);
         }
         const ajuda = toque
             ? 'Botões: ◀▶▲▼ andam · PULAR · GOLPE · DASH · RAJADA · CURA (segure)'
-            : 'setas andam/miram · Z pula · X golpe · C dash · A: toque = rajada, segure = cura · F rajada · ↑ senta · segure TAB mapa · ESC pausa';
+            : esquema === ESQUEMAS.hk
+                ? 'setas andam/miram · Z pula · X golpe · C dash · A: toque = rajada, segure = cura · F rajada · ↑ senta · segure TAB mapa · ESC pausa'
+                : 'WASD anda/mira · ESPAÇO pula · E golpe · C dash · F rajada · segure Q cura · W senta · segure TAB mapa · ESC pausa';
         texto(ajuda, W / 2, H - 22, toque ? 13 : 11, '#fff', 3);
     }
 
@@ -1713,6 +1717,7 @@
             return;
         }
         if (id === 'mapa') { visual.mapa = !visual.mapa; soltarTudo(); return; }
+        if (id === 'controles') { trocarEsquema(); return; }
         if (id === 'pausar') { pausar(); return; }
         if (id === 'titulo') { salvar(); jogo.fase = 'titulo'; visual.pausado = false; visual.mapa = false; visual.opcao = 0; return; }
         if (id === 'explorar') { core.iniciar(jogo, core.exportarSave(jogo)); visual.opcao = 0; tratarEventos(); ajustarCamera(0, true); return; }
@@ -1775,22 +1780,55 @@
         foco.apertado = false;
     }
 
-    // Teclado igual ao padrão de Hollow Knight no PC: setas andam e miram, Z pula,
-    // X golpeia, C dash, A tocado lança a magia e segurado cura (Foco), F é a magia
-    // rápida, Tab segurado mostra o mapa e Esc pausa.
-    const TECLAS = {
-        ArrowLeft: 'esquerda',
-        ArrowRight: 'direita',
-        ArrowUp: 'cima',
-        ArrowDown: 'baixo',
+    // Dois esquemas de teclado. O padrão usa WASD; o opcional copia Hollow Knight no PC
+    // (setas, Z pula, X golpe, A tocado = magia e segurado = cura). Tab (mapa segurado),
+    // Esc (pausa) e C (dash) valem nos dois.
+    const ESQUEMAS = {
+        padrao: {
+            nome: 'PADRÃO (WASD)',
+            mover: { KeyA: 'esquerda', KeyD: 'direita', KeyW: 'cima', KeyS: 'baixo', ArrowLeft: 'esquerda', ArrowRight: 'direita', ArrowUp: 'cima', ArrowDown: 'baixo' },
+            pulo: ['Space'], golpe: ['KeyE'], dash: ['KeyC', 'ShiftLeft', 'ShiftRight'], magia: ['KeyF'],
+            cura: 'KeyQ', foco: null,
+            confirma: ['Space', 'Enter', 'KeyE'],
+            nomes: { MOVE: 'A D', PULO: 'ESPAÇO', GOLPE: 'E', CURA: 'Q', CIMA: 'W', BAIXO: 'S', MIRA: 'W A S D', MAGIA: 'F', DASH: 'C', CONFIRMA: 'ESPAÇO' },
+        },
+        hk: {
+            nome: 'HOLLOW KNIGHT',
+            mover: { ArrowLeft: 'esquerda', ArrowRight: 'direita', ArrowUp: 'cima', ArrowDown: 'baixo' },
+            pulo: ['KeyZ'], golpe: ['KeyX'], dash: ['KeyC'], magia: ['KeyF'],
+            cura: null, foco: 'KeyA',
+            confirma: ['KeyZ', 'Space', 'Enter'],
+            nomes: { MOVE: '← →', PULO: 'Z', GOLPE: 'X', CURA: 'A', CIMA: '↑', BAIXO: '↓', MIRA: 'Setas', MAGIA: 'A (toque) ou F', DASH: 'C', CONFIRMA: 'Z' },
+        },
     };
-    const PULO = new Set(['KeyZ']);
-    const GOLPE = new Set(['KeyX']);
-    const DASH = new Set(['KeyC']);
-    const MAGIA = new Set(['KeyF']);
-    const FOCO = 'KeyA';
-    const TEMPO_FOCO = 0.2;       // segurou A mais que isso: vira cura em vez de magia
-    const CONFIRMA = new Set(['KeyZ', 'Space', 'Enter']);
+    const NOMES_TOQUE = { MOVE: '◀ ▶', PULO: 'PULAR', GOLPE: 'GOLPE', CURA: 'CURA', CIMA: '▲', BAIXO: '▼', MIRA: 'Direcional', MAGIA: 'RAJADA', DASH: 'DASH', CONFIRMA: 'PULAR' };
+    const CHAVE_CONTROLES = 'cacada-controles';
+    let esquema = ESQUEMAS.padrao;
+    try { if (localStorage.getItem(CHAVE_CONTROLES) === 'hk') esquema = ESQUEMAS.hk; } catch { /* modo privado */ }
+    function trocarEsquema() {
+        esquema = esquema === ESQUEMAS.padrao ? ESQUEMAS.hk : ESQUEMAS.padrao;
+        try { localStorage.setItem(CHAVE_CONTROLES, esquema === ESQUEMAS.hk ? 'hk' : 'padrao'); } catch { /* modo privado */ }
+        soltarTudo();
+    }
+    const TEMPO_FOCO = 0.2;       // Hollow Knight: segurou A mais que isso, vira cura em vez de magia
+
+    // Menus: as opções de cada tela (a de controles só aparece no teclado).
+    function opcoesTitulo() {
+        const o = lerSave() ? [['CONTINUAR', 'continuarSave'], ['NOVO JOGO', 'novo']] : [['NOVO JOGO', 'novo']];
+        if (!toque) o.push([`CONTROLES: ${esquema.nome}`, 'controles']);
+        return o;
+    }
+    function opcoesPausa() {
+        const o = [['▶ CONTINUAR', 'continuar'], ['MAPA', 'mapa']];
+        if (!toque) o.push([`CONTROLES: ${esquema.nome}`, 'controles']);
+        o.push(['TELA INICIAL', 'titulo']);
+        return o;
+    }
+    function totalMenu() {
+        if (jogo.fase === 'titulo') return opcoesTitulo().length;
+        if (jogo.fase === 'final') return 2;
+        return opcoesPausa().length;
+    }
 
     function navegarMenu(delta, total) {
         visual.opcao = (visual.opcao + delta + total) % total;
@@ -1798,32 +1836,33 @@
 
     function confirmarMenu() {
         if (jogo.fase === 'titulo') {
-            const save = lerSave();
-            const ids = save ? ['continuarSave', 'novo'] : ['novo'];
+            const ids = opcoesTitulo().map((o) => o[1]);
             acao(ids[Math.min(visual.opcao, ids.length - 1)]);
         } else if (jogo.fase === 'final') {
             acao(visual.opcao === 0 ? 'explorar' : 'titulo');
         } else if (visual.pausado) {
-            acao(['continuar', 'mapa', 'titulo'][visual.opcao]);
+            acao(opcoesPausa()[visual.opcao][1]);
         } else if (jogo.fase === 'pegou') {
             acao('continuar');
         }
     }
 
     janela.dialog.addEventListener('keydown', (event) => {
-        const nome = TECLAS[event.code];
-        const conhecida = nome || PULO.has(event.code) || GOLPE.has(event.code) || DASH.has(event.code) || MAGIA.has(event.code)
-            || [FOCO, 'Enter', 'Space', 'Escape', 'Tab'].includes(event.code);
+        const c = event.code;
+        const nome = esquema.mover[c];
+        const conhecida = nome || esquema.pulo.includes(c) || esquema.golpe.includes(c) || esquema.dash.includes(c) || esquema.magia.includes(c)
+            || c === esquema.cura || c === esquema.foco || esquema.confirma.includes(c) || c === 'Escape' || c === 'Tab';
         if (conhecida) event.preventDefault();
         if (event.repeat) return;
+        const confirma = esquema.confirma.includes(c);
         // Menus.
         if (jogo.fase === 'titulo' || jogo.fase === 'final' || visual.pausado || jogo.fase === 'pegou') {
-            if (visual.mapa) { if (['Tab', 'Escape'].includes(event.code) || CONFIRMA.has(event.code)) visual.mapa = false; return; }
-            const total = jogo.fase === 'titulo' ? (lerSave() ? 2 : 1) : jogo.fase === 'final' ? 2 : 3;
+            if (visual.mapa) { if (c === 'Tab' || c === 'Escape' || confirma) visual.mapa = false; return; }
+            const total = totalMenu();
             if (nome === 'cima') navegarMenu(-1, total);
             else if (nome === 'baixo') navegarMenu(1, total);
-            else if (CONFIRMA.has(event.code)) confirmarMenu();
-            else if (event.code === 'Escape' && visual.pausado) visual.pausado = false;
+            else if (confirma) confirmarMenu();
+            else if (c === 'Escape' && visual.pausado) visual.pausado = false;
             return;
         }
         if (jogo.fase === 'loja') {
@@ -1831,30 +1870,33 @@
             else if (nome === 'baixo') {
                 if (visual.lojaSel === LOJA.length - 1) acao('sairLoja');
                 else visual.lojaSel++;
-            } else if (CONFIRMA.has(event.code)) comprarSelecionado();
-            else if (event.code === 'Escape' || event.code === 'Tab') acao('sairLoja');
+            } else if (confirma) comprarSelecionado();
+            else if (c === 'Escape' || c === 'Tab') acao('sairLoja');
             return;
         }
         // Mapa rápido: aparece enquanto Tab estiver segurado.
-        if (event.code === 'Tab') { visual.mapa = true; soltarTudo(); return; }
+        if (c === 'Tab') { visual.mapa = true; soltarTudo(); return; }
         if (visual.mapa) return;
-        if (event.code === 'Escape') { pausar(); return; }
-        if (event.code === FOCO) { foco.apertado = true; foco.desde = visual.tempo; return; }
+        if (c === 'Escape') { pausar(); return; }
+        if (c === esquema.foco) { foco.apertado = true; foco.desde = visual.tempo; return; }
+        if (c === esquema.cura) entrada.degustar = true;
         if (nome) {
             entrada[nome] = true;
             if (nome === 'cima') entrada.cimaPedido = true;
         }
-        if (PULO.has(event.code)) { entrada.pulo = true; entrada.puloPedido = true; }
-        if (GOLPE.has(event.code)) entrada.golpePedido = true;
-        if (DASH.has(event.code)) entrada.dashPedido = true;
-        if (MAGIA.has(event.code)) entrada.magiaPedido = true;
+        if (esquema.pulo.includes(c)) { entrada.pulo = true; entrada.puloPedido = true; }
+        if (esquema.golpe.includes(c)) entrada.golpePedido = true;
+        if (esquema.dash.includes(c)) entrada.dashPedido = true;
+        if (esquema.magia.includes(c)) entrada.magiaPedido = true;
     });
     janela.dialog.addEventListener('keyup', (event) => {
-        const nome = TECLAS[event.code];
+        const c = event.code;
+        const nome = esquema.mover[c];
         if (nome) entrada[nome] = false;
-        if (PULO.has(event.code)) entrada.pulo = false;
-        if (event.code === 'Tab' && visual.mapa && !visual.pausado) visual.mapa = false;
-        if (event.code === FOCO && foco.apertado) {
+        if (esquema.pulo.includes(c)) entrada.pulo = false;
+        if (c === esquema.cura) entrada.degustar = false;
+        if (c === 'Tab' && visual.mapa && !visual.pausado) visual.mapa = false;
+        if (c === esquema.foco && foco.apertado) {
             // Toque rápido no A: magia. Segurado: era cura, e soltar para de curar.
             if (visual.tempo - foco.desde < TEMPO_FOCO && jogo.fase === 'jogando') entrada.magiaPedido = true;
             foco.apertado = false;
@@ -1922,7 +1964,7 @@
                         else if (tecla === 'pulo' || tecla === 'golpe') comprarSelecionado();
                         return;
                     }
-                    const total = jogo.fase === 'titulo' ? (lerSave() ? 2 : 1) : jogo.fase === 'final' ? 2 : 3;
+                    const total = totalMenu();
                     if (tecla === 'cima') navegarMenu(-1, total);
                     else if (tecla === 'baixo') navegarMenu(1, total);
                     else if (tecla === 'pulo' || tecla === 'golpe') confirmarMenu();

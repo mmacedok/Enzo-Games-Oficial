@@ -11,26 +11,28 @@ explora, luta com a coronhada da MP5K, ganha **habilidades que abrem caminhos no
 as vírgulas no lugar da queda.
 
 ## Controles
-Teclado igual ao padrão de **Hollow Knight no PC**.
+Dois esquemas de teclado; troque em **CONTROLES** na tela inicial ou na pausa (fica salvo).
 
-| Ação | Teclado | Celular |
-|---|---|---|
-| Andar / mirar | ← → ↑ ↓ | direcional (com diagonais ◤◥◣◢) |
-| Pular (segurar = mais alto) | Z | PULAR |
-| Coronhada em 8 direções (setas miram; ↓ no ar quica, ↓ no chão é rasteira) | X | GOLPE |
-| Dash (Capa Janky) | C | DASH |
-| Foco/Magia: **toque** = Rajada da MP5K, **segure** = Degustar (cura) | A | RAJADA / CURA |
-| Magia rápida (Rajada) | F | RAJADA |
-| Sentar no banco / comprar / falar | ↑ perto | ▲ |
-| Mapa rápido (enquanto segura) | Tab | MAPA |
-| Pausa | Esc | II |
-| Confirmar nos menus | Z (ou Enter/Espaço) | PULAR / GOLPE |
+| Ação | Padrão (WASD) | Hollow Knight (opcional) | Celular |
+|---|---|---|---|
+| Andar / mirar | W A S D (ou setas) | ← → ↑ ↓ | direcional (com diagonais ◤◥◣◢) |
+| Pular (segurar = mais alto) | Espaço | Z | PULAR |
+| Coronhada em 8 direções (↓ no ar quica, ↓ no chão é rasteira) | E | X | GOLPE |
+| Dash (Capa Janky) | C (ou Shift) | C | DASH |
+| Rajada da MP5K | F | A (toque) ou F | RAJADA |
+| Degustar (cura) | segure Q | segure A | CURA |
+| Sentar no banco / comprar / falar | W perto | ↑ perto | ▲ |
+| Mapa rápido (enquanto segura) | Tab | Tab | MAPA |
+| Pausa | Esc | Esc | II |
+| Confirmar nos menus | Espaço, Enter ou E | Z, Espaço ou Enter | PULAR / GOLPE |
+
+As placas e as dicas mostram as teclas do esquema escolhido (no celular, os nomes dos botões).
 
 ## Regras principais
 - **Vida:** 5 cogumelos (até 9; 4 fragmentos = +1). Encostar em inimigo tira 1, empurra e dá
   1,2 s de invencibilidade. Espinho e serra tiram 1 e devolvem ao último lugar seguro.
 - **Pontuação** (a alma de HK): +11 por golpe que acerta, até 99. **Degustar** gasta 33 e cura 1
-  cogumelo (segurando A ~1 s, parado no chão). A **Rajada** gasta 33.
+  cogumelo (segurando a tecla de cura ~1 s, parado no chão). A **Rajada** gasta 33.
 - **Coronhada em 8 direções:** frente, cima, baixo e as quatro diagonais (segure as setas ao
   golpear). Para baixo no chão vira uma rasteira na altura dos pés.
 - **Parede (Luvas de Fita), igual à Garra de Louva-a-Deus:** no ar, encoste na parede segurando

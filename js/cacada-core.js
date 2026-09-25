@@ -108,10 +108,10 @@
     const A = CONFIG.jogadorA;
 
     const HABILIDADES = Object.freeze({
-        rajada: Object.freeze({ nome: 'Rajada da MP5K', tecla: 'A (toque) ou F', texto: 'Gaste 33 de Pontuação para disparar uma rajada que atravessa os inimigos.' }),
-        dash: Object.freeze({ nome: 'Capa Janky', tecla: 'C', texto: 'Dê um dash para a frente, no chão ou no ar.' }),
-        parede: Object.freeze({ nome: 'Luvas de Fita', tecla: 'Z', texto: 'Encoste numa parede no ar para grudar e deslizar. Pule e segure de volta para a mesma parede: dá para escalar uma parede só.' }),
-        pulo2: Object.freeze({ nome: 'Parênteses', tecla: 'Z no ar', texto: 'Pule de novo no meio do ar.' }),
+        rajada: Object.freeze({ nome: 'Rajada da MP5K', tecla: '[MAGIA]', texto: 'Gaste 33 de Pontuação para disparar uma rajada que atravessa os inimigos.' }),
+        dash: Object.freeze({ nome: 'Capa Janky', tecla: '[DASH]', texto: 'Dê um dash para a frente, no chão ou no ar.' }),
+        parede: Object.freeze({ nome: 'Luvas de Fita', tecla: '[PULO]', texto: 'Encoste numa parede no ar para grudar e deslizar. Pule e segure de volta para a mesma parede: dá para escalar uma parede só.' }),
+        pulo2: Object.freeze({ nome: 'Parênteses', tecla: '[PULO] no ar', texto: 'Pule de novo no meio do ar.' }),
     });
     const HAB_POR_DIGITO = { 1: 'rajada', 2: 'dash', 3: 'parede', 4: 'pulo2' };
 

@@ -34,8 +34,8 @@
                 x: 0,
                 y: 0,
                 placas: [
-                    '← → anda · Z pula (segure = mais alto) · X golpeia',
-                    'Setas + X miram o golpe em 8 direções · no ar, ↓ + X QUICA em inimigos e espinhos',
+                    '[MOVE] anda · [PULO] pula (segure = mais alto) · [GOLPE] golpeia',
+                    '[MIRA] + [GOLPE] miram o golpe em 8 direções · no ar, [BAIXO] + [GOLPE] QUICA em inimigos e espinhos',
                 ],
                 mapa: [
                     '################################',
@@ -66,8 +66,8 @@
                 y: 0,
                 segredos: [[45, 12, 48, 14]],
                 placas: [
-                    'Pule na direção da quina para AGARRAR a beirada · ↑ ou PULAR sobe',
-                    'Segure A para DEGUSTAR: come um lanche e recupera 1 cogumelo (gasta 33 de Pontuação, que vem dos golpes)',
+                    'Pule na direção da quina para AGARRAR a beirada · [CIMA] ou [PULO] sobe',
+                    'Segure [CURA] para DEGUSTAR: come um lanche e recupera 1 cogumelo (gasta 33 de Pontuação, que vem dos golpes)',
                 ],
                 mapa: [
                     '#..............................................................#',
@@ -97,7 +97,7 @@
                 x: 3,
                 y: 0,
                 placas: [
-                    'Loja do ItaloLOL · aperte ↑ para comprar',
+                    'Loja do ItaloLOL · aperte [CIMA] para comprar',
                     '↓ Beco das Chaminés',
                 ],
                 falas: [
@@ -221,7 +221,7 @@
                 x: 2,
                 y: 3,
                 placas: [
-                    'Banco: aperte ↑ para sentar · salva o jogo e enche os cogumelos',
+                    'Banco: aperte [CIMA] para sentar · salva o jogo e enche os cogumelos',
                     'Longe demais para pular… uma capa ajudaria',
                 ],
                 falas: [
