@@ -15,9 +15,11 @@ artes podem seguir as mesmas pastas e tamanhos da primeira leva**; os tamanhos 4
 continuam sendo o ideal, mas não são obrigatórios.
 
 **Ainda faltam** (hoje desenhados por código):
-- Inimigos: **Ping**, **Emoji Raivoso**, **Troll**, **Spam Saltitante**, **Moderador**,
-  **Feiticeira** (a atual é a antiga da Ronda) e a **Sombra do Degustador** (hoje é o Degustador
-  pintado de roxo).
+- Inimigos: **Emoji Raivoso** (`inimigos/emoji-01.png`, `emoji-02.png`) e o quadro
+  `inimigos/ping-caca.png` (Ping perseguindo; hoje usa os quadros normais com um brilho vermelho).
+- **Moderador olhando para a esquerda**: o jogo espelha a arte, e aí "MOD" e "BAN" ficam
+  "DOM" e "NAB". Mande `moderador-*-esq.png` (as mesmas 5 poses viradas, com o texto normal) ou
+  as poses sem texto no escudo e no martelo.
 - ItaloLOL da tela da loja, balão de fala, ícones da loja, caixa das placas.
 - Quadros extras que deixariam as animações mais suaves: `virar`, `frear`, `pousar`, `topo`,
   mais quadros de `parado`/`golpe`/`dash`, `sentar`, `interagir`, `pegou-item`.

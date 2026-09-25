@@ -1,6 +1,6 @@
 # Caçada ao Inominável — metroidvania do Degustador da Noite
 
-Status: **v2 jogável com a primeira leva de artes definitivas** (Degustador, Inominável, chefes, Capanga, Drone, Bug, cenários, objetos e HUD; o que falta está em `docs/ASSETS-CACADA.md`). Inspirado em Hollow Knight e
+Status: **v2 jogável com a primeira leva de artes definitivas** (Degustador, Inominável, chefes, todos os inimigos menos o Emoji, cenários, objetos e HUD; o que falta está em `docs/ASSETS-CACADA.md`). Inspirado em Hollow Knight e
 Silksong (pesquisa em `docs/PESQUISA-HOLLOW-KNIGHT.md`). Abre ao clicar no título da página do
 Degustador. A v1 (6 fases soltas, estilo Super Meat Boy) virou o mundo de salas abaixo.
 

@@ -56,7 +56,7 @@
 
     // ------------------------------------------------------------- artes
     // Artes definitivas (docs/ASSETS-CACADA.md). O que ainda não tem arte continua
-    // desenhado por código (Ping, Emoji, Troll, Spam, Moderador, Sombra).
+    // desenhado por código (hoje só o Emoji Raivoso).
     const serie = (base, n) => Array.from({ length: n }, (_, i) => `${base}-${String(i + 1).padStart(2, '0')}.png`);
     const AREAS_ARTE = ['telhados', 'beco', 'fabrica', 'torre', 'covil'];
     const ARQUIVOS = {
@@ -86,7 +86,20 @@
         bug: serie('inimigos/bug', 2),
         drone: serie('inimigos/drone', 2),
         droneMirar: ['inimigos/drone-mirar.png'],
-        feiticeira: ['ronda/inimigos/feiticeira-01.png', 'ronda/inimigos/feiticeira-02.png', 'ronda/inimigos/feiticeira-03.png', 'ronda/inimigos/feiticeira-04.png'],
+        feiticeira: serie('inimigos/feiticeira', 4),
+        feiticeiraConjurar: ['inimigos/feiticeira-conjurar.png'],
+        feiticeiraSumir: ['inimigos/feiticeira-sumir.png'],
+        ping: serie('inimigos/ping', 2),
+        trollAndar: serie('inimigos/troll-andar', 4),
+        trollPreparar: ['inimigos/troll-preparar.png'],
+        trollInvestida: serie('inimigos/troll-investida', 2),
+        trollCansado: ['inimigos/troll-cansado.png'],
+        spam: serie('inimigos/spam', 3),
+        modGuarda: serie('inimigos/moderador-guarda', 2),
+        modErguer: ['inimigos/moderador-erguer.png'],
+        modGolpe: ['inimigos/moderador-golpe.png'],
+        modRecuperar: ['inimigos/moderador-recuperar.png'],
+        sombra: serie('inimigos/sombra', 2),
         // Chefes.
         cmOcioso: serie('chefes/capanga-mor-ocioso', 2),
         cmPreparar: ['chefes/capanga-mor-preparar.png'],
@@ -156,8 +169,8 @@
         ARQUIVOS[`meio_${a}`] = [`areas/${a}/meio.png`];
         ARQUIVOS[`fundo_${a}`] = [`areas/${a}/fundo.jpg`];
     }
-    // As artes olham para a direita, menos a feiticeira antiga da Ronda.
-    const OLHA_ESQUERDA = new Set(['feiticeira']);
+    // As artes olham para a direita.
+    const OLHA_ESQUERDA = new Set();
     const ARTE = {};
     for (const [nome, lista] of Object.entries(ARQUIVOS)) {
         ARTE[nome] = lista.map((arquivo) => {
@@ -1085,6 +1098,12 @@
             }
         },
         ping(e, cx, cy, flash) {
+            const caca = e.estado === 'caca';
+            if (caca) {
+                ctx.fillStyle = 'rgba(255, 60, 60, 0.3)';
+                ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
+            }
+            if (spriteInimigo('ping', visual.tempo * (caca ? 16 : 9) + e.fase * 3, cx, cy, 30, 32, e.dir < 0, flash)) return;
             const asa = Math.sin(visual.tempo * 30 + e.fase * 9) * 5;
             ctx.fillStyle = flash ? '#fff' : '#3a0d14';
             ctx.beginPath(); ctx.moveTo(cx - 5, cy); ctx.lineTo(cx - 14, cy - 4 - asa); ctx.lineTo(cx - 9, cy + 3); ctx.fill();
@@ -1128,6 +1147,8 @@
             const treme = e.estado === 'preparar' && !calmo ? Math.sin(visual.tempo * 70) * 1.5 : 0;
             const x = cx + treme;
             const base = e.y + e.h - visual.cam.y;
+            const quadro = { preparar: ['trollPreparar', 0], investida: ['trollInvestida', visual.tempo * 12], cansado: ['trollCansado', 0] }[e.estado] || ['trollAndar', visual.tempo * 8 + e.fase * 4];
+            if (spriteInimigo(quadro[0], quadro[1], x, base + 1, 40, 93, e.dir < 0, flash)) return;
             if (e.estado === 'investida') {
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
                 ctx.lineWidth = 2;
@@ -1147,6 +1168,9 @@
             const amassa = e.noChao && e.t < 0.12 ? 3 : 0;
             const x = cx;
             const base = e.y + e.h - visual.cam.y;
+            // 1 parado, 2 agachado (logo antes de pular ou ao pousar), 3 no ar.
+            const agachado = e.noChao && (e.t < 0.12 || e.t > (e.espera || 1) - 0.25);
+            if (spriteInimigo('spam', !e.noChao ? 2 : agachado ? 1 : 0, x, base + 1, 28, 61, e.dir < 0, flash)) return;
             contorno(flash, '#f4f4f4');
             ctx.beginPath(); ctx.rect(x - 9, base - 16 + amassa, 18, 16 - amassa); ctx.fill(); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(x - 9, base - 16 + amassa); ctx.lineTo(x, base - 8); ctx.lineTo(x + 9, base - 16 + amassa); ctx.stroke();
@@ -1180,6 +1204,8 @@
         moderador(e, cx, cy, flash) {
             const base = e.y + e.h - visual.cam.y;
             const d = e.dir;
+            const quadro = { erguer: ['modErguer', 0], golpe: ['modGolpe', 0], recuperar: ['modRecuperar', 0] }[e.estado] || ['modGuarda', visual.tempo * 3];
+            if (spriteInimigo(quadro[0], quadro[1], cx, base + 1, 44, 93, d < 0, flash)) return;
             contorno(flash, '#6d7482');
             ctx.beginPath(); ctx.roundRect(cx - 9, base - 24, 18, 24, 4); ctx.fill(); ctx.stroke();
             ctx.beginPath(); ctx.arc(cx, base - 26, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
@@ -1210,12 +1236,17 @@
                 ctx.fillStyle = 'rgba(255, 79, 216, 0.4)';
                 ctx.beginPath(); ctx.arc(cx + e.dir * 10, cy - 4, 6 + e.t * 10, 0, Math.PI * 2); ctx.fill();
             }
-            if (!spriteInimigo('feiticeira', visual.tempo * 6, cx, cy + 22, 44, 100, OLHA_ESQUERDA.has('feiticeira') ? olhaDireita : !olhaDireita, flash)) {
+            const quadro = e.estado === 'conjurar' ? ['feiticeiraConjurar', 0] : e.estado === 'sumir' || e.estado === 'aparecer' ? ['feiticeiraSumir', 0] : ['feiticeira', visual.tempo * 6];
+            if (!spriteInimigo(quadro[0], quadro[1], cx, cy, 42, 64, OLHA_ESQUERDA.has('feiticeira') ? olhaDireita : !olhaDireita, flash)) {
                 contorno(flash, '#b04dff');
                 ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
             }
         },
         sombra(e, cx, cy, flash) {
+            ctx.fillStyle = 'rgba(160, 70, 255, 0.22)';
+            ctx.beginPath(); ctx.arc(cx, cy, 18 + Math.sin(visual.tempo * 5) * 2, 0, Math.PI * 2); ctx.fill();
+            const treme = e.estado === 'preparar' && !calmo ? Math.sin(visual.tempo * 60) * 1.2 : 0;
+            if (spriteInimigo('sombra', visual.tempo * 5, cx + treme, e.y + e.h - visual.cam.y, 46, 125, e.dir < 0, flash)) return;
             const img = quadroDe('cair', 0);
             ctx.globalAlpha *= 0.85;
             ctx.fillStyle = 'rgba(160, 70, 255, 0.25)';
