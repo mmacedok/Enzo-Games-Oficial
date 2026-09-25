@@ -15,6 +15,31 @@ app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     next();
 });
+/**
+ * Login automático (só local, junto com ENZO_LOGIN_FALSO=1): com
+ * ENZO_LOGIN_AUTO="teste:<apelido>:<Nome>", quem abre uma página sem sessão
+ * já entra com essa conta. Use um apelido de ADMIN_EMAILS para entrar como admin.
+ */
+app.use(async (req, res, next) => {
+    const credencial = process.env.ENZO_LOGIN_AUTO;
+    const pagina = req.method === 'GET' && (req.path === '/' || /^\/[a-z0-9-]+\.html$/.test(req.path));
+    if (!credencial || process.env.ENZO_LOGIN_FALSO !== '1' || !pagina) return next();
+    try {
+        // Cookie de uma sessão que ainda vale: fica como está.
+        if (/(?:^|;\s*)sid=/.test(req.headers.cookie || '')) {
+            const eu = await pegarApi()(new Request(`http://${req.get('host')}/api/auth/me`, { headers: { cookie: req.headers.cookie } }));
+            if (eu.ok && (await eu.json()).loggedIn) return next();
+        }
+        const resposta = await pegarApi()(new Request(`http://${req.get('host')}/api/auth/google`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential: credencial }),
+        }));
+        const cookies = resposta.headers.getSetCookie();
+        if (resposta.ok && cookies.length) res.setHeader('Set-Cookie', cookies);
+    } catch (erro) {
+        console.warn('Login automático falhou:', erro.message);
+    }
+    next();
+});
 // Mount each public directory separately: encoded traversal cannot expose sources.
 function publicHeaders(res, filePath) {
     if (filePath.includes(`${path.sep}web${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
@@ -54,14 +79,18 @@ function loginFalso() {
         return { sub: `teste-${apelido}`, name: nome || apelido, email: `${apelido}@teste.local` };
     };
 }
+function pegarApi() {
+    if (!api) {
+        const { createApi } = require('./api/handler.js');
+        const { createLocalDb } = require('./api/db-local.js');
+        const pasta = process.env.ENZO_DB === 'memoria' ? null : path.join(DATA_DIR, 'local-db');
+        api = createApi({ db: createLocalDb(pasta), env: process.env, verificarGoogle: loginFalso() });
+    }
+    return api;
+}
 app.use('/api', express.raw({ type: () => true, limit: '32kb' }), async (req, res, next) => {
     try {
-        if (!api) {
-            const { createApi } = require('./api/handler.js');
-            const { createLocalDb } = require('./api/db-local.js');
-            const pasta = process.env.ENZO_DB === 'memoria' ? null : path.join(DATA_DIR, 'local-db');
-            api = createApi({ db: createLocalDb(pasta), env: process.env, verificarGoogle: loginFalso() });
-        }
+        pegarApi();
         const headers = new Headers();
         for (const [nome, valor] of Object.entries(req.headers)) {
             if (valor !== undefined) headers.set(nome, Array.isArray(valor) ? valor.join(', ') : valor);
