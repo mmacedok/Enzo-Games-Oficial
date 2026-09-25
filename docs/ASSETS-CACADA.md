@@ -1,9 +1,10 @@
 # Artes da "Caçada ao Inominável" — instruções para a IA que vai desenhar
 
-Este arquivo é para outra IA (ou pessoa) criar **todas as imagens definitivas** do jogo de
-plataforma do Degustador da Noite. Hoje o jogo usa artes temporárias: sprites antigos da
-Ronda (`assets/ronda/`) e desenhos feitos por código. Cada item abaixo diz **o que desenhar,
-o tamanho, quantos quadros, onde salvar e como o jogo usa a imagem**.
+Este arquivo é para outra IA (ou pessoa) criar **todas as imagens definitivas** do jogo do
+Degustador da Noite, um metroidvania inspirado em Hollow Knight (veja
+`docs/PESQUISA-HOLLOW-KNIGHT.md` e `docs/PLANO-CACADA.md`). Hoje o jogo usa artes temporárias:
+sprites antigos da Ronda (`assets/ronda/`) e desenhos feitos por código. Cada item abaixo diz
+**o que desenhar, o tamanho, quantos quadros, onde salvar e como o jogo usa a imagem**.
 
 Referências oficiais (leia antes de desenhar):
 - Ficha do Degustador: `assets/Personagens/Degustador da noite Ficha.png`
@@ -17,184 +18,185 @@ Referências oficiais (leia antes de desenhar):
 **Estilo**
 - Gibi / cartoon, igual às fichas: **contorno preto grosso**, cores chapadas com uma sombra
   simples, sem degradê realista. Leitura clara em tamanho pequeno.
-- Noite: o mundo é **roxo e azul-escuro**; o Degustador e os perigos precisam **se destacar**
-  do cenário (laranja da MP5K, amarelo das vírgulas, vermelho/prata dos perigos).
-- Nada de texto escrito dentro das imagens (exceto o logo, item 9.1).
-
-**Paleta base**
-
-| Uso | Cores |
-|---|---|
-| Céu e cidade | `#07041a` `#1c0f45` `#3a1a6b` `#241447` |
-| Telhados (tiles) | roxo `#8a2be2`, borda clara `#b77cff`, parede `#2a1450`, tijolo `#351a63` |
-| Degustador | cinza da roupa `#6b6f78`, preto `#1b1b1b`, verde do gorro `#4c8c2b`, laranja MP5K `#ff6600`, fita adesiva `#c9b99a` |
-| Inominável | camisa preta `#1b1b1b`, jeans `#4a6fa5`, cabelo/barba `#5a3b22`, pele `#e0a57a`, aura roxa `#a046ff` e verde `#5aff78` |
-| Perigos | prata `#d8dde6` / `#b9c0cc`, vermelho `#c0203a` |
-| Coletáveis | amarelo `#ffd400` |
+- Clima de Hollow Knight: mundo **escuro e melancólico**, cada área com sua cor; o Degustador,
+  os inimigos e os perigos precisam **se destacar do fundo**.
+- Nada de texto escrito dentro das imagens (exceto logo, placas do "BAN" e similares indicados).
 
 **Formato técnico**
-- **PNG com fundo transparente** (menos o céu, item 8.1, que é opaco).
-- Personagens de lado, **olhando para a DIREITA** (o jogo espelha para a esquerda).
-- Todos os quadros de uma mesma animação têm **o mesmo tamanho** e **o mesmo ponto de apoio**:
-  personagem centralizado na horizontal (coluna do meio) e **os pés sempre na mesma linha**.
-- Sem sombra no chão desenhada na imagem (o jogo não tem chão fixo embaixo do sprite).
-- Um arquivo por quadro, nome com número: `correr-01.png`, `correr-02.png`…
+- **PNG com fundo transparente** (menos os céus, que são opacos).
+- Personagens e inimigos de lado, **olhando para a DIREITA** (o jogo espelha para a esquerda).
+- Todos os quadros de uma animação têm **o mesmo tamanho** e **o mesmo ponto de apoio**
+  (personagem centralizado na horizontal e **pés sempre na mesma linha**).
+- Sem sombra no chão desenhada na imagem.
+- Um arquivo por quadro: `correr-01.png`, `correr-02.png`…
 
-**Escala no jogo (importante para o nível de detalhe)**
-A tela lógica é 640×360 e cada tile tem 20×20. O Degustador ocupa **~14×26 px** de colisão e é
-desenhado com uns **44 px** de altura. Por isso desenhe grande (tamanhos abaixo) e com poucos
-detalhes finos: tudo é reduzido ~3× no jogo.
+**Escala no jogo**
+Tela lógica 640×360, tile de 20×20 px. O Degustador tem ~14×26 px de colisão e é desenhado com
+~44 px de altura. Desenhe grande (tamanhos abaixo) e com poucos detalhes finos: tudo é reduzido
+~3× no jogo.
 
 ---
 
-## 2. Degustador da Noite (o jogador)
+## 2. Degustador da Noite (jogador)
 
-Pasta: `assets/cacada/degustador/` · quadros de **128×128** · **pés na linha 124**, corpo
-centralizado na **coluna 64** · olhando para a direita.
+Pasta `assets/cacada/degustador/` · quadros **128×128** · pés na **linha 124**, corpo na
+**coluna 64** · olhando para a direita.
 
 Visual (da ficha): roupa de Batman mal feita, cinza, com remendos de fita adesiva e morcego
-preto no peito; capa preta rasgada; cinto marrom com bolsos; **gorro do Teemo** verde com
-orelhinhas e óculos de aviador; óculos de grau; barba; **MP5K laranja** na mão.
+preto no peito; capa preta rasgada; cinto marrom; **gorro do Teemo** verde com orelhinhas e
+óculos de aviador; óculos de grau; barba; **MP5K laranja**.
 
 | Arquivo(s) | Quadros | O que mostrar |
 |---|---|---|
-| `parado-01..02.png` | 2 | Em pé, respirando (sobe/desce 1–2 px), MP5K apontada para baixo. |
-| `correr-01..06.png` | 6 | Ciclo de corrida rápida estilo Super Meat Boy: corpo inclinado para a frente, capa voando para trás. Os 6 quadros fecham o ciclo. |
-| `pular.png` | 1 | Subindo: pernas encolhidas, braço livre para cima, capa para baixo. |
-| `cair.png` | 1 | Caindo: braços abertos, capa para cima. |
-| `parede.png` | 1 | **Deslizando na parede**: de costas para a parede (a parede fica à **esquerda** do personagem no desenho), uma mão e um pé raspando nela, olhando para a direita, faíscas/poeira opcionais. |
-| `agarrado.png` | 1 | **Pendurado na quina** pelas duas mãos: braços esticados para cima, a quina fica no **canto superior direito** do quadro (mãos na linha ~30, coluna ~80), corpo pendurado abaixo. |
-| `subir-01..02.png` | 2 | Subindo a beirada: 1) cotovelo apoiado em cima, 2) joelho em cima. |
-| `atirar-01..02.png` | 2 | Correndo e atirando: MP5K apontada para a frente, 2) com clarão laranja/amarelo no cano. O cano sai na altura do peito (linha ~70). |
-| `atirar-ar.png` | 1 | Atirando no ar (pulando). |
-| `morrer.png` | 1 | Atingido: corpo torto, olhos em X, gorro voando. (O jogo explode em partículas logo depois.) |
+| `parado-01..02` | 2 | Em pé, respirando, MP5K apontada para baixo. |
+| `correr-01..06` | 6 | Corrida rápida, corpo inclinado, capa voando. |
+| `pular`, `cair` | 1 + 1 | Subindo (pernas encolhidas) e caindo (braços abertos, capa para cima). |
+| `golpe-frente-01..02` | 2 | **Coronhada**: bate com a coronha da MP5K para a frente (o ataque corpo a corpo). |
+| `golpe-cima` | 1 | Coronhada para cima. |
+| `golpe-baixo` | 1 | No ar, coronhada para baixo (usada para quicar/pogo). |
+| `dash-01..02` | 2 | **Capa Janky**: corpo esticado para a frente, capa em rastro. |
+| `pulo-duplo` | 1 | Cambalhota no ar com dois "parênteses" ( ) de energia dos lados. |
+| `parede` | 1 | Deslizando na parede (parede à **esquerda** do desenho), faíscas das Luvas de Fita. |
+| `agarrado` | 1 | Pendurado na quina pelas duas mãos (quina no canto superior direito, mãos na linha ~30). |
+| `subir-01..02` | 2 | Subindo a beirada (cotovelo, depois joelho em cima). |
+| `rajada-01..02` | 2 | Atirando a **Rajada da MP5K** para a frente, com clarão laranja. |
+| `degustar-01..02` | 2 | **Degustar**: comendo um lanche (coxinha) com brilho de cura rosado. |
+| `sentado` | 1 | Sentado no banco de praça, relaxado. |
+| `dano` | 1 | Atingido: corpo jogado para trás, careta. |
+| `morrer` | 1 | Caindo derrotado, gorro voando. |
 
-## 3. O Inominável (o objetivo de cada fase)
+## 3. O Inominável
 
-Pasta: `assets/cacada/inominavel/` · quadros de **160×160** · pés na linha 154, centralizado na
-coluna 80 · olhando para a **ESQUERDA** (ele espera o Degustador, que vem da esquerda).
+Pasta `assets/cacada/inominavel/` · quadros **160×160** · pés na linha 154, coluna 80 ·
+olhando para a **ESQUERDA**.
 
-Visual (da ficha): homem gordinho, cabelo castanho comprido **preso em rabo de cavalo**,
-**barba cheia**, **óculos**, camisa preta **do Gorillaz esticada** na barriga, calça jeans,
-tênis; carrega um **notebook com o logo do Discord**. Atrás dele, o Stand **"O Opressor do
-Chat"**: uma sombra preta enorme feita de texto/código "glitch", com **olhos roxos brilhando**
-e **fazendo joinha** 👍, envolta em **fumaça roxa e verde**.
+Visual: gordinho, cabelo castanho em **rabo de cavalo**, **barba**, **óculos**, camisa preta
+**do Gorillaz** esticada, jeans, tênis, **notebook com o logo do Discord**; aura **roxa e verde**.
 
 | Arquivo(s) | Quadros | O que mostrar |
 |---|---|---|
-| `parado-01..04.png` | 4 | Parado com o notebook, aura roxo-verde pulsando, cara de deboche. O Stand aparece atrás, meio transparente. |
-| `provocar.png` | 1 | Gritando (poder "Boca de Fossa"): boca aberta, linhas de grito. Usado quando o Degustador chega perto. |
-| `fugir-01..04.png` | 4 | Correndo para a direita (olhando para a direita), notebook debaixo do braço. Usado quando o Degustador toca nele e ele foge para a próxima fase. |
-| `capturado.png` | 1 | Última fase: sentado no chão, derrotado, Stand sumindo em pixels. |
-| `stand.png` | 1 | (opcional, 256×256) Só o Stand "Opressor do Chat", para desenhar separado com transparência. |
+| `parado-01..04` | 4 | Parado com o notebook, deboche, aura pulsando. |
+| `fugir-01..04` | 4 | Correndo para a direita (olhando para a direita). Aparece e foge em várias salas. |
+| `gritar-01..02` | 2 | "Boca de Fossa": boca aberta, linhas de grito (luta final). |
+| `derrotado` | 1 | Sentado no chão, derrotado, olhos em X. |
 
-## 4. Inimigos
+## 4. Inimigos (o "chat corrompido" do Inominável)
 
-Pasta: `assets/cacada/inimigos/`. Todos olhando para a **DIREITA**.
+Pasta `assets/cacada/inimigos/` · olhando para a **direita** · caixa de colisão entre
+parênteses (o desenho pode passar um pouco dela).
+
+| Arquivo(s) | Tamanho | Quadros | Descrição (e o inimigo de Hollow Knight que inspirou) |
+|---|---|---|---|
+| `capanga-01..04` | 128², pés linha 124 | 4 andar | Capanga do Coração (18×22): barbudo, camiseta branca com coração vermelho, jeans. Anda e vira na beirada (Crawlid). |
+| `ping-01..02` | 64² centro | 2 asas | **Ping** (16×14): balão vermelho de notificação com "!" branco e asinhas de morcego. Paira e **persegue voando** (Vengefly). Versão `ping-caca` com brilho vermelho. |
+| `emoji-01..02` | 64² centro | 2 | **Emoji Raivoso** (16×16): carinha amarela brava, bochecha vermelha. Voa em diagonal e **quica nas paredes** (Gruzzer). |
+| `drone-01..02`, `drone-mirar` | 128² centro | 2 + 1 | **Drone do Inominável** (20×16): quadricóptero preto, luz roxa, olho vermelho. Fica de longe e **cospe bolas verdes em leque** (Aspid). `mirar` = olho brilhando antes do tiro. |
+| `troll-andar-01..04`, `troll-preparar`, `troll-investida-01..02`, `troll-cansado` | 96², pés linha 92 | 8 | **Troll** (22×24): corcunda de moletom verde, sorriso enorme de troll. Vê você, **prepara** (olhos vermelhos, tremendo) e dá uma **investida** (Mosscharger). |
+| `spam-01..03` | 64², pés linha 60 | 3 | **Spam Saltitante** (18×16): envelope branco com carimbo vermelho e dentinhos na aba. **Pula em cima de você** (Leaping Husk). Quadros: parado, agachado, no ar. |
+| `bug-01..02` | 48² centro | 2 | **Bug** (14×14): besouro roxo-escuro com pixels de glitch rosa e ciano. **Anda em volta dos blocos**, inclusive paredes e teto (Tiktik). Desenhe de pé no chão; o jogo gira. |
+| `moderador-guarda-01..02`, `moderador-erguer`, `moderador-golpe`, `moderador-recuperar` | 96², pés linha 92 | 5 | **Moderador** (20×28): armadura cinza, **escudo azul com "MOD"** na frente e **martelo do "BAN"**. Bloqueia golpes de frente, ergue o martelo e dá uma estocada (Husk Sentry). |
+| `feiticeira-01..04`, `feiticeira-sumir`, `feiticeira-conjurar` | 128² centro | 6 | **Feiticeira** (20×28): cabelo roxo/rosa, casaco escuro, magia rosa. **Teleporta** e lança magia que persegue (Soul Twister). **Olhando para a direita** (a antiga olha para a esquerda). |
+| `sombra-01..02` | 128², pés linha 124 | 2 | **Sombra do Degustador** (16×24): silhueta roxa-escura translúcida do Degustador, olhos roxos, fiapos de fumaça. Aparece onde você morreu e guarda suas vírgulas (a Shade de HK). |
+
+## 5. Chefes
+
+Pasta `assets/cacada/chefes/`.
 
 | Arquivo(s) | Tamanho | Quadros | Descrição |
 |---|---|---|---|
-| `coracao-01..04.png` | 128×128, pés na linha 124 | 4 (andar) | Capanga do coração: homem barbudo, camiseta branca com **coração vermelho**, jeans, botas, cara de bravo (igual a `assets/ronda/inimigos/coracao-*`). Anda devagar patrulhando. Colisão 18×22. |
-| `coracao-derrotado.png` | 128×128 | 1 | Achatado (levou pisão), estrelinhas na cabeça. |
-| `drone-01..02.png` | 128×128, centro do drone no meio | 2 (hélices) | Drone do Inominável: quadricóptero preto com luz roxa e um **olho vermelho**, adesivo do Discord. Colisão 20×16. |
-| `feiticeira-01..04.png` | 128×128, centro do corpo no meio | 4 (flutuar) | Feiticeira: cabelo roxo/rosa, casaco escuro, **magia rosa** na mão, flutuando. Colisão 20×28. **Atenção:** desenhar olhando para a DIREITA (a arte antiga olha para a esquerda). |
-| `feiticeira-atacar.png` | 128×128 | 1 | Lançando a bola de magia. |
-| `magia-01..02.png` | 32×32 | 2 | Bola de magia rosa `#ff4fd8` com brilho, raio visível ~10 px. |
+| `capanga-mor-ocioso-01..02`, `-preparar`, `-salto`, `-corrida-01..03`, `-marreta-01..02`, `-atordoado-01..02`, `-derrotado` | 192², pés linha 186 | 12 | **Capanga-Mor** (40×52): o capanga do coração gigante e bombado, com uma **marreta enorme**, bandana. Salta e cai soltando ondas de choque, corre e bate na parede (fica tonto com estrelinhas), marretada no chão (inspirado no False Knight). |
+| `opressor-flutuar-01..04`, `-joinha`, `-grito`, `-glitch`, `-derrotado` | 256² centro | 8 | **O Opressor do Chat** (56×64): o Stand do Inominável da ficha — sombra gigante feita de **texto e código glitch**, **olhos roxos**, fumaça roxa e verde e uma mão fazendo **joinha**. |
+| `punho` | 128×512 | 1 | O punho de joinha gigante que esmaga de cima (coluna escura com contorno roxo). |
 
-## 5. Perigos e objetos
+## 6. Ataques e projéteis
 
-Pasta: `assets/cacada/objetos/`.
+Pasta `assets/cacada/efeitos/`.
+
+| Arquivo(s) | Tamanho | Descrição |
+|---|---|---|
+| `golpe-01..03` | 96×96 | **Arco branco** da coronhada (meia-lua branca com borda laranja), apontando para a direita. O jogo gira para cima/baixo. |
+| `rajada-01..02` | 96×32 | Rajada da MP5K: três balas com rastro laranja e um brilho em volta. |
+| `bola-verde` | 24×24 | Cuspe do drone (verde ácido). |
+| `magia-01..02` | 32×32 | Bola de magia rosa da feiticeira. |
+| `onda-01..02` | 48×48 | Onda de choque do Capanga-Mor correndo pelo chão (poeira + arco laranja). |
+| `pedra` | 32×32 | Entulho que cai do teto. |
+| `palavra-caixa` | 128×32 | Caixa preta de fala com borda vermelha para as palavras do "Grito de Fossa" (o jogo escreve a palavra por cima: OFENSA, BUEIRO, CRINGE, BAN, RATIO…). |
+| `glitch-01..02` | 16×16 | Quadradinhos de glitch verde/roxo (tiro do Opressor). |
+| `poeira-01..03` | 32×32 | Poeira lilás de pulo e pouso. |
+| `respingo-01..04` | 96×96 | Explosão roxa e laranja quando o Degustador cai. |
+| `acerto-01..03` | 48×48 | Estrela branca de impacto quando a coronhada acerta. |
+
+## 7. Objetos do mundo
+
+Pasta `assets/cacada/objetos/`.
 
 | Arquivo | Tamanho | Descrição / uso |
 |---|---|---|
-| `espinhos.png` | 64×64 | 3 espinhos de metal apontando para cima, pontas vermelhas, ocupando só a **metade de baixo** do tile. O jogo gira para fazer os do teto. |
-| `serra.png` | 64×64 | Serra circular de metal com 12 dentes, centro vermelho. **Desenhe de frente** (o jogo gira). Raio de perigo = 15 de 20 px do tile, então a serra deve ocupar quase o quadro todo. |
-| `trilho.png` | 64×16 | Trilho escuro por onde as serras andam (repete na horizontal/vertical). |
-| `plataforma.png` | 192×24 | Plataforma móvel de metal (3 tiles de largura por ~8 px no jogo), rebites, luzinha laranja embaixo. |
-| `mola-01.png`, `mola-02.png` | 64×64 | Mola vermelha/prata: 1) normal, 2) comprimida (após o quique). |
-| `telha.png`, `telha-rachada.png` | 64×64 | Telha de barro laranja: inteira e rachada (a rachada treme antes de cair). |
-| `marquise.png` | 64×32 | Marquise/toldo de madeira que dá para atravessar por baixo: só a **faixa de cima** é "chão". |
-| `bandeira-apagada.png`, `bandeira-acesa.png` | 64×128 | Ponto de controle: poste com bandeira triangular; apagada roxa-escura, acesa **laranja com uma vírgula branca**. Base do poste na linha 124. |
-| `virgula.png` | 48×48 | A vírgula coletável (piada gramatical do Degustador): vírgula amarela `#ffd400` gordinha com contorno preto e brilho. |
-| `projetil.png` | 64×16 | Bala da MP5K indo para a direita, rastro laranja. |
+| `banco` | 96×48 | **Banco de praça** de madeira e ferro (o checkpoint, como os bancos de HK). |
+| `placa` | 64×80 | Placa de madeira num poste (dicas do jogo). |
+| `barraca-italolol` | 128×112 | Barraca da loja: toldo listrado vermelho e branco, balcão azul e o **ItaloLOL** atrás. |
+| `alavanca-01..02` | 48×64 | Alavanca: fechada (vermelha) e aberta (verde). |
+| `portao` | 64×64 | Grade de ferro do portão (repete na vertical). |
+| `grade-arena` | 64×64 | Grade roxa brilhante que fecha a arena do chefe. |
+| `parede-rachada-01..03` | 64×64 | Tijolos que **escondem segredos**: inteira, rachada, quase quebrando. |
+| `virgulas-saco` | 48×48 | Saquinho de vírgulas (a moeda, como o Geo). |
+| `fragmento` | 48×48 | **Fragmento de cogumelo**: um quarto do cogumelo vermelho de bolinhas brancas, brilhando. |
+| `habilidade-orbe` | 64×64 | Orbe dourado brilhante das habilidades novas. |
+| `espinhos`, `serra`, `trilho`, `plataforma`, `mola-01..02`, `telha`, `telha-rachada`, `marquise` | como na v1 | Espinhos (metade de baixo do tile), serra de 12 dentes (o jogo gira), plataforma móvel de metal 192×24, mola vermelha, telha de barro, marquise de madeira. |
 
-## 6. Tiles do cenário (telhados)
+## 8. Tiles e fundos das áreas
 
-Pasta: `assets/cacada/tiles/` · cada tile **64×64**, **tem que emendar** com ele mesmo nos 4
-lados (sem borda visível quando repetido).
+Pasta `assets/cacada/areas/<area>/` · tiles de **64×64 que emendam** nos 4 lados · fundos de
+**1280×720** que emendam na horizontal (e na vertical nas áreas fechadas).
 
-| Arquivo | Uso |
-|---|---|
-| `telhado-topo.png` | Tile de cima de um prédio/telhado: faixa roxa `#8a2be2` com borda clara em cima, tijolo embaixo. É o chão onde se pisa. |
-| `telhado-meio.png` | Parede de tijolo roxo-escuro (interior dos blocos). |
-| `telhado-canto-esq.png`, `telhado-canto-dir.png` | (opcional) topo com quina arredondada nas pontas. |
-| `caixa.png` | Caixa de metal cinza com X (bloco sólido diferente). |
-| `interior.png` | (opcional) parede de fundo do covil, mais escura, para as fases fechadas (1-2 e 1-6). |
+| Área | Cor principal | Tiles (`topo`, `meio`) | Fundo |
+|---|---|---|---|
+| `telhados` — Telhados da Toradolândia | roxo `#8a2be2` | telhado roxo com borda clara; tijolo roxo-escuro | céu noturno, cidade distante e **batsinal de vírgula** (já existem na Ronda) |
+| `beco` — Beco das Chaminés | tijolo avermelhado `#c0583a` | beirada de tijolo; parede de tijolo escuro | parede de tijolos com canos e sombras de chaminés |
+| `fabrica` — Fábrica do Chat | laranja industrial `#e08a2c` | chapa de metal com rebites; parede de aço | engrenagens, canos e um brilho laranja de forno embaixo |
+| `torre` — Torre dos Servidores | ciano `#2bb3c0` | piso de metal com faixa ciano; parede de painéis | racks de servidores com LEDs piscando |
+| `covil` — Covil do Inominável | verde tóxico `#5aff78` e roxo | piso escuro com borda verde; parede com código glitch | céu corrompido com faixas de glitch e a cidade ao longe |
 
-## 7. Efeitos
+## 9. Interface (HUD e telas)
 
-Pasta: `assets/cacada/efeitos/`.
-
-| Arquivo | Tamanho | Descrição |
-|---|---|---|
-| `poeira-01..03.png` | 32×32 | Nuvenzinha de poeira lilás ao pular/pousar. |
-| `respingo-01..04.png` | 96×96 | Morte do Degustador: explosão roxa e laranja estilo gibi (sem sangue). |
-| `onomatopeias.png` | 512×128 | (opcional) "SPLAT!", "POW!", "BOING!", "ZAP!" em letras de gibi; hoje o jogo escreve com a fonte Bangers. |
-
-## 8. Fundo
-
-Pasta: `assets/cacada/fundo/`.
+Pasta `assets/cacada/ui/`.
 
 | Arquivo | Tamanho | Descrição |
 |---|---|---|
-| `ceu.png` | 1280×720, **opaco** | Céu noturno roxo e azul-escuro, estrelas, lua cheia à esquerda, nuvens. Fica parado. |
-| `cidade-longe.png` | 1280×640, transparente | Silhueta de prédios distantes com janelinhas amarelas. **Tem que emendar na horizontal** (borda esquerda continua na direita). Anda devagar (paralaxe 0,1). |
-| `cidade-perto.png` | 1280×640, transparente | Prédios mais perto e mais escuros, caixas d'água, antenas. **Emenda na horizontal.** Paralaxe 0,3. |
-| `sinal-virgula.png` | 256×256, transparente | O "batsinal" do Degustador: holofote projetando uma **vírgula** nas nuvens. |
-
-## 9. Interface
-
-Pasta: `assets/cacada/ui/`.
-
-| Arquivo | Tamanho | Descrição |
-|---|---|---|
-| `logo.png` | 1024×256, transparente | Título "CAÇADA AO INOMINÁVEL" em letras de gibi laranja com contorno preto grosso, uma vírgula no lugar de algum acento, Degustador apontando a MP5K num canto. |
-| `fase-1-1.png` … `fase-1-6.png` | 320×180 | (opcional) miniatura de cada fase para o menu. |
-| `cadeado.png`, `estrela.png` | 64×64 | Fase bloqueada / todas as vírgulas pegas. |
+| `vaso-pontuacao` | 128×128 | O "vaso de alma": círculo com moldura branca e uma **vírgula** gravada; o jogo enche por dentro com tinta clara. |
+| `cogumelo-cheio`, `cogumelo-vazio` | 48×48 | Vida: cogumelo vermelho com bolinhas brancas (cheio) e contorno apagado (vazio). |
+| `logo` | 1024×256 | "CAÇADA AO INOMINÁVEL" em letras de gibi laranja com contorno preto, Degustador apontando a MP5K. |
+| `titulo-fundo` | 1280×720 | Tela de título: o Degustador de costas olhando a cidade, o Inominável e o Stand ao longe. |
+| `habilidade-<nome>` | 256×256 | Ícone grande de cada habilidade para a tela "NOVA HABILIDADE": `rajada`, `dash` (capa), `parede` (luvas com fita), `pulo2` (parênteses). |
+| `mapa-banco`, `mapa-chefe`, `mapa-sombra` | 32×32 | Ícones do mapa. |
 
 ---
 
-## 10. Como pedir cada imagem (modelo de prompt)
+## 10. Modelo de prompt
 
-Use este modelo e troque o que está entre `< >`:
+> Sprite de jogo 2D estilo Hollow Knight com traço de gibi: contorno preto grosso, cores
+> chapadas com sombra simples, clima noturno. `<descrição do item>`. Vista de lado, olhando
+> para a direita. Fundo totalmente transparente, sem sombra no chão. Quadro de `<tamanho>` px,
+> personagem centralizado, pés na linha `<linha>`. Mesma escala e mesmo design dos outros
+> quadros da animação.
 
-> Sprite de jogo 2D em estilo de gibi, contorno preto grosso, cores chapadas com sombra
-> simples. `<descrição do item>`. Vista de lado, olhando para a direita. Fundo totalmente
-> transparente, sem sombra no chão. Quadro de `<tamanho>` px, personagem centralizado, pés na
-> linha `<linha>`. Mesma escala e mesmo design dos outros quadros da animação.
+Exemplo (Ping, quadro 1 de 2):
 
-Exemplo pronto (Degustador correndo, quadro 3 de 6):
-
-> Sprite de jogo 2D em estilo de gibi, contorno preto grosso, cores chapadas. Vigilante
-> gordinho com fantasia de Batman mal feita (cinza com remendos de fita adesiva, morcego preto
-> no peito, capa preta rasgada), gorro verde do Teemo com orelhinhas e óculos de aviador,
-> óculos de grau e barba, segurando uma submetralhadora MP5K laranja. Quadro 3 de 6 de um
-> ciclo de corrida rápida, corpo inclinado para a frente, capa voando para trás. Vista de
-> lado, olhando para a direita. Fundo transparente. Quadro de 128×128 px, pés na linha 124,
-> corpo centralizado.
+> Sprite de jogo 2D estilo Hollow Knight com traço de gibi, contorno preto grosso. Um balão de
+> notificação vermelho e redondo com um ponto de exclamação branco no meio, com duas asinhas de
+> morcego pretas batendo (asas para cima). Visto de lado. Fundo transparente. Quadro de 64×64 px,
+> centralizado.
 
 ## 11. Depois de criar (para quem for trocar no código)
 
 1. Salve os arquivos nas pastas acima (`assets/cacada/...`).
 2. Em `js/cacada.js`, troque os caminhos da constante `ARQUIVOS` (hoje apontam para
-   `assets/ronda/...`). As chaves (`parado`, `correr`, `pular`, `cair`, `parede`,
-   `agarrado`, `atirar`, `morrer`, `coracao`, `drone`, `feiticeira`, `projetil`, `ceu`,
-   `cidade`, `sinal`) correspondem aos itens 2, 4, 5 e 8; o que não tem chave ainda é
-   desenhado por código (passo 4).
-3. Os sprites temporários têm o apoio na coluna 76 (não 64); ao trocar, ajuste o `76` em
-   `desenharJogador` para `64`. A feiticeira nova olha para a direita: tire `'feiticeira'`
-   de `OLHA_ESQUERDA`.
-4. Tiles, serras, espinhos, mola, plataforma, bandeira, vírgula e o Inominável hoje são
-   desenhados por código (`TILES`, `desenharSerra`, `desenharInominavel`…). Troque cada
-   desenho por `ctx.drawImage` da arte nova, mantendo o mesmo tamanho na tela.
+   `assets/ronda/...`) e acrescente as chaves novas.
+3. Os sprites temporários têm o apoio na coluna 76; ao trocar, ajuste o `76` em
+   `desenharJogador` para `64`. A feiticeira nova olha para a direita: tire `'feiticeira'` de
+   `OLHA_ESQUERDA`.
+4. O que hoje é desenhado por código fica em `DESENHOS` (inimigos), `TILES_AREA`/`TILES`
+   (tiles), `camadaFundo` (fundos), `inominavel`, `desenharLoja`, `desenharColetaveis`,
+   `desenharGolpe` e `desenharHud`. Troque cada desenho por `ctx.drawImage` da arte nova,
+   mantendo o mesmo tamanho na tela.
 5. Rode `npm test` e abra o jogo (clique no título da página do Degustador) para conferir.

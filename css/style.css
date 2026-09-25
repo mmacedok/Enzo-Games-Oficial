@@ -1627,7 +1627,47 @@ body.game-dialog-open { overflow: hidden; }
 .cacada-botao[data-tecla="esquerda"], .cacada-botao[data-tecla="direita"] { background: #2a2a3a; font-size: 1.8rem; }
 .cacada-botao--baixo { min-width: 48px; background: #1d1d2b; font-size: 1.2rem; }
 .cacada-botao[data-tecla="pulo"] { min-width: 96px; }
+/* v2 (metroidvania): direcional em cruz + 5 botões de ação */
+.cacada-controles--v2 { align-items: center; width: min(100%, 760px); }
+.cacada-direcional {
+    display: grid;
+    grid-template-columns: repeat(3, 52px);
+    grid-template-rows: repeat(3, 44px);
+    gap: 4px;
+}
+.cacada-direcional .cacada-botao { min-width: 0; min-height: 0; padding: 0; font-size: 1.3rem; background: #2a2a3a; }
+.cacada-direcional [data-tecla="cima"] { grid-column: 2; grid-row: 1; }
+.cacada-direcional [data-tecla="esquerda"] { grid-column: 1; grid-row: 2; }
+.cacada-direcional [data-tecla="direita"] { grid-column: 3; grid-row: 2; }
+.cacada-direcional [data-tecla="baixo"] { grid-column: 2; grid-row: 3; }
+.cacada-acoes {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    grid-template-rows: 40px 72px;
+    gap: 6px;
+}
+.cacada-acoes .cacada-botao--menor { min-width: 64px; min-height: 0; font-size: 0.95rem; background: #3a2a55; }
+.cacada-acoes [data-tecla="golpe"] { grid-column: 1 / span 2; grid-row: 2; min-height: 0; }
+.cacada-acoes [data-tecla="pulo"] { grid-column: 3; grid-row: 2; min-height: 0; }
+@media (orientation: landscape) and (pointer: coarse) {
+    .cacada-controles--v2 {
+        position: fixed;
+        inset: auto 0 max(8px, env(safe-area-inset-bottom)) 0;
+        width: 100%;
+        padding: 0 max(12px, env(safe-area-inset-left)) 0 max(12px, env(safe-area-inset-right));
+        pointer-events: none;
+        z-index: 2;
+    }
+    .cacada-controles--v2 .cacada-botao { pointer-events: auto; opacity: 0.78; }
+    .cacada-controles--v2 .cacada-direcional { grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 38px); }
+    .cacada-controles--v2 .cacada-acoes { grid-template-rows: 32px 54px; gap: 5px; }
+    .cacada-controles--v2 .cacada-botao--menor { min-width: 54px; font-size: 0.8rem; }
+    .cacada-controles--v2 [data-tecla="golpe"], .cacada-controles--v2 [data-tecla="pulo"] { font-size: 1.15rem; min-width: 70px; }
+}
 @media (max-width: 560px) {
+    .cacada-acoes [data-tecla="golpe"], .cacada-acoes [data-tecla="pulo"] { font-size: 1.25rem; }
+    .cacada-direcional { grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 40px); }
+    .cacada-acoes .cacada-botao--menor { min-width: 52px; font-size: 0.8rem; }
     .cacada-controles { gap: 8px; padding: 0 4px; }
     .cacada-controles__lado { gap: 6px; flex: 1; }
     .cacada-botao, .cacada-botao[data-tecla="pulo"] { flex: 1; min-width: 0; padding: 0 4px; font-size: 1.15rem; }

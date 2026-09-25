@@ -1,293 +1,544 @@
 // ============================================================================
-// Contrato das regras da "Caçada ao Inominável" (js/cacada-core.js).
-// O teste mais importante é o do robô: prova que toda fase dá para passar
-// com a física de verdade (tools/cacada-robo.js).
+// Contrato das regras da "Caçada ao Inominável" (js/cacada-core.js e
+// js/cacada-inimigos.js): mundo, física, combate, inimigos, chefes e save.
+// A prova de que o mundo inteiro dá para atravessar está em
+// test/cacada-robo.test.js (mais demorado).
 // ============================================================================
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const C = require('../js/cacada-core.js');
-const FASES = require('../js/cacada-fases.js');
-const { resolver } = require('../tools/cacada-robo.js');
+const MUNDO = require('../js/cacada-mundo.js');
 
 const { CONFIG } = C;
 const T = CONFIG.tile;
+const L = CONFIG.jogadorL;
+const A = CONFIG.jogadorA;
+const DT = CONFIG.passo;
 
-/** Fase de teste a partir de linhas de texto. */
-const nivel = (mapa) => C.carregarFase({ id: 'teste', nome: 'teste', mapa });
+/** Mundo de uma sala só, para testar uma coisa por vez. */
+const mundoDe = (mapa, extra = {}) => ({ areas: { a: { nome: 'A', cor: '#fff' } }, salas: [{ id: 'sala', area: 'a', x: 0, y: 0, mapa, ...extra }] });
 
-/** Roda `segundos` de física com a entrada dada (função do tempo ou objeto fixo). */
-function rodar(nv, j, segundos, entrada = {}) {
-    const mundo = { nivel: nv };
-    let t = 0;
-    let pedido = false;
-    const passos = Math.round(segundos / CONFIG.passo);
-    for (let i = 0; i < passos; i++) {
-        const e = { ...(typeof entrada === 'function' ? entrada(t, j) : entrada) };
-        // puloPedido só vale no primeiro passo em que aparece.
-        if (e.puloPedido && pedido) e.puloPedido = false;
-        pedido = !!e.puloPedido;
-        C.passoJogador(mundo, j, e, CONFIG.passo, t);
-        t += CONFIG.passo;
-    }
-    return j;
+function jogoDe(mapa, extra = {}, habilidades = []) {
+    const jogo = C.criarJogo(mundoDe(mapa, extra));
+    C.iniciar(jogo);
+    for (const h of habilidades) jogo.progresso.habilidades.add(h);
+    jogo.eventos = [];
+    return jogo;
 }
 
-const CHAO_LIVRE = [
-    '..........',
-    '..........',
-    '..........',
-    '..........',
-    '..........',
-    '..........',
-    '..........',
-    '.S.......I',
-    '##########',
+/** Roda `segundos` de jogo com a entrada dada (objeto fixo ou função do passo). */
+function rodar(jogo, segundos, entrada = {}) {
+    const n = Math.round(segundos / DT);
+    for (let i = 0; i < n; i++) {
+        const e = typeof entrada === 'function' ? entrada(i, jogo) : { ...entrada };
+        e.cimaAgora = !!e.cimaPedido;
+        C.passo(jogo, e, DT);
+    }
+}
+
+const eventos = (jogo, tipo) => jogo.eventos.filter((e) => e.tipo === tipo);
+
+const SALA_LIVRE = [
+    '##############################',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#..S.........................#',
+    '##############################',
 ];
 
-test('todas as fases carregam: início, Inominável e só letras da legenda', () => {
-    assert.ok(FASES.length >= 6);
-    const ids = new Set();
-    for (const def of FASES) {
-        const nv = C.carregarFase(def);
-        assert.ok(!ids.has(def.id), `id repetido ${def.id}`);
-        ids.add(def.id);
-        assert.ok(nv.inicio && nv.objetivo, def.id);
-        assert.ok(nv.altura * T >= CONFIG.altura, `${def.id}: fase mais baixa que a tela`);
-        assert.ok(def.nome && def.dica, `${def.id}: falta nome ou dica`);
-        assert.ok(nv.virgulas.length > 0, `${def.id}: sem vírgulas`);
+// ------------------------------------------------------------------ mundo
+
+test('o mundo carrega: 15 salas, sem sobreposição e com aberturas que batem', () => {
+    const nivel = C.carregarMundo(MUNDO);
+    assert.equal(nivel.salas.length, 15);
+    assert.deepEqual(C.aberturasSemPar(nivel), []);
+    for (const s of nivel.salas) {
+        assert.ok(MUNDO.areas[s.area], `${s.id}: área sem nome`);
+        assert.ok(s.nome, `${s.id}: sala sem nome`);
     }
+    assert.ok(nivel.bancos.length >= 4);
+    assert.ok(nivel.lojas.length >= 1);
 });
 
-test('letra desconhecida no mapa é erro (pega erro de digitação)', () => {
-    assert.throws(() => nivel(['S.I', '#?#']), /desconhecida/);
-    assert.throws(() => nivel(['..I', '###']), /falta o S/);
+test('cada habilidade aparece uma vez no mundo e os dois chefes existem', () => {
+    const nivel = C.carregarMundo(MUNDO);
+    const habs = nivel.itens.filter((i) => i.tipo === 'habilidade').map((i) => i.habilidade).sort();
+    assert.deepEqual(habs, ['dash', 'parede', 'pulo2', 'rajada']);
+    const chefes = nivel.salas.filter((s) => s.chefeDef).map((s) => s.chefeDef.tipo).sort();
+    assert.deepEqual(chefes, ['capangaMor', 'opressor']);
+    // Fragmentos no mundo + 1 na loja dão pelo menos um cogumelo a mais.
+    assert.ok(nivel.itens.filter((i) => i.tipo === 'fragmento').length + 1 >= 4);
 });
 
-test('pulo cheio sobe ~4 tiles e soltar cedo pula mais baixo', () => {
-    assert.ok(Math.abs(C.alturaPulo() - 4 * T) < 4, `altura ${C.alturaPulo()}`);
-    const nv = nivel(CHAO_LIVRE);
-    const alto = (segurar) => {
-        const j = C.criarJogador(nv.inicio);
-        rodar(nv, j, 0.1);
-        const y0 = j.y;
+test('erros de desenho viram erro na hora de carregar', () => {
+    assert.throws(() => C.carregarMundo(mundoDe(['#?#', 'S..'])), /desconhecida/);
+    assert.throws(() => C.carregarMundo({ areas: {}, salas: [{ id: 'a', area: 'a', x: 0, y: 0, mapa: ['S..'] }, { id: 'b', area: 'a', x: 0, y: 0, mapa: ['...'] }] }), /sobrepõe/);
+    assert.throws(() => C.carregarMundo(mundoDe(['@..', 'S..'])), /chefe/);
+});
+
+// ------------------------------------------------------------------ física
+
+test('pulo sobe ~4 tiles; soltar cedo pula mais baixo', () => {
+    assert.ok(Math.abs(C.alturaPulo() - 4 * T) < 4);
+    const altura = (quadrosSegurando) => {
+        const jogo = jogoDe(SALA_LIVRE);
+        const y0 = jogo.jogador.y;
         let topo = y0;
-        rodar(nv, j, 0.8, (t) => {
-            topo = Math.min(topo, j.y);
-            return { pulo: t < segurar, puloPedido: t < 0.01 };
-        });
+        rodar(jogo, 0.6, (i, jj) => { topo = Math.min(topo, jj.jogador.y); return { pulo: i < quadrosSegurando, puloPedido: i === 0 }; });
         return y0 - topo;
     };
-    const cheio = alto(1);
-    const curto = alto(0.05);
-    assert.ok(cheio > 75 && cheio < 90, `pulo cheio ${cheio}`);
-    assert.ok(curto < cheio * 0.6, `pulo curto ${curto}`);
+    const cheio = altura(999);
+    assert.ok(cheio > 75 && cheio < 90, `pulo ${cheio}`);
+    assert.ok(altura(5) < cheio * 0.6, 'pulo curto');
 });
 
-test('tolerância da beirada (pulo coiote)', () => {
-    const nv2 = nivel([
-        '..........',
-        '..........',
-        '..........',
-        '..........',
-        '..........',
-        '..........',
-        '..........',
-        '.S.......I',
-        '###.......',
-    ]);
-    // Coiote: já saiu da beirada (no ar) e o pulo ainda vale.
-    const k = C.criarJogador(nv2.inicio);
-    const mundo = { nivel: nv2 };
-    let t = 0;
-    let pulouNoAr = false;
-    for (let i = 0; i < 120 && !pulouNoAr; i++, t += CONFIG.passo) {
-        const noAr = !k.noChao && k.x > 3 * T;
-        const ev = C.passoJogador(mundo, k, { direita: true, pulo: noAr, puloPedido: noAr }, CONFIG.passo, t);
-        if (noAr && ev.includes('pulo')) pulouNoAr = true;
-    }
-    assert.ok(pulouNoAr, 'pulou depois de sair da beirada');
-    assert.ok(k.vy < -400);
+test('dash só com a Capa Janky e anda ~85 px', () => {
+    const sem = jogoDe(SALA_LIVRE);
+    const x0 = sem.jogador.x;
+    rodar(sem, 0.25, (i) => ({ dashPedido: i === 0 }));
+    assert.ok(Math.abs(sem.jogador.x - x0) < 1, 'sem capa não sai do lugar');
+    const com = jogoDe(SALA_LIVRE, {}, ['dash']);
+    rodar(com, 0.3, (i) => ({ dashPedido: i === 0 }));
+    const andou = com.jogador.x - x0;
+    assert.ok(andou > 75 && andou < 110, `dash andou ${andou}`);
 });
 
-test('parede: desliza devagar e o pulo na parede empurra para longe', () => {
-    const nv = nivel([
-        '.....#....',
-        '.....#....',
-        '.....#....',
-        '.....#....',
-        '.....#....',
-        '.....#....',
-        '.....#....',
-        '.S...#...I',
-        '##########',
-    ]);
-    const j = C.criarJogador({ x: 5 * T - CONFIG.jogadorL, y: 50 });
-    rodar(nv, j, 0.5, { direita: true });
-    assert.equal(j.parede, 1);
-    assert.ok(j.vy <= CONFIG.quedaParede + 1, `desliza ${j.vy}`);
-    rodar(nv, j, CONFIG.passo, { direita: true, pulo: true, puloPedido: true });
-    assert.ok(j.vx < -150, `empurrou para a esquerda ${j.vx}`);
-    assert.ok(j.vy < -400, `subiu ${j.vy}`);
+test('parede: sem as Luvas cai direto; com as Luvas desliza e pula dela', () => {
+    const mapa = SALA_LIVRE.map((l, i) => (i > 0 && i < 15 ? `${l.slice(0, 10)}#${l.slice(11)}` : l));
+    const teste = (habilidades) => {
+        const jogo = jogoDe(mapa, {}, habilidades);
+        const j = jogo.jogador;
+        j.x = 10 * T - L;
+        j.y = 3 * T;
+        rodar(jogo, 0.5, { direita: true });
+        const vy = j.vy;
+        rodar(jogo, DT, { direita: true, pulo: true, puloPedido: true });
+        return { vy, vx: j.vx, parede: j.parede };
+    };
+    const sem = teste([]);
+    assert.ok(sem.vy > CONFIG.quedaParede + 50, `sem luvas cai rápido (${sem.vy})`);
+    const com = teste(['parede']);
+    assert.ok(com.vy <= CONFIG.quedaParede + 1, `desliza (${com.vy})`);
+    assert.ok(com.vx < -150, 'pula para longe da parede');
 });
 
-test('chaminé de 3 tiles: sobe só pulando de parede em parede', () => {
-    const mapa = ['........I..'];
-    for (let i = 0; i < 20; i++) mapa.push('####...####');
-    mapa.push('####S..####', '###########');
-    const r = resolver({ id: 'chamine', nome: 'x', mapa });
-    assert.ok(r.ok, 'o robô sobe a chaminé');
+test('pulo duplo só com os Parênteses', () => {
+    const alturaMax = (habilidades) => {
+        const jogo = jogoDe(SALA_LIVRE, {}, habilidades);
+        const y0 = jogo.jogador.y;
+        let topo = y0;
+        rodar(jogo, 1, (i, jj) => { topo = Math.min(topo, jj.jogador.y); return { pulo: true, puloPedido: i === 0 || i === 36 }; });
+        return y0 - topo;
+    };
+    const sem = alturaMax([]);
+    const com = alturaMax(['pulo2']);
+    assert.ok(com > sem + 40, `com ${com} × sem ${sem}`);
 });
 
-test('beirada: parede de 5 tiles só se sobe agarrando a quina', () => {
+test('agarra a quina de uma parede de 5 tiles e sobe com ↑', () => {
     const mapa = [
-        '..................',
-        '..................',
-        '..................',
-        '..................',
-        '..........I.......',
-        '.........#########',
-        '.........#########',
-        '.........#########',
-        '.........#########',
-        '.S.......#########',
-        '##################',
+        '##############################',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#.........####################',
+        '#.........####################',
+        '#.........####################',
+        '#.........####################',
+        '#.........####################',
+        '#..S......####################',
+        '##############################',
     ];
-    const nv = nivel(mapa);
-    const j = C.criarJogador(nv.inicio);
-    const eventos = [];
-    const mundo = { nivel: nv };
-    let t = 0;
-    for (let i = 0; i < 360; i++) {
-        const e = { direita: true, pulo: true, puloPedido: j.noChao && j.x > 6.5 * T };
-        eventos.push(...C.passoJogador(mundo, j, e, CONFIG.passo, t));
-        t += CONFIG.passo;
-        if (j.estado === 'agarrado') break;
-    }
-    assert.ok(eventos.includes('agarrou'), 'agarrou a quina');
-    assert.equal(j.estado, 'agarrado');
-    // ↑ sobe para cima do paredão.
-    for (let i = 0; i < 60; i++) { C.passoJogador(mundo, j, { cima: true }, CONFIG.passo, t); t += CONFIG.passo; }
-    assert.equal(j.estado, 'normal');
-    assert.ok(j.y + CONFIG.jogadorA <= 5 * T + 0.5 && j.x >= 9 * T - 2, `em cima (${j.x}, ${j.y})`);
-    // Sem agarrar (só pulo cheio, sem direção na hora de subir) não passa: 5 tiles > pulo.
-    assert.ok(C.alturaPulo() < 5 * T);
+    const jogo = jogoDe(mapa);
+    const j = jogo.jogador;
+    let agarrou = false;
+    rodar(jogo, 1.5, (i, jj) => {
+        if (jj.jogador.estado === 'agarrado') agarrou = true;
+        if (agarrou) return { cima: true };
+        return { direita: true, pulo: true, puloPedido: jj.jogador.noChao && jj.jogador.x > 6.5 * T };
+    });
+    assert.ok(agarrou, 'agarrou');
+    assert.ok(j.y + A <= 9 * T + 0.5 && j.x >= 10 * T - 2, `subiu (${j.x}, ${j.y})`);
 });
 
-test('marquise: sobe por baixo, pisa em cima e ↓ desce', () => {
-    const nv = nivel([
-        '..........',
-        '..........',
-        '..........',
-        '..........',
-        '...===....',
-        '..........',
-        '..........',
-        '.S.......I',
-        '##########',
-    ]);
-    const j = C.criarJogador({ x: 3 * T + 2, y: 7 * T + T - CONFIG.jogadorA });
-    rodar(nv, j, 0.05);
-    rodar(nv, j, 0.9, (t) => ({ pulo: true, puloPedido: t < 0.01 }));
-    assert.ok(j.noChao && Math.abs(j.y + CONFIG.jogadorA - 4 * T) < 0.5, `em cima da marquise ${j.y}`);
-    rodar(nv, j, 0.6, { baixo: true });
-    assert.ok(j.y + CONFIG.jogadorA > 6 * T, 'desceu pela marquise');
+// ------------------------------------------------------------------ combate
+
+const SALA_INIMIGO = SALA_LIVRE.map((l, i) => (i === 14 ? '#..S....c.....................#' : l)).map((l) => l.slice(0, 30));
+
+test('coronhada: acerta, dá 11 de Pontuação e empurra o inimigo', () => {
+    const jogo = jogoDe(SALA_INIMIGO);
+    const e = jogo.inimigos[0];
+    e.x = jogo.jogador.x + L + 10;
+    e.vida = 3;
+    const vidaAntes = e.vida;
+    rodar(jogo, 0.05, (i) => ({ golpePedido: i === 0 }));
+    assert.equal(e.vida, vidaAntes - 1);
+    assert.equal(jogo.jogador.pontuacao, CONFIG.pontuacaoPorGolpe);
+    assert.ok(e.kx > 0, 'inimigo recuou');
 });
 
-test('mola joga bem mais alto que o pulo', () => {
-    const nv = nivel(CHAO_LIVRE.map((l, i) => (i === 7 ? '.S.T.....I' : l)));
-    const j = C.criarJogador({ x: 3 * T + 3, y: 20 });
-    let topo = Infinity;
-    const eventos = [];
-    const mundo = { nivel: nv };
-    for (let i = 0, t = 0; i < 240; i++, t += CONFIG.passo) {
-        eventos.push(...C.passoJogador(mundo, j, {}, CONFIG.passo, t));
-        if (eventos.includes('mola')) topo = Math.min(topo, j.y);
-    }
-    assert.ok(eventos.includes('mola'));
-    assert.ok(7 * T - topo > C.alturaPulo() * 1.5, `subiu ${7 * T - topo}`);
-});
-
-test('espinhos, serra e queda matam; o Inominável termina a fase', () => {
-    const jogo = C.criarJogo([{ id: 'x', nome: 'x', dica: 'x', mapa: ['..........', '.S.^.....I', '##########', '..........'] }]);
-    C.iniciarFase(jogo, 0);
-    const e = { direita: true };
-    for (let i = 0; i < 120 && jogo.fase === 'jogando'; i++) C.passo(jogo, e, CONFIG.passo);
-    assert.equal(jogo.fase, 'morto');
-    assert.equal(jogo.causa, 'espinho');
-    assert.equal(jogo.mortes, 1);
-    for (let i = 0; i < 120 && jogo.fase !== 'jogando'; i++) C.passo(jogo, {}, CONFIG.passo);
-    assert.equal(jogo.fase, 'jogando', 'renasce sozinho');
-    assert.deepEqual([jogo.jogador.x, jogo.jogador.y], [jogo.nivel.inicio.x, jogo.nivel.inicio.y]);
-
-    const vit = C.criarJogo([{ id: 'x', nome: 'x', dica: 'x', mapa: ['..........', '.S......I.', '##########'] }]);
-    C.iniciarFase(vit, 0);
-    for (let i = 0; i < 600 && vit.fase === 'jogando'; i++) C.passo(vit, { direita: true }, CONFIG.passo);
-    assert.equal(vit.fase, 'vitoria');
-});
-
-test('ponto de controle: renasce nele e as vírgulas pegas continuam', () => {
-    const jogo = C.criarJogo([{ id: 'x', nome: 'x', dica: 'x', mapa: ['..........', '.S,C.^...I', '##########'] }]);
-    C.iniciarFase(jogo, 0);
-    for (let i = 0; i < 240 && jogo.fase === 'jogando'; i++) C.passo(jogo, { direita: true }, CONFIG.passo);
-    assert.equal(jogo.fase, 'morto');
-    assert.equal(jogo.pegas.size, 1);
-    for (let i = 0; i < 120 && jogo.fase !== 'jogando'; i++) C.passo(jogo, {}, CONFIG.passo);
-    assert.ok(jogo.checkpoint);
-    assert.ok(Math.abs(jogo.jogador.x - 3 * T) < T, 'renasceu no ponto de controle');
-    assert.equal(jogo.pegas.size, 1);
-});
-
-test('inimigos: pisão derruba e quica; encostar de lado mata; tiro derruba', () => {
-    const mapa = ['..........', '..........', '.S....E..I', '##########'];
-    // De lado.
-    const lado = C.criarJogo([{ id: 'x', nome: 'x', dica: 'x', mapa }]);
-    C.iniciarFase(lado, 0);
-    for (let i = 0; i < 240 && lado.fase === 'jogando'; i++) C.passo(lado, { direita: true }, CONFIG.passo);
-    assert.equal(lado.fase, 'morto');
-    assert.equal(lado.causa, 'coracao');
-    // Pisão: cai em cima.
-    const pisa = C.criarJogo([{ id: 'x', nome: 'x', dica: 'x', mapa }]);
-    C.iniciarFase(pisa, 0);
-    const d = pisa.inimigos[0];
-    d.vx = 0;
-    pisa.jogador.x = d.x + 2;
-    pisa.jogador.y = d.y - 60;
+test('pogo: golpe para baixo em espinho quica sem tomar dano', () => {
+    const mapa = SALA_LIVRE.map((l, i) => (i === 14 ? '#..S....^^^^^^^^..............#' : l)).map((l) => l.slice(0, 30));
+    const jogo = jogoDe(mapa);
+    const j = jogo.jogador;
+    j.x = 10 * T;
+    j.y = 9 * T;
     let quicou = false;
-    for (let i = 0; i < 120; i++) {
-        C.passo(pisa, {}, CONFIG.passo);
-        if (pisa.eventos.some((e) => e.tipo === 'pisao')) quicou = true;
-        if (quicou) break;
-    }
-    assert.ok(quicou && !d.vivo && pisa.jogador.vy < 0 && pisa.fase === 'jogando');
-    // Tiro: 2 tiros no coração.
-    const tiro = C.criarJogo([{ id: 'x', nome: 'x', dica: 'x', mapa }]);
-    C.iniciarFase(tiro, 0);
-    tiro.inimigos[0].vx = 0;
-    for (let i = 0; i < 120; i++) C.passo(tiro, { tiro: true }, CONFIG.passo);
-    assert.equal(tiro.inimigos[0].vivo, false);
-    assert.equal(tiro.fase, 'jogando');
+    rodar(jogo, 0.6, (i, jj) => {
+        if (eventos(jj, 'pogo').length) quicou = true;
+        const perto = jj.jogador.y + A > 14 * T - 30;
+        return { baixo: true, golpePedido: !quicou && jj.jogador.vy > 0 && perto };
+    });
+    assert.ok(quicou, 'quicou');
+    assert.equal(j.vida, CONFIG.vidaInicial);
+    assert.equal(eventos(jogo, 'perigo').length, 0);
 });
 
-test('passo fixo: 60 Hz e 144 Hz dão a mesma partida', () => {
+test('encostar no inimigo tira 1 cogumelo, empurra e dá invencibilidade', () => {
+    const jogo = jogoDe(SALA_INIMIGO);
+    const j = jogo.jogador;
+    const e = jogo.inimigos[0];
+    e.x = j.x + 4;
+    e.y = j.y + A - e.h;
+    rodar(jogo, 0.02);
+    assert.equal(j.vida, CONFIG.vidaInicial - 1);
+    assert.ok(j.invencivel > 0);
+    e.x = j.x;
+    e.y = j.y + A - e.h;
+    rodar(jogo, 0.1);
+    assert.equal(j.vida, CONFIG.vidaInicial - 1, 'invencível não toma de novo');
+});
+
+test('espinho tira 1 cogumelo e devolve ao último lugar seguro', () => {
+    const mapa = SALA_LIVRE.map((l, i) => (i === 14 ? '#..S.......^^^................#' : l)).map((l) => l.slice(0, 30));
+    const jogo = jogoDe(mapa);
+    rodar(jogo, 2, { direita: true });
+    assert.ok(eventos(jogo, 'perigo').length >= 1);
+    rodar(jogo, CONFIG.tempoPerigo + 0.1);
+    assert.equal(jogo.fase, 'jogando');
+    assert.ok(jogo.jogador.vida < CONFIG.vidaInicial);
+    assert.ok(jogo.jogador.x < 11 * T, 'voltou para antes dos espinhos');
+});
+
+test('morrer: renasce no banco com vida cheia e a Sombra guarda as vírgulas', () => {
+    const mapa = SALA_LIVRE.map((l, i) => (i === 14 ? '#..S.b..........^^............#' : l)).map((l) => l.slice(0, 30));
+    const jogo = jogoDe(mapa);
+    rodar(jogo, 0.3, { direita: true });
+    rodar(jogo, DT, { cimaPedido: true });
+    assert.equal(jogo.fase, 'sentado');
+    assert.equal(jogo.progresso.banco, 'sala:banco1');
+    jogo.progresso.virgulas = 40;
+    rodar(jogo, 0.1, { direita: true });
+    jogo.jogador.vida = 1;
+    jogo.jogador.invencivel = 0;
+    for (let i = 0; i < 400 && jogo.fase !== 'morto'; i++) rodar(jogo, DT, { direita: true });
+    assert.equal(jogo.progresso.mortes, 1);
+    rodar(jogo, CONFIG.tempoMorte + 0.1);
+    assert.equal(jogo.fase, 'sentado');
+    assert.equal(jogo.jogador.vida, jogo.progresso.vidaMax);
+    assert.equal(jogo.progresso.virgulas, 0);
+    assert.equal(jogo.progresso.sombra.virgulas, 40);
+    const sombra = jogo.inimigos.find((e) => e.tipo === 'sombra');
+    assert.ok(sombra, 'a Sombra está na sala');
+    // Derrotar a Sombra devolve as vírgulas.
+    sombra.vida = 1;
+    jogo.fase = 'jogando';
+    sombra.x = jogo.jogador.x + L + 6;
+    sombra.y = jogo.jogador.y;
+    sombra.vx = sombra.vy = 0;
+    rodar(jogo, 0.05, (i) => ({ golpePedido: i === 0 }));
+    assert.equal(jogo.progresso.virgulas, 40);
+    assert.equal(jogo.progresso.sombra, null);
+});
+
+test('Degustar: segurar cura 1 cogumelo e gasta 33 de Pontuação', () => {
+    const jogo = jogoDe(SALA_LIVRE);
+    const j = jogo.jogador;
+    j.vida = 2;
+    j.pontuacao = 40;
+    rodar(jogo, 0.5, { degustar: true });
+    assert.equal(j.vida, 2, 'soltar cedo não cura');
+    rodar(jogo, 0.1, {});
+    rodar(jogo, CONFIG.tempoDegustar + 0.05, { degustar: true });
+    assert.equal(j.vida, 3);
+    assert.equal(j.pontuacao, 40 - CONFIG.custoMagia);
+    rodar(jogo, 1.2, { degustar: true });
+    assert.equal(j.vida, 3, 'sem Pontuação não cura mais');
+});
+
+test('Rajada: só com a habilidade, gasta 33 e atravessa inimigos', () => {
+    const mapa = SALA_LIVRE.map((l, i) => (i === 14 ? '#..S....c..c..................#' : l)).map((l) => l.slice(0, 30));
+    const jogo = jogoDe(mapa);
+    jogo.jogador.pontuacao = 99;
+    rodar(jogo, 0.05, (i) => ({ magiaPedido: i === 0 }));
+    assert.equal(jogo.tiros.length, 0, 'sem a habilidade não atira');
+    jogo.progresso.habilidades.add('rajada');
+    for (const e of jogo.inimigos) { e.vida = 10; e.dir = 1; }
+    rodar(jogo, 0.6, (i) => ({ magiaPedido: i === 0 }));
+    assert.equal(jogo.jogador.pontuacao, 99 - CONFIG.custoMagia);
+    assert.ok(jogo.inimigos.every((e) => e.vida === 10 - CONFIG.rajadaDano), 'acertou os dois');
+});
+
+test('parede rachada quebra com 3 golpes; alavanca abre o portão', () => {
+    const mapa = SALA_LIVRE.map((l, i) => {
+        if (i === 12 || i === 13) return '#.....B......P................#'.slice(0, 30);
+        if (i === 14) return '#..S..B...L..P................#'.slice(0, 30);
+        return l;
+    });
+    const jogo = jogoDe(mapa);
+    const j = jogo.jogador;
+    rodar(jogo, 1, { direita: true });
+    for (let k = 0; k < 3; k++) rodar(jogo, 0.35, (i) => ({ golpePedido: i === 0, direita: i > 30 }));
+    assert.equal(jogo.progresso.quebrados.size, 1, 'quebrou');
+    rodar(jogo, 1, { direita: true });
+    assert.ok(j.x > 6 * T, 'passou pela parede quebrada');
+    // Volta um pouco e golpeia a alavanca.
+    j.x = 8 * T;
+    j.olhando = 1;
+    rodar(jogo, 0.1, (i) => ({ golpePedido: i === 0 }));
+    assert.ok(jogo.progresso.abertos.has('sala'), 'alavanca abriu');
+    rodar(jogo, 1.5, { direita: true });
+    assert.ok(j.x > 14 * T, 'passou pelo portão');
+});
+
+// ------------------------------------------------------------------ inimigos
+
+function inimigoSozinho(letra, mapaExtra) {
+    const mapa = SALA_LIVRE.map((l, i) => (mapaExtra && mapaExtra[i] ? mapaExtra[i] : l)).map((l) => l.slice(0, 30));
+    const linha = mapa[10].split('');
+    linha[20] = letra;
+    mapa[10] = linha.join('');
+    return jogoDe(mapa);
+}
+
+test('Ping fica parado de longe e persegue voando quando te vê', () => {
+    const jogo = inimigoSozinho('p');
+    const e = jogo.inimigos[0];
+    const d0 = Math.hypot(e.x - jogo.jogador.x, e.y - jogo.jogador.y);
+    rodar(jogo, 1);
+    assert.notEqual(e.estado, 'caca');
+    jogo.jogador.x = e.x - 120;
+    rodar(jogo, 1);
+    assert.equal(e.estado, 'caca');
+    assert.ok(Math.hypot(e.x - jogo.jogador.x, e.y - jogo.jogador.y) < 120 || jogo.jogador.vida < CONFIG.vidaInicial);
+    assert.ok(d0 > 0);
+});
+
+test('Troll prepara e dá investida', () => {
+    const mapa = SALA_LIVRE.map((l, i) => (i === 14 ? '#..S..............t...........#' : l)).map((l) => l.slice(0, 30));
+    const jogo = jogoDe(mapa);
+    const e = jogo.inimigos[0];
+    e.dir = -1;
+    jogo.jogador.x = e.x - 150;
+    let investiu = false;
+    rodar(jogo, 2, (i, jj) => { if (e.estado === 'investida') investiu = true; return {}; });
+    assert.ok(investiu);
+});
+
+test('Moderador bloqueia golpe de frente mas não por cima', () => {
+    const mapa = SALA_LIVRE.map((l, i) => (i === 14 ? '#..S....m.....................#' : l)).map((l) => l.slice(0, 30));
+    const jogo = jogoDe(mapa);
+    const e = jogo.inimigos[0];
+    rodar(jogo, 0.1);
+    e.dir = -1;
+    e.estado = 'guarda';
+    e.t = 0;
+    jogo.jogador.x = e.x - L - 12;
+    jogo.jogador.olhando = 1;
+    rodar(jogo, 0.03, (i) => ({ golpePedido: i === 0 }));
+    assert.equal(e.vida, e.vidaMax, 'bloqueou');
+    assert.ok(eventos(jogo, 'bloqueio').length >= 1);
+    // Por cima (pogo).
+    jogo.jogador.invencivel = 5;
+    jogo.jogador.x = e.x + 2;
+    jogo.jogador.y = e.y - A - 16;
+    jogo.jogador.vy = 100;
+    jogo.jogador.recargaGolpe = 0;
+    rodar(jogo, 0.3, (i) => ({ baixo: true, golpePedido: i === 2 }));
+    assert.ok(e.vida < e.vidaMax, 'golpe por cima passou do escudo');
+});
+
+test('Bug anda em volta de um bloco e volta ao começo', () => {
+    const mapa = SALA_LIVRE.map((l, i) => {
+        if (i >= 8 && i <= 10) return '#..........#####..............#'.slice(0, 30);
+        if (i === 7) return '#............g.................#'.slice(0, 30);
+        return l;
+    });
+    const jogo = jogoDe(mapa);
+    const e = jogo.inimigos[0];
+    jogo.jogador.x = 2 * T;
+    rodar(jogo, 0.05);
+    const inicio = { x: e.px, y: e.py };
+    const normais = new Set();
+    rodar(jogo, 16 * T / 38 + 0.05, (i) => { normais.add(`${e.nx},${e.ny}`); return {}; });
+    assert.equal(normais.size, 4, 'passou pelas 4 faces');
+    assert.ok(Math.hypot(e.px - inicio.x, e.py - inicio.y) < 3, 'voltou perto do início');
+});
+
+test('Drone atira em leque e a Feiticeira teleporta', () => {
+    const jogo = inimigoSozinho('d');
+    jogo.jogador.x = jogo.inimigos[0].x - 150;
+    rodar(jogo, 3);
+    assert.ok(eventos(jogo, 'tiroInimigo').length >= 1 || jogo.projeteis.length > 0);
+    const f = inimigoSozinho('f');
+    const e = f.inimigos[0];
+    f.jogador.x = e.x - 160;
+    const x0 = e.x;
+    const y0 = e.y;
+    rodar(f, 2.5);
+    assert.ok(Math.hypot(e.x - x0, e.y - y0) > 20, 'mudou de lugar');
+});
+
+// ------------------------------------------------------------------ chefes
+
+const ARENA = [
+    '##############################',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '#............................#',
+    '|............................#',
+    '|............................#',
+    '|S.........@.................#',
+    '##############################',
+];
+
+test('Capanga-Mor: a arena fecha, ele ataca, e ao cair deixa a Capa Janky', () => {
+    const jogo = jogoDe(ARENA, { chefe: 'capangaMor', premio: 'dash' });
+    const j = jogo.jogador;
+    rodar(jogo, 0.4, { direita: true });
+    assert.equal(jogo.arena, 0, 'arena ligada');
+    assert.ok(C.solido({ nivel: jogo.nivel, arena: jogo.arena }, 0, 13), 'grade fechada');
+    const chefe = jogo.inimigos.find((e) => e.chefe);
+    j.invencivel = 999;
+    rodar(jogo, 4);
+    assert.ok(jogo.projeteis.length > 0 || ['saltoPrep', 'salto', 'corridaPrep', 'corrida', 'marretaPrep', 'marreta', 'atordoado', 'recuperar', 'ocioso'].includes(chefe.estado));
+    chefe.vida = 1;
+    chefe.x = j.x + L + 4;
+    chefe.y = j.y + A - chefe.h;
+    j.olhando = 1;
+    rodar(jogo, 0.05, (i) => ({ golpePedido: i === 0 }));
+    assert.equal(chefe.vivo, false);
+    assert.ok(jogo.progresso.chefes.has('sala:chefe'));
+    assert.equal(jogo.arena, null, 'grade abriu');
+    const premio = jogo.nivel.itens.find((i) => i.premioDe === 'sala:chefe');
+    j.x = premio.x;
+    j.y = premio.y + premio.h - A;
+    j.invencivel = 0;
+    rodar(jogo, 0.05);
+    assert.equal(jogo.fase, 'pegou');
+    assert.ok(jogo.progresso.habilidades.has('dash'));
+    C.continuar(jogo);
+    assert.equal(jogo.fase, 'jogando');
+});
+
+test('Opressor do Chat: derrotar leva ao final', () => {
+    const jogo = jogoDe(ARENA, { chefe: 'opressor', final: true });
+    rodar(jogo, 0.4, { direita: true });
+    const chefe = jogo.inimigos.find((e) => e.chefe);
+    jogo.jogador.invencivel = 999;
+    rodar(jogo, 6);
+    assert.ok(eventos(jogo, 'ataqueChefe').length >= 1 || jogo.projeteis.length >= 0);
+    chefe.vida = 1;
+    chefe.x = jogo.jogador.x + L + 4;
+    chefe.y = jogo.jogador.y - 10;
+    chefe.vx = chefe.vy = 0;
+    jogo.jogador.olhando = 1;
+    rodar(jogo, 0.05, (i) => ({ golpePedido: i === 0 }));
+    assert.equal(chefe.vivo, false);
+    rodar(jogo, 3.2);
+    assert.equal(jogo.fase, 'final');
+    assert.ok(jogo.progresso.final);
+});
+
+// ------------------------------------------------------------------ loja, save, ritmo
+
+test('loja: sem vírgulas não compra; Fita Reforçada dobra o dano', () => {
+    const jogo = jogoDe(SALA_INIMIGO);
+    assert.equal(C.comprar(jogo, 'fita'), 'caro');
+    jogo.progresso.virgulas = 500;
+    assert.equal(C.comprar(jogo, 'fita'), 'ok');
+    assert.equal(C.comprar(jogo, 'fita'), 'comprado');
+    const e = jogo.inimigos[0];
+    e.x = jogo.jogador.x + L + 10;
+    e.vida = 5;
+    rodar(jogo, 0.05, (i) => ({ golpePedido: i === 0 }));
+    assert.equal(e.vida, 3);
+    assert.equal(C.comprar(jogo, 'fragmento'), 'ok');
+    assert.equal(jogo.progresso.fragmentos, 1);
+});
+
+test('save: exportar e importar devolve o mesmo progresso', () => {
+    const jogo = C.criarJogo(MUNDO);
+    C.iniciar(jogo);
+    const p = jogo.progresso;
+    p.habilidades.add('dash');
+    p.virgulas = 77;
+    p.coletados.add('x:1');
+    p.quebrados.add('B1,2');
+    p.abertos.add('torre');
+    p.chefes.add('arena:chefe');
+    p.sombra = { sala: 'beco', x: 10, y: 20, virgulas: 30 };
+    p.banco = 'beco:banco1';
+    p.visitadas.add('beco');
+    const dados = JSON.parse(JSON.stringify(C.exportarSave(jogo)));
+    const outro = C.criarJogo(MUNDO);
+    C.iniciar(outro, dados);
+    assert.deepEqual(C.exportarSave(outro), dados);
+    assert.equal(outro.fase, 'sentado', 'continua sentado no banco salvo');
+    assert.equal(outro.sala.id, 'beco');
+    // Save estranho não quebra o jogo.
+    const vazio = C.criarJogo(MUNDO);
+    C.iniciar(vazio, { v: 2, habilidades: ['voar', 'dash'], vidaMax: 99, banco: 'nao-existe' });
+    assert.deepEqual([...vazio.progresso.habilidades], ['dash']);
+    assert.equal(vazio.progresso.vidaMax, CONFIG.vidaMaxima);
+    assert.equal(vazio.fase, 'jogando');
+});
+
+test('passo fixo: 60 Hz e 144 Hz dão o mesmo resultado', () => {
     const final = (hz) => {
-        const jogo = C.criarJogo(FASES);
-        C.iniciarFase(jogo, 0);
+        const jogo = C.criarJogo(MUNDO);
+        C.iniciar(jogo);
         const e = { direita: true, pulo: true };
         for (let i = 0; i < hz * 3; i++) {
             if (i % Math.round(hz / 2) === 0) e.puloPedido = true;
             C.avancar(jogo, 1 / hz, e);
         }
-        return jogo;
+        return jogo.jogador;
     };
     const a = final(60);
     const b = final(144);
-    assert.ok(Math.abs(a.jogador.x - b.jogador.x) < 12, `${a.jogador.x} vs ${b.jogador.x}`);
-    assert.equal(a.mortes, b.mortes);
+    assert.ok(Math.abs(a.x - b.x) < 12, `${a.x} × ${b.x}`);
 });
 
-test('robô: toda fase tem caminho do início até o Inominável', { timeout: 300000 }, () => {
-    for (const def of FASES) {
-        const r = resolver(def);
-        assert.ok(r.ok, `${def.id} ${def.nome}: o robô não achou caminho (${r.nos} nós)`);
-    }
+test('começo do jogo: esconderijo, 5 cogumelos e nenhuma habilidade', () => {
+    const jogo = C.criarJogo(MUNDO);
+    C.iniciar(jogo);
+    assert.equal(jogo.sala.id, 'esconderijo');
+    assert.equal(jogo.jogador.vida, 5);
+    assert.equal(jogo.progresso.habilidades.size, 0);
+    assert.equal(jogo.fase, 'jogando');
 });

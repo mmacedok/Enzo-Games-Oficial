@@ -1,60 +1,82 @@
-# Caçada ao Inominável — jogo de plataforma do Degustador da Noite
+# Caçada ao Inominável — metroidvania do Degustador da Noite
 
-Status: **v1 jogável com artes temporárias** (24/09/2026). Substitui o runner "Degustação
-Noturna" (docs/PLANO-JOGO-DEGUSTADOR.md) no clique do título da página do Degustador.
+Status: **v2 jogável com artes temporárias** (25/09/2026). Inspirado em Hollow Knight e
+Silksong (pesquisa em `docs/PESQUISA-HOLLOW-KNIGHT.md`). Abre ao clicar no título da página do
+Degustador. A v1 (6 fases soltas, estilo Super Meat Boy) virou o mundo de salas abaixo.
 
 ## O que é
-Jogo de plataforma 2D com **fases feitas à mão**, no estilo Super Meat Boy / Mario / Sonic e
-dos jogos de Flash antigos: o Degustador atravessa cada fase fazendo parkour, desviando de
-armadilhas e inimigos, até chegar no **Inominável**. Nas fases 1 a 5 o Inominável foge para a
-próxima; na 1-6 o Degustador finalmente o pega.
+Um mundo só, a **Toradolândia**, feito de **15 salas ligadas** em **5 áreas**. O Degustador
+explora, luta com a coronhada da MP5K, ganha **habilidades que abrem caminhos novos**, senta em
+**bancos** para salvar e caça o Inominável até o covil dele. Quem morre deixa uma **Sombra** com
+as vírgulas no lugar da queda.
 
-## Movimentos
-| Movimento | Como |
-|---|---|
-| Correr | ← → (ou A D) |
-| Pular (segurar = mais alto) | Espaço, Z, K, ↑ ou W |
-| Deslizar na parede | no ar, empurrar contra a parede |
-| Pular da parede | encostado na parede, apertar pular |
-| Agarrar a beirada | no ar, empurrar na direção de uma quina; ↑ ou pular sobe, ↓ solta, pular para o outro lado salta |
-| Descer da marquise | ↓ |
-| Atirar (MP5K) | F, J ou X |
-| Pisão | cair em cima do inimigo |
-| Recomeçar a fase / pausar | R / P |
-
-Ajudas de "sensação boa": tolerância de beirada (coiote), pulo antecipado, passo de física
-fixo (60 Hz e 144 Hz jogam igual), renascer em 0,5 s no último ponto de controle.
-
-## Fases (Mundo 1: Toradolândia)
-| Fase | Nome | Ensina |
+## Controles
+| Ação | Teclado | Celular |
 |---|---|---|
-| 1-1 | Telhados da Toradolândia | correr, pular, buracos, marquises, espinhos |
-| 1-2 | Beco das Chaminés | deslizar e pular de parede em parede |
-| 1-3 | Beirais | agarrar a quina, telhas que desabam, mola |
-| 1-4 | Patrulha Noturna | inimigos: pisão e tiro |
-| 1-5 | Serraria | serras paradas e andando, plataformas móveis |
-| 1-6 | O Covil do Inominável | tudo junto |
+| Andar / mirar | ← → ↑ ↓ (ou WASD) | direcional |
+| Pular (segurar = mais alto) | Espaço ou Z | PULAR |
+| Coronhada (↑/↓ + golpe mira; no ar, ↓ quica) | X ou J | GOLPE |
+| Dash (Capa Janky) | C, K ou Shift | DASH |
+| Rajada da MP5K | F ou L | RAJADA |
+| Degustar (segurar: cura) | Q ou V | CURA |
+| Sentar no banco / comprar | ↑ perto | ▲ |
+| Mapa / pausa | Tab ou M / P | MAPA / II |
 
-Cada fase tem vírgulas para coletar (★ quando pega todas) e cronômetro com recorde. O progresso
-(fases liberadas, recordes e vírgulas) fica no navegador (`localStorage`, chave `cacada-progresso`).
+## Regras principais
+- **Vida:** 5 cogumelos (até 9; 4 fragmentos = +1). Encostar em inimigo tira 1, empurra e dá
+  1,2 s de invencibilidade. Espinho e serra tiram 1 e devolvem ao último lugar seguro.
+- **Pontuação** (a alma de HK): +11 por golpe que acerta, até 99. **Degustar** gasta 33 e cura 1
+  cogumelo (segurando ~1 s, parado no chão). A **Rajada** gasta 33.
+- **Pogo:** golpe para baixo no ar em inimigo, espinho, serra ou parede rachada faz quicar e
+  renova o dash e o pulo duplo.
+- **Morte:** renasce no último banco com vida cheia; as vírgulas ficam com a **Sombra**, que
+  aparece onde você caiu; derrote-a para pegar de volta.
+- **Bancos:** curam, salvam e fazem os inimigos voltarem.
+- **Segredos:** paredes rachadas quebram com 3 golpes e revelam salas escondidas; alavancas abrem
+  portões (atalhos).
+- **Loja do ItaloLOL** (na Praça): Fragmento de Cogumelo, Lanche Turbinado (cura mais rápida),
+  Fita Reforçada (coronhada tira o dobro).
+
+## Mundo e progressão
+| Área | Salas | O que tem |
+|---|---|---|
+| Telhados da Toradolândia | Esconderijo (início, banco), Telhados do Leste, Praça da Vírgula (loja), Torre da Antena | **Rajada da MP5K** no topo da antena; segredo atrás de parede rachada |
+| Beco das Chaminés | Chaminé do Beco, Beco (banco), Arena | chefe **Capanga-Mor** → **Capa Janky** (dash); vão que só se passa com dash |
+| Fábrica do Chat | Esteira de Memes, Fábrica (banco), Poço | serras, plataformas, mola; **Luvas de Fita** no fundo do poço |
+| Torre dos Servidores | Chaminé da Torre, Torre (banco, portão/atalho para a Antena), Sala dos Parênteses | chaminés de pulo de parede; **Parênteses** (pulo duplo) |
+| Covil do Inominável | Telhado Alto (banco), Covil | vão que só se passa com pulo duplo; chefe final **O Opressor do Chat** |
+
+**Inimigos:** Capanga (anda), Ping (persegue voando), Emoji Raivoso (quica), Drone (atira em
+leque de longe), Troll (investida), Spam Saltitante (pula em você), Bug (anda pelas paredes e
+teto), Moderador (escudo; bata por cima ou por trás), Feiticeira (teleporta e lança magia
+teleguiada), Sombra.
+
+**Chefes:** Capanga-Mor (salto com ondas de choque, investida que derruba entulho, marretada) e
+O Opressor do Chat (punho de joinha, Grito de Fossa com palavras voando — pule as de baixo, fique
+no chão nas de cima —, rajadas de glitch e Pings invocados). Os dois ficam mais rápidos com
+metade da vida.
 
 ## Arquivos
 ```
-js/cacada-core.js         regras puras: física, fases, perigos, inimigos (testável no Node)
-js/cacada-fases.js        as fases desenhadas em texto (uma letra por tile; legenda no topo)
-js/cacada.js              desenho, controles, menu, telas, progresso
-tools/cacada-robo.js      robô que acha um caminho em cada fase (prova que dá para passar)
-test/cacada-core.test.js  contrato da física + robô em todas as fases
+js/cacada-core.js         física, combate, mundo, save (testável no Node)
+js/cacada-inimigos.js     comportamento de cada inimigo e dos chefes
+js/cacada-mundo.js        as 15 salas em texto (legenda no topo do arquivo)
+js/cacada.js              desenho, HUD, mapa, telas, controles, save no navegador
+tools/cacada-robo.js      robô que atravessa o mundo com a mesma física
+test/cacada-core.test.js  contrato das regras (27 testes)
+test/cacada-robo.test.js  progressão (5 etapas) e travas de habilidade
 docs/ASSETS-CACADA.md     lista de todas as artes para a IA desenhar
 ```
 
-Para criar/editar fase: edite o texto em `js/cacada-fases.js` e rode
-`node tools/cacada-robo.js 1-3` (ou sem argumento para todas). O robô ignora inimigos (dá para
-pisar/atirar), mas respeita espinhos, serras, plataformas, molas e telhas.
+O robô prova duas coisas: (1) cada etapa (início → Rajada → chefe → Luvas → Parênteses → chefe
+final) dá para fazer só com as habilidades que o jogador já tem; (2) sem a habilidade certa, os
+três portões (vão do dash, chaminé das Luvas, vão do pulo duplo) **não** passam. A parte (2)
+demora alguns minutos: `CACADA_BLOQUEIOS=1 node --test test/cacada-robo.test.js`.
+
+O save fica no navegador (`localStorage`, chave `cacada-save-v2`).
 
 ## Próximos passos
-1. Henrique jogar e ajustar a sensação (velocidade, altura do pulo, janela de agarrar em `CONFIG`).
-2. Artes definitivas (docs/ASSETS-CACADA.md) e troca no `js/cacada.js`.
-3. Ranking: hoje não envia placar. Dá para ligar um ranking por fase (menor tempo) depois.
-4. Mais mundos (fases novas são só texto).
-5. Sons.
+1. Henrique jogar e ajustar a sensação (valores em `CONFIG`, no topo de `js/cacada-core.js`).
+2. Artes definitivas (`docs/ASSETS-CACADA.md`).
+3. Sons e música.
+4. Mais áreas, amuletos (os "charms" de HK) e chefes; ranking de tempo.
