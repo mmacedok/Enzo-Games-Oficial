@@ -611,9 +611,11 @@
                     }
                 } else if (c === 'X') ctx.drawImage(TILES.caixa, x, y);
                 else if (c === '=') {
-                    // Só o telhadinho da marquise (a mão-francesa fica de fora).
+                    // Faixa de tábuas com mãos-francesas (420×118) que se repete a cada 3 tiles,
+                    // então uma fila de marquises vira uma prancha contínua.
                     const img = arte('marquise');
-                    if (img) ctx.drawImage(img, 0, 0, 64, 22, x, y - 1, TL, 8);
+                    const fatia = img ? img.naturalWidth / 3 : 0;
+                    if (img) ctx.drawImage(img, (tx % 3) * fatia, 0, fatia, img.naturalHeight, x, y - 1, TL, TL * img.naturalHeight / fatia);
                     else ctx.drawImage(TILES.marquise, x, y);
                 } else if (c === 'T') {
                     const pulou = visual.tempo - (visual.molas.get(`${tx},${ty}`) ?? -9) < 0.25;
