@@ -7,7 +7,7 @@ const assert = require('node:assert/strict');
 const { createApi } = require('../api/handler.js');
 const { createLocalDb } = require('../api/db-local.js');
 const Baralho = require('../js/baralho-dados.js');
-const { sortearRaridade, aleatorioSeguro } = require('../api/baralho.js');
+const { sortearRaridade, sortearCarta, sortearFixa, aleatorioSeguro } = require('../api/baralho.js');
 
 const ENV = {
     GOOGLE_CLIENT_ID: 'teste.apps.googleusercontent.com',
@@ -62,7 +62,7 @@ test('B1. Sem login: GET /api/baralho, POST comprar, abrir e po dão 401', async
     assert.equal((await visitante('POST', '/api/baralho/po', { todas: true })).status, 401);
 });
 
-test('B2. 1º GET /api/baralho: boasVindas true, 1 pacote estacionamento, carteira zero, colecao vazia, total 25', async (t) => {
+test('B2. 1º GET /api/baralho: boasVindas true, 1 pacote estacionamento, carteira zero, colecao vazia, total 24', async (t) => {
     const { db, navegador } = montar();
     t.after(() => db.close());
     const leitor = navegador();
@@ -77,7 +77,7 @@ test('B2. 1º GET /api/baralho: boasVindas true, 1 pacote estacionamento, cartei
     assert.deepEqual(res.dados.carteira, { creditos: 0, po: 0 });
     assert.deepEqual(res.dados.colecao, {});
     assert.equal(res.dados.diferentes, 0);
-    assert.equal(res.dados.total, 25);
+    assert.equal(res.dados.total, 24);
 });
 
 test('B3. 2º e 3º GET: boasVindas false e continua 1 pacote só', async (t) => {
@@ -279,8 +279,8 @@ test('B11. Pacote de outra conta dá 404 e continua fechado para o dono', async 
     assert.equal(bVitimaApos.dados.pacotes[0].id, pacoteVitima);
 });
 
-test('B12. Repetida: com aleatorio sempre 0 (ItaloLOL comum), colecao.italolol === 3 e nova = true, false, false', async (t) => {
-    // Sorteador fixo: sempre devolve 0 (raridade comum, carta italolol)
+test('B12. Repetida: com aleatorio sempre 0 (Cara de Coração comum), colecao.cara-de-coracao === 3 e nova = true, false, false', async (t) => {
+    // Sorteador fixo: sempre devolve 0 (raridade comum, carta cara-de-coracao)
     const { db, navegador } = montar({ aleatorio: () => 0 });
     t.after(() => db.close());
     const leitor = navegador();
@@ -291,12 +291,12 @@ test('B12. Repetida: com aleatorio sempre 0 (ItaloLOL comum), colecao.italolol =
 
     const abrir = await leitor('POST', '/api/baralho/abrir', { pacotes: [pacoteId] });
     assert.equal(abrir.status, 200);
-    assert.equal(abrir.dados.colecao.italolol, 3);
+    assert.equal(abrir.dados.colecao['cara-de-coracao'], 3);
     const cartas = abrir.dados.abertos[0].cartas;
     assert.deepEqual(cartas.map((c) => c.nova), [true, false, false]);
 });
 
-test('B13. Pó: continuar B12, converter 2 italolol em 10 pó; erros 409 (tentar de novo), 400 (todas sem repetidas), 400 (inventada)', async (t) => {
+test('B13. Pó: continuar B12, converter 2 cara-de-coracao em 10 pó; erros 409 (tentar de novo), 400 (todas sem repetidas), 400 (inventada)', async (t) => {
     const { db, navegador } = montar({ aleatorio: () => 0 });
     t.after(() => db.close());
     const leitor = navegador();
@@ -305,15 +305,15 @@ test('B13. Pó: continuar B12, converter 2 italolol em 10 pó; erros 409 (tentar
     const baralho = await leitor('GET', '/api/baralho');
     await leitor('POST', '/api/baralho/abrir', { pacotes: [baralho.dados.pacotes[0].id] });
 
-    // Transforma 2 cópias de italolol (comum = 5 pó cada -> 10 pó)
-    const poRes = await leitor('POST', '/api/baralho/po', { cartas: { italolol: 2 } });
+    // Transforma 2 cópias de cara-de-coracao (comum = 5 pó cada -> 10 pó)
+    const poRes = await leitor('POST', '/api/baralho/po', { cartas: { 'cara-de-coracao': 2 } });
     assert.equal(poRes.status, 200);
     assert.equal(poRes.dados.ganhou, 10);
-    assert.equal(poRes.dados.colecao.italolol, 1);
+    assert.equal(poRes.dados.colecao['cara-de-coracao'], 1);
     assert.equal(poRes.dados.carteira.po, 10);
 
     // Tentar de novo com a última cópia restante dá 409
-    const denovo = await leitor('POST', '/api/baralho/po', { cartas: { italolol: 1 } });
+    const denovo = await leitor('POST', '/api/baralho/po', { cartas: { 'cara-de-coracao': 1 } });
     assert.equal(denovo.status, 409);
 
     // {todas: true} sem nenhuma repetida restante dá 400
@@ -334,25 +334,25 @@ test('B14. {todas: true} com repetidas de várias raridades: calcula pó exato e
     const u = await entrar(leitor, 'leitor12', 'Leitor Doze');
 
     // Insere cartas na coleção do leitor diretamente no banco para testar o cálculo exato de várias raridades:
-    // 3x italolol (comum, 5): 2 repetidas = 10 pó
+    // 3x cara-de-coracao (comum, 5): 2 repetidas = 10 pó
     // 2x hatsune-neves (raro, 15): 1 repetida = 15 pó
-    // 4x degustador-da-noite (épico, 50): 3 repetidas = 150 pó
+    // 4x chorao (épico, 50): 3 repetidas = 150 pó
     // 2x enzo-games (lendário, 200): 1 repetida = 200 pó
     // Total esperado: 10 + 15 + 150 + 200 = 375 pó
     await db.query(
         `INSERT INTO colecao (user_id, card_id, qtd, primeira_em) VALUES
-         ($1, 'italolol', 3, $2),
+         ($1, 'cara-de-coracao', 3, $2),
          ($1, 'hatsune-neves', 2, $2),
-         ($1, 'degustador-da-noite', 4, $2),
+         ($1, 'chorao', 4, $2),
          ($1, 'enzo-games', 2, $2)`, [u.id, relogio.agora]);
 
     const res = await leitor('POST', '/api/baralho/po', { todas: true });
     assert.equal(res.status, 200);
     assert.equal(res.dados.ganhou, 375);
     assert.equal(res.dados.carteira.po, 375);
-    assert.equal(res.dados.colecao.italolol, 1);
+    assert.equal(res.dados.colecao['cara-de-coracao'], 1);
     assert.equal(res.dados.colecao['hatsune-neves'], 1);
-    assert.equal(res.dados.colecao['degustador-da-noite'], 1);
+    assert.equal(res.dados.colecao.chorao, 1);
     assert.equal(res.dados.colecao['enzo-games'], 1);
 });
 
@@ -493,4 +493,12 @@ test('B19. GET /api/admin/users/:id retorna baralho.carteira, baralho.colecao e 
     assert.ok(res.dados.baralho.colecao, 'deve conter colecao');
     assert.ok(Array.isArray(res.dados.baralho.pacotes), 'deve conter pacotes');
     assert.equal(res.dados.baralho.pacotes.length, 1);
+});
+
+test('B20. Cabo Côco: chance fixa de 0,5% por carta (200 mil sorteios, ±0,1 pp) e nunca sai no sorteio por raridade', () => {
+    let saiu = 0;
+    for (let i = 0; i < 200000; i++) if (sortearFixa(aleatorioSeguro)?.id === 'cabo-coco') saiu++;
+    assert.ok(Math.abs(saiu / 2000 - 0.5) <= 0.1, `saiu ${saiu / 2000}%`);
+    for (let i = 0; i < 5000; i++) assert.notEqual(sortearCarta('lendario', aleatorioSeguro).id, 'cabo-coco');
+    assert.equal(sortearFixa(() => 0), null);
 });

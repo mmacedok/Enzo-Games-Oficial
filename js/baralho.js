@@ -66,14 +66,81 @@
     /** Cabo Côco só aparece sem tarja para quem descobriu a senha (conquista Acesso Confidencial). */
     const censurada = (def) => def.censurada && !window.EnzoConta?.temConquista?.('cabo-coco');
 
+    /** Tarja de cena do crime (a mesma da página de personagens); clicar pede a senha. */
+    function tarja(card, def) {
+        const faixa = el('button', 'crime-scene-overlay carta-tcg-tarja');
+        faixa.type = 'button';
+        faixa.setAttribute('aria-label', 'Conteúdo banido: pede senha');
+        const aviso = el('span', '', 'Conteúdo banido');
+        aviso.appendChild(el('small', '', 'em 456 países'));
+        faixa.appendChild(aviso);
+        faixa.addEventListener('click', (e) => {
+            // Na abertura o clique é da pilha de cartas (arrastar / virar), não da senha.
+            if (card.closest('.abertura')) return;
+            e.stopPropagation();
+            pedirSenha(def);
+        });
+        return faixa;
+    }
+
+    /** A senha é a mesma do site ("copo de lágrimas"); acertou = conquista Acesso Confidencial. */
+    function pedirSenha(def) {
+        const janela = el('dialog', 'password-overlay baralho-senha');
+        const caixa = el('form', 'password-modal');
+        caixa.method = 'dialog';
+        const texto = el('p');
+        texto.append(el('strong', '', 'Conteúdo banido em 456 países'), el('br'), 'Insira a senha de acesso confidencial:');
+        const campo = el('input');
+        Object.assign(campo, { type: 'password', placeholder: 'Sua senha...', autocomplete: 'off' });
+        campo.setAttribute('aria-label', 'Senha');
+        const erro = el('div', 'password-error', '❌ Senha incorreta! Acesso negado.');
+        const acoes = el('div', 'password-actions');
+        const ok = el('button', 'btn btn--danger', 'Decodificar');
+        const cancelar = el('button', 'btn btn--muted', 'Cancelar');
+        cancelar.type = 'button';
+        cancelar.addEventListener('click', () => janela.close());
+        acoes.append(ok, cancelar);
+        caixa.append(el('h3', '', '🚨 Alerta 🚨'), texto, campo, erro, acoes);
+        caixa.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (campo.value.normalize('NFD').replace(/[̀-ͯ\s]/g, '').toLowerCase() !== 'copodelagrimas') {
+                erro.style.display = 'block';
+                campo.select();
+                return;
+            }
+            janela.close();
+            await window.EnzoConta?.conquista?.('cabo-coco');
+            liberarCensuradas();
+        });
+        janela.addEventListener('close', () => janela.remove());
+        janela.addEventListener('click', (e) => { if (e.target === janela) janela.close(); });
+        janela.appendChild(caixa);
+        document.body.appendChild(janela);
+        janela.showModal();
+        campo.focus();
+    }
+
+    /** Troca na tela toda carta censurada pela versão liberada. */
+    function liberarCensuradas() {
+        document.querySelectorAll('.carta-tcg--censurada').forEach((velha) => {
+            const nova = carta(velha.dataset.carta);
+            nova.className = velha.className;
+            nova.style.cssText = velha.style.cssText;
+            nova.classList.remove('carta-tcg--censurada');
+            velha.replaceWith(nova);
+        });
+    }
+
     function carta(cardId) {
         const def = B.carta(cardId);
         const r = B.raridade(def.raridade);
         const card = el('article', `carta-tcg carta-tcg--${def.raridade}${def.tipo === 'campo' ? ' carta-tcg--campo' : ''}`);
-        card.setAttribute('aria-label', `${def.nome}: carta ${def.numero} de ${B.CARTAS.length}, ${r.nome}.`);
+        card.dataset.carta = def.id;
+        const nome = censurada(def) ? '???' : def.nome;
+        card.setAttribute('aria-label', `${nome}: carta ${def.numero} de ${B.CARTAS.length}, ${r.nome}.`);
 
         const topo = el('div', 'carta-tcg-topo');
-        topo.append(el('span', `carta-tcg-nome${def.nome.length > 13 ? ' carta-tcg-nome--longo' : ''}`, def.nome), el('span', 'carta-tcg-numero', `#${pad(def.numero)}`));
+        topo.append(el('span', `carta-tcg-nome${nome.length > 13 ? ' carta-tcg-nome--longo' : ''}`, nome), el('span', 'carta-tcg-numero', `#${pad(def.numero)}`));
 
         const arte = el('div', 'carta-tcg-arte');
         const img = el('img');
@@ -85,7 +152,7 @@
         arte.appendChild(img);
         if (censurada(def)) {
             card.classList.add('carta-tcg--censurada');
-            arte.appendChild(el('span', 'carta-tcg-carimbo', 'Banido'));
+            arte.appendChild(tarja(card, def));
         }
 
         const moldura = el('div', 'carta-tcg-moldura');

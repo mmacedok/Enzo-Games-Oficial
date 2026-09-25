@@ -672,22 +672,6 @@
       }
     ]
   },
-  "assets/Cartas/feiticeiro-de-terno.png": {
-    "width": 1024,
-    "height": 1280,
-    "variants": [
-      {
-        "width": 640,
-        "src": "assets/web/76e7c76dee4431d5-640.webp",
-        "bytes": 190814
-      },
-      {
-        "width": 1024,
-        "src": "assets/web/76e7c76dee4431d5-1024.webp",
-        "bytes": 432496
-      }
-    ]
-  },
   "assets/Cartas/hatsune-neves.png": {
     "width": 1024,
     "height": 1280,

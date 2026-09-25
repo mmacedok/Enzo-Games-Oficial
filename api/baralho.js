@@ -41,7 +41,7 @@ function sortearRaridade(chances, aleatorio, minimo = 0) {
 /** Sorteia uma carta da raridade pelo `peso`; raridade vazia desce para a de baixo. */
 function sortearCarta(raridadeId, aleatorio) {
     for (let i = Baralho.nivel(raridadeId); i >= 0; i--) {
-        const lista = Baralho.cartasDaRaridade(Baralho.RARIDADES[i].id);
+        const lista = Baralho.cartasDaRaridade(Baralho.RARIDADES[i].id).filter((c) => !c.chanceFixa);
         if (!lista.length) continue;
         const total = lista.reduce((soma, c) => soma + c.peso, 0);
         let x = aleatorio(total);
@@ -52,6 +52,18 @@ function sortearCarta(raridadeId, aleatorio) {
         return lista[lista.length - 1];
     }
     throw new Error('baralho sem cartas');
+}
+
+/** Cartas com chance própria (% por carta, em qualquer pacote), fora do sorteio por raridade. */
+const FIXAS = Baralho.CARTAS.filter((c) => c.chanceFixa > 0);
+const ESCALA_FIXA = 100000;
+
+/** Antes de cada carta: sai uma das FIXAS? (sorteio alto, então o aleatório "sempre 0" dos testes nunca cai nela) */
+function sortearFixa(aleatorio) {
+    for (const c of FIXAS) {
+        if (aleatorio(ESCALA_FIXA) >= ESCALA_FIXA - Math.round(c.chanceFixa * ESCALA_FIXA / 100)) return c;
+    }
+    return null;
 }
 
 /**
@@ -68,7 +80,7 @@ function sortearPacote(tipo, aleatorio = aleatorioSeguro) {
             raridades[raridades.length - 1] = sortearRaridade(p.chances, aleatorio, minimo);
         }
     }
-    return raridades.map((r) => sortearCarta(r, aleatorio).id);
+    return raridades.map((r) => (sortearFixa(aleatorio) || sortearCarta(r, aleatorio)).id);
 }
 
 const garantirCarteira = (ctx, usuarioId = ctx.usuario.id) => ctx.db.query(
@@ -324,4 +336,5 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, estado, creditarPartida, sortearPacote, sortearRaridade, sortearCarta, aleatorioSeguro };
+module.exports = {
+    rotas, estado, creditarPartida, sortearPacote, sortearRaridade, sortearCarta, sortearFixa, aleatorioSeguro };

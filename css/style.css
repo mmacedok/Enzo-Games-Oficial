@@ -2672,23 +2672,29 @@ button.ranking-nome:focus-visible { outline: 3px solid var(--focus); outline-off
 }
 @keyframes carta-reflexo { from { background-position: 130% 0; } 55%, to { background-position: -30% 0; } }
 
-/* Cabo Côco sem a senha: arte borrada e carimbo de banido. */
+/* Cabo Côco sem a senha: tarja de cena do crime (e arte borrada por baixo). */
 .carta-tcg--censurada .carta-tcg-arte img { filter: blur(3cqw) grayscale(1) contrast(1.3); transform: scale(1.15); }
-.carta-tcg-carimbo {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    padding: 1cqw 4cqw;
-    font-family: var(--font-heading);
-    font-size: 11cqw;
-    letter-spacing: 1cqw;
-    text-transform: uppercase;
-    color: var(--danger);
-    border: 1.2cqw solid var(--danger);
-    border-radius: 2cqw;
-    background: rgba(255, 245, 209, 0.85);
-    transform: translate(-50%, -50%) rotate(-14deg);
+.carta-tcg-tarja {
+    width: 100%;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
 }
+.carta-tcg-tarja span { font-size: 9cqw; letter-spacing: 0.4cqw; border-width: 0.6cqw; }
+.carta-tcg-tarja:hover span, .carta-tcg-tarja:focus-visible span { transform: rotate(-10deg) scale(1.08); }
+.abertura .carta-tcg-tarja { cursor: inherit; }
+/* Janela da senha do Cabo Côco por cima da Ficha (dialog = camada do topo). */
+dialog.baralho-senha {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    color: inherit;
+}
+dialog.baralho-senha[open] { display: flex; }
+dialog.baralho-senha::backdrop { background: transparent; }
 
 /* Costas: laranja de retícula com o selo do baralho (carta virada ou vaga vazia). */
 .carta-tcg--verso { --carta-moldura: var(--halftone-forte), var(--orange-light); }
