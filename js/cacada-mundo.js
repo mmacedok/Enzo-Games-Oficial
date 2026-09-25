@@ -34,8 +34,8 @@
                 x: 0,
                 y: 0,
                 placas: [
-                    '← → anda · ESPAÇO pula (segure = mais alto) · X golpeia',
-                    '↑ + X golpeia para cima · no ar, ↓ + X golpeia para baixo e QUICA em inimigos e espinhos',
+                    '← → anda · Z pula (segure = mais alto) · X golpeia',
+                    'Setas + X miram o golpe em 8 direções · no ar, ↓ + X QUICA em inimigos e espinhos',
                 ],
                 mapa: [
                     '################################',
@@ -67,7 +67,7 @@
                 segredos: [[45, 12, 48, 14]],
                 placas: [
                     'Pule na direção da quina para AGARRAR a beirada · ↑ ou PULAR sobe',
-                    'Segure Q para DEGUSTAR: come um lanche e recupera 1 cogumelo (gasta 33 de Pontuação, que vem dos golpes)',
+                    'Segure A para DEGUSTAR: come um lanche e recupera 1 cogumelo (gasta 33 de Pontuação, que vem dos golpes)',
                 ],
                 mapa: [
                     '#..............................................................#',

@@ -11,22 +11,26 @@ explora, luta com a coronhada da MP5K, ganha **habilidades que abrem caminhos no
 as vírgulas no lugar da queda.
 
 ## Controles
+Teclado igual ao padrão de **Hollow Knight no PC**.
+
 | Ação | Teclado | Celular |
 |---|---|---|
-| Andar / mirar | ← → ↑ ↓ (ou WASD) | direcional (com diagonais ◤◥◣◢) |
-| Pular (segurar = mais alto) | Espaço ou Z | PULAR |
-| Coronhada em 8 direções (setas miram; ↓ no ar quica, ↓ no chão é rasteira) | X ou J | GOLPE |
-| Dash (Capa Janky) | C, K ou Shift | DASH |
-| Rajada da MP5K | F ou L | RAJADA |
-| Degustar (segurar: cura) | Q ou V | CURA |
-| Sentar no banco / comprar | ↑ perto | ▲ |
-| Mapa / pausa | Tab ou M / P | MAPA / II |
+| Andar / mirar | ← → ↑ ↓ | direcional (com diagonais ◤◥◣◢) |
+| Pular (segurar = mais alto) | Z | PULAR |
+| Coronhada em 8 direções (setas miram; ↓ no ar quica, ↓ no chão é rasteira) | X | GOLPE |
+| Dash (Capa Janky) | C | DASH |
+| Foco/Magia: **toque** = Rajada da MP5K, **segure** = Degustar (cura) | A | RAJADA / CURA |
+| Magia rápida (Rajada) | F | RAJADA |
+| Sentar no banco / comprar / falar | ↑ perto | ▲ |
+| Mapa rápido (enquanto segura) | Tab | MAPA |
+| Pausa | Esc | II |
+| Confirmar nos menus | Z (ou Enter/Espaço) | PULAR / GOLPE |
 
 ## Regras principais
 - **Vida:** 5 cogumelos (até 9; 4 fragmentos = +1). Encostar em inimigo tira 1, empurra e dá
   1,2 s de invencibilidade. Espinho e serra tiram 1 e devolvem ao último lugar seguro.
 - **Pontuação** (a alma de HK): +11 por golpe que acerta, até 99. **Degustar** gasta 33 e cura 1
-  cogumelo (segurando ~1 s, parado no chão). A **Rajada** gasta 33.
+  cogumelo (segurando A ~1 s, parado no chão). A **Rajada** gasta 33.
 - **Coronhada em 8 direções:** frente, cima, baixo e as quatro diagonais (segure as setas ao
   golpear). Para baixo no chão vira uma rasteira na altura dos pés.
 - **Parede (Luvas de Fita), igual à Garra de Louva-a-Deus:** no ar, encoste na parede segurando
