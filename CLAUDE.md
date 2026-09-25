@@ -10,7 +10,8 @@
 - Antes de qualquer push, confira que nada do Baralho vai junto:
   `git diff --stat origin/main main` e `git grep -il baralho main` (tem que dar só este arquivo).
   Arquivos do Baralho: `js/baralho-dados.js`, `js/baralho.js`, `api/baralho.js`,
-  `test/baralho.test.js`, `docs/PLANO-BARALHO.md`, e trechos em `api/schema.js`, `api/handler.js`,
+  `test/baralho.test.js`, `docs/PLANO-BARALHO.md`, `docs/CARTAS-IDEIAS.md`,
+  `assets/Cartas/` (e as variantes em `assets/web/`, `data/images.json`, `js/images.generated.js`), e trechos em `api/schema.js`, `api/handler.js`,
   `api/games.js`, `api/admin.js`, `api/leitores.js`, `js/auth-widget.js`, `js/game-dialog.js`,
   `js/admin.js`, `admin.html`, `css/style.css`, páginas `*.html`, `README.md` e
   `docs/TESTES-PENDENTES.md`.

@@ -69,11 +69,11 @@
     function carta(cardId) {
         const def = B.carta(cardId);
         const r = B.raridade(def.raridade);
-        const card = el('article', `carta-tcg carta-tcg--${def.raridade}`);
+        const card = el('article', `carta-tcg carta-tcg--${def.raridade}${def.tipo === 'campo' ? ' carta-tcg--campo' : ''}`);
         card.setAttribute('aria-label', `${def.nome}: carta ${def.numero} de ${B.CARTAS.length}, ${r.nome}.`);
 
         const topo = el('div', 'carta-tcg-topo');
-        topo.append(el('span', 'carta-tcg-nome', def.nome), el('span', 'carta-tcg-numero', `#${pad(def.numero)}`));
+        topo.append(el('span', `carta-tcg-nome${def.nome.length > 13 ? ' carta-tcg-nome--longo' : ''}`, def.nome), el('span', 'carta-tcg-numero', `#${pad(def.numero)}`));
 
         const arte = el('div', 'carta-tcg-arte');
         const img = el('img');

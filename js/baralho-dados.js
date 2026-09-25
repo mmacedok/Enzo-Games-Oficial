@@ -58,7 +58,7 @@
             frase: 'Quando a derrota no LoL é grande demais, sobra só a sombra.' },
         { id: 'feiticeiro-de-terno', numero: 11, nome: 'Feiticeiro de Terno', tipo: 'personagem', raridade: 'raro', peso: 1,
             arte: 'assets/Cartas/feiticeiro-de-terno.png', foco: '50% 30%',
-            frase: 'Na Legião do Mal, até a magia usa gravata.' },
+            frase: 'O outro Stand do Degustador. Esse não faz joinha.' },
         { id: 'encantadora', numero: 12, nome: 'Encantadora', tipo: 'goon', raridade: 'raro', peso: 1,
             arte: 'assets/Cartas/encantadora.png', foco: '50% 30%',
             frase: 'Um feitiço rosa e você esquece o que ia falar no Discord.' },

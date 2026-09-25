@@ -110,7 +110,7 @@ Formato de cada item:
 - **Ref.:** ficha do Chorão (thread `ebf7e41bd727326a`)
 - **Frase:** *"Vou te processar! (chorando)"*
 - **Prompt:** `Chorão, vilão adulto corpulento de macacão operário, chorando em birra com a boca aberta, cachoeiras de lágrimas inundando um torneio de cartas ao redor, mesas e cartas boiando, pilha de papéis de processo judicial voando.` + épico.
-- **Decidir:** a bíblia diz "Chorão (ex-Cabo Coco)". Se o Chorão É o Cabo Côco, esta carta vira a versão "liberada" e o #002 fica como a versão banida, ou a gente troca por outro personagem.
+- **Decidido:** Chorão e Cabo Côco são cartas diferentes.
 
 **#010 Sombra do Degustador** — `sombra-do-degustador` · personagem · **Épico**
 - **Ref.:** sprite do Degustador sombrio (capa rasgada roxa, chapéu do Teemo, olhos roxos brilhantes)
@@ -119,9 +119,9 @@ Formato de cada item:
 
 **#011 Feiticeiro de Terno** — `feiticeiro-de-terno` · personagem · **Raro**
 - **Ref.:** sprite do homem de cabelo roxo longo, sobretudo preto e bola de energia magenta
-- **Frase:** *"Na Legião do Mal, até a magia usa gravata."*
+- **Frase:** *"O outro Stand do Degustador. Esse não faz joinha."*
 - **Prompt:** `Homem de cabelo roxo longo esvoaçante, terno preto com gravata roxa e sobretudo de barra rasgada, saltando e disparando uma esfera de energia magenta da mão, raios rosa em espiral em volta, fundo de telhados da cidade à noite.` + raro.
-- **Decidir:** quem é ele no cânone? O nome é provisório.
+- **Decidido:** é um Stand do Degustador da Noite (o segundo, além do Stand do Joinha).
 
 **#012 Encantadora** — `encantadora` · goon · **Raro**
 - **Ref.:** `assets/ronda/inimigos/feiticeira-01..04.png`
@@ -208,8 +208,8 @@ Cartas de campo são **paisagem dentro de retrato**: o lugar ocupa o quadro, sem
 - **Bala "Blasfêmia"** (carta de item?).
 - **Enzo Sherlock** (variante comum do Enzo).
 
-## Para decidir (Henrique)
-1. O Chorão é o Cabo Côco? (ver #009)
-2. Quem é o Feiticeiro de Terno? (ver #011)
-3. Campos precisam de moldura própria no site, ou só a faixa "Campo"?
-4. Os pacotes passam a usar as cartas novas na capa? Por exemplo, o Estacionamento com o Estacionamento Noturno na frente.
+## Decisões do Henrique (2026-09-25)
+1. Chorão e Cabo Côco são cartas diferentes.
+2. O Feiticeiro de Terno é um Stand do Degustador.
+3. Campos têm moldura própria (feita: papel de mapa, placa de madeira com pregos, janela com rosa dos ventos; classe `.carta-tcg--campo`).
+4. Ainda aberto: capas dos pacotes com as cartas novas.

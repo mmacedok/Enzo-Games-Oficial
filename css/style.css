@@ -2523,6 +2523,15 @@ button.ranking-nome:focus-visible { outline: 3px solid var(--focus); outline-off
     -webkit-text-stroke: 0.7cqw var(--ink);
     paint-order: stroke fill;
 }
+/* Nome comprido ("Marreteiro do Coração"): letra menor, até duas linhas. */
+.carta-tcg-nome--longo {
+    display: -webkit-box;
+    font-size: 8cqw;
+    line-height: 1;
+    white-space: normal;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
 .carta-tcg-numero { flex: none; font-family: var(--font-heading); font-size: 6cqw; letter-spacing: 0.3cqw; }
 .carta-tcg-arte { position: relative; flex: 1; min-height: 0; overflow: hidden; background: var(--text); border: 2px solid var(--ink); }
 .carta-tcg-arte img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -2558,6 +2567,78 @@ button.ranking-nome:focus-visible { outline: 3px solid var(--focus); outline-off
     .carta-tcg-frase { display: none; }
     .carta-tcg-numero { display: none; }
 }
+/* Carta de campo: pedaço do mapa do Zezo Verso. Papel de mapa com trilha
+   tracejada, nome numa placa de madeira pregada (como as placas do mapa) e a
+   arte numa janela de cantos redondos com rosa dos ventos. A borda de fora
+   continua sendo a da raridade. */
+.carta-tcg--campo {
+    --campo-papel: #f3e2b6;
+    --campo-madeira: #5c401e;
+}
+.carta-tcg--campo .carta-tcg-moldura {
+    background:
+        radial-gradient(circle, rgba(92, 64, 30, 0.2) 0.45cqw, transparent 0.55cqw) 0 0 / 4.5cqw 4.5cqw,
+        linear-gradient(160deg, #f8ecca, var(--campo-papel) 55%, #e6cc8f);
+    border-radius: 2cqw;
+}
+.carta-tcg--campo .carta-tcg-moldura::before {
+    content: '';
+    position: absolute;
+    inset: 1.4cqw;
+    border: 0.6cqw dashed rgba(92, 64, 30, 0.5);
+    border-radius: 1.5cqw;
+    pointer-events: none;
+}
+.carta-tcg--campo .carta-tcg-topo {
+    position: relative;
+    justify-content: center;
+    padding: 1.2cqw 5.5cqw;
+    background: linear-gradient(180deg, #f7e7c2, #e3c690);
+    border: 0.8cqw solid var(--campo-madeira);
+    border-radius: 1.5cqw;
+    box-shadow: 0 1cqw 0 var(--campo-madeira);
+    transform: rotate(1deg);
+}
+.carta-tcg--campo .carta-tcg-topo::before,
+.carta-tcg--campo .carta-tcg-topo::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 1.8cqw;
+    height: 1.8cqw;
+    margin-top: -0.9cqw;
+    background: #3a2a14;
+    border-radius: 50%;
+    box-shadow: inset 0.4cqw 0.4cqw 0 rgba(255, 255, 255, 0.35);
+}
+.carta-tcg--campo .carta-tcg-topo::before { left: 1.6cqw; }
+.carta-tcg--campo .carta-tcg-topo::after { right: 1.6cqw; }
+.carta-tcg--campo .carta-tcg-nome { color: #3a2a14; -webkit-text-stroke: 0; letter-spacing: 0.6cqw; }
+.carta-tcg--campo .carta-tcg-numero { display: none; }
+.carta-tcg--campo .carta-tcg-arte {
+    border: 0.9cqw solid var(--campo-madeira);
+    border-radius: 3cqw;
+    box-shadow: inset 0 0 4cqw rgba(40, 20, 0, 0.45);
+}
+.carta-tcg--campo .carta-tcg-arte::after {
+    content: 'N';
+    position: absolute;
+    top: 2cqw;
+    right: 2cqw;
+    display: grid;
+    place-items: center;
+    width: 8cqw;
+    height: 8cqw;
+    font-family: var(--font-heading);
+    font-size: 4.5cqw;
+    color: #3a2a14;
+    background: conic-gradient(from 45deg, #f3e2b6 0 25%, #d9bd82 0 50%, #f3e2b6 0 75%, #d9bd82 0);
+    border: 0.6cqw solid var(--campo-madeira);
+    border-radius: 50%;
+    box-shadow: 0 0.6cqw 0 rgba(0, 0, 0, 0.35);
+}
+.carta-tcg--campo .carta-tcg-faixa { border-radius: 1cqw; transform: rotate(-1.5deg); }
+.carta-tcg--campo .carta-tcg-frase { font-style: italic; color: #4a3418; }
 
 /* Épico: foil holográfico que corre com o mouse (mesmo arco-íris da estante). */
 .carta-tcg-foil,
