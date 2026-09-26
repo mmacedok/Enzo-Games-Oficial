@@ -31,3 +31,4 @@ data/local-db/
 
 # Function empacotada (gerada por tools/build-function.mjs; a fonte é netlify/functions-src/)
 netlify/functions/
+dist-artifact/

@@ -672,3 +672,4 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 @media (prefers-reduced-motion: reduce) {
     .bt-carta--pode, .bt-carta--alvo, .bt-aura--pronta .bt-orbe, .bt-confete { animation: none; }
 }
+.bt-pergunta-texto { font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 0.5px; }

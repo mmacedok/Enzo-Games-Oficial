@@ -747,17 +747,33 @@
         mesa.seta.classList.add('bt-seta--viva');
     }
 
-    function sair() {
+    /** Pergunta sim/não dentro da mesa (confirm() não funciona em todo lugar, como no artifact). */
+    function perguntar(texto, sim) {
+        if (!mesa) return Promise.resolve(false);
+        return new Promise((responder) => {
+            const fundo = el('div', 'bt-fim bt-pergunta');
+            const miolo = el('div', 'bt-fim-miolo');
+            const acoes = el('div', 'bt-fim-acoes');
+            const fechar = (r) => { fundo.remove(); responder(r); };
+            acoes.append(botao('bt-botao bt-botao--forte', sim, () => fechar(true)), botao('bt-botao', 'Continuar jogando', () => fechar(false)));
+            miolo.append(el('p', 'bt-pergunta-texto', texto), acoes);
+            fundo.appendChild(miolo);
+            mesa.raiz.appendChild(fundo);
+            acoes.lastChild.focus({ preventScroll: true });
+        });
+    }
+
+    async function sair() {
         if (ocupado) return;
-        if (estado && estado.fase !== 'fim' && !confirm('Sair desta batalha? Ela não fica salva.')) return;
+        if (estado && estado.fase !== 'fim' && !(await perguntar('Sair desta batalha? Ela não fica salva.', 'Sair'))) return;
         estado = null;
         partida++;
         telaMenu();
     }
 
-    function desistir() {
+    async function desistir() {
         if (!estado || estado.fase === 'fim' || ocupado) return;
-        if (!confirm('Desistir desta batalha?')) return;
+        if (!(await perguntar('Desistir desta batalha? O NPC ganha.', 'Desistir'))) return;
         executar({ tipo: 'desistir' });
     }
 
