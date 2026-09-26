@@ -1436,27 +1436,27 @@ body.theme-degustador .section-title { color: var(--purple); }
 .batman-title[data-ronda-trigger]:focus-visible { outline: 3px solid var(--focus); outline-offset: 6px; }
 
 /* ================================================================ cursores */
-body { cursor: url('../assets/cursors/cutlery.svg') 7 3, default; }
+body { cursor: url('../assets/cursors/ponteiro-talheres.png') 5 2, default; }
 body :is(a[href], button, select, [role="button"], [role="link"],
     .shelf-book, .hero-banner, .garfield-classic-logo, .character-card,
     .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask, .webtoon-image),
 body :is(a[href], button, select, [role="button"], [role="link"],
     .shelf-book, .hero-banner, .garfield-classic-logo, .character-card,
     .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask) * {
-    cursor: url('../assets/cursors/pasta.svg') 20 20, pointer;
+    cursor: url('../assets/cursors/mao-macarronada.png') 16 16, pointer;
 }
 body :is(input, textarea, [contenteditable="true"]) { cursor: text; }
 body :is(button, select, input):disabled { cursor: not-allowed; }
 
-/* Tema Degustador: MP5K laranja; nos itens clicáveis, com clarão de disparo. */
+/* Tema Degustador: MP5K laranja; nos itens clicáveis, a cabeça do Degustador. */
 body.theme-degustador {
-    cursor: url('../assets/cursors/mp5k.svg') 2 3, url('../assets/cursors/mp5k.png') 2 3, auto;
+    cursor: url('../assets/cursors/ponteiro-mp5k.png') 1 6, auto;
 }
 body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
     .shelf-book, .hero-banner, .easter-egg-trigger, .cabo-coco-mask, .webtoon-image, .game-canvas),
 body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
     .shelf-book, .hero-banner, .easter-egg-trigger, .cabo-coco-mask) * {
-    cursor: url('../assets/cursors/mp5k-fogo.svg') 2 3, url('../assets/cursors/mp5k-fogo.png') 2 3, pointer;
+    cursor: url('../assets/cursors/mao-degustador.png') 16 16, pointer;
 }
 body.theme-degustador :is(input, textarea, [contenteditable="true"]) { cursor: text; }
 
