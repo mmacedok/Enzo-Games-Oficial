@@ -194,6 +194,10 @@ function resolver(def, de, ate, opcoes = {}) {
     const W = nivel.largura;
     const limite = opcoes.limite || 1500000;
     const ciclo = Math.round(CONFIG.periodo * 4);
+    // Carga do Buzz! contada em ações (cada uma soma 1/15 s): arredondar em décimos juntava
+    // duas ações seguidas na mesma chave e a carga nunca chegava ao ponto de soltar.
+    const TEMPO_ACAO = QUADROS_POR_ACAO * CONFIG.passo;
+    const CARGA_MAX = Math.ceil(CONFIG.buzzCarga / TEMPO_ACAO) + 1; // +1: a soma em float pode ficar um tiquinho abaixo
 
     const j0 = C.criarJogador(partida);
     const inicio = { j: j0, t: 0, telhas: null, quebrados: null, pai: null, acao: -1 };
@@ -203,7 +207,7 @@ function resolver(def, de, ate, opcoes = {}) {
         const j = n.j;
         const sala = nivel.salas[C.salaEm(nivel, j.x + 7, j.y + 13)];
         const fase = sala && sala.temDinamicos ? Math.floor(((n.t % CONFIG.periodo) / CONFIG.periodo) * ciclo) : 0;
-        return `${Math.round(j.x / 3)},${Math.round(j.y / 3)},${Math.round(j.vx / 40)},${Math.round(j.vy / 60)},${j.estado[0]}${j.estado[1]},${j.noChao ? 1 : 0},${j.parede},${j.trava > 0 ? 1 : 0},${j.dashDisponivel ? 1 : 0}${j.puloDuploUsado ? 1 : 0}${j.dashRecarga > 0 ? 1 : 0},${fase},${n.telhas ? n.telhas.size : 0},${n.quebrados ? n.quebrados.size : 0},${Math.min(9, Math.round(j.carga * 10))}${j.planando ? 1 : 0}${j.atordoado > 0 ? 1 : 0}`;
+        return `${Math.round(j.x / 3)},${Math.round(j.y / 3)},${Math.round(j.vx / 40)},${Math.round(j.vy / 60)},${j.estado[0]}${j.estado[1]},${j.noChao ? 1 : 0},${j.parede},${j.trava > 0 ? 1 : 0},${j.dashDisponivel ? 1 : 0}${j.puloDuploUsado ? 1 : 0}${j.dashRecarga > 0 ? 1 : 0},${fase},${n.telhas ? n.telhas.size : 0},${n.quebrados ? n.quebrados.size : 0},${Math.min(CARGA_MAX, Math.round(j.carga / TEMPO_ACAO))}${j.planando ? 1 : 0}${j.atordoado > 0 ? 1 : 0}`;
     };
     const custo = (n) => {
         const j = n.j;
