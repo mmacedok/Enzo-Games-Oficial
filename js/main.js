@@ -262,11 +262,28 @@
     // Cada easter egg: scripts em ordem e o objeto global que abre o jogo.
     const JOGOS = {
         flappy: { scripts: ['js/game-dialog.js?v=5', 'js/flappy-core.js?v=1', 'js/flappy.js?v=4'], global: 'FlappyEnzo' },
-        ronda: { scripts: ['js/game-dialog.js?v=5', 'js/cacada-inimigos.js?v=2', 'js/cacada-core.js?v=8', 'js/cacada-artes.js?v=1', 'js/cacada-mundo-expansao.js?v=1', 'js/cacada-mundo.js?v=7', 'js/cacada.js?v=13'], global: 'CacadaInominavel' },
+        ronda: { scripts: ['js/game-dialog.js?v=5', 'js/cacada-inimigos.js?v=2', 'js/cacada-core.js?v=8', 'js/cacada-artes.js?v=1', 'js/cacada-mundo-expansao.js?v=1', 'js/cacada-mundo.js?v=7', 'js/cacada.js?v=13'], global: 'CacadaInominavel', exigeLogin: true },
     };
     const carregando = {};
-    function abrirJogo(nome) {
+    let esperandoLogin = null; // jogo que abre sozinho quando a pessoa terminar de entrar
+    async function abrirJogo(nome) {
         const jogo = JOGOS[nome];
+        if (jogo.exigeLogin) {
+            const conta = window.EnzoConta;
+            if (conta) await conta.pronto.catch(() => {});
+            if (!conta?.usuario) {
+                if (!conta?.loginAtivo) {
+                    alert('A Caçada só abre com login do Google, e o login está indisponível agora. Tente de novo mais tarde.');
+                    return;
+                }
+                if (!esperandoLogin) conta.aoMudar(() => {
+                    if (conta.usuario && esperandoLogin) { const n = esperandoLogin; esperandoLogin = null; abrirJogo(n); }
+                });
+                esperandoLogin = nome;
+                conta.pedirLogin();
+                return;
+            }
+        }
         carregando[nome] ??= jogo.scripts.reduce((fila, src) => fila.then(() => carregarScript(src)), Promise.resolve());
         carregando[nome]
             .then(() => window[jogo.global].abrir())
