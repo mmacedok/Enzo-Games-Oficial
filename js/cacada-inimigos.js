@@ -5,7 +5,8 @@
 // motor (js/cacada-core.js) monta a cada passo:
 //   c.T, c.tempo, c.alvo {x,y} (centro do Degustador), c.sala {x,y,w,h},
 //   c.rng(), c.solido(tx,ty), c.tileEm(tx,ty), c.mover(e,dx,dy) → {esq,dir,chao,teto},
-//   c.projetil(p), c.invocar(tipo,x,y), c.evento(ev), c.lugarLivre(...), c.contar(tipo)
+//   c.gravidade, c.quedaMax, c.projetil(p), c.invocar(tipo,x,y), c.evento(ev),
+//   c.lugarLivre(...), c.contar(tipo)
 // Sem DOM: roda no navegador e no Node (testes).
 // ============================================================================
 (function (root, factory) {
@@ -14,14 +15,11 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     'use strict';
 
-    const GRAVIDADE = 1800;
-    const QUEDA_MAX = 560;
-
     const centro = (e) => ({ x: e.x + e.w / 2, y: e.y + e.h / 2 });
     const limitar = (v, a, b) => Math.max(a, Math.min(b, v));
 
-    function cair(e, dt) {
-        e.vy = Math.min(e.vy + GRAVIDADE * dt, QUEDA_MAX);
+    function cair(e, dt, c) {
+        e.vy = Math.min(e.vy + c.gravidade * dt, c.quedaMax);
     }
 
     /** Recuo de quem anda no chão (leva um tranco e para). */
@@ -75,7 +73,7 @@
         capanga: {
             nome: 'Capanga do Coração', w: 18, h: 22, vida: 3, dano: 1, virgulas: 3, peso: 1,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 const kx = recuoChao(e, dt);
                 const r = c.mover(e, (e.dir * 45 + kx) * dt, e.vy * dt);
                 if (r.chao) e.vy = 0;
@@ -174,7 +172,7 @@
         troll: {
             nome: 'Troll', w: 22, h: 24, vida: 5, dano: 1, virgulas: 6, peso: 1.6,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const o = centro(e);
                 const dx = c.alvo.x - o.x;
@@ -208,7 +206,7 @@
         spam: {
             nome: 'Spam Saltitante', w: 18, h: 16, vida: 3, dano: 1, virgulas: 4, peso: 1,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const o = centro(e);
                 const dx = c.alvo.x - o.x;
@@ -254,7 +252,7 @@
         moderador: {
             nome: 'Moderador', w: 20, h: 28, vida: 5, dano: 1, virgulas: 8, peso: 2,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const o = centro(e);
                 const dx = c.alvo.x - o.x;
@@ -363,7 +361,7 @@
         capangaMor: {
             nome: 'Capanga-Mor', w: 40, h: 52, vida: 26, dano: 1, virgulas: 60, peso: 99, chefe: true,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const fase2 = e.vida <= e.vidaMax / 2;
                 const k = fase2 ? 0.72 : 1;
@@ -536,7 +534,7 @@
         rato: {
             nome: 'Rato do Comentário', w: 20, h: 14, vida: 3, dano: 1, virgulas: 4, peso: 0.9,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const o = centro(e);
                 const dx = c.alvo.x - o.x;
@@ -705,7 +703,7 @@
         golpista: {
             nome: 'Golpista do Pix', w: 14, h: 24, vida: 3, dano: 1, virgulas: 3, peso: 0.9, ladrao: true,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const o = centro(e);
                 const dx = c.alvo.x - o.x;
@@ -787,7 +785,7 @@
         fake: {
             nome: 'Fake', w: 14, h: 14, vida: 3, dano: 0, virgulas: 12, peso: 0.8,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const o = centro(e);
                 const dx = c.alvo.x - o.x;
@@ -844,7 +842,7 @@
         ratao: {
             nome: 'Ratão do Ratio', w: 44, h: 50, vida: 34, dano: 1, virgulas: 80, peso: 99, chefe: true,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const fase2 = e.vida <= e.vidaMax / 2;
                 const k = fase2 ? 0.72 : 1;
@@ -944,7 +942,7 @@
         coach: {
             nome: 'Coach Quântico', w: 30, h: 54, vida: 36, dano: 1, virgulas: 90, peso: 99, chefe: true,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const fase2 = e.vida <= e.vidaMax / 2;
                 const k = fase2 ? 0.72 : 1;
@@ -1136,7 +1134,7 @@
         glitch: {
             nome: 'Degustador Glitch', w: 14, h: 26, vida: 30, dano: 1, virgulas: 150, peso: 3, chefe: true,
             atualizar(e, c, dt) {
-                cair(e, dt);
+                cair(e, dt, c);
                 e.t += dt;
                 const fase2 = e.vida <= e.vidaMax / 2;
                 const k = fase2 ? 0.7 : 1;

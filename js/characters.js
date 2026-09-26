@@ -1,21 +1,9 @@
 (() => {
-    const overlay = document.getElementById('password-modal-overlay');
-    const input = document.getElementById('password-input');
-    const error = document.getElementById('password-error');
-    let lockedCard = null;
-    // Páginas sem ficha trancada (ex.: zezoverso.html) não têm o modal de senha.
-    if (overlay) {
-        overlay.setAttribute('role', 'dialog');
-        overlay.setAttribute('aria-modal', 'true');
-        overlay.setAttribute('aria-label', 'Desbloquear personagem');
-        input.setAttribute('aria-label', 'Senha de acesso');
-    }
     const viewer = document.createElement('dialog');
     viewer.className = 'character-viewer';
     viewer.innerHTML = '<button type="button" class="btn btn--small viewer-close" aria-label="Fechar ficha">Fechar ×</button><img alt=""><p></p>';
     document.body.appendChild(viewer);
     let previousFocus;
-    const closePassword = () => { overlay.style.display = 'none'; lockedCard?.focus(); };
     const show = card => {
         if (viewer.open) return;
         previousFocus = card;
@@ -27,26 +15,22 @@
         viewer.showModal();
         document.body.classList.add('viewer-open');
     };
+    /** Pede a senha da ficha banida; com a certa, revela a ficha e dá a conquista. */
+    async function pedirSenha(card) {
+        if (!(await window.EnzoSenha?.pedir())) return;
+        unlock(card);
+        window.EnzoConta?.conquista('cabo-coco');
+        show(card);
+    }
     document.querySelectorAll('.characters-roster .character-card').forEach(card => {
         card.tabIndex = 0; card.setAttribute('role', 'button');
         card.setAttribute('aria-label', card.dataset.locked === 'true' ? 'Ficha banida: pede senha' : `Abrir ficha: ${card.querySelector('img').alt}`);
         card.addEventListener('click', () => {
-            if (card.dataset.locked === 'true' && overlay) {
-                lockedCard = card; input.value = ''; error.style.display = 'none';
-                overlay.style.display = 'flex'; input.focus();
-            } else show(card);
+            if (card.dataset.locked === 'true') pedirSenha(card);
+            else show(card);
         });
         card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); } });
     });
-    const check = () => {
-        if (!lockedCard) return;
-        if (input.value.toLowerCase().replace(/\s/g, '') !== 'copodelagrimas') {
-            error.style.display = 'block'; input.select(); return;
-        }
-        unlock(lockedCard);
-        window.EnzoConta?.conquista('cabo-coco');
-        closePassword(); show(lockedCard);
-    };
     function unlock(card) {
         card.dataset.locked = 'false';
         card.querySelector('.crime-scene-overlay').hidden = true;
@@ -60,19 +44,6 @@
         if (!conta.temConquista('cabo-coco')) return;
         document.querySelectorAll('.characters-roster .character-card[data-locked="true"]').forEach(unlock);
     });
-    if (overlay) {
-        document.getElementById('password-submit').addEventListener('click', check);
-        document.getElementById('password-cancel').addEventListener('click', closePassword);
-        overlay.addEventListener('click', e => { if (e.target === overlay) closePassword(); });
-        overlay.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closePassword();
-            if (e.key === 'Enter' && e.target === input) check();
-            if (e.key === 'Tab') {
-                const items = [...overlay.querySelectorAll('input,button')];
-                e.preventDefault(); items[(items.indexOf(document.activeElement) + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
-            }
-        });
-    }
     viewer.querySelector('button').addEventListener('click', () => viewer.close());
     viewer.addEventListener('click', e => { if (e.target === viewer) viewer.close(); });
     viewer.addEventListener('close', () => { document.body.classList.remove('viewer-open'); previousFocus?.focus(); });

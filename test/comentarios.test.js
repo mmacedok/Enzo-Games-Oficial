@@ -4,6 +4,8 @@
 // ============================================================================
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { createApi } = require('../api/handler.js');
 const { createLocalDb } = require('../api/db-local.js');
 const catalogo = require('../data/database.json');
@@ -201,4 +203,79 @@ test('7. paginação com "antes"', async (t) => {
     const p2 = await visitante('GET', `${LISTA}&antes=${ultimo}`);
     assert.deepEqual(p2.dados.comments.map((c) => c.pedacos[0].t), ['carta 0']);
     assert.equal(p2.dados.maisAntigos, false);
+});
+
+test('8. paginação: duas cartas no mesmo instante não somem (cursor em:id)', async (t) => {
+    const { db, relogio, leitor, outro, visitante } = await cenario();
+    t.after(() => db.close());
+    const mandar = (chamar, texto) => chamar('POST', '/api/comments', { comicId: GIBI, chapterId: CAP, texto });
+
+    // As duas primeiras cartas saem no mesmo milissegundo (autores diferentes, para
+    // o anti-spam não interferir) e as 29 seguintes são mais novas: o empate cai
+    // exatamente na virada da página.
+    relogio.agora += 60 * 60 * 1000;
+    assert.equal((await mandar(leitor, 'carta 0')).status, 200);
+    assert.equal((await mandar(outro, 'carta 1')).status, 200);
+    for (let i = 2; i < 31; i++) {
+        relogio.agora += 60 * 60 * 1000;
+        assert.equal((await mandar(i % 2 ? outro : leitor, `carta ${i}`)).status, 200);
+    }
+
+    const p1 = await visitante('GET', LISTA);
+    assert.equal(p1.dados.comments.length, 30);
+    assert.equal(p1.dados.maisAntigos, true);
+    const ultima = p1.dados.comments[29];
+
+    const p2 = await visitante('GET', `${LISTA}&antes=${ultima.em}:${ultima.id}`);
+    assert.equal(p2.dados.maisAntigos, false);
+    assert.equal(p2.dados.comments.length, 1);
+    assert.equal(p2.dados.comments[0].em, ultima.em, 'a carta empatada ficou fora da página 2');
+    const todas = [...p1.dados.comments, ...p2.dados.comments].map((c) => c.pedacos[0].t);
+    assert.equal(todas.length, 31);
+    assert.equal(new Set(todas).size, 31, 'carta repetida ou sumida entre as páginas');
+
+    // Compatibilidade: só <em> continua valendo (e é justamente o cursor que perdia a empatada).
+    const soEm = await visitante('GET', `${LISTA}&antes=${ultima.em}`);
+    assert.equal(soEm.status, 200);
+    assert.equal(soEm.dados.comments.length, 0);
+});
+
+test('9. js/api-cliente.js: contrato do cliente que as páginas usam', async () => {
+    const vistas = [];
+    const respostas = [];
+    const janela = {};
+    const fonte = fs.readFileSync(path.join(__dirname, '..', 'js', 'api-cliente.js'), 'utf8');
+    // O arquivo é um IIFE de navegador: roda aqui com window e fetch de mentira.
+    new Function('window', 'fetch', fonte)(janela, async (caminho, opcoes) => {
+        vistas.push({ caminho, opcoes });
+        const [status, corpo] = respostas.shift();
+        return { ok: status < 400, status, json: async () => { if (corpo === undefined) throw new Error('sem JSON'); return corpo; } };
+    });
+    const { pedir, exigir } = janela.EnzoApi;
+
+    respostas.push([200, { tudo: 'ok' }]);
+    assert.deepEqual(await pedir('/api/x'), { ok: true, status: 200, dados: { tudo: 'ok' } });
+    assert.deepEqual(vistas[0], { caminho: '/api/x', opcoes: { credentials: 'same-origin' } });
+
+    respostas.push([200, {}]);
+    await pedir('/api/x', { a: 1 });
+    assert.equal(vistas[1].opcoes.method, 'POST');
+    assert.equal(vistas[1].opcoes.credentials, 'same-origin');
+    assert.equal(vistas[1].opcoes.headers['Content-Type'], 'application/json');
+    assert.equal(vistas[1].opcoes.body, '{"a":1}');
+
+    respostas.push([200, {}]);
+    await pedir('/api/x', undefined, { keepalive: true });
+    assert.deepEqual(vistas[2].opcoes, { credentials: 'same-origin', keepalive: true });
+
+    respostas.push([200, { v: 1 }]);
+    assert.deepEqual(await exigir('/api/x'), { v: 1 });
+
+    respostas.push([429, { error: 'calma!' }]);
+    await assert.rejects(exigir('/api/x'), { message: 'calma!', status: 429 });
+    respostas.push([500, undefined]);
+    await assert.rejects(exigir('/api/x'), { message: 'HTTP 500', status: 500 });
+    respostas.push([500, undefined]);
+    await assert.rejects(exigir('/api/x', undefined, { falha: 'não deu certo, tente de novo' }),
+        { message: 'não deu certo, tente de novo' });
 });

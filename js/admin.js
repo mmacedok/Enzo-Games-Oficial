@@ -29,20 +29,7 @@
     };
 
     // ---------------------------------------------------------------- servidor
-    async function pedir(caminho, corpo) {
-        const opcoes = corpo === undefined
-            ? { credentials: 'same-origin' }
-            : { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) };
-        const resposta = await fetch(caminho, opcoes);
-        let dados = null;
-        try { dados = await resposta.json(); } catch { /* sem JSON */ }
-        if (!resposta.ok) {
-            const erro = new Error(dados?.error || `HTTP ${resposta.status}`);
-            erro.status = resposta.status;
-            throw erro;
-        }
-        return dados;
-    }
+    const pedir = window.EnzoApi.exigir;
 
     // ---------------------------------------------------------------- saída
     function el(tag, classe, texto) {

@@ -269,7 +269,7 @@
     // Cada easter egg: scripts em ordem e o objeto global que abre o jogo.
     const JOGOS = {
         flappy: { scripts: ['js/game-dialog.js?v=rev0926', 'js/flappy-core.js?v=1', 'js/flappy.js?v=rev0926'], global: 'FlappyEnzo' },
-        ronda: { scripts: ['js/game-dialog.js?v=rev0926', 'js/cacada-inimigos.js?v=2', 'js/cacada-core.js?v=rev0926', 'js/cacada-artes.js?v=1', 'js/cacada-mundo-expansao.js?v=1', 'js/cacada-mundo.js?v=7', 'js/cacada.js?v=rev0926'], global: 'CacadaInominavel', exigeLogin: true },
+        ronda: { scripts: ['js/game-dialog.js?v=rev0926', 'js/cacada-inimigos.js?v=rev0926e', 'js/cacada-core.js?v=rev0926e', 'js/cacada-artes.js?v=1', 'js/cacada-mundo-expansao.js?v=1', 'js/cacada-mundo.js?v=rev0926e', 'js/cacada.js?v=rev0926e'], global: 'CacadaInominavel', exigeLogin: true },
     };
     const carregando = {};
     let esperandoLogin = null; // jogo que abre sozinho quando a pessoa terminar de entrar

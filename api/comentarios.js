@@ -1,6 +1,7 @@
 // ============================================================================
 // Cartas dos Leitores: comentários no fim de cada capítulo (docs/PLANO-COMENTARIOS.md).
 //   GET  /api/comments?comic=&chapter=&antes=   30 por vez, mais novos primeiro
+//        (antes = cursor <em>:<id> da última carta; só <em> segue valendo)
 //   POST /api/comments                          { comicId, chapterId, texto } (logado)
 //   POST /api/comments/:id/delete               autor ou admin
 //   POST /api/admin/comments/:id/censor         { trechos: [[inicio, fim], ...] } (admin)
@@ -140,7 +141,11 @@ const rotas = [
         async executar(ctx) {
             const busca = ctx.url.searchParams;
             const { comicId, chapterId } = exigirCapitulo(busca.get('comic'), busca.get('chapter'));
-            const antes = Number.parseInt(busca.get('antes'), 10);
+            // Cursor da página: <em>:<id> (o par não deixa carta empatada sumir); só <em> ainda vale.
+            const [emTexto, idTexto] = (busca.get('antes') || '').split(':');
+            const em = Number.parseInt(emTexto, 10);
+            const antes = Number.isSafeInteger(em) ? em : null;
+            const antesId = UUID.test(idTexto || '') ? idTexto : null;
             const admin = ehAdmin(ctx.config, ctx.usuario);
             const linhas = await ctx.db.query(
                 `SELECT * FROM (
@@ -148,9 +153,11 @@ const rotas = [
                        FROM comments c JOIN users u ON u.id = c.user_id
                       WHERE ${FILTROS}
                  ) t
-                 WHERE $3::bigint IS NULL OR t.created_at < $3
-                 ORDER BY t.created_at DESC, t.id LIMIT $4`,
-                [comicId, chapterId, Number.isSafeInteger(antes) ? antes : null, POR_PAGINA + 1]);
+                 WHERE $3::bigint IS NULL
+                    OR ($4::text IS NULL AND t.created_at < $3)
+                    OR ($4::text IS NOT NULL AND (t.created_at, t.id) < ($3::bigint, $4::text))
+                 ORDER BY t.created_at DESC, t.id DESC LIMIT $5`,
+                [comicId, chapterId, antes, antesId, POR_PAGINA + 1]);
             // Página vazia não traz o total: aí conta na mão (caso raro).
             let total = linhas.length ? Number(linhas[0].total) : null;
             if (total === null) {

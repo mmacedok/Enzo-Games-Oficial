@@ -5,7 +5,7 @@
 // existe. Usado por test/cacada-robo.test.js.
 //
 // Considera espinhos, chorume, serras (paradas e andando), plataformas móveis,
-// molas, telhas que desabam, portões fechados, a tampa do bueiro (opção `loja`),
+// molas, portões fechados, a tampa do bueiro (opção `loja`),
 // grades (quebra com a Queda de Bigorna), vidro (quebra com o Buzz!) e vento
 // (sobe planando com a Pipa). Ignora inimigos (dá para bater neles) e não
 // quebra paredes rachadas (segredos são opcionais).
@@ -200,14 +200,14 @@ function resolver(def, de, ate, opcoes = {}) {
     const CARGA_MAX = Math.ceil(CONFIG.buzzCarga / TEMPO_ACAO) + 1; // +1: a soma em float pode ficar um tiquinho abaixo
 
     const j0 = C.criarJogador(partida);
-    const inicio = { j: j0, t: 0, telhas: null, quebrados: null, pai: null, acao: -1 };
+    const inicio = { j: j0, t: 0, quebrados: null, pai: null, acao: -1 };
     const fila = new Fila();
     const vistos = new Set();
     const chave = (n) => {
         const j = n.j;
         const sala = nivel.salas[C.salaEm(nivel, j.x + 7, j.y + 13)];
         const fase = sala && sala.temDinamicos ? Math.floor(((n.t % CONFIG.periodo) / CONFIG.periodo) * ciclo) : 0;
-        return `${Math.round(j.x / 3)},${Math.round(j.y / 3)},${Math.round(j.vx / 40)},${Math.round(j.vy / 60)},${j.estado[0]}${j.estado[1]},${j.noChao ? 1 : 0},${j.parede},${j.trava > 0 ? 1 : 0},${j.dashDisponivel ? 1 : 0}${j.puloDuploUsado ? 1 : 0}${j.dashRecarga > 0 ? 1 : 0},${fase},${n.telhas ? n.telhas.size : 0},${n.quebrados ? n.quebrados.size : 0},${Math.min(CARGA_MAX, Math.round(j.carga / TEMPO_ACAO))}${j.planando ? 1 : 0}${j.atordoado > 0 ? 1 : 0}`;
+        return `${Math.round(j.x / 3)},${Math.round(j.y / 3)},${Math.round(j.vx / 40)},${Math.round(j.vy / 60)},${j.estado[0]}${j.estado[1]},${j.noChao ? 1 : 0},${j.parede},${j.trava > 0 ? 1 : 0},${j.dashDisponivel ? 1 : 0}${j.puloDuploUsado ? 1 : 0}${j.dashRecarga > 0 ? 1 : 0},${fase},${n.quebrados ? n.quebrados.size : 0},${Math.min(CARGA_MAX, Math.round(j.carga / TEMPO_ACAO))}${j.planando ? 1 : 0}${j.atordoado > 0 ? 1 : 0}`;
     };
     const custo = (n) => {
         const j = n.j;
@@ -228,19 +228,15 @@ function resolver(def, de, ate, opcoes = {}) {
             if (a.especial ? !habilidades.has('bigorna') && !habilidades.has('buzz') : a.dash && !habilidades.has('dash')) continue;
             const j = C.clonarJogador(n.j);
             let t = n.t;
-            const telhas = n.telhas ? new Map(n.telhas) : new Map();
             const quebrados = n.quebrados ? new Set(n.quebrados) : new Set();
             const mundo = {
                 ...base,
                 quebrados,
-                caidas: new Map(),
-                pisarTelha(tx, ty) { const k = `${tx},${ty}`; if (!telhas.has(k)) telhas.set(k, t); },
                 quebrar(id) { quebrados.add(id); },
             };
             let morreu = false;
             let venceu = false;
             for (let q = 0; q < QUADROS_POR_ACAO; q++) {
-                for (const [k, t0] of telhas) mundo.caidas.set(k, { caiu: t - t0 >= CONFIG.tempoTelha });
                 C.passoJogador(mundo, j, entradaDe(a, q === 0), CONFIG.passo, t);
                 t += CONFIG.passo;
                 if (C.tocouPerigo(nivel, j, t)) { morreu = true; break; }
@@ -248,7 +244,7 @@ function resolver(def, de, ate, opcoes = {}) {
             }
             if (morreu) continue;
             if (permitidas && !permitidas.has(C.salaEm(nivel, j.x + CONFIG.jogadorL / 2, j.y + CONFIG.jogadorA / 2))) continue;
-            const filho = { j, t, telhas: telhas.size ? telhas : null, quebrados: quebrados.size ? quebrados : null, pai: n, acao: ai };
+            const filho = { j, t, quebrados: quebrados.size ? quebrados : null, pai: n, acao: ai };
             if (venceu) {
                 const acoes = [];
                 for (let p = filho; p.pai; p = p.pai) acoes.push(p.acao);

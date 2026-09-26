@@ -25,16 +25,7 @@
         return b;
     }
 
-    async function pedir(caminho, corpo) {
-        const opcoes = corpo === undefined
-            ? { credentials: 'same-origin' }
-            : { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) };
-        const resposta = await fetch(caminho, opcoes);
-        let dados = null;
-        try { dados = await resposta.json(); } catch { /* sem JSON */ }
-        if (!resposta.ok) throw new Error(dados?.error || 'não deu certo, tente de novo');
-        return dados;
-    }
+    const pedir = (caminho, corpo) => window.EnzoApi.exigir(caminho, corpo, { falha: 'não deu certo, tente de novo' });
 
     const relativo = new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' });
     function quando(ms) {
@@ -101,7 +92,7 @@
 
         const base = `/api/comments?comic=${encodeURIComponent(comicId)}&chapter=${encodeURIComponent(chapterId)}`;
         let quantos = 0;
-        let ultimo = null;
+        let ultimo = null;   // cursor "<em>:<id>" da última carta carregada
         let admin = false;
 
         const contar = (delta = 0) => {
@@ -267,7 +258,8 @@
                 admin = dados.admin;
                 if (!maisAntigas) { lista.replaceChildren(); quantos = dados.total; contar(); }
                 for (const c of dados.comments) lista.appendChild(carta(c));
-                ultimo = dados.comments.length ? dados.comments[dados.comments.length - 1].em : ultimo;
+                const ultima = dados.comments[dados.comments.length - 1];
+                if (ultima) ultimo = `${ultima.em}:${ultima.id}`;
                 mais.hidden = !dados.maisAntigos;
             } catch {
                 aviso.hidden = false;
