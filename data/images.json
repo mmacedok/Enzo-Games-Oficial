@@ -2182,6 +2182,507 @@
       }
     ]
   },
+  "assets/areas/beco/fundo.jpg": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5c62a7dda7027d70-640.webp",
+        "bytes": 42274
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/5c62a7dda7027d70-1280.webp",
+        "bytes": 119604
+      }
+    ]
+  },
+  "assets/areas/beco/fundo.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d4fc96b918cf05fc-640.webp",
+        "bytes": 42660
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/d4fc96b918cf05fc-1280.webp",
+        "bytes": 121540
+      }
+    ]
+  },
+  "assets/areas/beco/meio.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/b9deaa62e60e7c7f-64.webp",
+        "bytes": 1476
+      }
+    ]
+  },
+  "assets/areas/beco/topo.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/892800a0032f59cd-64.webp",
+        "bytes": 1872
+      }
+    ]
+  },
+  "assets/areas/covil/fundo.jpg": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/83a3ba2c44602e2f-640.webp",
+        "bytes": 31958
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/83a3ba2c44602e2f-1280.webp",
+        "bytes": 85914
+      }
+    ]
+  },
+  "assets/areas/covil/fundo.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/05499b6955de7e30-640.webp",
+        "bytes": 32070
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/05499b6955de7e30-1280.webp",
+        "bytes": 87718
+      }
+    ]
+  },
+  "assets/areas/covil/meio.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/b6154790549d7c5d-64.webp",
+        "bytes": 1870
+      }
+    ]
+  },
+  "assets/areas/covil/topo.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/582feb829fd634fa-64.webp",
+        "bytes": 2188
+      }
+    ]
+  },
+  "assets/areas/fabrica/fundo.jpg": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/75c4d41e20a17907-640.webp",
+        "bytes": 39158
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/75c4d41e20a17907-1280.webp",
+        "bytes": 105932
+      }
+    ]
+  },
+  "assets/areas/fabrica/fundo.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/aeb23fdb6f3d1231-640.webp",
+        "bytes": 39566
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/aeb23fdb6f3d1231-1280.webp",
+        "bytes": 105306
+      }
+    ]
+  },
+  "assets/areas/fabrica/meio.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/f16370d00dd48f79-64.webp",
+        "bytes": 1154
+      }
+    ]
+  },
+  "assets/areas/fabrica/topo.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/7a2e962123adef75-64.webp",
+        "bytes": 2028
+      }
+    ]
+  },
+  "assets/areas/telhados/fundo.jpg": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/63643d0284dd53a9-640.webp",
+        "bytes": 17892
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/63643d0284dd53a9-1280.webp",
+        "bytes": 48484
+      }
+    ]
+  },
+  "assets/areas/telhados/fundo.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/84ee8306841c6276-640.webp",
+        "bytes": 17570
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/84ee8306841c6276-1280.webp",
+        "bytes": 48112
+      }
+    ]
+  },
+  "assets/areas/telhados/meio.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/f78362c754502aa2-64.webp",
+        "bytes": 1164
+      }
+    ]
+  },
+  "assets/areas/telhados/topo.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/e6ef7f795cfd437c-64.webp",
+        "bytes": 1612
+      }
+    ]
+  },
+  "assets/areas/torre/fundo.jpg": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/654373d0eb5fc2ac-640.webp",
+        "bytes": 42514
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/654373d0eb5fc2ac-1280.webp",
+        "bytes": 114660
+      }
+    ]
+  },
+  "assets/areas/torre/fundo.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c05ad00f48904285-640.webp",
+        "bytes": 42448
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/c05ad00f48904285-1280.webp",
+        "bytes": 116982
+      }
+    ]
+  },
+  "assets/areas/torre/meio.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/ce874afd924ca985-64.webp",
+        "bytes": 1646
+      }
+    ]
+  },
+  "assets/areas/torre/topo.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/27d4eab347ea110a-64.webp",
+        "bytes": 1982
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-atordoado-01.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/d2871e06b8277af8-192.webp",
+        "bytes": 12640
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-atordoado-02.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/a9985ad5ceb07822-192.webp",
+        "bytes": 13416
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-corrida-01.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/87009f4b9b3e8f78-192.webp",
+        "bytes": 13730
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-corrida-02.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/2dbb991a26f54aa6-192.webp",
+        "bytes": 12132
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-corrida-03.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/8fd2f217527cf2ca-192.webp",
+        "bytes": 12832
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-derrotado.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/fed2cf87001d92d3-192.webp",
+        "bytes": 11804
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-marreta-01.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/b8d6ae1c0906beb7-192.webp",
+        "bytes": 11664
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-marreta-02.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/fec6510b13237c5c-192.webp",
+        "bytes": 13562
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-ocioso-01.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/c2a881c966e3daec-192.webp",
+        "bytes": 14208
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-ocioso-02.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/b0b47abbf461b8d6-192.webp",
+        "bytes": 14016
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-preparar.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/16b553e591afb2f8-192.webp",
+        "bytes": 13052
+      }
+    ]
+  },
+  "assets/chefes/capanga-mor-salto.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/fcef6cd59b462a2a-192.webp",
+        "bytes": 13210
+      }
+    ]
+  },
+  "assets/chefes/opressor-derrotado.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/8645303e44a50abc-256.webp",
+        "bytes": 22470
+      }
+    ]
+  },
+  "assets/chefes/opressor-flutuar-01.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/1f267761eab8e3da-256.webp",
+        "bytes": 25968
+      }
+    ]
+  },
+  "assets/chefes/opressor-flutuar-02.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/f4e62d0f8b51c51b-256.webp",
+        "bytes": 25772
+      }
+    ]
+  },
+  "assets/chefes/opressor-flutuar-03.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/abf86e3cbb90e632-256.webp",
+        "bytes": 24684
+      }
+    ]
+  },
+  "assets/chefes/opressor-flutuar-04.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/e76cc1b029b5a59b-256.webp",
+        "bytes": 26582
+      }
+    ]
+  },
+  "assets/chefes/opressor-glitch.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/8099a7b5c1148a04-256.webp",
+        "bytes": 25578
+      }
+    ]
+  },
+  "assets/chefes/opressor-grito.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/da5f6d5a26e18757-256.webp",
+        "bytes": 31020
+      }
+    ]
+  },
+  "assets/chefes/opressor-joinha.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/2f075ad28ba0166b-256.webp",
+        "bytes": 26138
+      }
+    ]
+  },
+  "assets/chefes/punho.png": {
+    "width": 128,
+    "height": 512,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/8f3b1ede3a253b94-128.webp",
+        "bytes": 28806
+      }
+    ]
+  },
   "assets/cursors/mp5k-fogo.png": {
     "width": 32,
     "height": 32,
@@ -2233,6 +2734,611 @@
         "width": 1536,
         "src": "assets/web/7ad3422648e68b43-1536.webp",
         "bytes": 384994
+      }
+    ]
+  },
+  "assets/degustador/agarrado.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/b541447f7eea699b-128.webp",
+        "bytes": 3514
+      }
+    ]
+  },
+  "assets/degustador/cair.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/4a6b9d89cac8ffb8-128.webp",
+        "bytes": 6014
+      }
+    ]
+  },
+  "assets/degustador/correr-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/7c02148dd9e19125-128.webp",
+        "bytes": 4536
+      }
+    ]
+  },
+  "assets/degustador/correr-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/cf581349bdf5872a-128.webp",
+        "bytes": 3992
+      }
+    ]
+  },
+  "assets/degustador/correr-03.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/f087919ff1d6813b-128.webp",
+        "bytes": 4540
+      }
+    ]
+  },
+  "assets/degustador/correr-04.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/b70f01e284ba5873-128.webp",
+        "bytes": 4628
+      }
+    ]
+  },
+  "assets/degustador/correr-05.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/0dac9260fdb215b7-128.webp",
+        "bytes": 4090
+      }
+    ]
+  },
+  "assets/degustador/correr-06.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/63ce507025e31ef9-128.webp",
+        "bytes": 4394
+      }
+    ]
+  },
+  "assets/degustador/dano.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/11be7bdc0ea3a56e-128.webp",
+        "bytes": 6272
+      }
+    ]
+  },
+  "assets/degustador/dash-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/965428916be3c3c9-128.webp",
+        "bytes": 5134
+      }
+    ]
+  },
+  "assets/degustador/dash-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/d590d522dab67fe5-128.webp",
+        "bytes": 5242
+      }
+    ]
+  },
+  "assets/degustador/degustar-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/a5572fc69dcc33eb-128.webp",
+        "bytes": 6274
+      }
+    ]
+  },
+  "assets/degustador/degustar-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/42f42320c923e086-128.webp",
+        "bytes": 6512
+      }
+    ]
+  },
+  "assets/degustador/golpe-baixo.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/7d6a9f1e93b3cc2c-128.webp",
+        "bytes": 5954
+      }
+    ]
+  },
+  "assets/degustador/golpe-cima.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/eeb4e4758076a2f3-128.webp",
+        "bytes": 5488
+      }
+    ]
+  },
+  "assets/degustador/golpe-diagonal-baixo.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/7a923978d8e4e297-128.webp",
+        "bytes": 6276
+      }
+    ]
+  },
+  "assets/degustador/golpe-diagonal-cima.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/ce4e2c576e0eaad7-128.webp",
+        "bytes": 6590
+      }
+    ]
+  },
+  "assets/degustador/golpe-frente-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/8568dc11b74b0b89-128.webp",
+        "bytes": 6048
+      }
+    ]
+  },
+  "assets/degustador/golpe-frente-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/459f9506d792b4db-128.webp",
+        "bytes": 5744
+      }
+    ]
+  },
+  "assets/degustador/golpe-rasteira.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/c8be8d20b6ec628d-128.webp",
+        "bytes": 5410
+      }
+    ]
+  },
+  "assets/degustador/morrer.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/742bedb2e6de4952-128.webp",
+        "bytes": 6060
+      }
+    ]
+  },
+  "assets/degustador/parado-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/06a05b11eb453dbc-128.webp",
+        "bytes": 4398
+      }
+    ]
+  },
+  "assets/degustador/parado-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/dc4d4c916e68e5f0-128.webp",
+        "bytes": 4722
+      }
+    ]
+  },
+  "assets/degustador/parede.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/c289bbdfb6d306a7-128.webp",
+        "bytes": 4742
+      }
+    ]
+  },
+  "assets/degustador/pular.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/c796aa5b34d75a03-128.webp",
+        "bytes": 5528
+      }
+    ]
+  },
+  "assets/degustador/pulo-duplo.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/14c36fc88d1baa68-128.webp",
+        "bytes": 7306
+      }
+    ]
+  },
+  "assets/degustador/rajada-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/0139b9a118ac234c-128.webp",
+        "bytes": 5268
+      }
+    ]
+  },
+  "assets/degustador/rajada-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/e3fe7c26d759e791-128.webp",
+        "bytes": 5844
+      }
+    ]
+  },
+  "assets/degustador/sentado.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/8cd70279583754df-128.webp",
+        "bytes": 6586
+      }
+    ]
+  },
+  "assets/degustador/subir-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/8d9e5da28ae08ebc-128.webp",
+        "bytes": 3668
+      }
+    ]
+  },
+  "assets/degustador/subir-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/e5a5d0fcd7840606-128.webp",
+        "bytes": 4224
+      }
+    ]
+  },
+  "assets/efeitos/acerto-01.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/5f2dfcc7b190c77f-48.webp",
+        "bytes": 704
+      }
+    ]
+  },
+  "assets/efeitos/acerto-02.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/19e93eaa34e87404-48.webp",
+        "bytes": 1332
+      }
+    ]
+  },
+  "assets/efeitos/acerto-03.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/b3e67acb41987de2-48.webp",
+        "bytes": 1578
+      }
+    ]
+  },
+  "assets/efeitos/bola-verde.png": {
+    "width": 24,
+    "height": 24,
+    "variants": [
+      {
+        "width": 24,
+        "src": "assets/web/9e56e4c52c319751-24.webp",
+        "bytes": 596
+      }
+    ]
+  },
+  "assets/efeitos/glitch-01.png": {
+    "width": 16,
+    "height": 16,
+    "variants": [
+      {
+        "width": 16,
+        "src": "assets/web/6c16e9b2766671cd-16.webp",
+        "bytes": 178
+      }
+    ]
+  },
+  "assets/efeitos/glitch-02.png": {
+    "width": 16,
+    "height": 16,
+    "variants": [
+      {
+        "width": 16,
+        "src": "assets/web/ccc5aaf943b548ed-16.webp",
+        "bytes": 166
+      }
+    ]
+  },
+  "assets/efeitos/golpe-01.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/21c18a5c865d37b7-96.webp",
+        "bytes": 3716
+      }
+    ]
+  },
+  "assets/efeitos/golpe-02.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/b79187f0a833ebe5-96.webp",
+        "bytes": 4498
+      }
+    ]
+  },
+  "assets/efeitos/golpe-03.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/e82153a362b66678-96.webp",
+        "bytes": 4834
+      }
+    ]
+  },
+  "assets/efeitos/magia-01.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/c36ea8b6e73328e0-32.webp",
+        "bytes": 678
+      }
+    ]
+  },
+  "assets/efeitos/magia-02.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/274a6a58974f49e9-32.webp",
+        "bytes": 926
+      }
+    ]
+  },
+  "assets/efeitos/onda-01.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/8f5d548a6cacae60-48.webp",
+        "bytes": 1164
+      }
+    ]
+  },
+  "assets/efeitos/onda-02.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/27d451e5713dc8b8-48.webp",
+        "bytes": 1470
+      }
+    ]
+  },
+  "assets/efeitos/palavra-caixa.png": {
+    "width": 128,
+    "height": 32,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/fb9c145425cbc980-128.webp",
+        "bytes": 772
+      }
+    ]
+  },
+  "assets/efeitos/pedra.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/618f6b4f109ff27e-32.webp",
+        "bytes": 488
+      }
+    ]
+  },
+  "assets/efeitos/poeira-01.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/ddcf592965bdbcc1-32.webp",
+        "bytes": 684
+      }
+    ]
+  },
+  "assets/efeitos/poeira-02.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/8d89333b4a99a9fc-32.webp",
+        "bytes": 778
+      }
+    ]
+  },
+  "assets/efeitos/poeira-03.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/2bdce89f0a207850-32.webp",
+        "bytes": 818
+      }
+    ]
+  },
+  "assets/efeitos/rajada-01.png": {
+    "width": 96,
+    "height": 32,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/159410c1bd475684-96.webp",
+        "bytes": 1132
+      }
+    ]
+  },
+  "assets/efeitos/rajada-02.png": {
+    "width": 96,
+    "height": 32,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/492b946b4293b900-96.webp",
+        "bytes": 1144
+      }
+    ]
+  },
+  "assets/efeitos/respingo-01.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/a499804e276490c2-96.webp",
+        "bytes": 5506
+      }
+    ]
+  },
+  "assets/efeitos/respingo-02.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/f03990aedf7f3443-96.webp",
+        "bytes": 4084
+      }
+    ]
+  },
+  "assets/efeitos/respingo-03.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/f9ba43c966da98be-96.webp",
+        "bytes": 5830
+      }
+    ]
+  },
+  "assets/efeitos/respingo-04.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/e87f2dbdbcd39b9e-96.webp",
+        "bytes": 4280
       }
     ]
   },
@@ -2343,6 +3449,512 @@
       }
     ]
   },
+  "assets/inimigos/bug-01.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/79066ec52d5ac6fa-48.webp",
+        "bytes": 1146
+      }
+    ]
+  },
+  "assets/inimigos/bug-02.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/2a4ec58b7ed673c5-48.webp",
+        "bytes": 1574
+      }
+    ]
+  },
+  "assets/inimigos/capanga-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/aff70ff67d12b63b-128.webp",
+        "bytes": 5382
+      }
+    ]
+  },
+  "assets/inimigos/capanga-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/973346c389b06318-128.webp",
+        "bytes": 5102
+      }
+    ]
+  },
+  "assets/inimigos/capanga-03.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/0ec4179303324365-128.webp",
+        "bytes": 5394
+      }
+    ]
+  },
+  "assets/inimigos/capanga-04.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/d13d5a47b92e709a-128.webp",
+        "bytes": 5324
+      }
+    ]
+  },
+  "assets/inimigos/drone-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/80f7fdb39086418a-128.webp",
+        "bytes": 4468
+      }
+    ]
+  },
+  "assets/inimigos/drone-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/1acbb6329f06c589-128.webp",
+        "bytes": 4538
+      }
+    ]
+  },
+  "assets/inimigos/drone-mirar.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/39054c1cc0f12846-128.webp",
+        "bytes": 4610
+      }
+    ]
+  },
+  "assets/inimigos/feiticeira-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/7a67bc5640f6d883-128.webp",
+        "bytes": 8818
+      }
+    ]
+  },
+  "assets/inimigos/feiticeira-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/55a2c194213a36ec-128.webp",
+        "bytes": 9432
+      }
+    ]
+  },
+  "assets/inimigos/feiticeira-03.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/07f786ce5b02992b-128.webp",
+        "bytes": 10234
+      }
+    ]
+  },
+  "assets/inimigos/feiticeira-04.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/07252f383e0f79d2-128.webp",
+        "bytes": 9996
+      }
+    ]
+  },
+  "assets/inimigos/feiticeira-conjurar.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/f1355cf517c78101-128.webp",
+        "bytes": 10620
+      }
+    ]
+  },
+  "assets/inimigos/feiticeira-sumir.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/18708abefc7c3e6d-128.webp",
+        "bytes": 10930
+      }
+    ]
+  },
+  "assets/inimigos/moderador-erguer.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/47a3c05d1c43d379-96.webp",
+        "bytes": 4158
+      }
+    ]
+  },
+  "assets/inimigos/moderador-golpe.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/c843eb0b24df6918-96.webp",
+        "bytes": 3898
+      }
+    ]
+  },
+  "assets/inimigos/moderador-guarda-01.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/35dae36dc28dcf6c-96.webp",
+        "bytes": 4562
+      }
+    ]
+  },
+  "assets/inimigos/moderador-guarda-02.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/894dcf26ea23f68b-96.webp",
+        "bytes": 4544
+      }
+    ]
+  },
+  "assets/inimigos/moderador-recuperar.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/13df9afd48ab9428-96.webp",
+        "bytes": 3756
+      }
+    ]
+  },
+  "assets/inimigos/ping-01.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/c4045ce7fbce9943-64.webp",
+        "bytes": 1512
+      }
+    ]
+  },
+  "assets/inimigos/ping-02.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/0b27289f575b43f9-64.webp",
+        "bytes": 1510
+      }
+    ]
+  },
+  "assets/inimigos/sombra-01.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/5d67502d7d5017b3-128.webp",
+        "bytes": 9670
+      }
+    ]
+  },
+  "assets/inimigos/sombra-02.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/ffc4be2d4bc1d8f2-128.webp",
+        "bytes": 9550
+      }
+    ]
+  },
+  "assets/inimigos/spam-01.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/d4b67802bb4123e8-64.webp",
+        "bytes": 2140
+      }
+    ]
+  },
+  "assets/inimigos/spam-02.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/e7b6aec96b9ad198-64.webp",
+        "bytes": 2018
+      }
+    ]
+  },
+  "assets/inimigos/spam-03.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/8eb4dc2ad83b6ae9-64.webp",
+        "bytes": 1968
+      }
+    ]
+  },
+  "assets/inimigos/troll-andar-01.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/98a6b0712e0c9f68-96.webp",
+        "bytes": 3508
+      }
+    ]
+  },
+  "assets/inimigos/troll-andar-02.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/1bd62dafa7b037dd-96.webp",
+        "bytes": 3464
+      }
+    ]
+  },
+  "assets/inimigos/troll-andar-03.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/51e383b7e9328712-96.webp",
+        "bytes": 3448
+      }
+    ]
+  },
+  "assets/inimigos/troll-andar-04.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/9b6350cfc5d0f03b-96.webp",
+        "bytes": 3212
+      }
+    ]
+  },
+  "assets/inimigos/troll-cansado.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/c44443eb416d63d8-96.webp",
+        "bytes": 2892
+      }
+    ]
+  },
+  "assets/inimigos/troll-investida-01.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/8e4da32c88bbb95f-96.webp",
+        "bytes": 3044
+      }
+    ]
+  },
+  "assets/inimigos/troll-investida-02.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/6cac2309d2f20c4f-96.webp",
+        "bytes": 3390
+      }
+    ]
+  },
+  "assets/inimigos/troll-preparar.png": {
+    "width": 96,
+    "height": 96,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/85d2e0b13469d8e2-96.webp",
+        "bytes": 4064
+      }
+    ]
+  },
+  "assets/inominavel/derrotado.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/b7790b75d4b7f48d-160.webp",
+        "bytes": 6166
+      }
+    ]
+  },
+  "assets/inominavel/fugir-01.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/c7cb98ad9bcda611-160.webp",
+        "bytes": 8096
+      }
+    ]
+  },
+  "assets/inominavel/fugir-02.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/f6f4501e5e8584d8-160.webp",
+        "bytes": 7368
+      }
+    ]
+  },
+  "assets/inominavel/fugir-03.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/6866cd3dd617101e-160.webp",
+        "bytes": 7206
+      }
+    ]
+  },
+  "assets/inominavel/fugir-04.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/597a19251f2276f7-160.webp",
+        "bytes": 7158
+      }
+    ]
+  },
+  "assets/inominavel/gritar-01.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/40a33a5203eac858-160.webp",
+        "bytes": 9828
+      }
+    ]
+  },
+  "assets/inominavel/gritar-02.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/4872a3728f2e1111-160.webp",
+        "bytes": 9594
+      }
+    ]
+  },
+  "assets/inominavel/parado-01.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/06280f8ba6be7adc-160.webp",
+        "bytes": 6598
+      }
+    ]
+  },
+  "assets/inominavel/parado-02.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/529ac9a0320e5c97-160.webp",
+        "bytes": 6478
+      }
+    ]
+  },
+  "assets/inominavel/parado-03.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/789460e3e4aa69a6-160.webp",
+        "bytes": 6706
+      }
+    ]
+  },
+  "assets/inominavel/parado-04.png": {
+    "width": 160,
+    "height": 160,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/a388d8ed80402c54-160.webp",
+        "bytes": 6362
+      }
+    ]
+  },
   "assets/italo-face-t.png": {
     "width": 470,
     "height": 364,
@@ -2407,6 +4019,248 @@
       }
     ]
   },
+  "assets/objetos/alavanca-01.png": {
+    "width": 48,
+    "height": 64,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/de03442f31371c2d-48.webp",
+        "bytes": 1694
+      }
+    ]
+  },
+  "assets/objetos/alavanca-02.png": {
+    "width": 48,
+    "height": 64,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/68325b06c28eba3a-48.webp",
+        "bytes": 1666
+      }
+    ]
+  },
+  "assets/objetos/banco.png": {
+    "width": 96,
+    "height": 48,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/6efe474aede42532-96.webp",
+        "bytes": 2552
+      }
+    ]
+  },
+  "assets/objetos/barraca-italolol.png": {
+    "width": 128,
+    "height": 112,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/ca6c769ec0ebb5fb-128.webp",
+        "bytes": 6916
+      }
+    ]
+  },
+  "assets/objetos/espinhos.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/463cf23cfea90c47-64.webp",
+        "bytes": 1716
+      }
+    ]
+  },
+  "assets/objetos/fragmento.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/8ff7b55234d57e63-48.webp",
+        "bytes": 1740
+      }
+    ]
+  },
+  "assets/objetos/grade-arena.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/99075a0021e81054-64.webp",
+        "bytes": 3494
+      }
+    ]
+  },
+  "assets/objetos/habilidade-orbe.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/b0aaabc964a03a91-64.webp",
+        "bytes": 3722
+      }
+    ]
+  },
+  "assets/objetos/marquise.png": {
+    "width": 420,
+    "height": 118,
+    "variants": [
+      {
+        "width": 420,
+        "src": "assets/web/fb335babb1a8c3ce-420.webp",
+        "bytes": 11850
+      }
+    ]
+  },
+  "assets/objetos/mola-01.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/9f1b5204e2a97098-64.webp",
+        "bytes": 1692
+      }
+    ]
+  },
+  "assets/objetos/mola-02.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/9063adc9c1d6dcca-64.webp",
+        "bytes": 2076
+      }
+    ]
+  },
+  "assets/objetos/parede-rachada-01.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/5c2b34f7e8aea3b6-64.webp",
+        "bytes": 1716
+      }
+    ]
+  },
+  "assets/objetos/parede-rachada-02.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/d3919b220bd3c744-64.webp",
+        "bytes": 1976
+      }
+    ]
+  },
+  "assets/objetos/parede-rachada-03.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/0ae35af7a938b215-64.webp",
+        "bytes": 2306
+      }
+    ]
+  },
+  "assets/objetos/placa.png": {
+    "width": 64,
+    "height": 80,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/900da76f855f0d73-64.webp",
+        "bytes": 1972
+      }
+    ]
+  },
+  "assets/objetos/plataforma.png": {
+    "width": 192,
+    "height": 24,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/f83610f61c618e7a-192.webp",
+        "bytes": 944
+      }
+    ]
+  },
+  "assets/objetos/portao.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/acc94a87a7d10f00-64.webp",
+        "bytes": 1840
+      }
+    ]
+  },
+  "assets/objetos/serra.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/524a7e5f96e2fdfa-64.webp",
+        "bytes": 2188
+      }
+    ]
+  },
+  "assets/objetos/telha-rachada.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/7fe96129b30d45e6-64.webp",
+        "bytes": 1850
+      }
+    ]
+  },
+  "assets/objetos/telha.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/9297734fe5413c7e-64.webp",
+        "bytes": 1738
+      }
+    ]
+  },
+  "assets/objetos/trilho.png": {
+    "width": 64,
+    "height": 64,
+    "variants": [
+      {
+        "width": 64,
+        "src": "assets/web/7b01b25db1cf6565-64.webp",
+        "bytes": 1024
+      }
+    ]
+  },
+  "assets/objetos/virgulas-saco.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/0a413f428e9f49af-48.webp",
+        "bytes": 1928
+      }
+    ]
+  },
   "assets/qrcode.png": {
     "width": 280,
     "height": 280,
@@ -2415,6 +4269,164 @@
         "width": 280,
         "src": "assets/web/96739b00bd79b687-280.webp",
         "bytes": 12678
+      }
+    ]
+  },
+  "assets/ui/cogumelo-cheio.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/7e28c23ed551c930-48.webp",
+        "bytes": 1518
+      }
+    ]
+  },
+  "assets/ui/cogumelo-vazio.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/27239490974b6cdd-48.webp",
+        "bytes": 1420
+      }
+    ]
+  },
+  "assets/ui/habilidade-dash.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/38bc23fcc9c63b8b-256.webp",
+        "bytes": 17598
+      }
+    ]
+  },
+  "assets/ui/habilidade-parede.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/e9335f1119d1f859-256.webp",
+        "bytes": 26088
+      }
+    ]
+  },
+  "assets/ui/habilidade-pulo2.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/f91baff27b883cf7-256.webp",
+        "bytes": 29982
+      }
+    ]
+  },
+  "assets/ui/habilidade-rajada.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/211ac1f0a156bf5d-256.webp",
+        "bytes": 28674
+      }
+    ]
+  },
+  "assets/ui/logo.png": {
+    "width": 1024,
+    "height": 256,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/43fb723234e119ba-640.webp",
+        "bytes": 25144
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/43fb723234e119ba-1024.webp",
+        "bytes": 47128
+      }
+    ]
+  },
+  "assets/ui/mapa-banco.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/ac4c5cd3935f6d0a-32.webp",
+        "bytes": 786
+      }
+    ]
+  },
+  "assets/ui/mapa-chefe.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/aca78462d761fee4-32.webp",
+        "bytes": 944
+      }
+    ]
+  },
+  "assets/ui/mapa-sombra.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/92964e323036e79b-32.webp",
+        "bytes": 878
+      }
+    ]
+  },
+  "assets/ui/titulo-fundo.jpg": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/dbfe4a5f5fbbb09e-640.webp",
+        "bytes": 51158
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/dbfe4a5f5fbbb09e-1280.webp",
+        "bytes": 144492
+      }
+    ]
+  },
+  "assets/ui/titulo-fundo.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f82bdf94e3735659-640.webp",
+        "bytes": 51838
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/f82bdf94e3735659-1280.webp",
+        "bytes": 144622
+      }
+    ]
+  },
+  "assets/ui/vaso-pontuacao.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/09c41a43c1bc304b-128.webp",
+        "bytes": 6068
       }
     ]
   },
