@@ -5,6 +5,9 @@
 > nenhuma delas. As cartas já têm arte (`assets/Cartas/`); aqui é só a mesa e os enfeites.
 
 ## Como pôr uma imagem no jogo
+> Quer que um Claude faça isso por você? Mande as imagens e peça para ele seguir
+> `docs/INSTRUCOES-ASSETS-CLAUDE.md` (tem um pedido pronto para colar no começo).
+
 1. Gere a imagem com o prompt abaixo.
 2. Salve com **exatamente** o nome indicado dentro de **`assets/Batalha/`** (PNG).
 3. Rode `npm run build`. Ele gera a versão web em `assets/web/` e registra a imagem em `js/images.generated.js`.

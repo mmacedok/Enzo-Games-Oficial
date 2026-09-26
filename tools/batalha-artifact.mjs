@@ -2,7 +2,8 @@
 //
 // Link fixo (republicar sempre no mesmo): https://claude.ai/artifact/VUPMuaHWcGXx732Y22wE47
 // Uso: node tools/batalha-artifact.mjs <pasta-de-saída>
-// Gera <saída>/batalha.html (CSS e JS embutidos) e <saída>/cartas/*.webp (arte das cartas, versão 640).
+// Gera <saída>/batalha.html (CSS e JS embutidos), <saída>/cartas/*.webp (arte, menor versão web) e
+// <saída>/files.json (o mapa para o `files` do Artifact, com `root` = <saída>).
 // Imagens de assets/Batalha/ que já existirem vão junto; as que faltam ficam no placeholder.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -51,4 +52,7 @@ window.siteImageUrl = (s) => window.SiteImages?.[s]?.variants[0].src || s;
 ${js}
 `;
 fs.writeFileSync(path.join(saida, 'batalha.html'), html);
+// Mapa pronto para o parâmetro `files` da ferramenta Artifact.
+const arquivos = Object.fromEntries(Object.values(siteImages).map((i) => [i.variants[0].src, i.variants[0].src]));
+fs.writeFileSync(path.join(saida, 'files.json'), JSON.stringify(arquivos, null, 1));
 console.log(`${saida}/batalha.html (${(html.length / 1024).toFixed(0)} KB) + ${Object.keys(siteImages).length} imagens`);
