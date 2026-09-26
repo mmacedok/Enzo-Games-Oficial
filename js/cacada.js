@@ -2970,6 +2970,23 @@
     }
 
     /** Álbum de figurinhas (sentado no banco): 8 figurinhas e os encaixes. */
+    /**
+     * Molduras impressas em ui/album-fundo.png (1280×720), já na escala da tela (÷2):
+     * 3×3 na página da esquerda e 3×3 na da direita, lidas da arte.
+     */
+    const moldura = (x0, x1, y0, y1) => ({ x: x0 / 2, y: y0 / 2, w: (x1 - x0) / 2, h: (y1 - y0) / 2 });
+    const MOLDURAS_ALBUM = {
+        colecao: [
+            moldura(272, 372, 110, 238), moldura(393, 491, 106, 234), moldura(515, 612, 102, 230),
+            moldura(265, 368, 270, 400), moldura(388, 490, 266, 398), moldura(512, 612, 263, 395),
+            moldura(258, 362, 436, 573), moldura(383, 487, 433, 570),
+        ],
+        encaixes: [
+            moldura(665, 762, 102, 230), moldura(785, 882, 102, 230), moldura(903, 1002, 104, 232),
+            moldura(665, 765, 263, 397), moldura(788, 887, 265, 397),
+        ],
+    };
+
     function desenharAlbum() {
         const p = jogo.progresso;
         const fundo = arte('albumFundo');
@@ -2985,57 +3002,74 @@
         }
         texto('ÁLBUM DE FIGURINHAS', W / 2, 26, 24, COR.laranja, 5);
         areas = [];
-        // Encaixes (em cima).
-        const livres = core.encaixesLivres(p);
-        texto(`Encaixes: ${p.equipadas.length}/${p.encaixes}`, W / 2, 70, 14, COR.tinta, 0);
         const ids = Object.keys(FIGURINHAS);
-        for (let i = 0; i < p.encaixes; i++) {
-            const x = W / 2 - (p.encaixes * 34) / 2 + i * 34 + 17;
+        // Com a arte do álbum, cada figurinha e cada encaixe vai numa moldura impressa nela:
+        // página da esquerda = coleção (3×3), página da direita = encaixes no Álbum.
+        const molduras = fundo ? MOLDURAS_ALBUM : null;
+        const livres = core.encaixesLivres(p);
+        const claro = fundo ? '#e6d9b8' : COR.tinta;
+        texto('COLEÇÃO', 224, 48, 13, claro, fundo ? 3 : 0);
+        texto(`NO ÁLBUM ${p.equipadas.length}/${p.encaixes}`, 418, 48, 13, claro, fundo ? 3 : 0);
+        // Encaixes.
+        for (let i = 0; i < CONFIG.encaixesMax; i++) {
             const f = p.equipadas[i];
+            const r = molduras ? molduras.encaixes[i] : { x: W / 2 - (p.encaixes * 34) / 2 + i * 34 + 5, y: 80, w: 24, h: 32 };
+            if (!molduras && i >= p.encaixes) break;
+            if (i >= p.encaixes) {
+                // Encaixe que ainda não comprou (página nova na loja).
+                ctx.fillStyle = 'rgba(7, 4, 26, 0.55)';
+                ctx.fillRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
+                texto('LOJA', r.x + r.w / 2, r.y + r.h / 2, 10, '#8a7a66', 2);
+                continue;
+            }
             const img = arte(f ? 'albumEncaixeCheio' : 'albumEncaixe');
-            if (img) ctx.drawImage(img, x - 12, 80, 24, 32);
+            if (img) ctx.drawImage(img, r.x + 2, r.y + 2, r.w - 4, r.h - 4);
             else {
                 ctx.strokeStyle = f ? COR.amarelo : '#8a7a66';
                 ctx.lineWidth = 2;
                 ctx.setLineDash(f ? [] : [3, 3]);
-                ctx.strokeRect(x - 12, 80, 24, 32);
+                ctx.strokeRect(r.x, r.y, r.w, r.h);
                 ctx.setLineDash([]);
             }
             if (f) {
                 const fi = arte(`fig_${f}`);
-                if (fi) ctx.drawImage(fi, x - 11, 81, 22, 30);
-                else miniFigurinha(f, x, 96, 0.9);
+                if (fi) ctx.drawImage(fi, r.x + 4, r.y + 4, r.w - 8, r.h - 8);
+                else miniFigurinha(f, r.x + r.w / 2, r.y + r.h / 2, r.w / 26);
+                areas.push({ x: r.x, y: r.y, w: r.w, h: r.h, id: `fig:${ids.indexOf(f)}` });
             }
         }
-        // As 8 figurinhas (2 fileiras de 4).
+        // As 8 figurinhas.
         ids.forEach((id, i) => {
-            const col = i % 4;
-            const lin = Math.floor(i / 4);
-            const x = 110 + col * 140;
-            const y = 150 + lin * 92;
+            const r = molduras ? molduras.colecao[i] : { x: 110 + (i % 4) * 140 - 24, y: 150 + Math.floor(i / 4) * 92 - 32, w: 48, h: 64 };
+            const x = r.x + r.w / 2;
+            const y = r.y + r.h / 2;
             const tem = p.figurinhas.has(id);
             const usada = p.equipadas.includes(id);
-            const sel = visual.albumSel === i;
-            if (sel) {
-                ctx.fillStyle = 'rgba(255, 210, 63, 0.35)';
-                ctx.fillRect(x - 36, y - 38, 72, 84);
+            if (visual.albumSel === i) {
+                ctx.fillStyle = 'rgba(255, 210, 63, 0.25)';
+                ctx.fillRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6);
+                ctx.strokeStyle = COR.amarelo;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6);
             }
             if (tem) {
                 const img = arte(`fig_${id}`);
-                if (img) ctx.drawImage(img, x - 24, y - 32, 48, 64);
-                else miniFigurinha(id, x, y, 2);
-                if (usada) texto('NO ÁLBUM', x, y + 40, 11, '#2b8a3e', 0);
+                if (usada) ctx.globalAlpha = 0.45;   // está no Álbum (aparece na página da direita)
+                if (img) ctx.drawImage(img, r.x + 3, r.y + 3, r.w - 6, r.h - 6);
+                else miniFigurinha(id, x, y, r.w / 26);
+                ctx.globalAlpha = 1;
+                if (usada) texto('NO ÁLBUM', x, y, 10, '#7bd88f', 3);
             } else if (p.quebradas.has(id)) {
-                texto('QUEBROU', x, y, 12, '#8a7a66', 0);
-            } else {
+                texto('QUEBROU', x, y, 11, '#8a7a66', 2);
+            } else if (!molduras) {
                 ctx.strokeStyle = '#b5a88f';
                 ctx.lineWidth = 2;
                 ctx.setLineDash([4, 4]);
-                ctx.strokeRect(x - 24, y - 32, 48, 64);
+                ctx.strokeRect(r.x, r.y, r.w, r.h);
                 ctx.setLineDash([]);
                 texto('?', x, y, 22, '#b5a88f', 0);
-            }
-            areas.push({ x: x - 36, y: y - 38, w: 72, h: 84, id: `fig:${i}` });
+            } else texto('?', x, y, 22, 'rgba(230, 217, 184, 0.55)', 0);
+            areas.push({ x: r.x - 3, y: r.y - 3, w: r.w + 6, h: r.h + 6, id: `fig:${i}` });
         });
         // Descrição da escolhida.
         const id = ids[visual.albumSel] || ids[0];
@@ -3045,7 +3079,7 @@
         texto(tem ? `${FIGURINHAS[id].nome}: ${FIGURINHAS[id].texto}` : '??? (ainda não achou esta)', W / 2, H - 43, 13, '#fff', 3);
         if (visual.albumMsg) texto(visual.albumMsg, W / 2, H - 70, 13, livres <= 0 ? '#ff8ca0' : COR.amarelo, 3);
         botaoTela('FECHAR', W / 2 - 50, H - 24, 100, 22, '#2a2a3a', 'fecharAlbum');
-        if (!toque) texto(textoTeclas('[MIRA] escolhe · [CONFIRMA] põe/tira · ESC fecha'), W - 16, 26, 11, COR.lilas, 3, 'right');
+        if (!toque) texto(textoTeclas('[MIRA] escolhe · [CONFIRMA] põe/tira · ESC fecha'), W - 12, H - 12, 11, COR.lilas, 3, 'right');
     }
 
     function trocarNoAlbum() {
@@ -3427,12 +3461,13 @@
         if (esquema.dash.includes(c)) { entrada.dash = true; entrada.dashPedido = true; }
         if (esquema.magia.includes(c)) entrada.magiaPedido = true;
     });
-    /** Setas no Álbum: 8 figurinhas em 2 fileiras de 4. */
+    /** Setas no Álbum: 8 figurinhas numa grade de 3 colunas (a 9ª moldura fica vazia). */
     function moverNoAlbum(nome) {
         const s = visual.albumSel;
         if (nome === 'esquerda') visual.albumSel = (s + 7) % 8;
         else if (nome === 'direita') visual.albumSel = (s + 1) % 8;
-        else if (nome === 'cima' || nome === 'baixo') visual.albumSel = (s + 4) % 8;
+        else if (nome === 'baixo') visual.albumSel = s + 3 > 7 ? s % 3 : s + 3;
+        else if (nome === 'cima') visual.albumSel = s - 3 >= 0 ? s - 3 : (s + 6 > 7 ? s + 3 : s + 6);
         else return;
         visual.albumMsg = '';
     }
