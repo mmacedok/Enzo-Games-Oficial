@@ -9,7 +9,7 @@ Para voltar com ele:
 2. Recoloque `tetoRonda` e o jogo `'ronda-noturna'` em `api/anti-cheat.js` (estão no histórico do
    git, commit anterior à guarda) para o servidor voltar a aceitar os pontos.
 3. Aponte a chave `ronda` de `JOGOS` em `js/main.js` para `js/ronda-core.js` e `js/ronda.js`
-   (global `RondaDegustador`), e devolva os créditos em `CREDITOS_POR_PONTO` (`js/baralho-dados.js`, branch TCG).
+   (global `RondaDegustador`).
 
 Os recordes antigos (`ronda-noturna`) continuam no banco e aparecem na Ficha com o nome do jogo.
 Os sprites em `assets/ronda/` e os estilos `.ronda-botao` continuam em uso pela Caçada.
