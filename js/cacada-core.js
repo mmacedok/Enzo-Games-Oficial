@@ -1810,8 +1810,9 @@
             if (j.degustarT >= tempoDegustar) {
                 j.degustarT = 0;
                 j.pontuacao -= custoCura;
+                const vidaAntes = j.vida;
                 j.vida = Math.min(vidaTotal(jogo), j.vida + (coxinha ? 2 : 1));
-                jogo.eventos.push({ tipo: 'curou', x: j.x + L / 2, y: j.y });
+                jogo.eventos.push({ tipo: 'curou', x: j.x + L / 2, y: j.y, de: vidaAntes, ate: j.vida });
             }
         } else if (j.estado === 'degustando') {
             j.estado = 'normal';

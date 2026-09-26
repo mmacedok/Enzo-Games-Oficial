@@ -262,6 +262,8 @@
         copo: ['objetos/copo-requeijao.png'],
         chaveBueiro: ['objetos/chave-bueiro.png'],
         coposHud: ['ui/copos-0.png', 'ui/copos-1.png', 'ui/copos-2.png', 'ui/copos-3.png'],
+        // Cogumelo enchendo na cura: vazio → meio cheio → cheio com brilho.
+        cogGanhar: serie('ui/cogumelo-ganhar', 3),
         albumFundo: ['ui/album-fundo.png'],
         albumEncaixe: ['ui/album-encaixe.png'],
         albumEncaixeCheio: ['ui/album-encaixe-cheio.png'],
@@ -2348,7 +2350,11 @@
                     tremer(0.35);
                     salvar();
                     break;
-                case 'curou': textoFlutuante('+1', e.x, e.y - 20, '#ff8ca0'); particulas(e.x, e.y, 8, '#ff8ca0', 60); break;
+                case 'curou':
+                    textoFlutuante(`+${(e.ate ?? 1) - (e.de ?? 0)}`, e.x, e.y - 20, '#ff8ca0');
+                    particulas(e.x, e.y, 8, '#ff8ca0', 60);
+                    if (e.de != null) visual.cogGanhou = { inicio: visual.tempo, de: e.de, ate: e.ate };
+                    break;
                 case 'impacto': tremer(e.forte ? 0.25 : 0.12); particulas(e.x, e.y, 10, '#d8c4a0', 120); efeito('poeira', e.x, e.y - 8, e.forte ? 48 : 34, 0.3); break;
                 case 'tiroInimigo': case 'magia': break;
                 case 'rajada': particulas(e.x, e.y, 8, COR.laranja, 90); tremer(0.06); break;
@@ -2544,17 +2550,33 @@
         }
         // Cogumelos (vida). Os 2 do Cogumelo de Vidro ficam azulados.
         const vidaTotal = core.vidaTotal(jogo);
+        const degustando = j.estado === 'degustando';
+        const kCura = degustando ? j.degustarT / (p.loja.has('lanche') ? CONFIG.tempoDegustarRapido : CONFIG.tempoDegustar) : 0;
+        // Cura que acabou de entrar: os cogumelos novos passam pelo quadro cheio com brilho e dão um pulinho.
+        const ganhou = visual.cogGanhou;
+        const tGanhou = ganhou ? visual.tempo - ganhou.inicio : Infinity;
+        const DURA_GANHOU = 0.35;
         for (let i = 0; i < vidaTotal; i++) {
-            const img = arte(i < j.vida ? 'cogCheio' : 'cogVazio');
             const vidro = i >= p.vidaMax;
+            const enchendo = degustando && i === j.vida;
+            const acabouDeEncher = tGanhou >= 0 && tGanhou < DURA_GANHOU && i >= ganhou.de && i < ganhou.ate && i < j.vida;
+            let img;
+            if (acabouDeEncher) img = arte('cogGanhar', 2) || arte('cogCheio');
+            // Enchendo: vazio até a metade da carga, meio cheio depois.
+            else if (enchendo) img = arte('cogGanhar', kCura < 0.5 ? 0 : 1) || arte('cogVazio');
+            else img = arte(i < j.vida ? 'cogCheio' : 'cogVazio');
+            const pulo = acabouDeEncher ? 1 + 0.35 * Math.sin((tGanhou / DURA_GANHOU) * Math.PI) : 1;
+            const cx = 66 + i * 20;
             if (vidro) ctx.globalAlpha = 0.75;
-            if (img) ctx.drawImage(vidro ? tingidoLeve(img, 'rgba(143, 200, 255, 0.45)') : img, 66 + i * 20 - 9, 24 - 11, 19, 19);
-            else cogumelo(66 + i * 20, 24, i < j.vida, 1);
+            if (img) {
+                const s = 19 * pulo;
+                ctx.drawImage(vidro ? tingidoLeve(img, 'rgba(143, 200, 255, 0.45)') : img, cx - s / 2, 22.5 - s / 2, s, s);
+            } else cogumelo(cx, 24, i < j.vida, pulo);
             ctx.globalAlpha = 1;
         }
         // Degustando: a coxinha e o anel de carga ficam no cogumelo que vai encher.
-        if (j.estado === 'degustando') {
-            const k = j.degustarT / (p.loja.has('lanche') ? CONFIG.tempoDegustarRapido : CONFIG.tempoDegustar);
+        if (degustando) {
+            const k = kCura;
             const cx = 66 + Math.min(j.vida, vidaTotal - 1) * 20;
             const cy = 24;
             ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
