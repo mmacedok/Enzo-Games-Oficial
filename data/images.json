@@ -10,6 +10,54 @@
       }
     ]
   },
+  "assets/Batalha/caixa-internet.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1dc44f1bfa85743c-640.webp",
+        "bytes": 159624
+      },
+      {
+        "width": 1254,
+        "src": "assets/web/1dc44f1bfa85743c-1254.webp",
+        "bytes": 523062
+      }
+    ]
+  },
+  "assets/Batalha/caixa-legiao.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/fb643eef1c57ac1e-640.webp",
+        "bytes": 156932
+      },
+      {
+        "width": 1254,
+        "src": "assets/web/fb643eef1c57ac1e-1254.webp",
+        "bytes": 535146
+      }
+    ]
+  },
+  "assets/Batalha/caixa-turma.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1a01031745c6a8c9-640.webp",
+        "bytes": 142392
+      },
+      {
+        "width": 1254,
+        "src": "assets/web/1a01031745c6a8c9-1254.webp",
+        "bytes": 451472
+      }
+    ]
+  },
   "assets/Batalha/estado-escudo.png": {
     "width": 128,
     "height": 128,
@@ -51,6 +99,107 @@
         "width": 128,
         "src": "assets/web/39879b985d00f988-128.webp",
         "bytes": 6460
+      }
+    ]
+  },
+  "assets/Batalha/faixa.png": {
+    "width": 2172,
+    "height": 724,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e169777d72602c23-640.webp",
+        "bytes": 29428
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/e169777d72602c23-1280.webp",
+        "bytes": 99192
+      },
+      {
+        "width": 2000,
+        "src": "assets/web/e169777d72602c23-2000.webp",
+        "bytes": 201354
+      }
+    ]
+  },
+  "assets/Batalha/fundo-menu.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/522198780598ba64-640.webp",
+        "bytes": 118190
+      },
+      {
+        "width": 1254,
+        "src": "assets/web/522198780598ba64-1254.webp",
+        "bytes": 408754
+      }
+    ]
+  },
+  "assets/Batalha/icone-como-jogar.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/71d55b97b611bcee-640.webp",
+        "bytes": 144294
+      },
+      {
+        "width": 1254,
+        "src": "assets/web/71d55b97b611bcee-1254.webp",
+        "bytes": 433460
+      }
+    ]
+  },
+  "assets/Batalha/icone-npc-facil.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/20eaea2d5151fca6-640.webp",
+        "bytes": 106194
+      },
+      {
+        "width": 1254,
+        "src": "assets/web/20eaea2d5151fca6-1254.webp",
+        "bytes": 343010
+      }
+    ]
+  },
+  "assets/Batalha/icone-npc-normal.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/80edb8341b11bbff-640.webp",
+        "bytes": 106302
+      },
+      {
+        "width": 1254,
+        "src": "assets/web/80edb8341b11bbff-1254.webp",
+        "bytes": 276016
+      }
+    ]
+  },
+  "assets/Batalha/icone-outro-jogador.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8b28ea1eeccd8450-640.webp",
+        "bytes": 105544
+      },
+      {
+        "width": 1254,
+        "src": "assets/web/8b28ea1eeccd8450-1254.webp",
+        "bytes": 325948
       }
     ]
   },
