@@ -14,7 +14,7 @@
 
     const core = window.CacadaCore;
     const MUNDO = window.CacadaMundo;
-    const { CONFIG, HABILIDADES, LOJA } = core;
+    const { CONFIG, HABILIDADES, FIGURINHAS } = core;
     const W = CONFIG.largura;
     const H = CONFIG.altura;
     const TL = CONFIG.tile;
@@ -39,7 +39,6 @@
         laranja: '#ff6600',
         amarelo: '#ffd400',
         rosa: '#ff4fd8',
-        branco: '#ffffff',
         lilas: '#e6d6ff',
         verde: '#5aff78',
         roxo: '#a046ff',
@@ -52,6 +51,10 @@
         fabrica: { parede: '#23262e', tijolo: '#2f333d', topo: '#e08a2c', topoClaro: '#ffc07a', ceu: ['#0b0c10', '#15171d', '#1f222a'], fora: false },
         torre: { parede: '#0f2430', tijolo: '#153140', topo: '#2bb3c0', topoClaro: '#8ff1ff', ceu: ['#03080d', '#081520', '#0d2030'], fora: false },
         covil: { parede: '#1a0f24', tijolo: '#241533', topo: '#5aff78', topoClaro: '#c4ffd0', ceu: ['#04020a', '#140a24', '#1f0f35'], fora: true },
+        // Expansão.
+        esgoto: { parede: '#1e2212', tijolo: '#2a2f18', topo: '#9aa83a', topoClaro: '#d6e07a', ceu: ['#050603', '#0f130a', '#1a2112'], fora: false },
+        feira: { parede: '#1f1024', tijolo: '#2c1633', topo: '#d63c8f', topoClaro: '#ff8fc8', ceu: ['#07030a', '#150a1d', '#241030'], fora: true },
+        orkut: { parede: '#161a2a', tijolo: '#20263a', topo: '#8fa3d6', topoClaro: '#dbe4ff', ceu: ['#04050a', '#0b0f1c', '#141a2e'], fora: false },
     };
 
     // ------------------------------------------------------------- artes
@@ -166,12 +169,157 @@
         ARQUIVOS[`meio_${a}`] = [`areas/${a}/meio.png`];
         ARQUIVOS[`fundo_${a}`] = [`areas/${a}/fundo.jpg`];
     }
-    // As artes olham para a direita.
-    const OLHA_ESQUERDA = new Set();
+    // Artes da expansão (plano em cacada-expansion/PLANO-EXPANSAO-SPRITES.md). Só carregam as
+    // que já existem em assets/ (lista gerada por tools/cacada-artes.js em js/cacada-artes.js);
+    // o resto continua desenhado por código.
+    const EXPANSAO = {
+        // Degustador.
+        mergulhoPrep: ['degustador/mergulho-prep.png'],
+        mergulho: serie('degustador/mergulho', 2),
+        mergulhoPouso: ['degustador/mergulho-pouso.png'],
+        planar: serie('degustador/planar', 2),
+        buzzCarregar: serie('degustador/buzz-carregar', 2),
+        buzz: serie('degustador/buzz', 2),
+        pegouFigurinha: ['degustador/pegou-figurinha.png'],
+        // Esgoto.
+        rato: serie('inimigos/rato', 4),
+        ratoPreparar: ['inimigos/rato-preparar.png'],
+        ratoBote: ['inimigos/rato-bote.png'],
+        bocaFechada: ['inimigos/bocadelobo-fechada.png'],
+        bocaAbrir: ['inimigos/bocadelobo-abrir.png'],
+        bocaMorder: serie('inimigos/bocadelobo-morder', 2),
+        bolha: serie('inimigos/bolha', 2),
+        bolhaInchar: ['inimigos/bolha-inchar.png'],
+        bolhaEstouro: serie('efeitos/bolha-estouro', 3),
+        gota: serie('efeitos/gota', 2),
+        chorume: serie('perigos/chorume', 2),
+        grade: serie('objetos/grade-bueiro', 3),
+        tampaBueiro: ['objetos/tampa-bueiro.png'],
+        bueiroFechado: ['objetos/bueiro-fechado.png'],
+        bueiroAberto: ['objetos/bueiro-aberto.png'],
+        cano: ['objetos/cano-decor.png'],
+        raOcioso: serie('chefes/ratao-ocioso', 2),
+        raRolarPrep: ['chefes/ratao-rolar-prep.png'],
+        raRolar: serie('chefes/ratao-rolar', 2),
+        raMergulhar: ['chefes/ratao-mergulhar.png'],
+        raEmergir: serie('chefes/ratao-emergir', 2),
+        raArremessarPrep: ['chefes/ratao-arremessar-prep.png'],
+        raArremessar: ['chefes/ratao-arremessar.png'],
+        raAtordoado: serie('chefes/ratao-atordoado', 2),
+        raDerrotado: ['chefes/ratao-derrotado.png'],
+        tampa: serie('efeitos/tampa', 2),
+        respingoChorume: serie('efeitos/respingo-chorume', 3),
+        // Feira.
+        toldo: serie('objetos/toldo', 2),
+        vento: serie('objetos/vento', 3),
+        barracaPastel: ['objetos/barraca-pastel.png'],
+        tioPastel: serie('npcs/tio-pastel', 2),
+        popup: serie('inimigos/popup', 2),
+        popupPiscar: ['inimigos/popup-piscar.png'],
+        popupMirar: ['inimigos/popup-mirar.png'],
+        botaoX: serie('efeitos/botao-x', 2),
+        golpista: serie('inimigos/golpista', 4),
+        golpistaRoubar: ['inimigos/golpista-roubar.png'],
+        golpistaFugir: serie('inimigos/golpista-fugir', 2),
+        boneco: serie('inimigos/boneco', 3),
+        bonecoMurcho: ['inimigos/boneco-murcho.png'],
+        coOcioso: serie('chefes/coach-ocioso', 2),
+        coJogarPrep: ['chefes/coach-jogar-prep.png'],
+        coJogar: ['chefes/coach-jogar.png'],
+        coInvocar: ['chefes/coach-invocar.png'],
+        coPalestraPrep: ['chefes/coach-palestra-prep.png'],
+        coPalestra: serie('chefes/coach-palestra', 3),
+        coPulo: ['chefes/coach-pulo.png'],
+        coPouso: ['chefes/coach-pouso.png'],
+        coDerrotado: ['chefes/coach-derrotado.png'],
+        nota: serie('efeitos/nota', 2),
+        anelSom: serie('efeitos/anel-som', 2),
+        // Orkut.
+        vidro: serie('objetos/vidro', 3),
+        espinhosOrkut: ['perigos/espinhos-orkut.png'],
+        estrela: serie('efeitos/brilho-estrela', 2),
+        scrap: serie('inimigos/scrap', 2),
+        scrapAtacar: ['inimigos/scrap-atacar.png'],
+        fakeDisfarce: ['inimigos/fake-disfarce.png'],
+        fakeRevelar: ['inimigos/fake-revelar.png'],
+        fakePular: serie('inimigos/fake-pular', 2),
+        recado: serie('inimigos/recado', 2),
+        recadoMirar: ['inimigos/recado-mirar.png'],
+        scFlutuar: serie('chefes/scrapeira-flutuar', 4),
+        scSumir: ['chefes/scrapeira-sumir.png'],
+        scConjurar: ['chefes/scrapeira-conjurar.png'],
+        scMergulhoPrep: ['chefes/scrapeira-mergulho-prep.png'],
+        scMergulho: ['chefes/scrapeira-mergulho.png'],
+        scGrito: ['chefes/scrapeira-grito.png'],
+        scDerrotado: ['chefes/scrapeira-derrotado.png'],
+        coracao: serie('efeitos/coracao', 2),
+        paredeRecado: ['efeitos/parede-recado.png'],
+        // Itens e interface.
+        habBigorna: ['ui/habilidade-mergulho.png'],
+        habPipa: ['ui/habilidade-pipa.png'],
+        habBuzz: ['ui/habilidade-buzz.png'],
+        pipa: serie('objetos/pipa', 2),
+        pacote: serie('objetos/figurinha-pacote', 4),
+        copo: ['objetos/copo-requeijao.png'],
+        chaveBueiro: ['objetos/chave-bueiro.png'],
+        coposHud: ['ui/copos-0.png', 'ui/copos-1.png', 'ui/copos-2.png', 'ui/copos-3.png'],
+        // Cogumelo enchendo na cura: vazio → meio cheio → cheio com brilho.
+        cogGanhar: serie('ui/cogumelo-ganhar', 3),
+        // Cura, banco e Degustador (quadros extras).
+        coxinhaFx: ['efeitos/coxinha.png'],
+        anelCura: ['efeitos/anel-cura.png'],
+        curaFx: serie('efeitos/cura', 3),
+        degustarBrilho: serie('efeitos/degustar-brilho', 4),
+        salvarBrilho: serie('efeitos/salvar-brilho', 4),
+        bancoAtivo: serie('objetos/banco-ativo', 2),
+        degustarLoop: serie('degustador/degustar', 4),
+        sentadoLoop: serie('degustador/sentado', 2),
+        salvo: ['ui/salvo.png'],
+        setaInteragir: serie('ui/seta-interagir', 2),
+        // Inimigos que eram desenhados por código.
+        emoji: serie('inimigos/emoji', 2),
+        pingCaca: ['inimigos/ping-caca.png'],
+        feiticeiraConjurar: ['inimigos/feiticeira-conjurar.png'],
+        // Pausa.
+        pausaFundo: ['ui/pausa-fundo.png'],
+        pausaTitulo: ['ui/pausa-titulo.png'],
+        pausaEnfeite: ['ui/pausa-enfeite.png'],
+        botaoLaranja: ['ui/botao-laranja.png'],
+        botaoLaranjaSel: ['ui/botao-laranja-sel.png'],
+        botaoEscuro: ['ui/botao-escuro.png'],
+        botaoEscuroSel: ['ui/botao-escuro-sel.png'],
+        iconeContinuar: ['ui/icone-continuar.png'],
+        iconeMapa: ['ui/icone-mapa.png'],
+        iconeControles: ['ui/icone-controles.png'],
+        iconeInicio: ['ui/icone-inicio.png'],
+        albumFundo: ['ui/album-fundo.png'],
+        albumEncaixe: ['ui/album-encaixe.png'],
+        albumEncaixeCheio: ['ui/album-encaixe-cheio.png'],
+        mapaLoja: ['ui/mapa-loja.png'],
+        mapaFigurinha: ['ui/mapa-figurinha.png'],
+        mapaVoce: ['ui/mapa-voce.png'],
+        lojaCogumelo: ['ui/loja-cogumelo.png'],
+        lojaLanche: ['ui/loja-lanche.png'],
+        lojaFita: ['ui/loja-fita.png'],
+        lojaChave: ['ui/loja-chave.png'],
+        lojaEncaixe: ['ui/loja-encaixe.png'],
+        lojaCopo: ['ui/loja-copo.png'],
+        lojaFigurinha: ['ui/loja-figurinha.png'],
+    };
+    for (const f of Object.keys(FIGURINHAS)) EXPANSAO[`fig_${f}`] = [`ui/figurinha-${f}.png`];
+    for (const a of ['esgoto', 'feira', 'orkut']) {
+        EXPANSAO[`topo_${a}`] = [`areas/${a}/topo.png`];
+        EXPANSAO[`meio_${a}`] = [`areas/${a}/meio.png`];
+        EXPANSAO[`fundo_${a}`] = [`areas/${a}/fundo.jpg`];
+    }
+    Object.assign(ARQUIVOS, EXPANSAO);
+    const EXISTEM = new Set(window.CACADA_ARTES_NOVAS || []);
     const ARTE = {};
     for (const [nome, lista] of Object.entries(ARQUIVOS)) {
         ARTE[nome] = lista.map((arquivo) => {
             const img = new Image();
+            // Arte da expansão que ainda não existe: fica sem src (o jogo desenha por código).
+            if (EXPANSAO[nome] && !EXISTEM.has(arquivo)) return img;
             img.src = window.CACADA_ARTES?.[arquivo] || `assets/${arquivo}?v=2`;
             return img;
         });
@@ -194,9 +342,10 @@
     }
     const quadroDe = (nome, i = 0) => ARTE[nome][Math.abs(Math.floor(i)) % ARTE[nome].length];
 
-    /** Sprite com uma camada de cor por cima, mantendo o desenho (em cache). */
-    function tingidoLeve(img, cor) {
-        const chave = `leve|${img.src}|${cor}`;
+    /** Sprite pintado de uma cor (piscar de dano, sombra, chefe). Guardado em cache. `leve` pinta por cima sem apagar o desenho. */
+    const tintas = new Map();
+    function tingido(img, cor, leve = false) {
+        const chave = `${leve ? 'leve|' : ''}${img.src}|${cor}`;
         let c = tintas.get(chave);
         if (c) return c;
         c = document.createElement('canvas');
@@ -212,30 +361,20 @@
         tintas.set(chave, c);
         return c;
     }
-
-    /** Sprite pintado de uma cor (piscar de dano, sombra, chefe). Guardado em cache. */
-    const tintas = new Map();
-    function tingido(img, cor) {
-        const chave = `${img.src}|${cor}`;
-        let c = tintas.get(chave);
-        if (c) return c;
-        c = document.createElement('canvas');
-        c.width = img.naturalWidth;
-        c.height = img.naturalHeight;
-        const g = c.getContext('2d');
-        g.drawImage(img, 0, 0);
-        g.globalCompositeOperation = 'source-atop';
-        g.fillStyle = cor;
-        g.fillRect(0, 0, c.width, c.height);
-        tintas.set(chave, c);
-        return c;
-    }
+    const tingidoLeve = (img, cor) => tingido(img, cor, true);
 
     // ------------------------------------------------------------- save
+    // O save lido é guardado em cache: a tela de título consulta todo quadro.
+    let saveBruto;
+    let saveCache = null;
     function lerSave() {
         try {
             const bruto = localStorage.getItem(SAVE);
-            return bruto ? JSON.parse(bruto) : null;
+            if (bruto !== saveBruto) {
+                saveBruto = bruto;
+                saveCache = bruto ? JSON.parse(bruto) : null;
+            }
+            return saveCache;
         } catch {
             return null;
         }
@@ -243,15 +382,18 @@
     function salvar() {
         if (!jogo.jogador) return;
         try { localStorage.setItem(SAVE, JSON.stringify(core.exportarSave(jogo))); } catch { /* modo privado */ }
+        saveBruto = undefined;   // o save gravou: a próxima leitura faz o parse
         visual.salvouEm = visual.tempo;
     }
 
     // ------------------------------------------------------------- estado
     const jogo = core.criarJogo(MUNDO);
     const nivel = jogo.nivel;
+    /** O que a loja aberta vende agora (ItaloLOL ou Tio do Pastel). */
+    const itensLoja = () => core.itensDaLoja(jogo);
     const entrada = {
         esquerda: false, direita: false, cima: false, baixo: false,
-        pulo: false, puloPedido: false, golpePedido: false, dashPedido: false,
+        pulo: false, puloPedido: false, golpePedido: false, dash: false, dashPedido: false,
         magiaPedido: false, degustar: false, cimaPedido: false,
     };
     const visual = {
@@ -277,6 +419,11 @@
         fx: [],             // efeitos com arte (acerto, poeira, explosão…)
         puloDuploEm: -9,
         cadaveres: [],      // chefes derrotados caindo
+        albumSel: 0,        // figurinha escolhida no Álbum
+        albumMsg: '',
+        pousoEm: -9,        // pouso da Queda de Bigorna (pose de pouso)
+        figurinhaEm: -9,    // pegou figurinha (pose e aviso)
+        figurinhaNova: null,
     };
     let ultimoQuadro = null;
     let quadro = 0;
@@ -576,6 +723,16 @@
         const y0 = Math.max(0, Math.floor(cam.y / TL));
         const y1 = Math.min(nivel.altura - 1, Math.floor((cam.y + H) / TL));
         const p = jogo.progresso;
+        // Artes de topo/meio resolvidas uma vez por área (a tela pode mostrar mais de uma).
+        const artesDe = new Map();
+        const artesArea = (area) => {
+            let a = artesDe.get(area);
+            if (!a) {
+                a = { topo: arte(`topo_${area}`), meio: arte(`meio_${area}`) };
+                artesDe.set(area, a);
+            }
+            return a;
+        };
         for (let ty = y0; ty <= y1; ty++) {
             for (let tx = x0; tx <= x1; tx++) {
                 const c = nivel.grade[ty][tx];
@@ -588,7 +745,7 @@
                 if (c === '#') {
                     const acima = ty > 0 ? nivel.grade[ty - 1][tx] : '#';
                     const dentro = acima === '#' || acima === 'X' || acima === 'r' || acima === 'B';
-                    const img = arte(`${dentro ? 'meio' : 'topo'}_${area}`);
+                    const img = dentro ? artesArea(area).meio : artesArea(area).topo;
                     if (img) ctx.drawImage(img, x, y, TL, TL);
                     else ctx.drawImage(dentro ? tiles.meio : tiles.topo, x, y);
                 } else if (c === 'r') {
@@ -600,7 +757,7 @@
                     const vida = jogo.vidaParedes.get(id) ?? CONFIG.vidaParede;
                     const treme = vida < CONFIG.vidaParede && !calmo ? Math.sin(visual.tempo * 50) * 0.6 : 0;
                     const rach = area === 'telhados' && arte('rachada', CONFIG.vidaParede - Math.max(1, vida));
-                    const meio = arte(`meio_${area}`);
+                    const meio = artesArea(area).meio;
                     if (rach) ctx.drawImage(rach, x + treme, y, TL, TL);
                     else if (meio) {
                         // Outras áreas: o tijolo da área com rachaduras por cima.
@@ -627,7 +784,14 @@
                         ctx.fillStyle = '#c77dff';
                         for (let k = 3; k < TL; k += 7) ctx.fillRect(x + k, y, 2, TL);
                     }
-                } else if (c === 'X') ctx.drawImage(TILES.caixa, x, y);
+                } else if (c === 'G' || c === 'Y') {
+                    if (p.quebrados.has(nivel.grupoB.get(ty * nivel.largura + tx))) continue;
+                    desenharQuebravel(c, x, y);
+                } else if (c === 'Z') {
+                    desenharTampa(x, y, tx, ty, area, p.loja.has('chave'));
+                } else if (c === '~') desenharChorume(x, y, tx, ty);
+                else if (c === 'w') desenharVento(x, y, tx, ty);
+                else if (c === 'X') ctx.drawImage(TILES.caixa, x, y);
                 else if (c === '=') {
                     // Faixa de tábuas com mãos-francesas (420×118) que se repete a cada 3 tiles,
                     // então uma fila de marquises vira uma prancha contínua.
@@ -637,11 +801,12 @@
                     else ctx.drawImage(TILES.marquise, x, y);
                 } else if (c === 'T') {
                     const pulou = visual.tempo - (visual.molas.get(`${tx},${ty}`) ?? -9) < 0.25;
+                    if (area === 'feira') { desenharToldo(x, y, tx, ty, pulou); continue; }
                     const img = arte('mola', pulou ? 1 : 0);
                     if (img) ctx.drawImage(img, x, y, TL, TL);
                     else ctx.drawImage(TILES.mola, x, y);
                 } else if (c === '^' || c === 'v') {
-                    const img = arte('espinhos');
+                    const img = (area === 'orkut' && arte('espinhosOrkut')) || arte('espinhos');
                     if (!img) ctx.drawImage(c === '^' ? TILES.espinho : TILES.espinhoTeto, x, y);
                     else if (c === '^') ctx.drawImage(img, x, y, TL, TL);
                     else { ctx.save(); ctx.translate(x, y + TL); ctx.scale(1, -1); ctx.drawImage(img, 0, 0, TL, TL); ctx.restore(); }
@@ -649,6 +814,203 @@
                 else if (c === 'Q') desenharTelha(tx, ty, x, y);
             }
         }
+    }
+
+    // ---- blocos da expansão (arte quando existir; senão, desenho por código)
+    /** Grade de bueiro (G, a Queda de Bigorna quebra) ou parede de vidro (Y, o Buzz! quebra). */
+    function desenharQuebravel(c, x, y) {
+        const img = arte(c === 'G' ? 'grade' : 'vidro', 0);
+        if (img) { ctx.drawImage(img, x, y, TL, TL); return; }
+        if (c === 'G') {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(x, y, TL, TL);
+            ctx.fillStyle = '#6d6a5e';
+            for (let k = 2; k < TL; k += 5) ctx.fillRect(x + k, y, 2, TL);
+            ctx.fillRect(x, y + 2, TL, 2);
+            ctx.fillRect(x, y + TL - 4, TL, 2);
+            ctx.fillStyle = 'rgba(214, 224, 122, 0.25)';
+            ctx.fillRect(x, y, TL, 1);
+        } else {
+            ctx.fillStyle = 'rgba(143, 163, 214, 0.45)';
+            ctx.fillRect(x, y, TL, TL);
+            ctx.strokeStyle = 'rgba(219, 228, 255, 0.8)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x + 0.5, y + 0.5, TL - 1, TL - 1);
+            ctx.beginPath(); ctx.moveTo(x + 4, y + 15); ctx.lineTo(x + 13, y + 4); ctx.moveTo(x + 9, y + 17); ctx.lineTo(x + 16, y + 9); ctx.stroke();
+        }
+    }
+
+    /**
+     * Tampa de bueiro no chão (a fila de 'Z' é um bueiro só). Fechada até comprar a Chave
+     * do Bueiro: chão da área com uma tampa redonda deitada nele. Aberta: o buraco escuro
+     * e a tampa encostada no chão ao lado.
+     */
+    function desenharTampa(x, y, tx, ty, area, aberta) {
+        const grade = nivel.grade[ty];
+        const primeira = grade[tx - 1] !== 'Z';
+        let n = 0;
+        while (grade[tx + n - (primeira ? 0 : 1)] === 'Z') n++;
+        // Arte nova: um pedaço de chão de 2 tiles (128×64) com o bueiro já encaixado.
+        const peca = arte(aberta ? 'bueiroAberto' : 'bueiroFechado');
+        if (peca) {
+            if (primeira) ctx.drawImage(peca, x, y, n * TL, TL);
+            return;
+        }
+        const img = arte('tampaBueiro');
+        if (aberta) {
+            const fundo = ctx.createLinearGradient(0, y, 0, y + TL);
+            fundo.addColorStop(0, '#000');
+            fundo.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+            ctx.fillStyle = fundo;
+            ctx.fillRect(x, y, TL, TL);
+            if (!primeira) return;
+            // Tampa arrastada para a esquerda, deitada no chão.
+            if (img) ctx.drawImage(img, x - TL * 2 - 4, y - 10, TL * 2, 18);
+            else { ctx.fillStyle = '#3c3d44'; ctx.fillRect(x - TL * 1.5, y - 3, TL * 1.2, 3); }
+            return;
+        }
+        // A primeira desenha o chão da fila toda e a tampa por cima (as outras não pintam nada,
+        // senão cobririam a tampa).
+        if (!primeira) return;
+        const chao = arte(`topo_${area}`);
+        for (let k = 0; k < n; k++) {
+            if (chao) ctx.drawImage(chao, x + k * TL, y, TL, TL);
+            else ctx.drawImage((TILES_AREA[area] || TILES_AREA.telhados).topo, x + k * TL, y);
+        }
+        const w = n * TL;
+        if (img) {
+            // A arte é a tampa vista de cima: achatada, ela fica deitada no chão.
+            ctx.drawImage(img, x - 9, y - 10, w + 18, 24);
+            return;
+        }
+        ctx.fillStyle = '#2b2b30';
+        ctx.strokeStyle = '#55565e';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(x + w / 2, y + 2, w / 2, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = COR.amarelo;
+        ctx.fillRect(x + w / 2 - 1, y + 1, 3, 2);   // brilho da fechadura
+    }
+
+    /** Chorume: líquido que machuca (parte de baixo do tile). */
+    function desenharChorume(x, y, tx, ty) {
+        const acima = ty > 0 ? nivel.grade[ty - 1][tx] : '#';
+        const abaixo = nivel.grade[ty + 1]?.[tx] ?? '#';
+        const img = arte('chorume', visual.tempo * 6 + tx);
+        // Coluna de chorume = cachoeira: só o miolo da arte (sem a superfície), correndo para baixo.
+        if (img && (acima === '~' || abaixo === '~')) { desenharCachoeira(img, x, y, tx, ty, acima !== '~', abaixo !== '~'); return; }
+        if (img) { ctx.drawImage(img, x, y, TL, TL); return; }
+        const topo = acima === '~' ? 0 : 7;
+        ctx.fillStyle = '#8a4a1a';
+        ctx.fillRect(x, y + topo, TL, TL - topo);
+        ctx.fillStyle = '#b8601f';
+        ctx.fillRect(x, y + topo, TL, 2);
+        const b = (visual.tempo * 1.7 + tx * 0.37) % 1;
+        ctx.fillStyle = `rgba(255, 106, 42, ${1 - b})`;
+        ctx.beginPath(); ctx.arc(x + 5 + ((tx * 7) % 10), y + TL - 4 - b * (TL - topo - 4), 2 + b * 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    /** Um tile da cachoeira: chorume escorrendo (gradiente, veios e bolhas descendo), com bordas escuras e pingos no fim. */
+    function desenharCachoeira(img, x, y, tx, ty, inicio, fim) {
+        const esq = nivel.grade[ty][tx - 1] !== '~';
+        const dir = nivel.grade[ty][tx + 1] !== '~';
+        const alto = fim ? TL * 0.7 : TL;
+        const t = visual.tempo;
+        // Beiradas onduladas: o contorno da queda balança enquanto escorre.
+        const onda = (yy) => 1.8 + Math.sin((ty * TL + yy - t * 140) / 5) * 1.2;
+        const contornoQueda = () => {
+            // 1 px a mais em cima e embaixo para não sobrar costura entre os tiles.
+            const de = inicio ? 0 : -1;
+            const ate = fim ? alto : alto + 1;
+            ctx.beginPath();
+            ctx.moveTo(x + (esq ? onda(de) : -0.5), y + de);
+            for (let yy = de + 1; yy <= ate; yy += 1) ctx.lineTo(x + (esq ? onda(yy) : -0.5), y + yy);
+            for (let yy = ate; yy >= de; yy -= 1) ctx.lineTo(x + TL - (dir ? onda(yy + 7) : -0.5), y + yy);
+            ctx.closePath();
+        };
+        ctx.save();
+        contornoQueda(); ctx.clip();
+        // Mais escuro nas beiradas da queda, mais claro no meio.
+        const g = ctx.createLinearGradient(x, 0, x + TL, 0);
+        g.addColorStop(0, esq ? '#3a1806' : '#7a3a10');
+        g.addColorStop(1, dir ? '#3a1806' : '#7a3a10');
+        ctx.fillStyle = g;
+        ctx.fillRect(x, y, TL, alto);
+        // Veios que escorrem: faixas de luz descendo em velocidades diferentes.
+        for (let k = 0; k < 3; k++) {
+            const vx = x + 3 + ((tx * 5 + k * 6) % 15);
+            const vel = 90 + k * 35;
+            const comp = 14 + k * 5;
+            const ciclo = comp + 26;
+            const vy = y + (((ty * TL + t * vel + k * 17) % ciclo) + ciclo) % ciclo - comp;
+            ctx.fillStyle = k === 1 ? 'rgba(255, 160, 70, 0.45)' : 'rgba(190, 95, 30, 0.7)';
+            ctx.fillRect(vx, vy, k === 1 ? 1 : 2, comp);
+        }
+        // Bolhas de sujeira descendo junto.
+        const bv = (ty * TL + t * 80 + tx * 11) % (TL * 2);
+        ctx.fillStyle = '#5e2c0c';
+        ctx.beginPath(); ctx.arc(x + 6 + ((tx * 3) % 8), y + bv - TL / 2, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255, 106, 42, 0.7)';
+        ctx.beginPath(); ctx.arc(x + 13 - ((tx * 5) % 6), y + ((bv + TL) % (TL * 2)) - TL / 2, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = COR.tinta;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (esq) { ctx.moveTo(x + onda(0), y); for (let yy = 2; yy <= alto; yy += 2) ctx.lineTo(x + onda(yy), y + yy); }
+        if (dir) { ctx.moveTo(x + TL - onda(7), y); for (let yy = 2; yy <= alto; yy += 2) ctx.lineTo(x + TL - onda(yy + 7), y + yy); }
+        ctx.stroke();
+        if (inicio) {
+            // Boca do cano no teto.
+            ctx.fillStyle = '#2a2a24';
+            ctx.fillRect(x - (esq ? 3 : 0), y - 2, TL + (esq ? 3 : 0) + (dir ? 3 : 0), 5);
+            ctx.fillStyle = COR.tinta;
+            ctx.fillRect(x - (esq ? 3 : 0), y + 3, TL + (esq ? 3 : 0) + (dir ? 3 : 0), 1);
+        }
+        if (fim) {
+            // Pingos que se soltam no fim da queda.
+            ctx.fillStyle = '#c8641e';
+            for (let k = 0; k < 3; k++) {
+                const t = (visual.tempo * 1.6 + k / 3 + tx * 0.21) % 1;
+                ctx.beginPath(); ctx.arc(x + 4 + k * 6, y + alto + t * 14, 1.8 * (1 - t) + 0.6, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+    }
+
+    /** Corrente de vento (sobe planando com a Pipa). */
+    function desenharVento(x, y, tx, ty) {
+        const img = arte('vento', visual.tempo * 10);
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        if (img) ctx.drawImage(img, x, y, TL, TL);
+        else {
+            ctx.strokeStyle = '#e6d6ff';
+            ctx.lineWidth = 1;
+            for (let k = 0; k < 2; k++) {
+                const yy = y + TL - ((visual.tempo * 90 + ty * 20 + k * 10 + tx * 7) % (TL + 8));
+                ctx.beginPath(); ctx.moveTo(x + 4 + k * 10, yy); ctx.lineTo(x + 4 + k * 10, yy - 6); ctx.stroke();
+            }
+        }
+        ctx.restore();
+    }
+
+    /** Toldo listrado da Feira (quica igual mola). */
+    function desenharToldo(x, y, tx, ty, pulou) {
+        const img = arte('toldo', pulou ? 1 : 0);
+        if (img) {
+            // Arte de 3 tiles (192×48): cada tile mostra a sua fatia.
+            const fatia = img.naturalWidth / 3;
+            ctx.drawImage(img, (tx % 3) * fatia, 0, fatia, img.naturalHeight, x, y - 2, TL, TL * img.naturalHeight / fatia);
+            return;
+        }
+        const amassa = pulou ? 3 : 0;
+        ctx.fillStyle = '#2c1633';
+        ctx.fillRect(x, y + 10, TL, TL - 10);
+        for (let k = 0; k < 4; k++) {
+            ctx.fillStyle = k % 2 ? '#fff1dc' : '#d63c8f';
+            ctx.fillRect(x + k * 5, y + amassa, 5, 9 - amassa);
+        }
+        ctx.strokeStyle = COR.tinta;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, y + amassa + 0.5, TL - 1, 9 - amassa);
     }
 
     function desenharTelha(tx, ty, x, y) {
@@ -797,11 +1159,11 @@
             if (it.premioDe && !p.chefes.has(it.premioDe)) continue;
             const x = it.x + it.w / 2 - cam.x;
             const y = it.y + it.h / 2 - cam.y + Math.sin(visual.tempo * 3 + it.x) * 2;
-            const img = arte({ virgulas: 'saco', fragmento: 'fragmento', habilidade: 'orbe' }[it.tipo]);
+            const img = arte({ virgulas: 'saco', fragmento: 'fragmento', habilidade: 'orbe', figurinha: 'pacote', copo: 'copo' }[it.tipo], visual.tempo * 10);
             if (img) {
-                const tam = it.tipo === 'habilidade' ? 26 : it.tipo === 'fragmento' ? 20 : 18;
+                const tam = it.tipo === 'habilidade' ? 26 : it.tipo === 'fragmento' || it.tipo === 'copo' || it.tipo === 'figurinha' ? 20 : 18;
                 const brilho = ctx.createRadialGradient(x, y, 2, x, y, tam);
-                brilho.addColorStop(0, it.tipo === 'fragmento' ? 'rgba(255, 140, 160, 0.45)' : 'rgba(255, 210, 63, 0.45)');
+                brilho.addColorStop(0, it.tipo === 'fragmento' ? 'rgba(255, 140, 160, 0.45)' : it.tipo === 'copo' ? 'rgba(200, 180, 255, 0.45)' : 'rgba(255, 210, 63, 0.45)');
                 brilho.addColorStop(1, 'rgba(255, 210, 63, 0)');
                 ctx.fillStyle = brilho;
                 ctx.beginPath(); ctx.arc(x, y, tam, 0, Math.PI * 2); ctx.fill();
@@ -838,8 +1200,29 @@
                 ctx.strokeStyle = COR.tinta;
                 ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-                const letra = { rajada: 'R', dash: 'C', parede: 'L', pulo2: '( )' }[it.habilidade] || '?';
+                const letra = { rajada: 'R', dash: 'C', parede: 'L', pulo2: '( )', bigorna: 'B', pipa: 'P', buzz: 'Z!' }[it.habilidade] || '?';
                 texto(letra, x, y + 1, 11, '#fff', 3);
+            } else if (it.tipo === 'figurinha') {
+                // Pacotinho de figurinha dourado girando.
+                const giro = Math.cos(visual.tempo * 4 + it.x);
+                ctx.fillStyle = 'rgba(255, 210, 63, 0.3)';
+                ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = giro > 0 ? '#ffd23f' : '#c99a1e';
+                ctx.strokeStyle = COR.tinta;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.roundRect(x - 6 * Math.abs(giro) - 1, y - 8, 12 * Math.abs(giro) + 2, 16, 2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(x - 1, y - 5, 2, 10);
+            } else if (it.tipo === 'copo') {
+                // Caco de copo de requeijão com brilho lilás.
+                ctx.fillStyle = 'rgba(200, 180, 255, 0.3)';
+                ctx.beginPath(); ctx.arc(x, y, 12 + Math.sin(visual.tempo * 4) * 2, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'rgba(230, 240, 255, 0.85)';
+                ctx.strokeStyle = COR.tinta;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(x - 7, y - 6); ctx.lineTo(x + 6, y - 7); ctx.lineTo(x + 4, y + 7); ctx.lineTo(x - 5, y + 5); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#b9a4ff';
+                ctx.fillRect(x - 5, y + 1, 9, 3);
             }
         }
         // Bancos, placas, loja, alavancas.
@@ -847,7 +1230,8 @@
             if (b.sala !== jogo.sala.idx) continue;
             const x = b.x - cam.x;
             const y = b.y - cam.y;
-            const img = arte('banco');
+            const ativo = jogo.progresso.banco === b.id;
+            const img = (ativo && arte('bancoAtivo', visual.tempo * 4)) || arte('banco');
             if (img) {
                 if (!(jogo.fase === 'sentado' && jogo.progresso.banco === b.id)) pintar(img, x + b.w / 2, y + b.h, 0.62, 48, 46);
                 if (jogo.progresso.banco === b.id) virgula(x + b.w / 2, y - 20, 0.5, COR.laranja);
@@ -898,8 +1282,9 @@
         }
     }
 
-    /** Barraca do ItaloLOL (provisória). */
+    /** Barraca do ItaloLOL (ou do Tio do Pastel, na Feira). */
     function desenharLoja(x, y, l) {
+        if (l.vendedor === 'pastel') { desenharPastel(x, y, l); return; }
         const img = arte('barraca');
         if (img) { pintar(img, x + l.w / 2, y + l.h, 0.52, 64, 110); return; }
         ctx.fillStyle = '#3a2a1a';
@@ -922,21 +1307,57 @@
         virgula(x + l.w / 2, y + 30, 0.5);
     }
 
+    /** Barraca do Tio do Pastel (Feira da Madrugada). */
+    function desenharPastel(x, y, l) {
+        const tio = arte('tioPastel', visual.tempo * 3);
+        const img = arte('barracaPastel');
+        if (img) {
+            if (tio) pintar(tio, x + l.w / 2, y + l.h - 10, 52 / 160, 80, 155);
+            pintar(img, x + l.w / 2, y + l.h, 0.52, 64, 110);
+            return;
+        }
+        ctx.fillStyle = '#3a1f14';
+        ctx.fillRect(x - 10, y + 12, l.w + 20, l.h - 12);
+        for (let i = 0; i < 6; i++) {
+            ctx.fillStyle = i % 2 ? '#fff1dc' : '#d63c8f';
+            ctx.fillRect(x - 12 + i * 9, y, 9, 10);
+        }
+        ctx.strokeStyle = COR.tinta;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x - 12, y, 54, 10);
+        // Tio do Pastel: careca de bigode, avental branco.
+        ctx.fillStyle = '#e0a57a';
+        ctx.beginPath(); ctx.arc(x + l.w / 2, y + 18, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#3a2a1a';
+        ctx.fillRect(x + l.w / 2 - 5, y + 20, 10, 2);
+        ctx.fillStyle = '#f4f4f4';
+        ctx.fillRect(x - 10, y + 24, l.w + 20, 10);
+        ctx.strokeRect(x - 10, y + 24, l.w + 20, 10);
+        // Pastel fumegando no balcão.
+        ctx.fillStyle = '#e8b24a';
+        ctx.beginPath(); ctx.ellipse(x + l.w / 2 + 10, y + 23, 6, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath(); ctx.moveTo(x + l.w / 2 + 10, y + 19); ctx.lineTo(x + l.w / 2 + 12, y + 12 - Math.sin(visual.tempo * 3) * 2); ctx.stroke();
+    }
+
     /** Salas secretas ficam cobertas de parede até o Degustador entrar nelas. */
     const revelados = new Set();
     function desenharSegredos() {
         const j = jogo.jogador;
+        const cam = visual.cam;
         const cx = j.x + JL / 2;
         const cy = j.y + JA / 2;
+        const tiles = TILES_AREA[jogo.sala.area] || TILES_AREA.telhados;
+        const meio = arte(`meio_${jogo.sala.area}`);
         nivel.segredos.forEach((sg, i) => {
             if (revelados.has(i) || sg.sala !== jogo.sala.idx) return;
             if (cx > sg.x && cx < sg.x + sg.w && cy > sg.y && cy < sg.y + sg.h) { revelados.add(i); return; }
-            const tiles = TILES_AREA[jogo.sala.area] || TILES_AREA.telhados;
+            // Fora da câmera não aparece na tela: não gasta o laço de tiles.
+            if (sg.x + sg.w < cam.x || sg.x > cam.x + W || sg.y + sg.h < cam.y || sg.y > cam.y + H) return;
             for (let y = sg.y; y < sg.y + sg.h; y += TL) {
-                const meio = arte(`meio_${jogo.sala.area}`);
                 for (let x = sg.x; x < sg.x + sg.w; x += TL) {
-                    if (meio) ctx.drawImage(meio, Math.round(x - visual.cam.x), Math.round(y - visual.cam.y), TL, TL);
-                    else ctx.drawImage(tiles.meio, Math.round(x - visual.cam.x), Math.round(y - visual.cam.y));
+                    if (meio) ctx.drawImage(meio, Math.round(x - cam.x), Math.round(y - cam.y), TL, TL);
+                    else ctx.drawImage(tiles.meio, Math.round(x - cam.x), Math.round(y - cam.y));
                 }
             }
         });
@@ -946,7 +1367,13 @@
     function poseDoJogador() {
         const j = jogo.jogador;
         if (jogo.fase === 'morto') return ['morrer', 0];
-        if (jogo.fase === 'sentado') return ['sentado', 0];
+        if (jogo.fase === 'sentado' || jogo.fase === 'album') return ['sentadoLoop', visual.tempo * 3];
+        if (j.estado === 'mergulho') return j.mergulhoT < CONFIG.mergulhoPrep ? ['mergulhoPrep', 0] : ['mergulho', visual.tempo * 16];
+        if (j.estado === 'carregando') return ['buzzCarregar', visual.tempo * 12];
+        if (j.estado === 'buzz') return ['buzz', visual.tempo * 20];
+        if (visual.tempo - visual.pousoEm < 0.22 && j.noChao) return ['mergulhoPouso', 0];
+        if (visual.tempo - visual.figurinhaEm < 0.8 && j.noChao) return ['pegouFigurinha', 0];
+        if (j.planando) return ['planar', visual.tempo * 6];
         if (j.golpe && j.golpe.t < 0.14) {
             const g = j.golpe;
             if (g.dir === 'cima') return ['golpeCima', 0];
@@ -957,7 +1384,7 @@
         }
         if (j.recargaMagia > CONFIG.rajadaRecarga - 0.2) return ['atirar', j.recargaMagia > CONFIG.rajadaRecarga - 0.08 ? 1 : 0];
         if (j.estado === 'dash') return ['dash', j.dashT > CONFIG.dashTempo * 0.5 ? 0 : 1];
-        if (j.estado === 'degustando') return ['degustar', visual.tempo * 5];
+        if (j.estado === 'degustando') return ['degustarLoop', visual.tempo * 8];
         if (j.invencivel > CONFIG.invencivel - 0.25 && jogo.fase === 'jogando') return ['dano', 0];
         if (j.grudado || (!j.noChao && j.parede !== 0 && j.vy > 0 && jogo.progresso.habilidades.has('parede'))) return ['parede', 0];
         if (!j.noChao && visual.tempo - visual.puloDuploEm < 0.3) return ['puloDuplo', 0];
@@ -981,7 +1408,11 @@
         if (pose.startsWith('golpe')) olhando = j.golpe.lado;
         const cx = j.x + JL / 2 - cam.x;
         let base = j.y + JA - cam.y;
-        const img = quadroDe(pose, i);
+        // Poses da expansão sem arte ainda: usam a pose antiga mais parecida.
+        const RESERVA = { mergulhoPrep: 'pular', mergulho: 'cair', mergulhoPouso: 'golpeRasteira', buzzCarregar: 'degustar', buzz: 'dash', planar: 'cair', pegouFigurinha: 'parado', degustarLoop: 'degustar', sentadoLoop: 'sentado' };
+        let img = quadroDe(pose, i);
+        if (!pronta(img) && RESERVA[pose]) img = quadroDe(RESERVA[pose], i);
+        desenharExtrasDoJogador(j, cx, base);
         if (j.estado === 'dash') {
             // Rastro da capa.
             for (let k = 1; k <= 3; k++) {
@@ -993,14 +1424,68 @@
         }
         if (pronta(img)) {
             const k = TAM_JOGADOR / 128;
-            pintar(img, cx, base, k, 64, 125, olhando);
+            const treme = j.estado === 'carregando' && !calmo ? Math.sin(visual.tempo * 90) * 1.2 : 0;
+            pintar(img, cx + treme, base, k, 64, 125, olhando);
+            // Coxinha na boca enquanto degusta (só com a arte: o quadro antigo já tem o lanche).
+            const coxinha = j.estado === 'degustando' && arte('coxinhaFx');
+            if (coxinha) pintar(coxinha, cx + olhando * 9, base - 30 + Math.sin(visual.tempo * 16), 13 / 48, 24, 24);
         } else {
             ctx.fillStyle = '#e040fb';
             ctx.fillRect(cx - 7, base - 26, 14, 26);
             ctx.fillStyle = '#4c8c2b';
             ctx.fillRect(cx - 9, base - 30, 18, 6);
         }
-        if (jogo.fase === 'sentado') texto('SALVO', cx, base - 44, 12, COR.verde, 3);
+        if (jogo.fase === 'sentado') {
+            const salvo = arte('salvo');
+            if (salvo) ctx.drawImage(salvo, cx - 32, base - 54, 64, 20);
+            else texto('SALVO', cx, base - 44, 12, COR.verde, 3);
+            if (jogo.progresso.figurinhas.size) texto(textoTeclas('[CIMA] Álbum'), cx, base - 58, 11, COR.amarelo, 3);
+        }
+    }
+
+    /** Pipa no alto, rastro do mergulho, faíscas do Buzz! (antes do corpo). */
+    function desenharExtrasDoJogador(j, cx, base) {
+        if (j.planando) {
+            // A linha sai da mão levantada até a pipa.
+            const px = cx - j.olhando * 16 + Math.sin(visual.tempo * 3) * 3;
+            const py = base - 70 + Math.sin(visual.tempo * 2.3) * 3;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(cx + j.olhando * 3, base - 34); ctx.quadraticCurveTo(cx, base - 55, px, py + 8); ctx.stroke();
+            const img = arte('pipa', visual.tempo * 6);
+            if (img) pintar(img, px, py, 26 / 64, 32, 32);
+            else {
+                ctx.fillStyle = '#e6d6ff';
+                ctx.strokeStyle = COR.tinta;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(px, py - 11); ctx.lineTo(px + 8, py); ctx.lineTo(px, py + 9); ctx.lineTo(px - 8, py); ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.strokeStyle = '#ff8ca0';
+                ctx.beginPath(); ctx.moveTo(px, py + 9); ctx.quadraticCurveTo(px + 5, py + 16, px - 2, py + 22); ctx.stroke();
+            }
+        }
+        if (j.estado === 'degustando') {
+            const brilho = arte('degustarBrilho', visual.tempo * 10);
+            if (brilho) pintar(brilho, cx, base - 20, 60 / 128, 64, 64);
+        }
+        if (j.estado === 'mergulho' && j.mergulhoT >= CONFIG.mergulhoPrep) {
+            ctx.strokeStyle = 'rgba(230, 214, 255, 0.6)';
+            ctx.lineWidth = 2;
+            for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(cx + k * 6, base - 34); ctx.lineTo(cx + k * 6, base - 60 - Math.abs(k) * 6); ctx.stroke(); }
+        }
+        if (j.estado === 'carregando') {
+            const k = Math.min(1, j.carga / CONFIG.buzzCarga);
+            ctx.strokeStyle = k >= 1 ? COR.amarelo : 'rgba(185, 164, 255, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(cx, base - 14, 18, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); ctx.stroke();
+        }
+        if (j.estado === 'buzz') {
+            for (let k = 1; k <= 4; k++) {
+                ctx.globalAlpha = 0.14 * (5 - k);
+                ctx.fillStyle = k % 2 ? '#b9a4ff' : '#ffd23f';
+                ctx.fillRect(cx - j.dashLado * k * 14 - 8, base - 22, 16, 14);
+            }
+            ctx.globalAlpha = 1;
+        }
     }
 
     /** Arco branco da coronhada. */
@@ -1098,6 +1583,11 @@
     }
 
     const contorno = (flash, cor) => { ctx.fillStyle = flash ? '#fff' : cor; ctx.strokeStyle = COR.tinta; ctx.lineWidth = 1.5; };
+    /** Sem arte: o corpo do inimigo vira um retângulo na cor dele. */
+    const retanguloSemArte = (e, cx, cy, flash, cor) => {
+        contorno(flash, cor);
+        ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
+    };
 
     const DESENHOS = {
         capanga(e, cx, cy, flash) {
@@ -1111,10 +1601,7 @@
             ctx.translate(-cx, -(e.y + e.h - visual.cam.y));
             const ok = spriteInimigo('capanga', passo, cx, e.y + e.h - visual.cam.y - pulinho, 34, 125, e.dir < 0, flash);
             ctx.restore();
-            if (!ok) {
-                contorno(flash, '#e0245e');
-                ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
-            }
+            if (!ok) retanguloSemArte(e, cx, cy, flash, '#e0245e');
         },
         ping(e, cx, cy, flash) {
             const caca = e.estado === 'caca';
@@ -1122,6 +1609,7 @@
                 ctx.fillStyle = 'rgba(255, 60, 60, 0.3)';
                 ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
             }
+            if (caca && spriteInimigo('pingCaca', 0, cx, cy + Math.sin(visual.tempo * 30) * 1.5, 30, 32, e.dir < 0, flash)) return;
             if (spriteInimigo('ping', visual.tempo * (caca ? 16 : 9) + e.fase * 3, cx, cy, 30, 32, e.dir < 0, flash)) return;
             const asa = Math.sin(visual.tempo * 30 + e.fase * 9) * 5;
             ctx.fillStyle = flash ? '#fff' : '#3a0d14';
@@ -1136,6 +1624,7 @@
             texto('!', cx, cy + 1, 12, '#fff', 0);
         },
         emoji(e, cx, cy, flash) {
+            if (spriteInimigo('emoji', visual.tempo * 10 + e.fase * 3, cx, cy, 30, 32, (e.vx || 0) < 0, flash)) return;
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(Math.sin(visual.tempo * 6 + e.fase) * 0.3);
@@ -1157,10 +1646,7 @@
                 ctx.beginPath(); ctx.arc(cx, cy, 16, 0, Math.PI * 2); ctx.fill();
             }
             const mirando = e.estado === 'mirar';
-            if (!spriteInimigo(mirando ? 'droneMirar' : 'drone', visual.tempo * 20, cx, cy, 34, 64, e.dir < 0, flash)) {
-                contorno(flash, '#2ecc71');
-                ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
-            }
+            if (!spriteInimigo(mirando ? 'droneMirar' : 'drone', visual.tempo * 20, cx, cy, 34, 64, e.dir < 0, flash)) retanguloSemArte(e, cx, cy, flash, '#2ecc71');
         },
         troll(e, cx, cy, flash) {
             const treme = e.estado === 'preparar' && !calmo ? Math.sin(visual.tempo * 70) * 1.5 : 0;
@@ -1256,11 +1742,8 @@
                 ctx.beginPath(); ctx.arc(cx + e.dir * 10, cy - 4, 6 + e.t * 10, 0, Math.PI * 2); ctx.fill();
             }
             // Conjurando: os quadros com a mão acesa (a arte "feiticeira-conjurar" veio com outro personagem).
-            const quadro = e.estado === 'conjurar' ? ['feiticeira', 2 + (Math.floor(visual.tempo * 8) % 2)] : e.estado === 'sumir' || e.estado === 'aparecer' ? ['feiticeiraSumir', 0] : ['feiticeira', visual.tempo * 6];
-            if (!spriteInimigo(quadro[0], quadro[1], cx, cy, 42, 64, OLHA_ESQUERDA.has('feiticeira') ? olhaDireita : !olhaDireita, flash)) {
-                contorno(flash, '#b04dff');
-                ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
-            }
+            const quadro = e.estado === 'conjurar' ? (arte('feiticeiraConjurar') ? ['feiticeiraConjurar', 0] : ['feiticeira', 2 + (Math.floor(visual.tempo * 8) % 2)]) : e.estado === 'sumir' || e.estado === 'aparecer' ? ['feiticeiraSumir', 0] : ['feiticeira', visual.tempo * 6];
+            if (!spriteInimigo(quadro[0], quadro[1], cx, cy, 42, 64, !olhaDireita, flash)) retanguloSemArte(e, cx, cy, flash, '#b04dff');
         },
         sombra(e, cx, cy, flash) {
             ctx.fillStyle = 'rgba(160, 70, 255, 0.22)';
@@ -1295,10 +1778,7 @@
             const fase2 = e.vida <= e.vidaMax / 2 && !flash ? 'rgba(200, 0, 40, 1)' : null;
             if (spriteInimigo(quadro[0], quadro[1], cx, base + 2, 76, 187, e.dir < 0, flash, fase2 && Math.sin(visual.tempo * 8) > 0.6 ? fase2 : null)) return;
             // Sem arte: o capanga normal tingido e a marreta desenhada.
-            if (!spriteInimigo('capanga', est === 'corrida' ? visual.tempo * 12 : 0, cx, base + 2, 84, 125, e.dir < 0, flash, 'rgba(120, 0, 30, 1)')) {
-                contorno(flash, '#8a1030');
-                ctx.fillRect(e.x - visual.cam.x, e.y - visual.cam.y, e.w, e.h);
-            }
+            if (!spriteInimigo('capanga', est === 'corrida' ? visual.tempo * 12 : 0, cx, base + 2, 84, 125, e.dir < 0, flash, 'rgba(120, 0, 30, 1)')) retanguloSemArte(e, cx, cy, flash, '#8a1030');
             if (est === 'atordoado') {
                 for (let k = 0; k < 3; k++) {
                     const a = visual.tempo * 5 + (k * Math.PI * 2) / 3;
@@ -1344,15 +1824,329 @@
             ctx.fillStyle = flash ? '#fff' : 'rgba(12, 4, 22, 0.95)';
             ctx.beginPath(); ctx.arc(cx + lado * 38, cy + 6, 11, 0, Math.PI * 2); ctx.fill();
             ctx.fillRect(cx + lado * 38 - 4, cy - 16, 8, 16);
-            if (e.aviso) {
-                const a = e.aviso;
-                ctx.fillStyle = `rgba(160, 70, 255, ${0.3 + a.t * 0.5})`;
-                ctx.fillRect(a.x - visual.cam.x, a.y - visual.cam.y, a.w, a.h);
-                ctx.fillStyle = `rgba(160, 70, 255, ${0.08 + a.t * 0.12})`;
-                ctx.fillRect(a.x - visual.cam.x, jogo.sala.px.y - visual.cam.y, a.w, a.y - jogo.sala.px.y);
-            }
         },
     };
+
+    // ------------------------------------------------------------- inimigos da expansão
+    // Cada um tenta a arte (quando existir em assets/) e, se não houver, desenha por código.
+    const ANEL_FASE2 = (e, flash, cor) => (e.vida <= e.vidaMax / 2 && !flash && Math.sin(visual.tempo * 8) > 0.6 ? cor : null);
+    function estrelas(cx, y) {
+        for (let k = 0; k < 3; k++) {
+            const a = visual.tempo * 5 + (k * Math.PI * 2) / 3;
+            texto('★', cx + Math.cos(a) * 16, y - 6 + Math.sin(a) * 4, 10, COR.amarelo, 2);
+        }
+    }
+    Object.assign(DESENHOS, {
+        rato(e, cx, cy, flash) {
+            const base = e.y + e.h - visual.cam.y;
+            const quadro = { preparar: ['ratoPreparar', 0], bote: ['ratoBote', 0] }[e.estado] || ['rato', e.x / 5 + e.fase * 4];
+            const treme = e.estado === 'preparar' && !calmo ? Math.sin(visual.tempo * 70) * 1.2 : 0;
+            if (spriteInimigo(quadro[0], quadro[1], cx + treme, base + 1, 32, 93, e.dir < 0, flash)) return;
+            contorno(flash, '#6e5a4a');
+            ctx.beginPath(); ctx.ellipse(cx + treme, base - 6, 10, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx + treme + e.dir * 9, base - 8, 4.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = e.estado === 'preparar' ? '#ff3b3b' : '#fff';
+            ctx.fillRect(cx + treme + e.dir * 11 - 1, base - 10, 2, 2);
+            // Rabo que termina num balão de comentário.
+            ctx.strokeStyle = COR.tinta;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(cx - e.dir * 9, base - 6); ctx.quadraticCurveTo(cx - e.dir * 16, base - 16, cx - e.dir * 20, base - 12); ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.roundRect(cx - e.dir * 20 - 4, base - 18, 8, 6, 2); ctx.fill(); ctx.stroke();
+        },
+        bocadelobo(e, cx, cy, flash) {
+            const base = e.y + e.h - visual.cam.y;
+            const nome = e.estado === 'abrir' ? 'bocaAbrir' : e.estado === 'morder' ? 'bocaMorder' : 'bocaFechada';
+            if (spriteInimigo(nome, visual.tempo * 16, cx, base + 1, 34, 93, false, flash)) return;
+            // Guia de concreto com grade; aberta, vira uma bocarra para cima.
+            contorno(flash, '#7a7a78');
+            ctx.fillRect(cx - 12, base - 6, 24, 6); ctx.strokeRect(cx - 12, base - 6, 24, 6);
+            ctx.fillStyle = '#1a1a1a';
+            for (let k = -9; k < 10; k += 4) ctx.fillRect(cx + k, base - 5, 2, 4);
+            if (e.estado === 'abrir' || e.estado === 'morder') {
+                const alto = e.estado === 'morder' ? 30 : 8;
+                contorno(flash, '#5b5b58');
+                ctx.beginPath(); ctx.moveTo(cx - 12, base - 6); ctx.lineTo(cx - 8, base - 6 - alto); ctx.lineTo(cx - 2, base - 6); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(cx + 12, base - 6); ctx.lineTo(cx + 8, base - 6 - alto); ctx.lineTo(cx + 2, base - 6); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#ff3b3b';
+                ctx.fillRect(cx - 5, base - 5, 2, 2); ctx.fillRect(cx + 3, base - 5, 2, 2);
+            }
+        },
+        bolha(e, cx, cy, flash) {
+            const inchada = e.estado === 'inchar';
+            const esc = inchada ? 1 + e.t * 0.6 : 1;
+            if (spriteInimigo(inchada ? 'bolhaInchar' : 'bolha', visual.tempo * 6, cx, cy, 30 * esc, 32, false, flash)) return;
+            ctx.fillStyle = flash ? '#fff' : inchada ? 'rgba(255, 106, 42, 0.8)' : 'rgba(154, 168, 58, 0.7)';
+            ctx.strokeStyle = COR.tinta;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(cx, cy, 8 * esc, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = COR.tinta;
+            ctx.fillRect(cx - 3, cy - 2, 2, 2); ctx.fillRect(cx + 1, cy - 2, 2, 2);
+            ctx.beginPath(); ctx.arc(cx, cy + 4, 2, Math.PI, 0); ctx.stroke();
+        },
+        gota(e, cx, cy) {
+            // Cano enferrujado saindo do teto.
+            const img = arte('cano');
+            if (img) {
+                // A arte é um cano que sai da parede e faz a curva para baixo (boca em x≈108, y≈96).
+                // Um tubo desce do teto até a flange, para o cano não ficar voando.
+                const k = 40 / 128;
+                const boca = e.y + e.h - visual.cam.y;
+                const fx = cx - (108 - 12) * k;
+                const fy = boca - (96 - 55) * k;
+                const tx = Math.floor((cx - (108 - 12) * k + visual.cam.x) / TL);
+                let ty = Math.floor(e.y / TL);
+                while (ty > 0 && !['#', 'X'].includes(nivel.grade[ty - 1]?.[tx])) ty--;
+                const teto = ty * TL - visual.cam.y;
+                if (teto < fy - 2) {
+                    ctx.save();
+                    ctx.translate(Math.round(fx), Math.round(teto));
+                    ctx.rotate(Math.PI / 2);
+                    // Trecho reto do cano (x 26..60, y 43..67), esticado na vertical.
+                    ctx.drawImage(img, 26, 43, 34, 24, 0, -12 * k, fy - teto, 24 * k);
+                    ctx.restore();
+                    ctx.fillStyle = COR.tinta;
+                    ctx.fillRect(Math.round(fx) - 6, Math.round(teto), 12, 3);
+                }
+                pintar(img, cx, boca, k, 108, 96);
+                return;
+            }
+            ctx.fillStyle = '#5a4030';
+            ctx.strokeStyle = COR.tinta;
+            ctx.lineWidth = 1.5;
+            ctx.fillRect(cx - 5, e.y - visual.cam.y - 10, 10, 18); ctx.strokeRect(cx - 5, e.y - visual.cam.y - 10, 10, 18);
+            ctx.fillRect(cx - 7, e.y - visual.cam.y + 6, 14, 4); ctx.strokeRect(cx - 7, e.y - visual.cam.y + 6, 14, 4);
+            const k = (e.t % 1.7) / 1.7;
+            ctx.fillStyle = '#b8601f';
+            ctx.beginPath(); ctx.arc(cx, e.y - visual.cam.y + 11 + k * 3, 1 + k * 2, 0, Math.PI * 2); ctx.fill();
+        },
+        popup(e, cx, cy, flash) {
+            const nome = e.estado === 'piscar' ? 'popupPiscar' : e.estado === 'mirar' ? 'popupMirar' : 'popup';
+            if (spriteInimigo(nome, visual.tempo * 8, cx, cy, 28, 32, e.dir < 0, flash)) return;
+            contorno(flash, '#f4f4f4');
+            ctx.beginPath(); ctx.rect(cx - 9, cy - 7, 18, 14); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#d63c8f';
+            ctx.fillRect(cx - 9, cy - 7, 18, 4);
+            ctx.fillStyle = e.estado === 'mirar' && Math.floor(visual.tempo * 16) % 2 ? '#ffd23f' : '#e0243c';
+            ctx.fillRect(cx + 5, cy - 6, 3, 2);
+            ctx.fillStyle = COR.tinta;
+            ctx.beginPath(); ctx.ellipse(cx, cy + 2, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
+        },
+        golpista(e, cx, cy, flash) {
+            const base = e.y + e.h - visual.cam.y;
+            const quadro = e.estado === 'fugir' ? ['golpistaFugir', visual.tempo * 14] : ['golpista', e.x / 6 + e.fase * 4];
+            if (spriteInimigo(quadro[0], quadro[1], cx, base + 1, 34, 125, e.dir < 0, flash)) return;
+            contorno(flash, '#3a3f58');
+            ctx.beginPath(); ctx.roundRect(cx - 6, base - 20, 12, 14, 3); ctx.fill(); ctx.stroke();   // moletom
+            ctx.fillStyle = flash ? '#fff' : '#e0a57a';
+            ctx.beginPath(); ctx.arc(cx, base - 23, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = COR.tinta;
+            ctx.fillRect(cx - 4, base - 25, 8, 2);                                                       // óculos escuros
+            ctx.fillRect(cx - 5, base - 6, 3, 6); ctx.fillRect(cx + 2, base - 6, 3, 6);
+            if (e.roubo) { virgula(cx - e.dir * 8, base - 14, 0.5); }
+        },
+        boneco(e, cx, cy, flash) {
+            const base = e.y + e.h - visual.cam.y;
+            const b = e.balanco || 0;
+            if (spriteInimigo('boneco', b < -0.33 ? 0 : b > 0.33 ? 2 : 1, cx, base + 1, 20, 125, false, flash)) return;
+            ctx.save();
+            ctx.translate(cx, base);
+            ctx.rotate(b * 0.35);
+            contorno(flash, '#d63c8f');
+            ctx.beginPath(); ctx.roundRect(-5, -40, 10, 40, 4); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#fff1dc';
+            for (let k = -34; k < 0; k += 10) ctx.fillRect(-5, k, 10, 4);
+            // Braços se debatendo.
+            ctx.strokeStyle = flash ? '#fff' : '#d63c8f';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(-4, -30); ctx.lineTo(-14, -30 - b * 12); ctx.moveTo(4, -30); ctx.lineTo(14, -30 + b * 12); ctx.stroke();
+            ctx.fillStyle = COR.tinta;
+            ctx.fillRect(-3, -37, 2, 2); ctx.fillRect(1, -37, 2, 2);
+            ctx.beginPath(); ctx.ellipse(0, -32, 2, 3, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        },
+        scrap(e, cx, cy, flash) {
+            const atacando = e.estado === 'preparar' || e.estado === 'atacar';
+            ctx.globalAlpha *= 0.85;
+            if (spriteInimigo(atacando ? 'scrapAtacar' : 'scrap', visual.tempo * 6, cx, cy, 32, 48, e.dir < 0, flash)) return;
+            contorno(flash, 'rgba(219, 228, 255, 0.9)');
+            ctx.beginPath(); ctx.rect(cx - 10, cy - 7, 20, 13); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx - 10, cy - 7); ctx.lineTo(cx, cy + (atacando ? 4 : 0)); ctx.lineTo(cx + 10, cy - 7); ctx.stroke();
+            ctx.fillStyle = 'rgba(143, 163, 214, 0.6)';
+            ctx.beginPath(); ctx.moveTo(cx - 8, cy + 6); ctx.lineTo(cx - e.dir * 16, cy + 12 + Math.sin(visual.tempo * 5) * 2); ctx.lineTo(cx + 8, cy + 6); ctx.fill();
+            ctx.fillStyle = atacando ? '#ff3b3b' : COR.tinta;
+            ctx.fillRect(cx - 5, cy - 1, 2, 2); ctx.fillRect(cx + 3, cy - 1, 2, 2);
+        },
+        fake(e, cx, cy, flash) {
+            const base = e.y + e.h - visual.cam.y;
+            if (e.estado === 'disfarce' || e.estado === 'andar') {
+                // Parece um saco de vírgulas… com cor de latão e nó torto.
+                if (spriteInimigo('fakeDisfarce', 0, cx, base + 1, 22, 61, false, flash)) return;
+                const saco = arte('saco');
+                if (saco) { ctx.drawImage(flash ? tingido(saco, '#fff') : tingidoLeve(saco, 'rgba(160, 110, 40, 0.35)'), cx - 9, base - 18, 18, 18); return; }
+            }
+            const nome = e.estado === 'revelar' ? 'fakeRevelar' : 'fakePular';
+            if (spriteInimigo(nome, visual.tempo * 12, cx, base + 1, 22, 61, e.dir < 0, flash)) return;
+            contorno(flash, '#9a7a3a');
+            ctx.beginPath(); ctx.ellipse(cx, base - 7, 8, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            if (e.estado !== 'disfarce') {
+                ctx.fillStyle = '#fff';
+                for (let k = -5; k < 6; k += 3) { ctx.beginPath(); ctx.moveTo(cx + k, base - 6); ctx.lineTo(cx + k + 1.5, base - 3); ctx.lineTo(cx + k + 3, base - 6); ctx.fill(); }
+                ctx.fillStyle = '#ff3b3b';
+                ctx.fillRect(cx - 4, base - 11, 2, 2); ctx.fillRect(cx + 2, base - 11, 2, 2);
+            }
+        },
+        recado(e, cx, cy, flash) {
+            const mirando = e.estado === 'mirar';
+            if (spriteInimigo(mirando ? 'recadoMirar' : 'recado', visual.tempo * 6, cx, cy, 26, 32, false, flash)) return;
+            const s = mirando ? 1 + e.t * 0.4 : 1;
+            ctx.fillStyle = flash ? '#fff' : mirando && Math.floor(visual.tempo * 16) % 2 ? '#ff6a6a' : '#b9c4e6';
+            ctx.strokeStyle = COR.tinta;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy + 7 * s);
+            ctx.bezierCurveTo(cx - 12 * s, cy - 2 * s, cx - 6 * s, cy - 10 * s, cx, cy - 4 * s);
+            ctx.bezierCurveTo(cx + 6 * s, cy - 10 * s, cx + 12 * s, cy - 2 * s, cx, cy + 7 * s);
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#fff';
+            if (Math.floor(visual.tempo * 6 + e.fase * 4) % 3 === 0) ctx.fillRect(cx + 5, cy - 7, 2, 2);
+        },
+
+        // ---- chefes
+        ratao(e, cx, cy, flash) {
+            const base = e.y + e.h - visual.cam.y;
+            const est = e.estado;
+            if (e.aviso) {
+                // Bolhas no chão onde ele vai sair.
+                const a = e.aviso;
+                ctx.fillStyle = `rgba(255, 106, 42, ${0.25 + a.t * 0.5})`;
+                ctx.fillRect(a.x - visual.cam.x, a.y - visual.cam.y, a.w, a.h);
+                for (let k = 0; k < 4; k++) {
+                    const bx = a.x - visual.cam.x + ((k * 13 + visual.tempo * 40) % a.w);
+                    ctx.beginPath(); ctx.arc(bx, a.y - visual.cam.y - ((visual.tempo * 30 + k * 7) % 12), 2, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            if (est === 'submerso') return;
+            const quadro = est === 'rolar' ? ['raRolar', visual.tempo * 16]
+                : est === 'rolarPrep' ? ['raRolarPrep', 0]
+                : est === 'mergulharPrep' ? ['raMergulhar', 0]
+                : est === 'emergir' ? ['raEmergir', e.t * 12]
+                : est === 'arremessarPrep' ? ['raArremessarPrep', 0]
+                : est === 'arremessar' ? ['raArremessar', 0]
+                : est === 'atordoado' ? ['raAtordoado', visual.tempo * 6]
+                : ['raOcioso', visual.tempo * 4];
+            if (spriteInimigo(quadro[0], quadro[1], cx, base + 2, 76, 187, e.dir < 0, flash, ANEL_FASE2(e, flash, 'rgba(200, 0, 40, 1)'))) {
+                if (est === 'atordoado') estrelas(cx, e.y - visual.cam.y);
+                return;
+            }
+            // Sem arte: um ratão rei (ou uma bola rolando com a tampa por fora).
+            if (est === 'rolar') {
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(visual.tempo * 14 * e.dir);
+                contorno(flash, '#4e4a44');
+                ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#2b2b30';
+                ctx.fillRect(-14, -3, 28, 6);
+                ctx.restore();
+                return;
+            }
+            contorno(flash, '#6e5a4a');
+            ctx.beginPath(); ctx.ellipse(cx, base - 20, 20, 20, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx + e.dir * 10, base - 42, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            // Coroa de tampa de bueiro.
+            ctx.fillStyle = '#55565e';
+            ctx.fillRect(cx + e.dir * 10 - 10, base - 56, 20, 5);
+            ctx.fillStyle = '#ff3b3b';
+            ctx.fillRect(cx + e.dir * 15 - 1, base - 45, 3, 3);
+            ctx.fillStyle = '#f4e6b0';
+            ctx.fillRect(cx + e.dir * 17 - 2, base - 38, 3, 5);
+            if (est === 'arremessarPrep') {
+                ctx.fillStyle = '#2b2b30';
+                ctx.beginPath(); ctx.arc(cx - e.dir * 16, base - 56, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            }
+            if (est === 'atordoado') estrelas(cx, e.y - visual.cam.y);
+        },
+        coach(e, cx, cy, flash) {
+            const base = e.y + e.h - visual.cam.y;
+            const est = e.estado;
+            const quadro = est === 'palestra' ? ['coPalestra', visual.tempo * 14]
+                : est === 'palestraPrep' ? ['coPalestraPrep', 0]
+                : est === 'jogarPrep' ? ['coJogarPrep', 0]
+                : est === 'jogar' ? ['coJogar', 0]
+                : est === 'invocar' ? ['coInvocar', 0]
+                : est === 'puloPrep' ? ['coPouso', 0]
+                : est === 'pulo' ? ['coPulo', 0]
+                : est === 'cansado' ? ['coPouso', 0]
+                : ['coOcioso', visual.tempo * 4];
+            if (spriteInimigo(quadro[0], quadro[1], cx, base + 2, 76, 187, e.dir < 0, flash, ANEL_FASE2(e, flash, 'rgba(214, 60, 143, 1)'))) return;
+            contorno(flash, '#d63c8f');
+            ctx.beginPath(); ctx.roundRect(cx - 11, base - 42, 22, 28, 4); ctx.fill(); ctx.stroke();          // terno
+            ctx.fillStyle = flash ? '#fff' : '#e0a57a';
+            ctx.beginPath(); ctx.arc(cx, base - 48, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(cx - 4 + e.dir * 2, base - 45, 8, 2);                                                // sorriso brilhante
+            ctx.fillStyle = COR.tinta;
+            ctx.fillRect(cx - 8, base - 14, 6, 14); ctx.fillRect(cx + 2, base - 14, 6, 14);
+            ctx.strokeStyle = '#aaa';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(cx - 7, base - 50); ctx.quadraticCurveTo(cx + e.dir * 8, base - 44, cx + e.dir * 8, base - 46); ctx.stroke();  // headset
+            if (est === 'jogarPrep' || est === 'jogar') {
+                ctx.fillStyle = '#ffb3cf';
+                ctx.fillRect(cx - e.dir * 14 - 6, base - 50, 12, 6);
+            }
+        },
+        scrapeira(e, cx, cy, flash) {
+            const est = e.estado;
+            const nome = est === 'sumir' || est === 'aparecer' ? 'scSumir'
+                : est === 'conjurar' ? 'scConjurar'
+                : est === 'mergulhoPrep' ? 'scMergulhoPrep'
+                : est === 'mergulho' ? 'scMergulho'
+                : est === 'grito' ? 'scGrito'
+                : 'scFlutuar';
+            if (spriteInimigo(nome, visual.tempo * 8, cx, cy, 116, 128, e.dir < 0, flash, ANEL_FASE2(e, flash, 'rgba(143, 163, 214, 1)'))) return;
+            const aura = ctx.createRadialGradient(cx, cy, 8, cx, cy, 60);
+            aura.addColorStop(0, 'rgba(219, 228, 255, 0.35)');
+            aura.addColorStop(1, 'rgba(143, 163, 214, 0)');
+            ctx.fillStyle = aura;
+            ctx.fillRect(cx - 60, cy - 60, 120, 120);
+            contorno(flash, 'rgba(143, 163, 214, 0.9)');
+            ctx.beginPath(); ctx.moveTo(cx - 18, cy + 30); ctx.lineTo(cx - 10, cy - 12); ctx.lineTo(cx + 10, cy - 12); ctx.lineTo(cx + 18, cy + 30); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx, cy - 20, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#dbe4ff';
+            ctx.beginPath(); ctx.ellipse(cx, cy - 28, 16, 9, 0, Math.PI, 0); ctx.fill();                  // cabelão
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(cx - 5, cy - 22, 3, 3); ctx.fillRect(cx + 2, cy - 22, 3, 3);
+            // Envelopes flutuando na barra do vestido.
+            for (let k = 0; k < 3; k++) {
+                const ex = cx - 14 + k * 14 + Math.sin(visual.tempo * 2 + k) * 3;
+                ctx.fillStyle = 'rgba(219, 228, 255, 0.7)';
+                ctx.fillRect(ex - 4, cy + 32 + (k % 2) * 4, 8, 6);
+            }
+        },
+        glitch(e, cx, cy, flash) {
+            // O Degustador de novo, só que corrompido (reusa as artes dele, tingidas).
+            const base = e.y + e.h - visual.cam.y;
+            const est = e.estado;
+            const pose = est === 'golpe' || est === 'golpePrep' ? ['golpeFrente', est === 'golpe' ? 1 : 0]
+                : est === 'dash' || est === 'dashPrep' ? ['dash', 0]
+                : est === 'rajadaPrep' ? ['atirar', 0]
+                : !e.noChao ? [e.vy < 0 ? 'pular' : 'cair', 0]
+                : Math.abs(e.vx) > 5 || est === 'perseguir' ? ['correr', e.x / 9]
+                : ['parado', visual.tempo * 3];
+            const tinta = Math.floor(visual.tempo * 12) % 5 === 0 ? 'rgba(90, 255, 120, 1)' : 'rgba(40, 10, 60, 1)';
+            const deslize = !calmo && Math.floor(visual.tempo * 9) % 7 === 0 ? 3 : 0;
+            if (spriteInimigo(pose[0], pose[1], cx + deslize, base, TAM_JOGADOR, 125, e.dir < 0, flash, tinta)) {
+                ctx.fillStyle = COR.verde;
+                ctx.fillRect(cx - 4 + e.dir * 2, base - 30, 2, 2); ctx.fillRect(cx + 1 + e.dir * 2, base - 30, 2, 2);
+                return;
+            }
+            contorno(flash, '#2a0f3a');
+            ctx.fillRect(cx - 7, base - 26, 14, 26); ctx.strokeRect(cx - 7, base - 26, 14, 26);
+            ctx.fillStyle = COR.verde;
+            ctx.fillRect(cx - 4, base - 22, 2, 2); ctx.fillRect(cx + 2, base - 22, 2, 2);
+        },
+    });
 
     function desenharProjeteis() {
         const cam = visual.cam;
@@ -1367,6 +2161,7 @@
                 }
                 continue;
             }
+            if (desenharProjetilNovo(p, x, y)) continue;
             const giro = Math.atan2(p.vy || 0, p.vx || 1);
             const img = arte({ bola: 'bolaVerde', magia: 'magia', glitch: 'glitch', pedra: 'pedra', onda: 'onda', punho: 'punho' }[p.tipo], visual.tempo * 10);
             if (img && p.tipo === 'bola') { pintar(img, x, y, (p.r * 2 + 10) / 24, 16, 12, 1, giro); continue; }
@@ -1447,6 +2242,88 @@
                 ctx.fillRect(x + 4 + k * 6, y - 7 + k * 5, 12, 4);
             }
         }
+    }
+
+    /** Projéteis da expansão (chorume, gota, X, estrela, tampa, nota, anel de som, coração, rajada glitch). */
+    function desenharProjetilNovo(p, x, y) {
+        const artes = { chorume: 'respingoChorume', gota: 'gota', botaoX: 'botaoX', estrela: 'estrela', tampa: 'tampa', nota: 'nota', anel: 'anelSom', coracao: 'coracao' };
+        const tipos = new Set([...Object.keys(artes), 'rajadaGlitch']);
+        if (!tipos.has(p.tipo)) return false;
+        const img = artes[p.tipo] ? arte(artes[p.tipo], visual.tempo * 12) : null;
+        if (img) {
+            if (p.tipo === 'anel') pintar(img, x + p.w / 2, y + p.h, (p.w + 10) / 64, 32, 32, Math.sign(p.vx) || 1);
+            else if (p.tipo === 'nota') pintar(img, x, y, 22 / 32, 16, 8, 1, Math.atan2(p.vy, p.vx));
+            else pintar(img, x, y, (p.r * 2 + 8) / img.naturalWidth, img.naturalWidth / 2, img.naturalHeight / 2, 1, p.tipo === 'tampa' ? visual.tempo * 14 : 0);
+            return true;
+        }
+        ctx.strokeStyle = COR.tinta;
+        ctx.lineWidth = 1.5;
+        switch (p.tipo) {
+            case 'chorume': case 'gota':
+                ctx.fillStyle = '#b8601f';
+                ctx.beginPath(); ctx.arc(x, y, p.r, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#ff3b3b';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                if (p.tipo === 'gota') { ctx.fillStyle = '#b8601f'; ctx.beginPath(); ctx.moveTo(x - p.r, y); ctx.lineTo(x, y - p.r * 2.2); ctx.lineTo(x + p.r, y); ctx.fill(); }
+                break;
+            case 'botaoX':
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(visual.tempo * 12);
+                ctx.fillStyle = '#e0243c';
+                ctx.fillRect(-p.r - 1, -2, p.r * 2 + 2, 4);
+                ctx.fillRect(-2, -p.r - 1, 4, p.r * 2 + 2);
+                ctx.restore();
+                break;
+            case 'estrela':
+                texto('✦', x, y, 14, '#fff', 2);
+                break;
+            case 'tampa':
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(visual.tempo * 14);
+                ctx.fillStyle = '#3c3d44';
+                ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#ff3b3b';
+                ctx.stroke();
+                ctx.fillStyle = '#55565e';
+                ctx.fillRect(-p.r + 3, -2, p.r * 2 - 6, 4);
+                ctx.restore();
+                break;
+            case 'nota':
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(Math.atan2(p.vy, p.vx));
+                ctx.fillStyle = '#ffb3cf';
+                ctx.fillRect(-8, -4, 16, 8);
+                ctx.strokeStyle = '#e0243c';
+                ctx.strokeRect(-8, -4, 16, 8);
+                ctx.restore();
+                break;
+            case 'anel':
+                ctx.strokeStyle = COR.laranja;
+                ctx.lineWidth = 2.5;
+                for (let k = 0; k < 2; k++) {
+                    ctx.beginPath(); ctx.arc(x + p.w / 2 - Math.sign(p.vx) * k * 6, y + p.h, p.h - k * 5, Math.PI, 0); ctx.stroke();
+                }
+                break;
+            case 'coracao':
+                ctx.fillStyle = '#f0c4d4';
+                ctx.strokeStyle = '#e0243c';
+                ctx.beginPath();
+                ctx.moveTo(x, y + p.r);
+                ctx.bezierCurveTo(x - p.r * 1.6, y - p.r * 0.2, x - p.r * 0.6, y - p.r * 1.4, x, y - p.r * 0.5);
+                ctx.bezierCurveTo(x + p.r * 0.6, y - p.r * 1.4, x + p.r * 1.6, y - p.r * 0.2, x, y + p.r);
+                ctx.fill(); ctx.stroke();
+                break;
+            case 'rajadaGlitch':
+                ctx.fillStyle = Math.floor(visual.tempo * 20) % 2 ? COR.verde : COR.roxo;
+                for (let k = 0; k < 3; k++) ctx.fillRect(x + 3 + k * 8, y + 2 + k * 3, 10, 4);
+                break;
+            default: break;
+        }
+        return true;
     }
 
     /**
@@ -1631,7 +2508,12 @@
                     tremer(0.35);
                     salvar();
                     break;
-                case 'curou': textoFlutuante('+1', e.x, e.y - 20, '#ff8ca0'); particulas(e.x, e.y, 8, '#ff8ca0', 60); break;
+                case 'curou':
+                    textoFlutuante(`+${(e.ate ?? 1) - (e.de ?? 0)}`, e.x, e.y - 20, '#ff8ca0');
+                    particulas(e.x, e.y, 8, '#ff8ca0', 60);
+                    efeito('curaFx', e.x, e.y - 20, 64, 0.25);
+                    if (e.de != null) visual.cogGanhou = { inicio: visual.tempo, de: e.de, ate: e.ate };
+                    break;
                 case 'impacto': tremer(e.forte ? 0.25 : 0.12); particulas(e.x, e.y, 10, '#d8c4a0', 120); efeito('poeira', e.x, e.y - 8, e.forte ? 48 : 34, 0.3); break;
                 case 'tiroInimigo': case 'magia': break;
                 case 'rajada': particulas(e.x, e.y, 8, COR.laranja, 90); tremer(0.06); break;
@@ -1649,16 +2531,17 @@
                     }
                     if (e.areaNova) visual.area = { nome: MUNDO.areas[jogo.sala.area]?.nome || '', inicio: visual.tempo };
                     break;
-                case 'banco': salvar(); particulas(e.x, e.y, 10, COR.verde, 60); break;
+                case 'banco': salvar(); particulas(e.x, e.y, 10, COR.verde, 60); efeito('salvarBrilho', e.x, e.y - 24, 72, 0.4); break;
                 case 'arena':
                     visual.chefeNome = core.Inimigos.TIPOS[e.chefe].nome;
                     tremer(0.3);
                     break;
                 case 'chefeDerrotado': {
                     // O chefe fica caído no chão da arena (arte de derrotado), sumindo devagar.
-                    const nome = e.chefe === 'capangaMor' ? 'cmDerrotado' : e.chefe === 'opressor' ? 'opDerrotado' : null;
+                    const nome = { capangaMor: 'cmDerrotado', opressor: 'opDerrotado', ratao: 'raDerrotado', coach: 'coDerrotado', scrapeira: 'scDerrotado' }[e.chefe] || null;
                     const ch = jogo.inimigos.find((i) => i.tipo === e.chefe);
-                    if (nome && ch) visual.cadaveres.push({ nome, x: ch.x + ch.w / 2, base: ch.y + ch.h, voa: e.chefe === 'opressor', lado: ch.dir, inicio: visual.tempo, sala: jogo.sala.idx });
+                    const voa = e.chefe === 'opressor' || e.chefe === 'scrapeira';
+                    if (nome && ch) visual.cadaveres.push({ nome, x: ch.x + ch.w / 2, base: ch.y + ch.h, voa, lado: ch.dir, inicio: visual.tempo, sala: jogo.sala.idx });
                     efeito('respingo', e.x, e.y, 90, 0.6);
                     parar(0.35);
                     tremer(0.6);
@@ -1672,6 +2555,29 @@
                 case 'comprou': salvar(); break;
                 case 'invocou': particulas(e.x, e.y, 12, COR.roxo, 100); break;
                 case 'final': visual.fimEm = visual.tempo; salvar(); break;
+                // Expansão.
+                case 'mergulho': particulas(e.x, e.y - 20, 6, COR.lilas, 60); break;
+                case 'pousoMergulho': visual.pousoEm = visual.tempo; break;
+                case 'grade': case 'gradeQuebrou': particulas(e.x, e.y, 16, '#8a8a7a', 150); tremer(0.2); if (e.tipo === 'gradeQuebrou') { textoFlutuante('KRAK!', e.x, e.y); salvar(); } break;
+                case 'vidroQuebrou': particulas(e.x, e.y, 24, '#dbe4ff', 170); tremer(0.25); textoFlutuante('CRASH!', e.x, e.y, '#dbe4ff'); salvar(); break;
+                case 'planar': particulas(e.x, e.y - 30, 3, '#e6d6ff', 40); break;
+                case 'carregando': particulas(e.x, e.y, 4, COR.lilas, 40); break;
+                case 'buzz': textoFlutuante('BUZZ!', e.x, e.y - 30, COR.amarelo, 18); tremer(0.1); break;
+                case 'buzzBateu': tremer(0.15); particulas(e.x, e.y - 12, 8, '#fff', 90); break;
+                case 'copo': textoFlutuante(`Caco de copo ${e.copos % CONFIG.pedacosPorCopo}/${CONFIG.pedacosPorCopo}`, e.x, e.y - 8, '#c8b4ff'); salvar(); break;
+                case 'copoCompleto': textoFlutuante('COPO COMPLETO! +33 DE PONTUAÇÃO', e.x, e.y - 8, '#c8b4ff', 16); particulas(e.x, e.y, 20, '#c8b4ff', 120); salvar(); break;
+                case 'figurinha':
+                    visual.figurinhaEm = visual.tempo;
+                    visual.figurinhaNova = { id: e.figurinha, inicio: visual.tempo };
+                    particulas(e.x, e.y, 16, COR.amarelo, 120);
+                    salvar();
+                    break;
+                case 'figurinhaQuebrou': textoFlutuante('O Cogumelo de Vidro quebrou…', e.x, e.y - 20, '#dbe4ff', 14); break;
+                case 'roubo': textoFlutuante(`-${e.valor} , ROUBADO!`, e.x, e.y - 10, '#ff5b5b', 14); break;
+                case 'estouro': particulas(e.x, e.y, 14, '#b8601f', 120); efeito('bolhaEstouro', e.x, e.y, 40, 0.25); break;
+                case 'piscou': particulas(e.x, e.y, 8, '#d63c8f', 80); break;
+                case 'golpeGlitch': particulas(e.x + e.lado * 14, e.y, 6, COR.verde, 90); break;
+                case 'album': salvar(); break;
                 default: break;
             }
         }
@@ -1741,7 +2647,22 @@
         return linhas.length;
     }
 
+    const CORTE_BOTAO = { botaoEscuro: [0, 56], botaoLaranjaSel: [9, 67] };
+    const ICONE_BOTAO = { continuar: 'iconeContinuar', mapa: 'iconeMapa', controles: 'iconeControles', titulo: 'iconeInicio' };
     function botaoTela(rotulo, x, y, w, h, cor, id, ativo = false) {
+        const tipo = cor === COR.laranja ? 'botaoLaranja' : cor === '#2a2a3a' ? 'botaoEscuro' : null;
+        const painel = tipo && (arte(ativo ? `${tipo}Sel` : tipo) || null);
+        if (painel) {
+            // Arte de 600×76 esticada no botão (a borda dourada do selecionado já vem nela).
+            // Algumas vieram recortadas com um pedaço do botão vizinho: só a faixa do botão.
+            const [sy, sh] = CORTE_BOTAO[ativo ? `${tipo}Sel` : tipo] || [0, painel.naturalHeight];
+            ctx.drawImage(painel, 0, sy, painel.naturalWidth, sh, x - 4, y - 2, w + 8, h + 4);
+            const icone = ICONE_BOTAO[id] && arte(ICONE_BOTAO[id]);
+            if (icone) ctx.drawImage(icone, x + 14, y + h / 2 - 11, 22, 22);
+            texto(icone ? rotulo.replace(/^▶\s*/, '') : rotulo, x + w / 2 + (icone ? 12 : 0), y + h / 2 + 1, rotulo.length > 20 ? 15 : 18, '#fff', 4);
+            areas.push({ x, y, w, h, id });
+            return;
+        }
         ctx.fillStyle = cor;
         ctx.strokeStyle = ativo ? COR.amarelo : COR.tinta;
         ctx.lineWidth = ativo ? 4 : 3;
@@ -1769,7 +2690,7 @@
             const r = 38 * k;
             ctx.save();
             ctx.beginPath(); ctx.arc(mx, my, r, 0, Math.PI * 2); ctx.clip();
-            const nivelTinta = j.pontuacao / CONFIG.pontuacaoMax;
+            const nivelTinta = j.pontuacao / core.pontuacaoTotal(p);
             const topo = my + r - nivelTinta * r * 2;
             ctx.fillStyle = j.pontuacao >= CONFIG.custoMagia ? '#fff5d1' : '#b9a6d9';
             ctx.beginPath();
@@ -1784,7 +2705,7 @@
         ctx.beginPath(); ctx.arc(vx, vy, 22, 0, Math.PI * 2); ctx.fill();
         ctx.save();
         ctx.beginPath(); ctx.arc(vx, vy, 20, 0, Math.PI * 2); ctx.clip();
-        const nivelTinta = j.pontuacao / CONFIG.pontuacaoMax;
+        const nivelTinta = j.pontuacao / core.pontuacaoTotal(p);
         const topo = vy + 20 - nivelTinta * 40;
         ctx.fillStyle = j.pontuacao >= CONFIG.custoMagia ? '#fff5d1' : '#b9a6d9';
         ctx.beginPath();
@@ -1801,32 +2722,65 @@
         ctx.beginPath(); ctx.arc(vx, vy, 23, 0, Math.PI * 2); ctx.stroke();
         virgula(vx, vy + 1, 1.3, j.pontuacao >= CONFIG.custoMagia ? COR.laranja : 'rgba(255, 255, 255, 0.35)');
         }
-        // Cogumelos (vida).
-        for (let i = 0; i < p.vidaMax; i++) {
-            const img = arte(i < j.vida ? 'cogCheio' : 'cogVazio');
-            if (img) ctx.drawImage(img, 66 + i * 20 - 9, 24 - 11, 19, 19);
-            else cogumelo(66 + i * 20, 24, i < j.vida, 1);
+        // Cogumelos (vida). Os 2 do Cogumelo de Vidro ficam azulados.
+        const vidaTotal = core.vidaTotal(jogo);
+        const degustando = j.estado === 'degustando';
+        const kCura = degustando ? j.degustarT / (p.loja.has('lanche') ? CONFIG.tempoDegustarRapido : CONFIG.tempoDegustar) : 0;
+        // Cura que acabou de entrar: os cogumelos novos passam pelo quadro cheio com brilho e dão um pulinho.
+        const ganhou = visual.cogGanhou;
+        const tGanhou = ganhou ? visual.tempo - ganhou.inicio : Infinity;
+        const DURA_GANHOU = 0.35;
+        for (let i = 0; i < vidaTotal; i++) {
+            const vidro = i >= p.vidaMax;
+            const enchendo = degustando && i === j.vida;
+            const acabouDeEncher = tGanhou >= 0 && tGanhou < DURA_GANHOU && i >= ganhou.de && i < ganhou.ate && i < j.vida;
+            let img;
+            if (acabouDeEncher) img = arte('cogGanhar', 2) || arte('cogCheio');
+            // Enchendo: vazio até a metade da carga, meio cheio depois.
+            else if (enchendo) img = arte('cogGanhar', kCura < 0.5 ? 0 : 1) || arte('cogVazio');
+            else img = arte(i < j.vida ? 'cogCheio' : 'cogVazio');
+            const pulo = acabouDeEncher ? 1 + 0.35 * Math.sin((tGanhou / DURA_GANHOU) * Math.PI) : 1;
+            const cx = 66 + i * 20;
+            if (vidro) ctx.globalAlpha = 0.75;
+            if (img) {
+                const s = 19 * pulo;
+                ctx.drawImage(vidro ? tingidoLeve(img, 'rgba(143, 200, 255, 0.45)') : img, cx - s / 2, 22.5 - s / 2, s, s);
+            } else cogumelo(cx, 24, i < j.vida, pulo);
+            ctx.globalAlpha = 1;
         }
         // Degustando: a coxinha e o anel de carga ficam no cogumelo que vai encher.
-        if (j.estado === 'degustando') {
-            const k = j.degustarT / (p.loja.has('lanche') ? CONFIG.tempoDegustarRapido : CONFIG.tempoDegustar);
-            const cx = 66 + Math.min(j.vida, p.vidaMax - 1) * 20;
+        if (degustando) {
+            const k = kCura;
+            const cx = 66 + Math.min(j.vida, vidaTotal - 1) * 20;
             const cy = 24;
             ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.lineWidth = 5;
             ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.stroke();
-            ctx.strokeStyle = COR.amarelo;
-            ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(cx, cy, 12, -Math.PI / 2, -Math.PI / 2 + Math.min(1, k) * Math.PI * 2); ctx.stroke();
+            const anel = arte('anelCura');
+            if (anel) {
+                // A arte é o anel inteiro: aparece em sentido horário conforme a carga.
+                ctx.save();
+                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, 20, -Math.PI / 2, -Math.PI / 2 + Math.min(1, k) * Math.PI * 2); ctx.closePath(); ctx.clip();
+                ctx.drawImage(anel, cx - 15, cy - 15, 30, 30);
+                ctx.restore();
+            } else {
+                ctx.strokeStyle = COR.amarelo;
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(cx, cy, 12, -Math.PI / 2, -Math.PI / 2 + Math.min(1, k) * Math.PI * 2); ctx.stroke();
+            }
             // Coxinha pequena em cima do anel.
+            const coxinha = arte('coxinhaFx');
+            if (coxinha) ctx.drawImage(coxinha, cx - 7, cy - 24, 14, 14);
+            else {
             ctx.fillStyle = '#d98a3a';
             ctx.strokeStyle = COR.tinta;
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(cx, cy - 22); ctx.quadraticCurveTo(cx + 6, cy - 11, cx, cy - 11); ctx.quadraticCurveTo(cx - 6, cy - 11, cx, cy - 22); ctx.fill(); ctx.stroke();
+            }
         }
         // Fragmentos.
         if (p.fragmentos > 0) {
-            const fx = 66 + p.vidaMax * 20 + 2;
+            const fx = 66 + vidaTotal * 20 + 2;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
             ctx.fillRect(fx - 7, 17, 14, 14);
             ctx.fillStyle = '#ff8ca0';
@@ -1838,7 +2792,46 @@
         // Itens comprados na loja.
         let ix = 66;
         if (p.loja.has('lanche')) { texto('LANCHE', ix - 6, 67, 11, '#ff8ca0', 3, 'left'); ix += 50; }
-        if (p.loja.has('fita')) texto('FITA ×2', ix - 6, 67, 11, COR.amarelo, 3, 'left');
+        if (p.loja.has('fita')) { texto('FITA ×2', ix - 6, 67, 11, COR.amarelo, 3, 'left'); ix += 56; }
+        // Figurinhas no Álbum (miniaturas).
+        for (const f of p.equipadas) {
+            const img = arte(`fig_${f}`);
+            if (img) ctx.drawImage(img, ix - 8, 58, 14, 18);
+            else miniFigurinha(f, ix - 1, 67, 0.55);
+            ix += 18;
+        }
+        // Copo de Requeijão (cacos).
+        if (p.copos > 0) {
+            const resto = p.copos % CONFIG.pedacosPorCopo;
+            const img = arte('coposHud', resto);
+            const xx = 128;
+            if (img) ctx.drawImage(img, xx - 9, 37, 18, 18);
+            else {
+                ctx.strokeStyle = '#c8b4ff';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(xx - 5, 39, 10, 13);
+                ctx.fillStyle = '#c8b4ff';
+                ctx.fillRect(xx - 4, 51 - (resto / CONFIG.pedacosPorCopo) * 12, 8, (resto / CONFIG.pedacosPorCopo) * 12);
+            }
+        }
+        // Figurinha nova: aviso grande por uns segundos.
+        const fn = visual.figurinhaNova;
+        if (fn && visual.tempo - fn.inicio < 3.2) {
+            const t = visual.tempo - fn.inicio;
+            ctx.globalAlpha = Math.min(1, t * 3, (3.2 - t) * 2);
+            ctx.fillStyle = 'rgba(7, 4, 26, 0.85)';
+            ctx.fillRect(W / 2 - 170, 70, 340, 70);
+            ctx.strokeStyle = COR.amarelo;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(W / 2 - 170, 70, 340, 70);
+            const img = arte(`fig_${fn.id}`);
+            if (img) ctx.drawImage(img, W / 2 - 160, 76, 44, 58);
+            else miniFigurinha(fn.id, W / 2 - 138, 105, 1.4);
+            texto('FIGURINHA NOVA!', W / 2 + 26, 90, 16, COR.amarelo, 4);
+            texto(FIGURINHAS[fn.id].nome, W / 2 + 26, 112, 18, '#fff', 4);
+            texto(textoTeclas('Ponha no Álbum: sente no banco e aperte [CIMA]'), W / 2 + 26, 131, 11, COR.lilas, 3);
+            ctx.globalAlpha = 1;
+        }
         // Salvando…
         if (visual.tempo - visual.salvouEm < 1.2) texto('salvo', W - 12, H - 14, 12, COR.verde, 3, 'right');
         // Chefe.
@@ -1874,8 +2867,33 @@
             paragrafo(textoTeclas(placa.texto), W / 2, H - 52, W - 110, 14, '#fff');
         }
         // Dica de ↑ perto de banco ou loja.
-        const perto = [...nivel.bancos, ...nivel.lojas].find((b) => b.sala === jogo.sala.idx && core.colide({ x: j.x, y: j.y, w: JL, h: JA }, core.zonaDeUso(b)));
-        if (perto && jogo.fase === 'jogando') texto(textoTeclas('[CIMA]'), j.x + JL / 2 - visual.cam.x, j.y - 14 - visual.cam.y + Math.sin(visual.tempo * 6) * 2, 16, COR.amarelo, 3);
+        const pertoUso = (b) => b.sala === jogo.sala.idx && core.colide({ x: j.x, y: j.y, w: JL, h: JA }, core.zonaDeUso(b));
+        const perto = nivel.bancos.find(pertoUso) || nivel.lojas.find(pertoUso);
+        if (perto && jogo.fase === 'jogando') {
+            const sx = j.x + JL / 2 - visual.cam.x;
+            const sy = j.y - 14 - visual.cam.y + Math.sin(visual.tempo * 6) * 2;
+            const seta = arte('setaInteragir', visual.tempo * 4);
+            if (seta) {
+                ctx.drawImage(seta, sx - 8, sy - 10, 16, 16);
+                texto(textoTeclas('[CIMA]'), sx, sy - 18, 11, COR.amarelo, 3);
+            } else texto(textoTeclas('[CIMA]'), sx, sy, 16, COR.amarelo, 3);
+        }
+    }
+
+    /** Figurinha desenhada por código (enquanto a arte não chega): cartão com um símbolo. */
+    const SIMBOLO_FIG = { ima: 'U', coxinha: '▲▲', coronha: '═', capa: '◣', vidro: '◆', pimenta: '🌶', tenis: '≋', radio: '))' };
+    function miniFigurinha(id, x, y, k = 1) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(k, k);
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = COR.tinta;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(-11, -15, 22, 30, 3); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = { ima: '#e0243c', coxinha: '#d98a3a', coronha: COR.laranja, capa: '#1b1b1b', vidro: '#8fc8ff', pimenta: '#e0243c', tenis: '#5a8c2b', radio: '#6b4a2b' }[id] || '#888';
+        ctx.fillRect(-8, -12, 16, 24);
+        ctx.restore();
+        texto(SIMBOLO_FIG[id] || '?', x, y + 1, 11 * k, '#fff', 2);
     }
 
     /** Troca [PULO], [GOLPE]… pelo nome da tecla do esquema atual (ou do botão, no celular). */
@@ -1883,6 +2901,9 @@
         const nomes = toque ? NOMES_TOQUE : esquema.nomes;
         return t.replace(/\[([A-Z]+)\]/g, (m, k) => nomes[k] ?? m);
     }
+
+    // Vizinhos usados no contorno do mapa (constante fora dos laços).
+    const VIZINHOS_MAPA = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
     function desenharMapa() {
         ctx.fillStyle = 'rgba(7, 4, 26, 0.92)';
@@ -1908,10 +2929,11 @@
                 for (let tx = 0; tx < s.w; tx += passo) {
                     const c = nivel.grade[s.ty + ty][s.tx + tx];
                     if (c === '#' || c === 'X') {
-                        const vizinhoVazio = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => {
-                            const cc = nivel.grade[s.ty + ty + b]?.[s.tx + tx + a];
-                            return cc && cc !== '#' && cc !== 'X' && cc !== 'r';
-                        });
+                        let vizinhoVazio = false;
+                        for (let v = 0; v < VIZINHOS_MAPA.length; v++) {
+                            const cc = nivel.grade[s.ty + ty + VIZINHOS_MAPA[v][1]]?.[s.tx + tx + VIZINHOS_MAPA[v][0]];
+                            if (cc && cc !== '#' && cc !== 'X' && cc !== 'r') { vizinhoVazio = true; break; }
+                        }
                         if (vizinhoVazio) ctx.fillRect(x + tx * escala, y + ty * escala, Math.max(1, escala * passo), Math.max(1, escala * passo));
                     }
                 }
@@ -1925,6 +2947,27 @@
                 if (img) ctx.drawImage(img, x + w / 2 - 8, y + h / 2 - 8, 16, 16);
                 else texto('☠', x + w / 2, y + h / 2, 12, '#ff5b5b', 3);
             }
+            // Rádio de Pilha: mostra os inimigos (vivos) e as salas secretas.
+            if (core.usa(jogo, 'radio')) {
+                ctx.fillStyle = '#ff5b5b';
+                for (const d of s.inimigos) {
+                    if (jogo.mortos.has(d.id) || d.tipo === 'gota') continue;
+                    ctx.fillRect(ox + (d.x / TL) * escala - 1, oy + (d.y / TL) * escala - 1, 2, 2);
+                }
+                ctx.strokeStyle = COR.amarelo;
+                ctx.setLineDash([2, 2]);
+                for (const sg of nivel.segredos) {
+                    if (sg.sala !== s.idx) continue;
+                    ctx.strokeRect(ox + (sg.x / TL) * escala, oy + (sg.y / TL) * escala, (sg.w / TL) * escala, (sg.h / TL) * escala);
+                }
+                ctx.setLineDash([]);
+            }
+        }
+        for (const l of nivel.lojas) {
+            if (!p.visitadas.has(nivel.salas[l.sala].id)) continue;
+            const img = arte('mapaLoja');
+            if (img) ctx.drawImage(img, ox + (l.x / TL) * escala - 6, oy + (l.y / TL) * escala - 6, 12, 12);
+            else texto('$', ox + (l.x / TL) * escala, oy + (l.y / TL) * escala, 11, COR.amarelo, 3);
         }
         for (const b of nivel.bancos) {
             if (!p.visitadas.has(nivel.salas[b.sala].id)) continue;
@@ -1955,7 +2998,7 @@
         if (!hab) return;
         ctx.fillStyle = 'rgba(7, 4, 26, 0.86)';
         ctx.fillRect(0, 0, W, H);
-        const icone = arte({ rajada: 'habRajada', dash: 'habDash', parede: 'habParede', pulo2: 'habPulo2' }[jogo.pegou]);
+        const icone = arte({ rajada: 'habRajada', dash: 'habDash', parede: 'habParede', pulo2: 'habPulo2', bigorna: 'habBigorna', pipa: 'habPipa', buzz: 'habBuzz' }[jogo.pegou]);
         if (icone) {
             const brilho = ctx.createRadialGradient(W / 2, 62, 4, W / 2, 62, 60);
             brilho.addColorStop(0, 'rgba(255, 210, 63, 0.5)');
@@ -1973,19 +3016,26 @@
         const tecla = textoTeclas(hab.tecla);
         texto(`Botão: ${tecla}`, W / 2, 206 + dy, 20, COR.amarelo, 4);
         areas = [];
-        botaoTela('CONTINUAR', W / 2 - 80, 276 + (icone ? 20 : 0) - (icone ? 20 : 0), 160, 40, COR.laranja, 'continuar');
+        botaoTela('CONTINUAR', W / 2 - 80, 276, 160, 40, COR.laranja, 'continuar');
     }
 
     function desenharLojaTela() {
         ctx.fillStyle = 'rgba(7, 4, 26, 0.9)';
         ctx.fillRect(0, 0, W, H);
-        texto('LOJA DO ITALOLOL', W / 2, 36, 30, COR.laranja, 6);
+        texto(jogo.vendedor === 'pastel' ? 'BARRACA DO TIO DO PASTEL' : 'LOJA DO ITALOLOL', W / 2, 36, 30, jogo.vendedor === 'pastel' ? '#ff8fc8' : COR.laranja, 6);
         virgula(W / 2 - 30, 70, 1);
         texto(`${jogo.progresso.virgulas}`, W / 2 - 18, 71, 20, COR.amarelo, 4, 'left');
         areas = [];
-        LOJA.forEach((item, i) => {
-            const y = 96 + i * 62;
-            const comprado = jogo.progresso.loja.has(item.id);
+        // Até 4 itens por vez; a lista rola junto com a escolha.
+        const itens = itensLoja();
+        if (visual.lojaSel >= itens.length) visual.lojaSel = Math.max(0, itens.length - 1);
+        const inicio = Math.max(0, Math.min(visual.lojaSel - 1, itens.length - 4));
+        if (inicio > 0) texto('▲', W / 2, 90, 12, COR.lilas, 2);
+        if (inicio + 4 < itens.length) texto('▼', W / 2, 90 + 4 * 62 - 4, 12, COR.lilas, 2);
+        itens.forEach((item, i) => {
+            if (i < inicio || i >= inicio + 4) return;
+            const y = 96 + (i - inicio) * 62;
+            const comprado = jogo.progresso.loja.has(item.id) && !item.repoe;
             const sel = visual.lojaSel === i;
             ctx.fillStyle = sel ? '#4b1f7a' : '#24103f';
             ctx.strokeStyle = sel ? COR.laranja : COR.tinta;
@@ -2004,10 +3054,141 @@
         if (!toque) texto(textoTeclas('[CIMA]/[BAIXO] escolhe · [CONFIRMA] compra · [BAIXO] no fim ou ESC sai'), W / 2, H - 70, 12, COR.lilas, 3);
     }
 
+    /** Álbum de figurinhas (sentado no banco): 8 figurinhas e os encaixes. */
+    /**
+     * Molduras impressas em ui/album-fundo.png (1280×720), já na escala da tela (÷2):
+     * 3×3 na página da esquerda e 3×3 na da direita, lidas da arte.
+     */
+    const moldura = (x0, x1, y0, y1) => ({ x: x0 / 2, y: y0 / 2, w: (x1 - x0) / 2, h: (y1 - y0) / 2 });
+    const MOLDURAS_ALBUM = {
+        colecao: [
+            moldura(272, 372, 110, 238), moldura(393, 491, 106, 234), moldura(515, 612, 102, 230),
+            moldura(265, 368, 270, 400), moldura(388, 490, 266, 398), moldura(512, 612, 263, 395),
+            moldura(258, 362, 436, 573), moldura(383, 487, 433, 570),
+        ],
+        encaixes: [
+            moldura(665, 762, 102, 230), moldura(785, 882, 102, 230), moldura(903, 1002, 104, 232),
+            moldura(665, 765, 263, 397), moldura(788, 887, 265, 397),
+        ],
+    };
+
+    function desenharAlbum() {
+        const p = jogo.progresso;
+        const fundo = arte('albumFundo');
+        if (fundo) ctx.drawImage(fundo, 0, 0, W, H);
+        else {
+            ctx.fillStyle = 'rgba(7, 4, 26, 0.92)';
+            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#3a2a1a';
+            ctx.fillRect(40, 44, W - 80, H - 96);
+            ctx.fillStyle = '#f4ead5';
+            ctx.fillRect(48, 52, W / 2 - 52, H - 112);
+            ctx.fillRect(W / 2 + 4, 52, W / 2 - 52, H - 112);
+        }
+        texto('ÁLBUM DE FIGURINHAS', W / 2, 26, 24, COR.laranja, 5);
+        areas = [];
+        const ids = Object.keys(FIGURINHAS);
+        // Com a arte do álbum, cada figurinha e cada encaixe vai numa moldura impressa nela:
+        // página da esquerda = coleção (3×3), página da direita = encaixes no Álbum.
+        const molduras = fundo ? MOLDURAS_ALBUM : null;
+        const livres = core.encaixesLivres(p);
+        const claro = fundo ? '#e6d9b8' : COR.tinta;
+        texto('COLEÇÃO', 224, 48, 13, claro, fundo ? 3 : 0);
+        texto(`NO ÁLBUM ${p.equipadas.length}/${p.encaixes}`, 418, 48, 13, claro, fundo ? 3 : 0);
+        // Encaixes.
+        for (let i = 0; i < CONFIG.encaixesMax; i++) {
+            const f = p.equipadas[i];
+            const r = molduras ? molduras.encaixes[i] : { x: W / 2 - (p.encaixes * 34) / 2 + i * 34 + 5, y: 80, w: 24, h: 32 };
+            if (!molduras && i >= p.encaixes) break;
+            if (i >= p.encaixes) {
+                // Encaixe que ainda não comprou (página nova na loja).
+                ctx.fillStyle = 'rgba(7, 4, 26, 0.55)';
+                ctx.fillRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
+                texto('LOJA', r.x + r.w / 2, r.y + r.h / 2, 10, '#8a7a66', 2);
+                continue;
+            }
+            const img = arte(f ? 'albumEncaixeCheio' : 'albumEncaixe');
+            if (img) ctx.drawImage(img, r.x + 2, r.y + 2, r.w - 4, r.h - 4);
+            else {
+                ctx.strokeStyle = f ? COR.amarelo : '#8a7a66';
+                ctx.lineWidth = 2;
+                ctx.setLineDash(f ? [] : [3, 3]);
+                ctx.strokeRect(r.x, r.y, r.w, r.h);
+                ctx.setLineDash([]);
+            }
+            if (f) {
+                const fi = arte(`fig_${f}`);
+                if (fi) ctx.drawImage(fi, r.x + 4, r.y + 4, r.w - 8, r.h - 8);
+                else miniFigurinha(f, r.x + r.w / 2, r.y + r.h / 2, r.w / 26);
+                areas.push({ x: r.x, y: r.y, w: r.w, h: r.h, id: `fig:${ids.indexOf(f)}` });
+            }
+        }
+        // As 8 figurinhas.
+        ids.forEach((id, i) => {
+            const r = molduras ? molduras.colecao[i] : { x: 110 + (i % 4) * 140 - 24, y: 150 + Math.floor(i / 4) * 92 - 32, w: 48, h: 64 };
+            const x = r.x + r.w / 2;
+            const y = r.y + r.h / 2;
+            const tem = p.figurinhas.has(id);
+            const usada = p.equipadas.includes(id);
+            if (visual.albumSel === i) {
+                ctx.fillStyle = 'rgba(255, 210, 63, 0.25)';
+                ctx.fillRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6);
+                ctx.strokeStyle = COR.amarelo;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6);
+            }
+            if (tem) {
+                const img = arte(`fig_${id}`);
+                if (usada) ctx.globalAlpha = 0.45;   // está no Álbum (aparece na página da direita)
+                if (img) ctx.drawImage(img, r.x + 3, r.y + 3, r.w - 6, r.h - 6);
+                else miniFigurinha(id, x, y, r.w / 26);
+                ctx.globalAlpha = 1;
+                if (usada) texto('NO ÁLBUM', x, y, 10, '#7bd88f', 3);
+            } else if (p.quebradas.has(id)) {
+                texto('QUEBROU', x, y, 11, '#8a7a66', 2);
+            } else if (!molduras) {
+                ctx.strokeStyle = '#b5a88f';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.strokeRect(r.x, r.y, r.w, r.h);
+                ctx.setLineDash([]);
+                texto('?', x, y, 22, '#b5a88f', 0);
+            } else texto('?', x, y, 22, 'rgba(230, 217, 184, 0.55)', 0);
+            areas.push({ x: r.x - 3, y: r.y - 3, w: r.w + 6, h: r.h + 6, id: `fig:${i}` });
+        });
+        // Descrição da escolhida.
+        const id = ids[visual.albumSel] || ids[0];
+        const tem = p.figurinhas.has(id);
+        ctx.fillStyle = 'rgba(7, 4, 26, 0.85)';
+        ctx.fillRect(40, H - 58, W - 80, 30);
+        texto(tem ? `${FIGURINHAS[id].nome}: ${FIGURINHAS[id].texto}` : '??? (ainda não achou esta)', W / 2, H - 43, 13, '#fff', 3);
+        if (visual.albumMsg) texto(visual.albumMsg, W / 2, H - 70, 13, livres <= 0 ? '#ff8ca0' : COR.amarelo, 3);
+        botaoTela('FECHAR', W / 2 - 50, H - 24, 100, 22, '#2a2a3a', 'fecharAlbum');
+        if (!toque) texto(textoTeclas('[MIRA] escolhe · [CONFIRMA] põe/tira · ESC fecha'), W - 12, H - 12, 11, COR.lilas, 3, 'right');
+    }
+
+    function trocarNoAlbum() {
+        const id = Object.keys(FIGURINHAS)[visual.albumSel];
+        const r = core.trocarFigurinha(jogo, id);
+        visual.albumMsg = r === 'cheio' ? 'Sem encaixe livre: tire uma figurinha antes (ou compre uma página nova).' : r === 'naoTem' ? 'Você ainda não tem esta figurinha.' : '';
+        tratarEventos();
+    }
+
     function desenharPausa() {
-        ctx.fillStyle = 'rgba(7, 4, 26, 0.8)';
-        ctx.fillRect(0, 0, W, H);
-        texto('PAUSADO', W / 2, 80, 44, '#fff', 7);
+        const fundo = arte('pausaFundo');
+        if (fundo) {
+            ctx.globalAlpha = 0.85;
+            ctx.drawImage(fundo, 0, 0, W, H);
+            ctx.globalAlpha = 1;
+        } else {
+            ctx.fillStyle = 'rgba(7, 4, 26, 0.8)';
+            ctx.fillRect(0, 0, W, H);
+        }
+        const titulo = arte('pausaTitulo');
+        if (titulo) ctx.drawImage(titulo, W / 2 - 130, 38, 260, 65);
+        else texto('PAUSADO', W / 2, 80, 44, '#fff', 7);
+        const enfeite = arte('pausaEnfeite');
+        if (enfeite) ctx.drawImage(enfeite, W / 2 - 128, 101, 256, 16);
         areas = [];
         const opcoes = opcoesPausa();
         const passo = opcoes.length > 3 ? 44 : 50;
@@ -2141,6 +3322,7 @@
         }
         if (jogo.fase === 'pegou') desenharPegou();
         if (jogo.fase === 'loja') desenharLojaTela();
+        if (jogo.fase === 'album') desenharAlbum();
         if (jogo.fase === 'final') desenharFinal();
         if (visual.mapa) desenharMapa();
         else if (visual.pausado) desenharPausa();
@@ -2149,10 +3331,25 @@
     // ------------------------------------------------------------- fluxo
     function novoJogo(save = null) {
         core.iniciar(jogo, save);
+        revelados.clear();
         visual.pausado = false;
         visual.mapa = false;
         visual.particulas = [];
         visual.textos = [];
+        visual.fx = [];
+        visual.cadaveres = [];
+        visual.hitstop = 0;
+        visual.tremor = 0;
+        visual.flashDano = 0;
+        visual.flashBranco = 0;
+        visual.morteEm = 0;
+        visual.fimEm = 0;
+        visual.area = null;
+        visual.figurinhaNova = null;
+        visual.puloDuploEm = -9;
+        visual.pousoEm = -9;
+        visual.figurinhaEm = -9;
+        visual.molas.clear();
         visual.opcao = 0;
         soltarTudo();
         tratarEventos();
@@ -2174,17 +3371,28 @@
         if (id === 'pausar') { pausar(); return; }
         if (id === 'titulo') { salvar(); jogo.fase = 'titulo'; visual.pausado = false; visual.mapa = false; visual.opcao = 0; return; }
         if (id === 'explorar') { core.iniciar(jogo, core.exportarSave(jogo)); visual.opcao = 0; tratarEventos(); ajustarCamera(0, true); return; }
-        if (id === 'sairLoja') { core.sairLoja(jogo); visual.lojaMsg = ''; return; }
+        if (id === 'sairLoja') { core.sairLoja(jogo); visual.lojaMsg = ''; visual.lojaSel = 0; return; }
         if (id.startsWith('loja:')) {
             visual.lojaSel = Number(id.slice(5));
             comprarSelecionado();
         }
+        if (id === 'fecharAlbum') { core.fecharAlbum(jogo); visual.albumMsg = ''; return; }
+        if (id.startsWith('fig:')) {
+            visual.albumSel = Number(id.slice(4));
+            trocarNoAlbum();
+        }
     }
 
     function comprarSelecionado() {
-        const item = LOJA[visual.lojaSel];
+        const item = itensLoja()[visual.lojaSel];
+        if (!item) return;
         const r = core.comprar(jogo, item.id);
-        const efeitoItem = { cogumelo: '+1 cogumelo de vida!', lanche: 'Agora você degusta bem mais rápido.', fita: 'Sua coronhada agora tira o dobro!' };
+        const efeitoItem = {
+            cogumelo: '+1 cogumelo de vida!', lanche: 'Agora você degusta bem mais rápido.', fita: 'Sua coronhada agora tira o dobro!',
+            chave: 'A tampa de bueiro do Beco agora abre.', encaixe1: '+1 encaixe no Álbum.', encaixe2: '+1 encaixe no Álbum.',
+            copo1: 'Mais um caco do Copo de Requeijão.', copo2: 'Mais um caco do Copo de Requeijão.',
+            pacote1: 'Figurinha nova: Pimenta Malagueta!', pacote2: 'Figurinha nova: Cogumelo de Vidro!', vidroNovo: 'Cogumelo de Vidro novinho.',
+        };
         visual.lojaMsg = r === 'ok' ? `${item.nome}: ${efeitoItem[item.id] || 'comprado!'}` : r === 'caro' ? `Faltam ${item.preco - jogo.progresso.virgulas} vírgulas.` : 'Você já tem isso.';
         tratarEventos();
     }
@@ -2284,6 +3492,10 @@
         return opcoesPausa().length;
     }
 
+    /** O jogo está numa tela de menu (sem controle do Degustador)? */
+    const emMenu = () => jogo.fase === 'titulo' || jogo.fase === 'final' || visual.pausado || jogo.fase === 'pegou'
+        || visual.mapa || jogo.fase === 'loja' || jogo.fase === 'album';
+
     function navegarMenu(delta, total) {
         visual.opcao = (visual.opcao + delta + total) % total;
     }
@@ -2301,8 +3513,11 @@
         }
     }
 
+    const teclasApertadas = new Set();
+    janela.dialog.addEventListener('keyup', (event) => teclasApertadas.delete(event.code), true);
     janela.dialog.addEventListener('keydown', (event) => {
         const c = event.code;
+        teclasApertadas.add(c);
         const nome = esquema.mover[c];
         const conhecida = nome || esquema.pulo.includes(c) || esquema.golpe.includes(c) || esquema.dash.includes(c) || esquema.magia.includes(c)
             || c === esquema.cura || c === esquema.foco || esquema.confirma.includes(c) || c === 'Escape' || c === 'Tab';
@@ -2320,12 +3535,19 @@
             return;
         }
         if (jogo.fase === 'loja') {
-            if (nome === 'cima') visual.lojaSel = (visual.lojaSel + LOJA.length - 1) % LOJA.length;
+            const n = itensLoja().length;
+            if (nome === 'cima') visual.lojaSel = (visual.lojaSel + n - 1) % n;
             else if (nome === 'baixo') {
-                if (visual.lojaSel === LOJA.length - 1) acao('sairLoja');
+                if (visual.lojaSel === n - 1) acao('sairLoja');
                 else visual.lojaSel++;
             } else if (confirma) comprarSelecionado();
             else if (c === 'Escape' || c === 'Tab') acao('sairLoja');
+            return;
+        }
+        if (jogo.fase === 'album') {
+            moverNoAlbum(nome);
+            if (confirma) trocarNoAlbum();
+            else if (c === 'Escape' || c === 'Tab') acao('fecharAlbum');
             return;
         }
         // Mapa rápido: aparece enquanto Tab estiver segurado.
@@ -2340,14 +3562,25 @@
         }
         if (esquema.pulo.includes(c)) { entrada.pulo = true; entrada.puloPedido = true; }
         if (esquema.golpe.includes(c)) entrada.golpePedido = true;
-        if (esquema.dash.includes(c)) entrada.dashPedido = true;
+        if (esquema.dash.includes(c)) { entrada.dash = true; entrada.dashPedido = true; }
         if (esquema.magia.includes(c)) entrada.magiaPedido = true;
     });
+    /** Setas no Álbum: 8 figurinhas numa grade de 3 colunas (a 9ª moldura fica vazia). */
+    function moverNoAlbum(nome) {
+        const s = visual.albumSel;
+        if (nome === 'esquerda') visual.albumSel = (s + 7) % 8;
+        else if (nome === 'direita') visual.albumSel = (s + 1) % 8;
+        else if (nome === 'baixo') visual.albumSel = s + 3 > 7 ? s % 3 : s + 3;
+        else if (nome === 'cima') visual.albumSel = s - 3 >= 0 ? s - 3 : (s + 6 > 7 ? s + 3 : s + 6);
+        else return;
+        visual.albumMsg = '';
+    }
     janela.dialog.addEventListener('keyup', (event) => {
         const c = event.code;
         const nome = esquema.mover[c];
         if (nome) entrada[nome] = false;
         if (esquema.pulo.includes(c)) entrada.pulo = false;
+        if (esquema.dash.includes(c) && !esquema.dash.some((k) => k !== c && teclasApertadas.has(k))) entrada.dash = false;
         if (c === esquema.cura) entrada.degustar = false;
         if (c === 'Tab' && visual.mapa && !visual.pausado) visual.mapa = false;
         if (c === esquema.foco && foco.apertado) {
@@ -2400,15 +3633,18 @@
                 event.preventDefault();
                 botao.setPointerCapture?.(event.pointerId);
                 botao.classList.add('is-apertado');
-                const emMenu = jogo.fase === 'titulo' || jogo.fase === 'final' || visual.pausado || jogo.fase === 'pegou' || visual.mapa || jogo.fase === 'loja';
                 const teclas = tecla.split(' ');
-                if (emMenu && teclas.length > 1) return;
-                if (emMenu) {
+                if (emMenu()) {
                     if (visual.mapa) { visual.mapa = false; return; }
                     if (jogo.fase === 'loja') {
-                        if (tecla === 'cima') visual.lojaSel = (visual.lojaSel + LOJA.length - 1) % LOJA.length;
-                        else if (tecla === 'baixo') visual.lojaSel = (visual.lojaSel + 1) % LOJA.length;
+                        const n = itensLoja().length;
+                        if (tecla === 'cima') visual.lojaSel = (visual.lojaSel + n - 1) % n;
+                        else if (tecla === 'baixo') visual.lojaSel = (visual.lojaSel + 1) % n;
                         else if (tecla === 'pulo' || tecla === 'golpe') comprarSelecionado();
+                        return;
+                    }
+                    if (jogo.fase === 'album') {
+                        if (tecla === 'pulo' || tecla === 'golpe') trocarNoAlbum();
                         return;
                     }
                     const total = totalMenu();
@@ -2419,7 +3655,7 @@
                 }
                 if (tecla === 'pulo') { entrada.pulo = true; entrada.puloPedido = true; }
                 else if (tecla === 'golpe') entrada.golpePedido = true;
-                else if (tecla === 'dash') entrada.dashPedido = true;
+                else if (tecla === 'dash') { entrada.dash = true; entrada.dashPedido = true; }
                 else if (tecla === 'magia') entrada.magiaPedido = true;
                 else {
                     for (const t of teclas) entrada[t] = true;
@@ -2446,15 +3682,17 @@
         let dedo = null;
         let centro = null;
         let atual = { esquerda: false, direita: false, cima: false, baixo: false };
-        const emMenu = () => jogo.fase === 'titulo' || jogo.fase === 'final' || visual.pausado || jogo.fase === 'pegou' || visual.mapa || jogo.fase === 'loja';
         function aplicarDirecao(novo) {
             if (emMenu()) {
                 // Nos menus, empurrar para cima/baixo anda uma opção por vez.
-                if (novo.cima && !atual.cima) {
-                    if (jogo.fase === 'loja') visual.lojaSel = (visual.lojaSel + LOJA.length - 1) % LOJA.length;
+                const n = itensLoja().length || 1;
+                if (jogo.fase === 'album') {
+                    for (const t of ['esquerda', 'direita', 'cima', 'baixo']) if (novo[t] && !atual[t]) moverNoAlbum(t);
+                } else if (novo.cima && !atual.cima) {
+                    if (jogo.fase === 'loja') visual.lojaSel = (visual.lojaSel + n - 1) % n;
                     else if (!visual.mapa) navegarMenu(-1, totalMenu());
                 } else if (novo.baixo && !atual.baixo) {
-                    if (jogo.fase === 'loja') visual.lojaSel = (visual.lojaSel + 1) % LOJA.length;
+                    if (jogo.fase === 'loja') visual.lojaSel = (visual.lojaSel + 1) % n;
                     else if (!visual.mapa) navegarMenu(1, totalMenu());
                 }
                 atual = novo;

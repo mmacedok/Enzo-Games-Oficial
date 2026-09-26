@@ -288,8 +288,12 @@
             if (!c?.disponivel) { secao.hidden = true; return; }
             montarFormulario();
             carregar();
+            let meuId = c.usuario?.id ?? null;
             const parar = c.aoMudar(() => {
                 if (!secao.isConnected) { parar(); return; }   // capítulo trocado: esta seção saiu da tela
+                const id = c.usuario?.id ?? null;
+                if (id === meuId) return;   // aviso da conta sem trocar de usuário: nada muda aqui
+                meuId = id;
                 montarFormulario();
                 carregar();
             });

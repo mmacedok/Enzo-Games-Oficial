@@ -128,7 +128,7 @@
 
     // ---------------------------------------------------------------- painel lateral
     function barra(parte, total, largura = 18) {
-        const cheio = total > 0 ? Math.round((parte / total) * largura) : 0;
+        const cheio = total > 0 ? Math.max(0, Math.min(largura, Math.round((parte / total) * largura))) : 0;
         const b = el('span', 'numero-barra');
         b.append('[', el('b', '', '|'.repeat(cheio)), '·'.repeat(largura - cheio), ']');
         return b;
@@ -646,11 +646,16 @@
         const limpo = texto.trim();
         eco(limpo);
         if (estado.confirmar) {
-            const acao = estado.confirmar;
-            estado.confirmar = null;
-            atualizarPrompt();
-            if (/^(s|sim|y|yes)$/i.test(limpo)) await acao();
-            else apagado('cancelado.');
+            if (/^(s|sim|y|yes)$/i.test(limpo)) {
+                const acao = estado.confirmar;
+                estado.confirmar = null;
+                atualizarPrompt();
+                await acao();
+            } else if (/^(n|nao|não|no)$/i.test(limpo)) {
+                estado.confirmar = null;
+                atualizarPrompt();
+                apagado('cancelado.');
+            } else apagado('há uma confirmação pendente: responda s ou n.');
             return;
         }
         if (!limpo) return;
@@ -721,8 +726,14 @@
 
     const relogio = $('relogio');
     const tique = () => { relogio.textContent = new Date().toLocaleTimeString('pt-BR'); };
-    tique();
-    setInterval(tique, 1000);
+    let pulso = 0;
+    const andarRelogio = () => {
+        clearInterval(pulso);
+        pulso = document.hidden ? 0 : setInterval(tique, 1000);
+        tique();
+    };
+    andarRelogio();
+    document.addEventListener('visibilitychange', andarRelogio);
 
     // ---------------------------------------------------------------- boot
     async function boot() {

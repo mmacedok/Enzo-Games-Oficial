@@ -1,6 +1,5 @@
 // ============================================================================
 // Leitor de gibis — ÚNICO motor de renderização de reader.html.
-// Não carregue js/reader.js: ele é um fork obsoleto deste arquivo.
 // ============================================================================
 (() => {
     'use strict';
@@ -37,6 +36,7 @@
         restoredKey: null,
         interacted: false,
         jumped: false,           // já pulou para a página salva
+        finishedKey: null,       // edição já gravada como concluída
     };
     const conta = () => window.EnzoConta;
 
@@ -54,17 +54,6 @@
     const chapterNumber = (comic) => {
         const match = String(comic.id || '').match(/(\d+)/);
         return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
-    };
-
-    const goTo = (url, { wipe = true } = {}) => {
-        const wipeEl = qs('macaroni-wipe');
-        if (!wipe || !wipeEl) {
-            window.location.href = url;
-            return;
-        }
-        wipeEl.classList.remove('is-leaving');
-        wipeEl.classList.add('is-active');
-        setTimeout(() => { window.location.href = url; }, wipe ? 600 : 0);
     };
 
     // Só o parâmetro `chapter` é confiável; o comicId pode vir do localStorage.
@@ -353,6 +342,7 @@
             ui.imageContainer.appendChild(coverWrapper);
         }
 
+        const masks = (state.db.censorship?.[state.comic.id] || []).filter(entry => !entry.chapterId || entry.chapterId === chapter.id);
         chapter.pages.forEach((url, index) => {
             const wrapper = document.createElement('div');
             wrapper.className = 'page-wrapper';
@@ -361,7 +351,6 @@
             // Páginas deitadas ficam ilegíveis no celular: oferece tela cheia com rolagem.
             if (image.width > image.height) wrapper.appendChild(buildExpandButton(url, index));
 
-            const masks = (state.db.censorship?.[state.comic.id] || []).filter(entry => !entry.chapterId || entry.chapterId === chapter.id);
             const mask = masks.find((entry) => entry.pageIndex === index);
             if (mask && !state.unlocked) wrapper.appendChild(buildCaboCocoMask(mask.box));
 
@@ -386,7 +375,6 @@
 
     // -------------------------------------------------------------------- zoom
     function updateZoomUI() {
-        ui.imageContainer.style.setProperty('--zoom-level', state.zoom);
         const width = Math.min(800, ui.viewport.clientWidth - 40) * state.zoom;
         ui.imageContainer.style.width = `${Math.max(120, width)}px`;
         ui.imageContainer.querySelectorAll('.webtoon-image').forEach(img => { img.sizes = `${Math.round(width)}px`; });
@@ -557,7 +545,10 @@
     // ------------------------------------------------------------------ events
     function setupEventListeners() {
         ui.chapterSelect.addEventListener('change', (event) => {
-            const [comicId, chapterId] = JSON.parse(event.target.value);
+            let value;
+            try { value = JSON.parse(event.target.value); } catch { return; } // value vazio: ignora
+            if (!Array.isArray(value)) return;
+            const [comicId, chapterId] = value;
             loadComic(comicId, chapterId, 'push');
         });
 
@@ -606,16 +597,26 @@
             changeZoom(event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP);
         }, { passive: false });
 
-        window.addEventListener('resize', updateZoomUI);
+        // Um quadro, um cálculo: resize e rolagem disparam várias vezes por quadro.
+        let zoomFrame = 0;
+        window.addEventListener('resize', () => {
+            if (zoomFrame) return;
+            zoomFrame = requestAnimationFrame(() => { zoomFrame = 0; updateZoomUI(); });
+        });
 
         // Barra some ao rolar para baixo e volta ao rolar para cima.
+        let scrollFrame = 0;
         ui.viewport.addEventListener('scroll', () => {
-            const top = ui.viewport.scrollTop;
-            if (Math.abs(top - state.lastScroll) < 12) return;
-            document.body.classList.toggle('ui-hidden', top > state.lastScroll && top > 120);
-            state.lastScroll = top;
-            saveProgressSoon();
-            saveIfFinished();
+            if (scrollFrame) return;
+            scrollFrame = requestAnimationFrame(() => {
+                scrollFrame = 0;
+                const top = ui.viewport.scrollTop;
+                if (Math.abs(top - state.lastScroll) < 12) return;
+                document.body.classList.toggle('ui-hidden', top > state.lastScroll && top > 120);
+                state.lastScroll = top;
+                saveProgressSoon();
+                saveIfFinished();
+            });
         }, { passive: true });
         // Leitor já mexeu na página: não pula mais para a página salva na conta.
         for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
@@ -645,6 +646,7 @@
         state.unlocked = false;
         state.interacted = false;
         state.jumped = false;
+        state.finishedKey = null;
         const casa = qs('back-btn');
         if (casa) casa.dataset.nav = casaDo(comic);
 
@@ -653,7 +655,7 @@
         const wanted = chapterId
             || localStorage.getItem('currentChapterId')
             || comic.chapters?.[0]?.id;
-        const index = comic.chapters?.findIndex((chapter) => chapter.id === wanted) ?? -1;
+        const index = comic.chapters?.findIndex((chapter) => chapter.id === wanted);
         state.chapterIndex = index === -1 ? 0 : index;
 
         localStorage.setItem('currentComicId', comic.id);
@@ -696,22 +698,13 @@
 
     async function init() {
         qs('back-btn')?.addEventListener('click', (event) => { window.location.href = event.currentTarget.dataset.nav || 'index.html'; });
-        const wipe = qs('macaroni-wipe');
-        // Veio da animação de abrir o gibi na home: entra direto, sem macarronada.
+        // Veio da animação de abrir o gibi na home: entra direto.
         let enteringFromComic = false;
         try {
             enteringFromComic = sessionStorage.getItem('enzo-enter-comic') === '1';
             sessionStorage.removeItem('enzo-enter-comic');
-        } catch { /* sem sessionStorage: usa a transição normal */ }
-        if (enteringFromComic) {
-            document.body.classList.add('enter-from-comic');
-            wipe?.classList.remove('is-active');
-        } else if (wipe) {
-            setTimeout(() => {
-                wipe.classList.remove('is-active');
-                wipe.classList.add('is-leaving');
-            }, 100);
-        }
+        } catch { /* sem sessionStorage */ }
+        if (enteringFromComic) document.body.classList.add('enter-from-comic');
 
         setupPasswordModal();
         setupEventListeners();

@@ -95,6 +95,32 @@
         voltaTelha: 3,
         vidaParede: 3,           // golpes para quebrar parede rachada
         virgulasBau: 15,
+        // Queda de Bigorna (mergulho para baixo; quebra grades de bueiro)
+        mergulhoPrep: 0.12,
+        mergulhoVelocidade: 720,
+        mergulhoPouso: 0.22,
+        mergulhoDano: 2,
+        mergulhoRaio: 46,
+        // Pipa (planar segurando o pulo na queda; o vento empurra para cima)
+        planarQueda: 70,
+        ventoForca: 2600,
+        ventoMax: -300,
+        // Buzz! (segure ↓ + dash no chão, solte: super-dash que quebra vidro)
+        buzzCarga: 0.6,
+        buzzVelocidade: 520,
+        buzzMax: 3,              // s no máximo
+        buzzDano: 2,
+        // Copo de Requeijão (3 pedaços = +33 de Pontuação máxima)
+        pedacosPorCopo: 3,
+        pontuacaoPorCopo: 33,
+        copos: 3,
+        // Figurinhas
+        encaixesIniciais: 3,
+        encaixesMax: 5,
+        imaRaio: 70,
+        coronhaComprida: 1.3,
+        tenisImpulso: 1.1,
+        custoCoxinha: 55,
     });
 
     const T = CONFIG.tile;
@@ -106,14 +132,47 @@
         dash: Object.freeze({ nome: 'Capa Janky', tecla: '[DASH]', texto: 'Dê um dash para a frente, no chão ou no ar.' }),
         parede: Object.freeze({ nome: 'Luvas de Fita', tecla: '[PULO]', texto: 'Encoste numa parede no ar para grudar e deslizar. Pule e segure de volta para a mesma parede: dá para escalar uma parede só.' }),
         pulo2: Object.freeze({ nome: 'Parênteses', tecla: '[PULO] no ar', texto: 'Pule de novo no meio do ar.' }),
+        bigorna: Object.freeze({ nome: 'Queda de Bigorna', tecla: '[BAIXO] + [DASH] no ar', texto: 'Mergulhe direto para baixo: quebra grades de bueiro e acerta quem estiver perto do pouso.' }),
+        pipa: Object.freeze({ nome: 'Pipa', tecla: 'segure [PULO] caindo', texto: 'Plane devagar segurando o pulo enquanto cai. Nas correntes de vento, a pipa sobe.' }),
+        buzz: Object.freeze({ nome: 'Buzz!', tecla: 'segure [BAIXO] + [DASH] no chão', texto: 'Segure para carregar e solte: um super-dash que atravessa vãos enormes e estilhaça paredes de vidro.' }),
     });
-    const HAB_POR_DIGITO = { 1: 'rajada', 2: 'dash', 3: 'parede', 4: 'pulo2' };
+    const HAB_POR_DIGITO = { 1: 'rajada', 2: 'dash', 3: 'parede', 4: 'pulo2', 5: 'bigorna', 6: 'pipa', 7: 'buzz' };
 
-    const LOJA = Object.freeze([
-        Object.freeze({ id: 'cogumelo', nome: 'Cogumelo Inteiro', preco: 150, texto: '+1 cogumelo de vida na hora (e enche todos).' }),
-        Object.freeze({ id: 'lanche', nome: 'Lanche Turbinado', preco: 160, texto: 'Degustar fica bem mais rápido.' }),
-        Object.freeze({ id: 'fita', nome: 'Fita Reforçada', preco: 220, texto: 'A coronhada tira o dobro de vida.' }),
-    ]);
+    /** Figurinhas (os amuletos de Hollow Knight): cada uma ocupa 1 encaixe do Álbum. */
+    const FIGURINHAS = Object.freeze({
+        ima: Object.freeze({ nome: 'Ímã de Vírgula', texto: 'Os baús de vírgulas vêm até você.' }),
+        coxinha: Object.freeze({ nome: 'Coxinha Dupla', texto: `Degustar cura 2 cogumelos, mas gasta ${CONFIG.custoCoxinha} de Pontuação.` }),
+        coronha: Object.freeze({ nome: 'Coronha Comprida', texto: 'A coronhada alcança 30% mais longe.' }),
+        capa: Object.freeze({ nome: 'Capa Remendada', texto: 'Ninguém te acerta durante o dash.' }),
+        vidro: Object.freeze({ nome: 'Cogumelo de Vidro', texto: '+2 cogumelos de vida. Quebra se você morrer.' }),
+        pimenta: Object.freeze({ nome: 'Pimenta Malagueta', texto: 'Com 1 cogumelo só, a coronhada tira o dobro.' }),
+        tenis: Object.freeze({ nome: 'Tênis de Mola', texto: 'Pula mais alto.' }),
+        radio: Object.freeze({ nome: 'Rádio de Pilha', texto: 'O mapa mostra inimigos e salas secretas.' }),
+    });
+
+    /**
+     * Lojas. `depois`: só aparece depois de derrotar esse chefe. `copo`/`encaixe`/
+     * `figurinha` dizem o que a compra dá; `chave` abre a tampa do bueiro.
+     */
+    const LOJAS = Object.freeze({
+        italolol: Object.freeze([
+            Object.freeze({ id: 'cogumelo', nome: 'Cogumelo Inteiro', preco: 150, texto: '+1 cogumelo de vida na hora (e enche todos).' }),
+            Object.freeze({ id: 'lanche', nome: 'Lanche Turbinado', preco: 160, texto: 'Degustar fica bem mais rápido.' }),
+            Object.freeze({ id: 'fita', nome: 'Fita Reforçada', preco: 220, texto: 'A coronhada tira o dobro de vida.' }),
+            Object.freeze({ id: 'chave', nome: 'Chave do Bueiro', preco: 120, depois: 'arena:chefe', texto: 'Abre a tampa de bueiro no chão do Beco. Dizem que tem um rei lá embaixo.' }),
+            Object.freeze({ id: 'encaixe1', nome: 'Página do Álbum', preco: 200, depois: 'arena:chefe', encaixe: true, texto: '+1 encaixe de figurinha no Álbum.' }),
+            Object.freeze({ id: 'copo1', nome: 'Caco de Requeijão', preco: 180, depois: 'arena:chefe', copo: true, texto: 'Um pedaço do Copo de Requeijão (3 pedaços = +33 de Pontuação máxima).' }),
+            Object.freeze({ id: 'pacote1', nome: 'Pacote de Figurinha', preco: 150, depois: 'arena:chefe', figurinha: 'pimenta', texto: 'Uma figurinha lacrada. Qual será?' }),
+        ]),
+        pastel: Object.freeze([
+            Object.freeze({ id: 'encaixe2', nome: 'Página Dupla', preco: 260, encaixe: true, texto: '+1 encaixe de figurinha no Álbum.' }),
+            Object.freeze({ id: 'copo2', nome: 'Caco de Requeijão', preco: 220, copo: true, texto: 'Mais um pedaço do Copo de Requeijão.' }),
+            Object.freeze({ id: 'pacote2', nome: 'Pacote de Figurinha', preco: 180, figurinha: 'vidro', texto: 'Figurinha lacrada, direto da feira.' }),
+            Object.freeze({ id: 'vidroNovo', nome: 'Cogumelo de Vidro novo', preco: 120, repoe: 'vidro', texto: 'Um Cogumelo de Vidro inteiro de novo (só se o seu quebrou).' }),
+        ]),
+    });
+    const LOJA = LOJAS.italolol;
+    const TODOS_ITENS_LOJA = Object.freeze([...LOJAS.italolol, ...LOJAS.pastel]);
 
     /** Legenda do mapa (uma letra por tile de 20×20). */
     const LEGENDA = Object.freeze({
@@ -154,9 +213,35 @@
         'g': 'Bug (anda em volta dos blocos)',
         'm': 'Moderador (escudo)',
         'f': 'Feiticeira (teleporta)',
+        // Expansão (Esgoto, Feira, Orkut, Servidor Esquecido)
+        '5': 'habilidade: Queda de Bigorna (mergulho)',
+        '6': 'habilidade: Pipa (planar)',
+        '7': 'habilidade: Buzz! (super-dash)',
+        'G': 'grade de bueiro (só a Queda de Bigorna quebra)',
+        'Y': 'parede de vidro (só o Buzz! quebra)',
+        'Z': 'tampa de bueiro (abre com a Chave do Bueiro)',
+        '~': 'chorume (machuca, como espinho)',
+        'w': 'corrente de vento (com a Pipa, sobe)',
+        'h': 'figurinha (qual: lista "figurinhas" da sala)',
+        'q': 'caco do Copo de Requeijão',
+        'R': 'Rato do Comentário (corre e dá bote)',
+        'l': 'Boca-de-Lobo (escondida no chão, morde para cima)',
+        'o': 'Bolha de Chorume (flutua e estoura)',
+        'k': 'cano que pinga chorume',
+        'u': 'Pop-up (teleporta e atira X)',
+        'x': 'Golpista do Pix (rouba vírgulas)',
+        'y': 'Boneco de Posto (se debate no lugar)',
+        's': 'Scrap Fantasma (atravessa paredes)',
+        'F': 'Fake (saco de vírgulas falso)',
+        'n': 'Recado Cintilante (torre de brilho)',
     });
-    const FIXOS = new Set(['#', 'X', '=', 'Q', 'T', '^', 'v', 'B', 'P', '|']);
-    const INIMIGO_POR_LETRA = { c: 'capanga', p: 'ping', e: 'emoji', d: 'drone', t: 'troll', j: 'spam', g: 'bug', m: 'moderador', f: 'feiticeira' };
+    const FIXOS = new Set(['#', 'X', '=', 'Q', 'T', '^', 'v', 'B', 'P', '|', 'G', 'Y', 'Z', '~', 'w']);
+    /** Blocos que quebram em grupo (vizinhos iguais quebram juntos). */
+    const QUEBRAVEIS = new Set(['B', 'G', 'Y']);
+    const INIMIGO_POR_LETRA = {
+        c: 'capanga', p: 'ping', e: 'emoji', d: 'drone', t: 'troll', j: 'spam', g: 'bug', m: 'moderador', f: 'feiticeira',
+        R: 'rato', l: 'bocadelobo', o: 'bolha', k: 'gota', u: 'popup', x: 'golpista', y: 'boneco', s: 'scrap', F: 'fake', n: 'recado',
+    };
 
     // ------------------------------------------------------------ mundo
 
@@ -176,8 +261,7 @@
             largura: W, altura: H, larguraPx: W * T, alturaPx: H * T,
             grade, salaIdx, salas, salaPorId: new Map(), areas: def.areas || {},
             inicio: null, bancos: [], placas: [], lojas: [], cameos: [], itens: [], alavancas: [],
-            serras: [], plataformas: [], grupoB: new Map(), gruposB: new Map(), temDinamicos: false, segredos: [],
-            deslocamento: { x: minX, y: minY },
+            serras: [], plataformas: [], grupoB: new Map(), gruposB: new Map(), segredos: [],
         };
         for (const s of salas) {
             s.tx -= minX;
@@ -193,6 +277,7 @@
             const cont = {};
             const novoId = (tipo) => { cont[tipo] = (cont[tipo] || 0) + 1; return `${s.id}:${tipo}${cont[tipo]}`; };
             let placa = 0;
+            let figurinha = 0;
             for (let ly = 0; ly < s.h; ly++) {
                 for (let lx = 0; lx < s.w; lx++) {
                     const c = s.linhas[ly][lx] || '.';
@@ -208,7 +293,12 @@
                     if (c === 'S') nivel.inicio = { x: x + (T - L) / 2, y: base - A, sala: s.idx };
                     else if (c === 'b') nivel.bancos.push({ id: novoId('banco'), sala: s.idx, x: x - 10, y: base - 14, w: 40, h: 14 });
                     else if (c === 'i') nivel.placas.push({ id: novoId('placa'), sala: s.idx, x: x - 10, y: base - 30, w: 40, h: 30, texto: (s.placas || [])[placa++] || '' });
-                    else if (c === 'N') nivel.lojas.push({ id: novoId('loja'), sala: s.idx, x: x - 6, y: base - 34, w: 32, h: 34 });
+                    else if (c === 'N') nivel.lojas.push({ id: novoId('loja'), sala: s.idx, x: x - 6, y: base - 34, w: 32, h: 34, vendedor: s.vendedor || 'italolol' });
+                    else if (c === 'h') {
+                        const qual = (s.figurinhas || [])[figurinha++];
+                        if (!FIGURINHAS[qual]) throw new Error(`Sala ${s.id}: "h" sem figurinha válida na lista "figurinhas"`);
+                        nivel.itens.push({ id: novoId('figurinha'), sala: s.idx, tipo: 'figurinha', figurinha: qual, x: x + 1, y: y + 1, w: 18, h: 18 });
+                    } else if (c === 'q') nivel.itens.push({ id: novoId('copo'), sala: s.idx, tipo: 'copo', x: x + 2, y: y + 2, w: 16, h: 16 });
                     else if (c === 'I') nivel.cameos.push({ id: novoId('inominavel'), sala: s.idx, x: x - 6, y: base - 50, w: 32, h: 50, falas: s.falas || [], final: !!s.final });
                     else if (c === ',') nivel.itens.push({ id: novoId('virgulas'), sala: s.idx, tipo: 'virgulas', valor: CONFIG.virgulasBau, x: x + 3, y: y + 3, w: 14, h: 14 });
                     else if (c === '*') nivel.itens.push({ id: novoId('fragmento'), sala: s.idx, tipo: 'fragmento', x: x + 2, y: y + 2, w: 16, h: 16 });
@@ -226,23 +316,23 @@
                         if (s.premio) nivel.itens.push({ id: `${s.id}:premio`, sala: s.idx, tipo: 'habilidade', habilidade: s.premio, premioDe: s.chefeDef.id, x, y: base - 20, w: 20, h: 20 });
                     } else if (c === 'O' || c === 'H' || c === 'U') {
                         nivel.serras.push({ tipo: c, sala: s.idx, cx: x + T / 2, cy: y + T / 2, fase: nivel.serras.length * 0.7 });
-                        if (c !== 'O') { nivel.temDinamicos = true; s.temDinamicos = true; }
+                        if (c !== 'O') s.temDinamicos = true;
                     } else if (c === 'M' && s.linhas[ly][lx - 1] !== 'M') {
                         let n = 1;
                         while (s.linhas[ly][lx + n] === 'M') n++;
                         nivel.plataformas.push({ id: nivel.plataformas.length, sala: s.idx, x0: x, y, w: n * T, h: CONFIG.plataformaA });
-                        nivel.temDinamicos = true;
                         s.temDinamicos = true;
                     }
                 }
             }
         }
         if (!nivel.inicio) throw new Error('Mundo sem S (início)');
-        // Paredes rachadas vizinhas formam um grupo só (quebram juntas).
+        // Paredes rachadas (e grades e vidros) vizinhas formam um grupo só (quebram juntas).
         for (let gy = 0; gy < H; gy++) {
             for (let gx = 0; gx < W; gx++) {
-                if (grade[gy][gx] !== 'B' || nivel.grupoB.has(gy * W + gx)) continue;
-                const id = `B${gx},${gy}`;
+                const letra = grade[gy][gx];
+                if (!QUEBRAVEIS.has(letra) || nivel.grupoB.has(gy * W + gx)) continue;
+                const id = `${letra}${gx},${gy}`;
                 const celulas = [];
                 const fila = [[gx, gy]];
                 nivel.grupoB.set(gy * W + gx, id);
@@ -252,12 +342,12 @@
                     for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
                         const nx = cx + ox;
                         const ny = cy + oy;
-                        if (nx < 0 || ny < 0 || nx >= W || ny >= H || grade[ny][nx] !== 'B' || nivel.grupoB.has(ny * W + nx)) continue;
+                        if (nx < 0 || ny < 0 || nx >= W || ny >= H || grade[ny][nx] !== letra || nivel.grupoB.has(ny * W + nx)) continue;
                         nivel.grupoB.set(ny * W + nx, id);
                         fila.push([nx, ny]);
                     }
                 }
-                nivel.gruposB.set(id, { id, celulas, sala: salaIdx[gy * W + gx] });
+                nivel.gruposB.set(id, { id, letra, celulas, sala: salaIdx[gy * W + gx] });
             }
         }
         return nivel;
@@ -302,8 +392,9 @@
     }
 
     /**
-     * Sólido? `mundo` = { nivel, caidas?, quebrados?, abertos?, arena? } — o
-     * estado que muda (telhas caídas, paredes quebradas, portões abertos, luta).
+     * Sólido? `mundo` = { nivel, caidas?, quebrados?, abertos?, arena?, loja? } — o
+     * estado que muda (telhas caídas, paredes quebradas, portões abertos, luta,
+     * Chave do Bueiro comprada).
      */
     function solido(mundo, tx, ty) {
         const nivel = mundo.nivel;
@@ -311,7 +402,8 @@
         switch (c) {
             case '#': case 'X': case 'T': case 'r': return true;
             case 'Q': return !(mundo.caidas && mundo.caidas.get(`${tx},${ty}`)?.caiu);
-            case 'B': return !(mundo.quebrados && mundo.quebrados.has(nivel.grupoB.get(ty * nivel.largura + tx)));
+            case 'B': case 'G': case 'Y': return !(mundo.quebrados && mundo.quebrados.has(nivel.grupoB.get(ty * nivel.largura + tx)));
+            case 'Z': return !(mundo.loja && mundo.loja.has('chave'));
             case 'P': return !(mundo.abertos && mundo.abertos.has(nivel.salas[nivel.salaIdx[ty * nivel.largura + tx]].id));
             case '|': return mundo.arena != null && mundo.arena === nivel.salaIdx[ty * nivel.largura + tx];
             default: return false;
@@ -334,9 +426,10 @@
             coiote: 0, antecipado: 0,
             parede: 0, grudado: 0, coiotaParede: 0, ultimaParede: 0,
             trava: 0, travaLado: 0, semCorte: false,
-            estado: 'normal',    // 'normal' | 'dash' | 'degustando'
-            lado: 0, plataforma: -1, descendo: 0,
-            dashT: 0, dashLado: 1, dashRecarga: 0, dashDisponivel: true, puloDuploUsado: false,
+            estado: 'normal',    // 'normal' | 'dash' | 'degustando' | 'mergulho' | 'carregando' | 'buzz'
+            plataforma: -1, descendo: 0,
+            mergulhoT: 0, carga: 0, buzzT: 0, planando: false,
+            soltarCura: false, dashT: 0, dashLado: 1, dashRecarga: 0, dashDisponivel: true, puloDuploUsado: false,
             recuo: 0, recuoVx: 0, atordoado: 0,
             vida: CONFIG.vidaInicial, pontuacao: 0, invencivel: 0,
             golpe: null, recargaGolpe: 0, recargaMagia: 0, degustarT: 0,
@@ -447,11 +540,93 @@
         j.puloDuploUsado = false;
     }
 
+    /** Quebra o grupo de blocos (grade/vidro) do tile, se ainda estiver inteiro. */
+    function quebrarBloco(mundo, tx, ty) {
+        const nivel = mundo.nivel;
+        const id = nivel.grupoB.get(ty * nivel.largura + tx);
+        if (!id || !solido(mundo, tx, ty)) return false;
+        if (mundo.quebrar) mundo.quebrar(id, tx, ty);
+        else mundo.quebrados.add(id);
+        return true;
+    }
+
+    /** Corrente de vento ('w') no corpo do Degustador? */
+    function noVento(mundo, j) {
+        const x0 = Math.floor((j.x + 1) / T);
+        const x1 = Math.floor((j.x + L - 1) / T);
+        for (let ty = Math.floor(j.y / T); ty <= Math.floor((j.y + A) / T); ty++) {
+            for (let tx = x0; tx <= x1; tx++) if (tileEm(mundo.nivel, tx, ty) === 'w') return true;
+        }
+        return false;
+    }
+
+    /** Queda de Bigorna: prepara no ar, desce reto e quebra grades de bueiro. */
+    function passoMergulho(mundo, j, dt, t, ev) {
+        j.mergulhoT += dt;
+        j.vx = 0;
+        if (j.mergulhoT < CONFIG.mergulhoPrep) { j.vy = 0; return ev; }
+        j.vy = CONFIG.mergulhoVelocidade;
+        const dy = j.vy * dt;
+        const ty = Math.floor((j.y + A + dy) / T);
+        for (let tx = Math.floor((j.x + 0.5) / T); tx <= Math.floor((j.x + L - 0.5) / T); tx++) {
+            if (tileEm(mundo.nivel, tx, ty) === 'G' && quebrarBloco(mundo, tx, ty)) ev.push('grade');
+        }
+        j.noChao = false;
+        const pouso = moverY(mundo, j, dy, t + dt);
+        if (!pouso) return ev;
+        j.estado = 'normal';
+        j.mergulhoT = 0;
+        j.atordoado = CONFIG.mergulhoPouso;
+        renovarAr(j);
+        ev.push('pousoMergulho');
+        if (pouso.c === 'T') {
+            j.vy = CONFIG.molaImpulso;
+            j.noChao = false;
+            j.semCorte = true;
+            j.atordoado = 0;
+            ev.push('mola');
+        } else if (pouso.c === 'Q' && mundo.pisarTelha) mundo.pisarTelha(pouso.tx, pouso.ty);
+        return ev;
+    }
+
+    /** Buzz!: super-dash reto até bater; parede de vidro estilhaça e ele segue. */
+    function passoBuzz(mundo, j, e, dt, t, ev) {
+        j.buzzT += dt;
+        j.vy = 0;
+        if (j.buzzT > 0.08 && (e.puloPedido || e.dashPedido)) {
+            // Cancelou no meio do caminho: cai dali.
+            j.estado = 'normal';
+            j.vx = j.dashLado * CONFIG.velocidadeMax * 0.5;
+            j.antecipado = 0;
+            ev.push('buzzFim');
+            return ev;
+        }
+        const bateu = moverX(mundo, j, j.dashLado * CONFIG.buzzVelocidade * dt);
+        if (bateu) {
+            const tx = j.dashLado > 0 ? Math.floor((j.x + L + 1) / T) : Math.floor((j.x - 1) / T);
+            let vidro = false;
+            for (let ty = Math.floor((j.y + 0.5) / T); ty <= Math.floor((j.y + A - 0.5) / T); ty++) {
+                if (tileEm(mundo.nivel, tx, ty) === 'Y' && quebrarBloco(mundo, tx, ty)) vidro = true;
+            }
+            if (vidro) { ev.push('vidro'); return ev; }
+        }
+        if (bateu || j.buzzT >= CONFIG.buzzMax) {
+            j.estado = 'normal';
+            j.vx = 0;
+            j.dashRecarga = CONFIG.dashRecarga;
+            if (bateu) { j.atordoado = 0.2; ev.push('buzzBateu'); } else ev.push('buzzFim');
+        }
+        j.noChao = apoiado(mundo, j, t);
+        return ev;
+    }
+
     /**
      * Um passo de física do Degustador.
-     * entrada: { esquerda, direita, cima, baixo, pulo, puloPedido, dashPedido }.
-     * mundo.habilidades: Set com 'dash', 'parede', 'pulo2'…
-     * Devolve os acontecimentos do passo ('pulo', 'pulo2', 'parede', 'dash', 'mola', 'grudou').
+     * entrada: { esquerda, direita, cima, baixo, pulo, puloPedido, dash, dashPedido }.
+     * mundo.habilidades: Set com 'dash', 'parede', 'pulo2', 'bigorna', 'pipa', 'buzz'…
+     * mundo.tenis: pula mais alto (figurinha Tênis de Mola).
+     * Devolve os acontecimentos do passo ('pulo', 'pulo2', 'parede', 'dash', 'mola', 'grudou',
+     * 'mergulho', 'pousoMergulho', 'grade', 'carregando', 'buzz', 'vidro', 'planar'…).
      */
     function passoJogador(mundo, j, e, dt, t) {
         const ev = [];
@@ -463,6 +638,32 @@
         j.atordoado = Math.max(0, j.atordoado - dt);
         j.recuo = Math.max(0, j.recuo - dt);
         if (j.atordoado > 0) dir = 0;
+
+        if (j.estado === 'mergulho') return passoMergulho(mundo, j, dt, t, ev);
+        if (j.estado === 'buzz') return passoBuzz(mundo, j, e, dt, t, ev);
+        if (j.estado === 'carregando') {
+            j.vx = 0;
+            j.planando = false;
+            if (!e.dash || !apoiado(mundo, j, t)) {
+                const pronto = j.carga >= CONFIG.buzzCarga && !e.dash;
+                j.estado = 'normal';
+                j.carga = 0;
+                if (pronto) {
+                    j.estado = 'buzz';
+                    j.buzzT = 0;
+                    j.dashLado = dir || j.olhando;
+                    j.olhando = j.dashLado;
+                    ev.push('buzz');
+                    return ev;
+                }
+            } else {
+                j.carga += dt;
+                if (dir) j.olhando = dir;
+                j.vy = Math.min(j.vy + CONFIG.gravidade * dt, CONFIG.quedaMax);
+                moverY(mundo, j, j.vy * dt, t + dt);
+                return ev;
+            }
+        }
 
         if (j.estado === 'dash') {
             j.dashT -= dt;
@@ -514,7 +715,7 @@
                 j.antecipado = 0;
                 j.noChao = false;
             } else if (j.noChao || j.coiote > 0) {
-                j.vy = CONFIG.impulso;
+                j.vy = CONFIG.impulso * (mundo.tenis ? CONFIG.tenisImpulso : 1);
                 j.noChao = false;
                 j.coiote = 0;
                 j.antecipado = 0;
@@ -538,6 +739,27 @@
             j.noChao = false;
         }
 
+        // ↓ + dash: no ar, Queda de Bigorna; no chão, carrega o Buzz!.
+        if (e.dashPedido && e.baixo && !travado && j.atordoado <= 0) {
+            if (!j.noChao && hab.has('bigorna')) {
+                j.estado = 'mergulho';
+                j.mergulhoT = 0;
+                j.grudado = 0;
+                j.planando = false;
+                j.vx = 0;
+                j.vy = 0;
+                ev.push('mergulho');
+                return ev;
+            }
+            if (j.noChao && hab.has('buzz')) {
+                j.estado = 'carregando';
+                j.carga = 0;
+                j.vx = 0;
+                ev.push('carregando');
+                return ev;
+            }
+        }
+
         // Dash.
         if (e.dashPedido && hab.has('dash') && j.dashRecarga <= 0 && j.dashDisponivel && !travado && j.atordoado <= 0) {
             let lado = dir || j.olhando;
@@ -550,6 +772,15 @@
         if (j.vy >= 0) j.semCorte = false;
 
         j.vy = Math.min(j.vy + CONFIG.gravidade * dt, CONFIG.quedaMax);
+        // Pipa: segurando o pulo na queda, plana; na corrente de vento, sobe.
+        const planava = j.planando;
+        j.planando = hab.has('pipa') && !j.noChao && e.pulo && j.grudado === 0 && !travado && j.atordoado <= 0
+            && (j.vy > 0 || planava);
+        if (j.planando) {
+            if (noVento(mundo, j)) j.vy = Math.max(CONFIG.ventoMax, j.vy - (CONFIG.ventoForca + CONFIG.gravidade) * dt);
+            else if (j.vy > CONFIG.planarQueda) j.vy = Math.max(CONFIG.planarQueda, j.vy - CONFIG.gravidade * 3 * dt);
+            if (!planava) ev.push('planar');
+        }
         if (podeParede && !j.noChao && j.parede !== 0 && (dir === j.parede || j.grudado === j.parede) && j.vy > CONFIG.quedaParede) j.vy = CONFIG.quedaParede;
 
         if (j.plataforma >= 0) {
@@ -637,6 +868,7 @@
                 const k = tileEm(nivel, tx, ty);
                 if (k === '^' && colide(c, tileInteiro ? { x: tx * T, y: ty * T, w: T, h: T } : { x: tx * T + 2, y: ty * T + 9, w: T - 4, h: T - 9 })) return 'espinho';
                 if (k === 'v' && colide(c, tileInteiro ? { x: tx * T, y: ty * T, w: T, h: T } : { x: tx * T + 2, y: ty * T, w: T - 4, h: T - 9 })) return 'espinho';
+                if (k === '~' && colide(c, tileInteiro ? { x: tx * T, y: ty * T, w: T, h: T } : { x: tx * T, y: ty * T + 7, w: T, h: T - 7 })) return 'chorume';
             }
         }
         for (const s of nivel.serras) {
@@ -653,15 +885,14 @@
         return null;
     }
 
-    /** Caixa da coronhada. */
     /**
      * Área da coronhada. g.gx/g.gy é a direção (8 direções): frente, cima, baixo
      * e as diagonais. Para baixo no chão vira uma rasteira na altura dos pés.
      */
     function caixaGolpe(j, g) {
-        const R = CONFIG.golpeAlcance;
-        const gx = g.gx ?? (g.dir === 'frente' ? g.lado : 0);
-        const gy = g.gy ?? (g.dir === 'cima' ? -1 : g.dir === 'baixo' ? 1 : 0);
+        const R = CONFIG.golpeAlcance * (g.longo ? CONFIG.coronhaComprida : 1);
+        const gx = g.gx;
+        const gy = g.gy;
         if (gx === 0 && gy < 0) return { x: j.x - 9, y: j.y - R, w: L + 18, h: R + 4 };
         if (gx === 0 && gy > 0) {
             if (g.noChao) return { x: j.x - 16, y: j.y + A - 16, w: L + 32, h: 20 };
@@ -683,8 +914,17 @@
             coletados: new Set(), quebrados: new Set(), abertos: new Set(), chefes: new Set(),
             visitadas: new Set(), banco: null, loja: new Set(), fugas: new Set(), sombra: null,
             tempo: 0, mortes: 0, final: false,
+            // Expansão: figurinhas (tem / no Álbum / quebradas), encaixes e cacos de copo.
+            figurinhas: new Set(), equipadas: [], quebradas: new Set(), encaixes: CONFIG.encaixesIniciais, copos: 0,
         };
     }
+
+    /** Figurinha no Álbum (equipada)? */
+    const usa = (jogo, id) => jogo.progresso.equipadas.includes(id);
+    /** Cogumelos máximos agora (o Cogumelo de Vidro dá +2 enquanto estiver no Álbum). */
+    const vidaTotal = (jogo) => jogo.progresso.vidaMax + (usa(jogo, 'vidro') ? 2 : 0);
+    /** Pontuação máxima: 99 + 33 por Copo de Requeijão completo. */
+    const pontuacaoTotal = (p) => CONFIG.pontuacaoMax + Math.floor(p.copos / CONFIG.pedacosPorCopo) * CONFIG.pontuacaoPorCopo;
 
     function mulberry32(a) {
         return function () {
@@ -730,13 +970,17 @@
         jogo.vidaParedes = new Map();
         jogo.eventos = [];
         jogo.fimEm = 0;
+        jogo.tempo = 0;
+        jogo.acumulado = 0;
+        jogo.faseT = 0;
+        jogo.pegou = null;
         const banco = bancoSalvo(jogo);
         if (banco) {
             posicionarNoBanco(jogo, banco);
             jogo.fase = 'sentado';
         } else {
             jogo.jogador = criarJogador(jogo.nivel.inicio);
-            jogo.jogador.vida = jogo.progresso.vidaMax;
+            jogo.jogador.vida = vidaTotal(jogo);
             entrarSala(jogo, jogo.nivel.salas[jogo.nivel.inicio.sala]);
             jogo.fase = 'jogando';
         }
@@ -746,7 +990,7 @@
 
     function posicionarNoBanco(jogo, banco) {
         const j = criarJogador({ x: banco.x + banco.w / 2 - L / 2, y: banco.y + banco.h - A });
-        j.vida = jogo.progresso.vidaMax;
+        j.vida = vidaTotal(jogo);
         jogo.jogador = j;
         jogo.sala = null;
         entrarSala(jogo, jogo.nivel.salas[banco.sala]);
@@ -760,6 +1004,13 @@
             abertos: jogo.progresso.abertos,
             arena: jogo.arena,
             habilidades: jogo.progresso.habilidades,
+            loja: jogo.progresso.loja,
+            tenis: usa(jogo, 'tenis'),
+            quebrar(id, tx, ty) {
+                jogo.progresso.quebrados.add(id);
+                const letra = jogo.nivel.gruposB.get(id)?.letra;
+                jogo.eventos.push({ tipo: letra === 'Y' ? 'vidroQuebrou' : 'gradeQuebrou', x: tx * T + T / 2, y: ty * T + T / 2 });
+            },
             pisarTelha(tx, ty) {
                 const k = `${tx},${ty}`;
                 if (!jogo.caidas.has(k)) jogo.caidas.set(k, { t: 0, caiu: false });
@@ -856,7 +1107,12 @@
                 }
                 return null;
             },
-            contar: (tipo) => jogo.inimigos.filter((i) => i.vivo && i.tipo === tipo).length + novos.filter((i) => i.tipo === tipo).length,
+            contar: (tipo) => {
+                let n = 0;
+                for (const i of jogo.inimigos) if (i.vivo && i.tipo === tipo) n++;
+                for (const i of novos) if (i.tipo === tipo) n++;
+                return n;
+            },
         };
     }
 
@@ -934,7 +1190,7 @@
             jogo.eventos.push({ tipo: 'sombraDerrotada', x, y, virgulas: valor });
             return;
         }
-        const valor = Inimigos.TIPOS[en.tipo].virgulas || 0;
+        const valor = (Inimigos.TIPOS[en.tipo].virgulas || 0) + (en.roubo || 0);
         p.virgulas += valor;
         if (en.chefe) {
             p.chefes.add(en.id);
@@ -975,6 +1231,12 @@
         jogo.fase = 'morto';
         jogo.faseT = 0;
         p.mortes++;
+        if (usa(jogo, 'vidro')) {
+            p.equipadas = p.equipadas.filter((f) => f !== 'vidro');
+            p.figurinhas.delete('vidro');
+            p.quebradas.add('vidro');
+            jogo.eventos.push({ tipo: 'figurinhaQuebrou', figurinha: 'vidro', x: j.x + L / 2, y: j.y });
+        }
         if (p.virgulas > 0) {
             p.sombra = { sala: jogo.sala.id, x: Math.max(jogo.sala.px.x + T, Math.min(j.x, jogo.sala.px.x + jogo.sala.px.w - 2 * T)), y: Math.max(jogo.sala.px.y + T, Math.min(j.y - 10, jogo.sala.px.y + jogo.sala.px.h - 3 * T)), virgulas: p.virgulas };
             p.virgulas = 0;
@@ -992,7 +1254,7 @@
             jogo.fase = 'sentado';
         } else {
             jogo.jogador = criarJogador(jogo.nivel.inicio);
-            jogo.jogador.vida = jogo.progresso.vidaMax;
+            jogo.jogador.vida = vidaTotal(jogo);
             jogo.sala = null;
             entrarSala(jogo, jogo.nivel.salas[jogo.nivel.inicio.sala]);
             jogo.fase = 'jogando';
@@ -1006,10 +1268,12 @@
         j.vx = 0;
         j.vy = 0;
         j.estado = 'normal';
-        j.vida = jogo.progresso.vidaMax;
+        j.vida = vidaTotal(jogo);
         jogo.progresso.banco = banco.id;
         jogo.mortos.clear();
         jogo.inimigos = inimigosDaSala(jogo, jogo.sala);
+        jogo.projeteis = [];
+        jogo.tiros = [];
         jogo.fase = 'sentado';
         jogo.eventos.push({ tipo: 'banco', id: banco.id, x: banco.x + banco.w / 2, y: banco.y });
     }
@@ -1024,12 +1288,13 @@
         const gx = gy === 0 ? lado : (h === 0 || (j.parede !== 0 && h === j.parede && !j.noChao) ? 0 : h);
         if (gx !== 0) lado = gx;
         const dir = gy === 0 ? 'frente' : gx === 0 ? (gy < 0 ? 'cima' : 'baixo') : (gy < 0 ? 'cimaDiag' : 'baixoDiag');
-        j.golpe = { dir, gx, gy, lado, noChao: j.noChao, t: 0, atingidos: new Set(), paredes: new Set(), pogou: false };
+        j.golpe = { dir, gx, gy, lado, noChao: j.noChao, longo: usa(jogo, 'coronha'), t: 0, atingidos: new Set(), paredes: new Set(), pogou: false };
         j.recargaGolpe = CONFIG.golpeRecarga;
         jogo.eventos.push({ tipo: 'golpe', dir, gx, gy, lado, x: j.x + L / 2, y: j.y + A / 2 });
     }
 
-    const danoGolpe = (jogo) => CONFIG.danoGolpe * (jogo.progresso.loja.has('fita') ? 2 : 1);
+    const danoGolpe = (jogo) => CONFIG.danoGolpe * (jogo.progresso.loja.has('fita') ? 2 : 1)
+        * (usa(jogo, 'pimenta') && jogo.jogador.vida === 1 ? 2 : 1);
 
     /** Janela ativa da coronhada: acerta inimigos, paredes rachadas, alavancas e faz pogo. */
     function atualizarGolpe(jogo, mundo, dt) {
@@ -1056,7 +1321,7 @@
                 continue;
             }
             ferirInimigo(jogo, en, danoGolpe(jogo), dx, dy, true);
-            j.pontuacao = Math.min(CONFIG.pontuacaoMax, j.pontuacao + CONFIG.pontuacaoPorGolpe);
+            j.pontuacao = Math.min(pontuacaoTotal(jogo.progresso), j.pontuacao + CONFIG.pontuacaoPorGolpe);
             if (quica) pogo = true;
             else if (g.gy === 0) { j.recuo = CONFIG.recuoTempo; j.recuoVx = -g.lado * CONFIG.recuoGolpe; }
         }
@@ -1179,12 +1444,24 @@
     function colisoesComInimigos(jogo) {
         const j = jogo.jogador;
         const cj = caixaPerigo(j);
+        // Mergulhando não leva dano; com a Capa Remendada, o dash também protege.
+        if (j.estado === 'mergulho' || (j.estado === 'dash' && usa(jogo, 'capa'))) return;
         for (const en of jogo.inimigos) {
             if (!en.vivo || en.intangivel) continue;
             if (en.chefe && jogo.arena == null) continue;
             const corpo = { x: en.x + 1, y: en.y + 1, w: en.w - 2, h: en.h - 2 };
-            if (colide(cj, corpo) || (en.ataque && colide(cj, en.ataque))) {
-                if (ferirJogador(jogo, en.dano, en.x + en.w / 2)) return;
+            if (en.dano > 0 && (colide(cj, corpo) || (en.ataque && colide(cj, en.ataque)))) {
+                if (ferirJogador(jogo, en.dano, en.x + en.w / 2)) {
+                    if (Inimigos.TIPOS[en.tipo].ladrao && !en.roubo && jogo.progresso.virgulas > 0) {
+                        // Golpista do Pix: leva vírgulas e foge; derrubado, devolve.
+                        en.roubo = Math.min(jogo.progresso.virgulas, 25);
+                        jogo.progresso.virgulas -= en.roubo;
+                        en.estado = 'fugir';
+                        en.t = 0;
+                        jogo.eventos.push({ tipo: 'roubo', x: en.x + en.w / 2, y: en.y, valor: en.roubo });
+                    }
+                    return;
+                }
             }
         }
         for (const p of jogo.projeteis) {
@@ -1214,16 +1491,23 @@
         const j = jogo.jogador;
         const p = jogo.progresso;
         const cj = caixa(j);
+        const ima = usa(jogo, 'ima');
+        const R = CONFIG.imaRaio;
+        const perto = { x: j.x - R, y: j.y - R, w: L + 2 * R, h: A + 2 * R };
         for (const it of jogo.nivel.itens) {
             if (it.sala !== jogo.sala.idx || p.coletados.has(it.id)) continue;
             if (it.premioDe && !p.chefes.has(it.premioDe)) continue;
-            if (!colide(cj, it)) continue;
+            if (!colide(cj, it) && !(ima && it.tipo === 'virgulas' && colide(perto, it))) continue;
             p.coletados.add(it.id);
             if (it.tipo === 'virgulas') {
                 p.virgulas += it.valor;
                 jogo.eventos.push({ tipo: 'virgulas', x: it.x + it.w / 2, y: it.y, valor: it.valor });
             } else if (it.tipo === 'fragmento') {
                 adicionarFragmento(jogo, it.x + it.w / 2, it.y);
+            } else if (it.tipo === 'copo') {
+                adicionarCopo(jogo, it.x + it.w / 2, it.y);
+            } else if (it.tipo === 'figurinha') {
+                ganharFigurinha(jogo, it.figurinha, it.x + it.w / 2, it.y);
             } else if (it.tipo === 'habilidade') {
                 p.habilidades.add(it.habilidade);
                 jogo.fase = 'pegou';
@@ -1235,13 +1519,54 @@
         }
     }
 
+    function adicionarCopo(jogo, x, y) {
+        const p = jogo.progresso;
+        p.copos = Math.min(CONFIG.copos * CONFIG.pedacosPorCopo, p.copos + 1);
+        const completo = p.copos % CONFIG.pedacosPorCopo === 0;
+        if (completo) jogo.jogador.pontuacao = pontuacaoTotal(p);
+        jogo.eventos.push({ tipo: completo ? 'copoCompleto' : 'copo', x, y, copos: p.copos });
+    }
+
+    function ganharFigurinha(jogo, id, x, y) {
+        const p = jogo.progresso;
+        p.figurinhas.add(id);
+        p.quebradas.delete(id);
+        jogo.eventos.push({ tipo: 'figurinha', figurinha: id, x, y });
+    }
+
+    /** Encaixes livres no Álbum (cada figurinha usa 1). */
+    const encaixesLivres = (p) => p.encaixes - p.equipadas.length;
+
+    /** Põe ou tira uma figurinha do Álbum (só com o Álbum aberto, no banco). 'ok', 'cheio', 'naoTem' ou 'longe'. */
+    function trocarFigurinha(jogo, id) {
+        const p = jogo.progresso;
+        if (jogo.fase !== 'album') return 'longe';
+        if (!p.figurinhas.has(id)) return 'naoTem';
+        const vidaAntes = vidaTotal(jogo);
+        if (p.equipadas.includes(id)) p.equipadas = p.equipadas.filter((f) => f !== id);
+        else if (encaixesLivres(p) <= 0) return 'cheio';
+        else p.equipadas = [...p.equipadas, id];
+        // No banco a vida fica cheia (o Cogumelo de Vidro entra ou sai junto).
+        if (vidaTotal(jogo) !== vidaAntes) jogo.jogador.vida = vidaTotal(jogo);
+        jogo.eventos.push({ tipo: 'album', figurinha: id, equipada: p.equipadas.includes(id) });
+        return 'ok';
+    }
+
+    /** Sentado no banco, abre o Álbum de figurinhas. */
+    function abrirAlbum(jogo) {
+        if (jogo.fase === 'sentado') { jogo.fase = 'album'; jogo.eventos.push({ tipo: 'abriuAlbum' }); }
+    }
+    function fecharAlbum(jogo) {
+        if (jogo.fase === 'album') jogo.fase = 'sentado';
+    }
+
     function adicionarFragmento(jogo, x, y) {
         const p = jogo.progresso;
         p.fragmentos++;
         if (p.fragmentos >= 4) {
             p.fragmentos -= 4;
             p.vidaMax = Math.min(CONFIG.vidaMaxima, p.vidaMax + 1);
-            jogo.jogador.vida = p.vidaMax;
+            jogo.jogador.vida = vidaTotal(jogo);
             jogo.eventos.push({ tipo: 'cogumeloNovo', x, y });
         } else {
             jogo.eventos.push({ tipo: 'fragmento', x, y, fragmentos: p.fragmentos });
@@ -1262,32 +1587,44 @@
         for (const l of jogo.nivel.lojas) {
             if (l.sala === jogo.sala.idx && colide(cj, zonaDeUso(l))) {
                 jogo.fase = 'loja';
-                jogo.eventos.push({ tipo: 'loja' });
+                jogo.vendedor = l.vendedor;
+                jogo.eventos.push({ tipo: 'loja', vendedor: l.vendedor });
                 return;
             }
         }
     }
 
-    /** Compra na loja: 'ok', 'caro' ou 'comprado'. */
+    /** O que a loja do vendedor mostra agora (itens "depois" de um chefe só aparecem depois dele). */
+    function itensDaLoja(jogo, vendedor = jogo.vendedor || 'italolol') {
+        const p = jogo.progresso;
+        return (LOJAS[vendedor] || []).filter((i) => (!i.depois || p.chefes.has(i.depois)) && (!i.repoe || p.quebradas.has(i.repoe)));
+    }
+
+    /** Compra na loja: 'ok', 'caro', 'comprado' ou 'inexistente'. */
     function comprar(jogo, id) {
         const p = jogo.progresso;
-        const item = LOJA.find((i) => i.id === id);
+        const item = itensDaLoja(jogo).find((i) => i.id === id);
         if (!item) return 'inexistente';
-        if (p.loja.has(id)) return 'comprado';
+        if (p.loja.has(id) && !item.repoe) return 'comprado';
         if (p.virgulas < item.preco) return 'caro';
         p.virgulas -= item.preco;
-        p.loja.add(id);
+        if (!item.repoe) p.loja.add(id);
+        const j = jogo.jogador;
         if (id === 'cogumelo') {
             p.vidaMax = Math.min(CONFIG.vidaMaxima, p.vidaMax + 1);
-            jogo.jogador.vida = p.vidaMax;
-            jogo.eventos.push({ tipo: 'cogumeloNovo', x: jogo.jogador.x + L / 2, y: jogo.jogador.y });
+            j.vida = vidaTotal(jogo);
+            jogo.eventos.push({ tipo: 'cogumeloNovo', x: j.x + L / 2, y: j.y });
         }
+        if (item.encaixe) p.encaixes = Math.min(CONFIG.encaixesMax, p.encaixes + 1);
+        if (item.copo) adicionarCopo(jogo, j.x + L / 2, j.y);
+        if (item.figurinha) ganharFigurinha(jogo, item.figurinha, j.x + L / 2, j.y);
+        if (item.repoe) ganharFigurinha(jogo, item.repoe, j.x + L / 2, j.y);
         jogo.eventos.push({ tipo: 'comprou', item: id });
         return 'ok';
     }
 
     function sairLoja(jogo) {
-        if (jogo.fase === 'loja') jogo.fase = 'jogando';
+        if (jogo.fase === 'loja') { jogo.fase = 'jogando'; jogo.vendedor = null; }
     }
 
     /** Fecha a tela de habilidade nova e volta ao jogo. */
@@ -1355,10 +1692,40 @@
             en.flash = Math.max(0, en.flash - dt);
             if (en.chefe && jogo.arena == null) continue;
             Inimigos.TIPOS[en.tipo].atualizar(en, c, dt);
-            if (!en.voa && en.y > jogo.nivel.alturaPx + 40) en.vivo = false;
+            if (!en.voa && en.y > jogo.nivel.alturaPx + 40) {
+                // Caiu fora do mundo: some como os derrotados, mas sem virgulas nem evento.
+                en.vivo = false;
+                if (en.id) jogo.mortos.add(en.id);
+            }
         }
         if (novos.length) jogo.inimigos.push(...novos);
         if (jogo.inimigos.length > 40) jogo.inimigos = jogo.inimigos.filter((e) => e.vivo);
+    }
+
+    /** Pouso da Queda de Bigorna: acerta quem estiver em volta dos pés. */
+    function impactoMergulho(jogo) {
+        const j = jogo.jogador;
+        const cx = j.x + L / 2;
+        const cy = j.y + A;
+        const R = CONFIG.mergulhoRaio;
+        for (const en of jogo.inimigos) {
+            if (!en.vivo || en.intangivel || (en.chefe && jogo.arena == null)) continue;
+            if (!colideCirculo(en, cx, cy - 8, R)) continue;
+            ferirInimigo(jogo, en, CONFIG.mergulhoDano * (usa(jogo, 'pimenta') && j.vida === 1 ? 2 : 1), Math.sign(en.x + en.w / 2 - cx) || 1, -1);
+        }
+        jogo.eventos.push({ tipo: 'impacto', x: cx, y: cy, forte: true, mergulho: true });
+    }
+
+    /** Buzz!: acerta uma vez cada inimigo que atravessar. */
+    function atropelarNoBuzz(jogo) {
+        const j = jogo.jogador;
+        const cj = caixa(j);
+        j.buzzAtingidos = j.buzzAtingidos || new Set();
+        for (const en of jogo.inimigos) {
+            if (!en.vivo || en.intangivel || j.buzzAtingidos.has(en) || (en.chefe && jogo.arena == null) || !colide(cj, en)) continue;
+            j.buzzAtingidos.add(en);
+            ferirInimigo(jogo, en, CONFIG.buzzDano, j.dashLado, 0);
+        }
     }
 
     /** Liga a arena quando o Degustador entra de vez na sala do chefe. */
@@ -1385,7 +1752,9 @@
 
     /** Um passo fixo da partida. */
     function passo(jogo, e, dt) {
-        jogo.tempo += dt;
+        // O relógio do mundo só corre com o Degustador em jogo: nas outras telas
+        // (sentado, perigo, morto…) as serras e plataformas móveis ficam paradas.
+        if (jogo.fase === 'jogando') jogo.tempo += dt;
         const j = jogo.jogador;
         if (jogo.fimEm && jogo.tempo >= jogo.fimEm && jogo.fase !== 'final') {
             jogo.fase = 'final';
@@ -1420,7 +1789,9 @@
                 return;
             case 'sentado':
                 jogo.progresso.tempo += dt;
-                if (e.esquerda || e.direita || e.puloPedido || e.baixo || e.golpePedido) {
+                if (e.cimaPedido) {
+                    abrirAlbum(jogo);
+                } else if (e.esquerda || e.direita || e.puloPedido || e.baixo || e.golpePedido) {
                     jogo.fase = 'jogando';
                     jogo.eventos.push({ tipo: 'levantou' });
                 }
@@ -1442,7 +1813,17 @@
 
         // Degustar: segurar para comer um lanche e curar 1 cogumelo.
         const tempoDegustar = jogo.progresso.loja.has('lanche') ? CONFIG.tempoDegustarRapido : CONFIG.tempoDegustar;
-        const podeDegustar = e.degustar && j.noChao && j.pontuacao >= CONFIG.custoMagia && j.vida < jogo.progresso.vidaMax
+        const coxinha = usa(jogo, 'coxinha');
+        const custoCura = coxinha ? CONFIG.custoCoxinha : CONFIG.custoMagia;
+        // Como no Hollow Knight, o dash interrompe a cura: perde a carga e só volta a curar
+        // depois de soltar e segurar a tecla de novo.
+        if (!e.degustar) j.soltarCura = false;
+        if (j.estado === 'degustando' && e.dashPedido && (hab.has('dash') || hab.has('buzz'))) {
+            j.estado = 'normal';
+            j.degustarT = 0;
+            j.soltarCura = true;
+        }
+        const podeDegustar = e.degustar && !j.soltarCura && j.noChao && j.pontuacao >= custoCura && j.vida < vidaTotal(jogo)
             && (j.estado === 'normal' || j.estado === 'degustando') && j.atordoado <= 0;
         if (podeDegustar) {
             if (j.estado !== 'degustando') jogo.eventos.push({ tipo: 'degustando', x: j.x + L / 2, y: j.y });
@@ -1450,9 +1831,10 @@
             j.degustarT += dt;
             if (j.degustarT >= tempoDegustar) {
                 j.degustarT = 0;
-                j.pontuacao -= CONFIG.custoMagia;
-                j.vida = Math.min(jogo.progresso.vidaMax, j.vida + 1);
-                jogo.eventos.push({ tipo: 'curou', x: j.x + L / 2, y: j.y });
+                j.pontuacao -= custoCura;
+                const vidaAntes = j.vida;
+                j.vida = Math.min(vidaTotal(jogo), j.vida + (coxinha ? 2 : 1));
+                jogo.eventos.push({ tipo: 'curou', x: j.x + L / 2, y: j.y, de: vidaAntes, ate: j.vida });
             }
         } else if (j.estado === 'degustando') {
             j.estado = 'normal';
@@ -1468,7 +1850,10 @@
 
         for (const tipo of passoJogador(mundo, j, e, dt, jogo.tempo - dt)) {
             jogo.eventos.push({ tipo, x: j.x + L / 2, y: j.y + A, lado: j.olhando });
+            if (tipo === 'pousoMergulho') impactoMergulho(jogo);
+            if (tipo === 'buzz') j.buzzAtingidos = new Set();
         }
+        if (j.estado === 'buzz') atropelarNoBuzz(jogo);
         const pogou = atualizarGolpe(jogo, mundo, dt);
         consumir(e);
 
@@ -1513,6 +1898,7 @@
             coletados: [...p.coletados], quebrados: [...p.quebrados], abertos: [...p.abertos], chefes: [...p.chefes],
             visitadas: [...p.visitadas], banco: p.banco, loja: [...p.loja], fugas: [...p.fugas], sombra: p.sombra,
             tempo: p.tempo, mortes: p.mortes, final: p.final,
+            figurinhas: [...p.figurinhas], equipadas: [...p.equipadas], quebradas: [...p.quebradas], encaixes: p.encaixes, copos: p.copos,
         };
     }
 
@@ -1536,6 +1922,11 @@
         p.tempo = Number(d.tempo) || 0;
         p.mortes = Number(d.mortes) || 0;
         p.final = !!d.final;
+        p.figurinhas = new Set(lista(d.figurinhas).filter((f) => f in FIGURINHAS));
+        p.encaixes = Math.max(CONFIG.encaixesIniciais, Math.min(CONFIG.encaixesMax, Number(d.encaixes) || CONFIG.encaixesIniciais));
+        p.equipadas = [...new Set(lista(d.equipadas).filter((f) => p.figurinhas.has(f)))].slice(0, p.encaixes);
+        p.quebradas = new Set(lista(d.quebradas).filter((f) => f in FIGURINHAS));
+        p.copos = Math.max(0, Math.min(CONFIG.copos * CONFIG.pedacosPorCopo, Math.floor(Number(d.copos) || 0)));
         return p;
     }
 
@@ -1543,6 +1934,8 @@
         CONFIG,
         HABILIDADES,
         LOJA,
+        LOJAS,
+        FIGURINHAS,
         LEGENDA,
         Inimigos,
         carregarMundo,
@@ -1564,7 +1957,15 @@
         passo,
         avancar,
         comprar,
+        itensDaLoja,
         sairLoja,
+        abrirAlbum,
+        fecharAlbum,
+        trocarFigurinha,
+        encaixesLivres,
+        usa,
+        vidaTotal,
+        pontuacaoTotal,
         zonaDeUso,
         continuar,
         ferirJogador,

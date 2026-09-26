@@ -17,6 +17,8 @@ module.exports = [
     )`,
     // Fala do balão na Ficha do Leitor (pública; null = fala sorteada do Enzo).
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS fala TEXT',
+    'CREATE INDEX IF NOT EXISTS idx_users_last_login ON users(last_login_at DESC)',
+    'CREATE INDEX IF NOT EXISTS idx_users_created ON users(created_at)',
     // id = HMAC-SHA256 do token do cookie: vazar o banco não entrega sessões.
     `CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,
@@ -25,6 +27,7 @@ module.exports = [
         created_at BIGINT NOT NULL
     )`,
     'CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)',
+    'CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)',
     // verified = passou pelo anti-cheat. Recordes trazidos do localStorage
     // (convidado) ficam com verified = false: contam no perfil, não no ranking.
     `CREATE TABLE IF NOT EXISTS game_scores (
@@ -39,6 +42,7 @@ module.exports = [
     )`,
     'CREATE INDEX IF NOT EXISTS idx_game_leaderboard ON game_scores(game_id, verified, score DESC)',
     'CREATE INDEX IF NOT EXISTS idx_user_best_score ON game_scores(user_id, game_id, score DESC)',
+    'CREATE INDEX IF NOT EXISTS idx_game_scores_created ON game_scores(created_at DESC)',
     `CREATE TABLE IF NOT EXISTS game_runs (
         run_token TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -47,6 +51,7 @@ module.exports = [
         expires_at BIGINT NOT NULL
     )`,
     'CREATE INDEX IF NOT EXISTS idx_game_runs_user ON game_runs(user_id, started_at)',
+    'CREATE INDEX IF NOT EXISTS idx_game_runs_expires ON game_runs(expires_at)',
     `CREATE TABLE IF NOT EXISTS reading_progress (
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         comic_id TEXT NOT NULL,

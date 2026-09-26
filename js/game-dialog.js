@@ -73,17 +73,20 @@
             if (typeof fn === 'function') callbacksFechar.push(fn);
         }
 
+        const aoRedimensionar = () => { if (dialog.open) ajustarTamanho(); };
         dialog.querySelector('.game-close').addEventListener('click', () => dialog.close());
         dialog.addEventListener('close', () => {
+            if (dialog.open) return;   // o evento close chega depois de um abrir() imediato
             document.body.classList.remove('game-dialog-open');
+            window.removeEventListener('resize', aoRedimensionar);
+            dialog.remove();
             for (const fn of callbacksFechar) fn();
-        });
-        window.addEventListener('resize', () => {
-            if (dialog.open) ajustarTamanho();
         });
 
         function abrir() {
             if (dialog.open) return;
+            document.body.appendChild(dialog);
+            window.addEventListener('resize', aoRedimensionar);
             ajustarTamanho();
             document.body.classList.add('game-dialog-open');
             dialog.showModal();

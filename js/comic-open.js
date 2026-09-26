@@ -52,10 +52,12 @@
         const limit = new Promise((resolve) => setTimeout(resolve, 3000));
         // A marca só é gravada se a animação começou: sem ela o leitor abre na capa.
         const started = animate(options);
-        return Promise.race([started, limit]).then(() => {
-            if (!running) return;
-            try { sessionStorage.setItem(ENTER_FLAG, '1'); } catch { /* modo privado: só perde a entrada suave */ }
-        });
+        return Promise.race([started, limit])
+            .then(() => {
+                if (!running) return;
+                try { sessionStorage.setItem(ENTER_FLAG, '1'); } catch { /* modo privado: só perde a entrada suave */ }
+            })
+            .finally(() => { running = false; }); // sem isso um clique depois da animação ficaria preso
     }
 
     async function animate({ source, coverSrc, coverSource, pageSrc }) {

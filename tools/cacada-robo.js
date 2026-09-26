@@ -4,9 +4,11 @@
 // (js/cacada-core.js) e só as habilidades informadas. Se acha, o caminho
 // existe. Usado por test/cacada-robo.test.js.
 //
-// Considera espinhos, serras (paradas e andando), plataformas móveis, molas,
-// telhas que desabam e portões fechados. Ignora inimigos (dá para bater neles)
-// e não quebra paredes rachadas (segredos são opcionais).
+// Considera espinhos, chorume, serras (paradas e andando), plataformas móveis,
+// molas, telhas que desabam, portões fechados, a tampa do bueiro (opção `loja`),
+// grades (quebra com a Queda de Bigorna), vidro (quebra com o Buzz!) e vento
+// (sobe planando com a Pipa). Ignora inimigos (dá para bater neles) e não
+// quebra paredes rachadas (segredos são opcionais).
 //
 // Uso: node tools/cacada-robo.js   (confere as etapas de ETAPAS)
 // ============================================================================
@@ -23,6 +25,8 @@ const ACOES = [];
 for (const dir of [-1, 0, 1]) for (const pulo of [0, 1, 2]) ACOES.push({ dir, pulo });
 ACOES.push({ dir: 0, pulo: 0, baixo: true }, { dir: 0, pulo: 0, cima: true }, { dir: 1, pulo: 0, cima: true }, { dir: -1, pulo: 0, cima: true });
 ACOES.push({ dir: -1, pulo: 2, dash: true }, { dir: 1, pulo: 2, dash: true });
+// ↓ + dash: no ar mergulha (Queda de Bigorna); no chão carrega o Buzz! (solta com outra ação).
+ACOES.push({ dir: 0, pulo: 0, baixo: true, dash: true, especial: true });
 
 function entradaDe(a, primeiro) {
     return {
@@ -32,6 +36,7 @@ function entradaDe(a, primeiro) {
         baixo: !!a.baixo,
         pulo: a.pulo > 0,
         puloPedido: a.pulo === 1 && primeiro,
+        dash: !!a.dash,
         dashPedido: !!a.dash && primeiro,
     };
 }
@@ -134,7 +139,9 @@ function campoDeDistancia(nivel, mundo, r, habilidades) {
     const parede = habilidades.has('parede');
     const alcance = habilidades.has('pulo2') ? 8 : 5;
     const comGravidade = !!habilidades.gravidade;
-    const podeSubirPara = (x, y) => !comGravidade || altura[y * W + x] <= alcance || (parede && (apoio(x - 1, y) || apoio(x + 1, y)));
+    const pipa = habilidades.has('pipa');
+    const podeSubirPara = (x, y) => !comGravidade || altura[y * W + x] <= alcance || (parede && (apoio(x - 1, y) || apoio(x + 1, y)))
+        || (pipa && C.tileEm(nivel, x, y) === 'w');
     const dist = new Int32Array(W * H).fill(-1);
     const fila = [];
     for (let ty = Math.floor(r.y / T); ty <= Math.floor((r.y + r.h) / T); ty++) {
@@ -154,7 +161,7 @@ function campoDeDistancia(nivel, mundo, r, habilidades) {
             const ny = y + oy;
             if (!vazio(nx, ny)) continue;
             const tn = C.tileEm(nivel, nx, ny);
-            if (tn === '^' || tn === 'v') continue;
+            if (tn === '^' || tn === 'v' || tn === '~') continue;
             const nk = ny * W + nx;
             if (dist[nk] !== -1) continue;
             if (oy === 1 && !podeSubirPara(x, y)) continue; // de baixo para cima
@@ -175,23 +182,32 @@ function resolver(def, de, ate, opcoes = {}) {
     const nivel = opcoes.nivel || C.carregarMundo(def);
     const habilidades = new Set(opcoes.habilidades || []);
     const permitidas = opcoes.salas ? new Set(opcoes.salas.map((id) => nivel.salaPorId.get(id).idx)) : null;
-    const base = { nivel, habilidades, abertos: new Set(opcoes.abertos || []), quebrados: new Set(), arena: null };
+    const base = { nivel, habilidades, abertos: new Set(opcoes.abertos || []), quebrados: new Set(), arena: null, loja: new Set(opcoes.loja || []) };
     const destino = typeof ate === 'string' ? alvo(nivel, ate) : ate;
     const partida = typeof de === 'string' ? ponto(nivel, de) : de;
-    const campo = campoDeDistancia(nivel, base, destino, Object.assign(new Set(habilidades), { gravidade: !!opcoes.gravidade }));
+    // O campo que guia a busca já trata grade/vidro que dá para quebrar como passagem.
+    const quebraveis = new Set();
+    for (const g of nivel.gruposB.values()) {
+        if ((g.letra === 'G' && habilidades.has('bigorna')) || (g.letra === 'Y' && habilidades.has('buzz'))) quebraveis.add(g.id);
+    }
+    const campo = campoDeDistancia(nivel, { ...base, quebrados: quebraveis }, destino, Object.assign(new Set(habilidades), { gravidade: !!opcoes.gravidade }));
     const W = nivel.largura;
     const limite = opcoes.limite || 1500000;
     const ciclo = Math.round(CONFIG.periodo * 4);
+    // Carga do Buzz! contada em ações (cada uma soma 1/15 s): arredondar em décimos juntava
+    // duas ações seguidas na mesma chave e a carga nunca chegava ao ponto de soltar.
+    const TEMPO_ACAO = QUADROS_POR_ACAO * CONFIG.passo;
+    const CARGA_MAX = Math.ceil(CONFIG.buzzCarga / TEMPO_ACAO) + 1; // +1: a soma em float pode ficar um tiquinho abaixo
 
     const j0 = C.criarJogador(partida);
-    const inicio = { j: j0, t: 0, telhas: null, pai: null, acao: -1 };
+    const inicio = { j: j0, t: 0, telhas: null, quebrados: null, pai: null, acao: -1 };
     const fila = new Fila();
     const vistos = new Set();
     const chave = (n) => {
         const j = n.j;
         const sala = nivel.salas[C.salaEm(nivel, j.x + 7, j.y + 13)];
         const fase = sala && sala.temDinamicos ? Math.floor(((n.t % CONFIG.periodo) / CONFIG.periodo) * ciclo) : 0;
-        return `${Math.round(j.x / 3)},${Math.round(j.y / 3)},${Math.round(j.vx / 40)},${Math.round(j.vy / 60)},${j.estado[0]}${j.estado[1]},${j.noChao ? 1 : 0},${j.parede},${j.trava > 0 ? 1 : 0},${j.dashDisponivel ? 1 : 0}${j.puloDuploUsado ? 1 : 0}${j.dashRecarga > 0 ? 1 : 0},${fase},${n.telhas ? n.telhas.size : 0}`;
+        return `${Math.round(j.x / 3)},${Math.round(j.y / 3)},${Math.round(j.vx / 40)},${Math.round(j.vy / 60)},${j.estado[0]}${j.estado[1]},${j.noChao ? 1 : 0},${j.parede},${j.trava > 0 ? 1 : 0},${j.dashDisponivel ? 1 : 0}${j.puloDuploUsado ? 1 : 0}${j.dashRecarga > 0 ? 1 : 0},${fase},${n.telhas ? n.telhas.size : 0},${n.quebrados ? n.quebrados.size : 0},${Math.min(CARGA_MAX, Math.round(j.carga / TEMPO_ACAO))}${j.planando ? 1 : 0}${j.atordoado > 0 ? 1 : 0}`;
     };
     const custo = (n) => {
         const j = n.j;
@@ -209,14 +225,17 @@ function resolver(def, de, ate, opcoes = {}) {
         nos++;
         for (let ai = 0; ai < ACOES.length; ai++) {
             const a = ACOES[ai];
-            if (a.dash && !habilidades.has('dash')) continue;
+            if (a.especial ? !habilidades.has('bigorna') && !habilidades.has('buzz') : a.dash && !habilidades.has('dash')) continue;
             const j = C.clonarJogador(n.j);
             let t = n.t;
             const telhas = n.telhas ? new Map(n.telhas) : new Map();
+            const quebrados = n.quebrados ? new Set(n.quebrados) : new Set();
             const mundo = {
                 ...base,
+                quebrados,
                 caidas: new Map(),
                 pisarTelha(tx, ty) { const k = `${tx},${ty}`; if (!telhas.has(k)) telhas.set(k, t); },
+                quebrar(id) { quebrados.add(id); },
             };
             let morreu = false;
             let venceu = false;
@@ -229,7 +248,7 @@ function resolver(def, de, ate, opcoes = {}) {
             }
             if (morreu) continue;
             if (permitidas && !permitidas.has(C.salaEm(nivel, j.x + CONFIG.jogadorL / 2, j.y + CONFIG.jogadorA / 2))) continue;
-            const filho = { j, t, telhas: telhas.size ? telhas : null, pai: n, acao: ai };
+            const filho = { j, t, telhas: telhas.size ? telhas : null, quebrados: quebrados.size ? quebrados : null, pai: n, acao: ai };
             if (venceu) {
                 const acoes = [];
                 for (let p = filho; p.pai; p = p.pai) acoes.push(p.acao);
@@ -246,6 +265,44 @@ function resolver(def, de, ate, opcoes = {}) {
 }
 
 /**
+ * Prova por túnel: existe alguma sequência de tiles vazios (de lado, para cima ou para
+ * baixo) ligando `de` até `ate`, só dentro das `salas`? Ignora física, espinhos e o
+ * tamanho do Degustador (que tem 2 tiles de altura), então é mais generosa que o jogo:
+ * se nem ela passa, nenhum jeito de se mexer passa. Serve para travas que são parede
+ * (tampa do bueiro, grade, vidro), em salas grandes demais para a busca do robô esgotar.
+ */
+function temTunel(def, de, ate, opcoes = {}) {
+    const nivel = opcoes.nivel || C.carregarMundo(def);
+    const habilidades = new Set(opcoes.habilidades || []);
+    const quebrados = new Set();
+    for (const g of nivel.gruposB.values()) {
+        if ((g.letra === 'G' && habilidades.has('bigorna')) || (g.letra === 'Y' && habilidades.has('buzz'))) quebrados.add(g.id);
+    }
+    const mundo = { nivel, habilidades, abertos: new Set(opcoes.abertos || []), quebrados, arena: null, loja: new Set(opcoes.loja || []) };
+    const permitidas = new Set(opcoes.salas.map((id) => nivel.salaPorId.get(id).idx));
+    const W = nivel.largura;
+    const livre = (x, y) => x >= 0 && y >= 0 && x < W && y < nivel.altura
+        && permitidas.has(nivel.salaIdx[y * W + x]) && !C.solido(mundo, x, y);
+    const p = typeof de === 'string' ? ponto(nivel, de) : de;
+    const destino = typeof ate === 'string' ? alvo(nivel, ate) : ate;
+    const x0 = Math.floor((p.x + CONFIG.jogadorL / 2) / T);
+    const y0 = Math.floor((p.y + CONFIG.jogadorA - 1) / T);
+    const visto = new Uint8Array(W * nivel.altura);
+    const fila = [[x0, y0]];
+    visto[y0 * W + x0] = 1;
+    for (let i = 0; i < fila.length; i++) {
+        const [x, y] = fila[i];
+        if (C.colide({ x: x * T, y: y * T, w: T, h: T }, destino)) return true;
+        for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+            if (!livre(nx, ny) || visto[ny * W + nx]) continue;
+            visto[ny * W + nx] = 1;
+            fila.push([nx, ny]);
+        }
+    }
+    return false;
+}
+
+/**
  * Etapas da progressão: cada uma diz de onde a onde o jogador precisa
  * conseguir ir com as habilidades que já tem naquele momento.
  */
@@ -255,16 +312,47 @@ const ETAPAS = [
     { nome: 'Capa Janky → Luvas de Fita (Poço)', de: 'arena:chefe', ate: 'poco:habilidade1', habilidades: ['rajada', 'dash'] },
     { nome: 'Luvas → Parênteses', de: 'poco:habilidade1', ate: 'parenteses:habilidade1', habilidades: ['rajada', 'dash', 'parede'] },
     { nome: 'Parênteses → Covil (chefe final)', de: 'parenteses:habilidade1', ate: 'covil:chefe', habilidades: ['rajada', 'dash', 'parede', 'pulo2'] },
+    // Expansão (a Chave do Bueiro sai na loja do ItaloLOL depois do Capanga-Mor).
+    { nome: 'Beco → Trono do Ratão (Esgoto, com a Chave)', de: 'beco:banco1', ate: 'trono:chefe', habilidades: ['rajada', 'dash'], loja: ['chave'] },
+    { nome: 'Queda de Bigorna → volta do Esgoto ao Beco', de: 'trono:chefe', ate: 'beco:banco1', habilidades: ['rajada', 'dash', 'bigorna'], loja: ['chave'] },
+    { nome: 'Queda de Bigorna → Palco do Coach (Feira)', de: 'esconderijo:banco1', ate: 'palco:chefe', habilidades: ['rajada', 'dash', 'bigorna'] },
+    { nome: 'Pipa → volta da Feira aos Telhados', de: 'palco:chefe', ate: 'sala:telhados', habilidades: ['rajada', 'dash', 'bigorna', 'pipa'] },
+    { nome: 'Pipa → Salão da Scrapeira (Orkut)', de: 'parenteses:habilidade1', ate: 'salao:chefe', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna', 'pipa'] },
+    { nome: 'Buzz! → volta do Salão às Comunidades', de: 'salao:chefe', ate: 'comunidades:banco1', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna', 'pipa', 'buzz'] },
+    { nome: 'Comunidades → Parênteses (vento do Portal)', de: 'comunidades:banco1', ate: 'sala:parenteses', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna', 'pipa', 'buzz'] },
+    { nome: 'Buzz! → Servidor Esquecido (chefe secreto)', de: 'alto:banco1', ate: 'servidor:chefe', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna', 'pipa', 'buzz'] },
 ];
 
-/** Portões de habilidade: sem ela, não passa (a busca esgota sem achar). */
+/**
+ * Portões de habilidade: sem ela, não passa. As de física pedem que a busca esgote sem
+ * achar; as de parede (`tunel`) pedem que nem um túnel de tiles ligue os dois lados, e
+ * que com o que está em `com` o túnel apareça (prova que a parede é a trava).
+ */
 const BLOQUEIOS = [
     { nome: 'sem dash não atravessa o vão do Beco', de: 'beco:banco1', ate: 'sala:esteira', habilidades: ['rajada'], salas: ['beco', 'esteira'] },
     { nome: 'sem Luvas não sobe a chaminé da Fábrica', de: 'fabrica:banco1', ate: 'sala:chamine2', habilidades: ['rajada', 'dash'], salas: ['fabrica', 'chamine2'] },
     { nome: 'sem Parênteses não atravessa o Telhado Alto', de: 'alto:banco1', ate: 'sala:covil', habilidades: ['rajada', 'dash', 'parede'], salas: ['alto', 'covil'] },
+    { nome: 'sem a Chave do Bueiro não entra no Esgoto', de: 'beco:banco1', ate: 'sala:boca', habilidades: ['rajada', 'dash'], salas: ['beco', 'boca'], tunel: true, com: { loja: ['chave'] } },
+    { nome: 'sem Queda de Bigorna não entra na Feira', de: 'esconderijo:banco1', ate: 'sala:feira', habilidades: ['rajada', 'dash', 'parede', 'pulo2'], salas: ['esconderijo', 'telhados', 'feira'], tunel: true, com: { habilidades: ['bigorna'] } },
+    // Só o Portal: nos Parênteses (paredes, plataformas) a busca não esgota. Parte da beirada
+    // e do alto da passagem que vem dos Parênteses, com pulo duplo e dash ainda guardados.
+    // Cada partida esgota com uns 2,8 milhões de nós (uns 6 minutos).
+    { nome: 'sem Pipa não atravessa o Portal de Recados', de: [{ x: 5120 + 7 * T, y: 14 * T + 360 - CONFIG.jogadorA + T }, { x: 5120 + 2, y: 360 + 10 * T }], ate: 'sala:comunidades', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna'], salas: ['portal', 'comunidades'], limite: 4000000 },
+    { nome: 'sem Buzz! não entra no Servidor Esquecido', de: 'alto:banco1', ate: 'sala:servidor', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna', 'pipa'], salas: ['alto', 'covil', 'servidor'], tunel: true, com: { habilidades: ['buzz'] } },
 ];
 
-module.exports = { resolver, ponto, alvo, ACOES, QUADROS_POR_ACAO, entradaDe, ETAPAS, BLOQUEIOS };
+/** Roda a busca de cada ponto de partida de `b.de` (um id, um ponto ou uma lista). */
+function resolverDeVarios(def, b, nivel) {
+    let nos = 0;
+    for (const de of Array.isArray(b.de) ? b.de : [b.de]) {
+        const r = resolver(def, de, b.ate, { ...b, nivel });
+        nos += r.nos;
+        if (r.ok || !r.esgotou) return { ...r, nos };
+    }
+    return { ok: false, esgotou: true, nos };
+}
+
+module.exports = { resolver, resolverDeVarios, temTunel, ponto, alvo, ACOES, QUADROS_POR_ACAO, entradaDe, ETAPAS, BLOQUEIOS };
 
 if (require.main === module) {
     const M = require('../js/cacada-mundo.js');
@@ -276,7 +364,7 @@ if (require.main === module) {
     }
     for (const b of BLOQUEIOS) {
         const inicio = Date.now();
-        const r = resolver(M, b.de, b.ate, { ...b, nivel });
+        const r = b.tunel ? { ok: temTunel(M, b.de, b.ate, { ...b, nivel }), esgotou: true, nos: 0 } : resolverDeVarios(M, b, nivel);
         const certo = !r.ok && r.esgotou;
         console.log(`${certo ? 'OK ' : 'FALHOU'} bloqueio: ${b.nome} (${r.ok ? 'PASSOU!' : r.esgotou ? 'esgotou' : 'limite'}; ${r.nos} nós, ${((Date.now() - inicio) / 1000).toFixed(1)} s)`);
     }

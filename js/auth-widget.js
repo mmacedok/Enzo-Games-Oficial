@@ -397,7 +397,7 @@
                 const fala = el('span', `leitor-fala${leitor.fala ? '' : ' leitor-fala--vazia'}`, leitor.fala || '...');
                 const numeros = el('span', 'leitor-numeros');
                 const conquistas = el('span', '');
-                conquistas.append(icone('trofeu', '🏆'), ` ${leitor.conquistas}/${C?.LISTA.length ?? 0}`);
+                conquistas.append(icone('trofeu', '🏆'), ` ${leitor.conquistas}/${C.LISTA.length}`);
                 const secretos = el('span', '');
                 secretos.append(icone('enzo-secreto', '🐱'), ` ${leitor.secretos}/${C?.SECRETOS ?? 0}`);
                 numeros.append(conquistas, secretos);
@@ -632,8 +632,8 @@
         try {
             const { ok, dados } = await pedir('/api/games/session/submit', { runToken, score: pontos, metadata });
             if (ok && estado.dados) {
-                const atual = estado.dados.records[partida.jogo] || { best: 0, verifiedBest: 0 };
-                estado.dados.records[partida.jogo] = { best: Math.max(atual.best, dados.best), verifiedBest: Math.max(atual.verifiedBest, dados.best) };
+                const atual = estado.dados.records[partida.jogo] || { best: 0 };
+                estado.dados.records[partida.jogo] = { best: Math.max(atual.best, dados.best) };
             }
             return ok ? dados : { accepted: false, error: dados?.error || 'não foi possível salvar' };
         } catch {
