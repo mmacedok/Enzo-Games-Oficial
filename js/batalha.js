@@ -104,7 +104,6 @@
     let deckEscolhido = DECKS[0];
     let ocupado = false;
     let modo = null;            // { tipo: 'alvo', jogada, alvos, texto } | { tipo: 'aura' } | { tipo: 'preparar', ativo, banco }
-    let log = [];
     let partida = 0;            // muda a cada batalha: a vez do NPC antiga para sozinha
     let mesa = null;            // elementos fixos da mesa
     const cartasVivas = new Map();   // uid -> elemento .bt-carta (reaproveitado entre desenhos)
@@ -292,9 +291,9 @@
         NPC = 1;
         nivel = n;
         partida++;
+        depoisDaMoeda = null;
         const outros = DECKS.filter((d) => d !== deckEscolhido);
         const deckNpc = outros[Math.floor(Math.random() * outros.length)];
-        log = [];
         estado = R.criarPartida({
             semente: `${Date.now()}-${Math.random()}`,
             decks: [deckEscolhido.cartas, deckNpc.cartas],
@@ -453,20 +452,27 @@
         hp.classList.toggle('bt-hp--baixo', vida <= max * 0.3);
         hp.title = `${vida} de ${max} HP`;
         const auras = hud.querySelector('.bt-auras');
-        auras.replaceChildren(...Array.from({ length: inst.aura }, () => el('i', 'bt-aura-pip')));
+        if (auras.dataset.qtd !== String(inst.aura)) {
+            auras.dataset.qtd = String(inst.aura);
+            auras.replaceChildren(...Array.from({ length: inst.aura }, () => el('i', 'bt-aura-pip')));
+        }
         auras.title = `${inst.aura} Aura`;
         const est = hud.querySelector('.bt-estados');
         const icones = [];
         for (const k of ['notificado', 'iludido']) if (inst.estados[k]) icones.push(k);
-        if (R.silenciado(estado, inst) || inst.estados.silenciado >= estado.turno) icones.push('silenciado');
+        if (R.silenciado(estado, inst)) icones.push('silenciado');
         if (inst.escudo && inst.escudo.ate >= estado.turno) icones.push('escudo');
-        est.replaceChildren(...icones.map((k) => {
-            const img = arte(ARTE.estados[k]);
-            const i = el('i', `bt-estado bt-estado--${k}`, img ? '' : ESTADOS[k].icone);
-            if (img) i.style.backgroundImage = `url('${img}')`;
-            i.title = `${ESTADOS[k].nome}: ${ESTADOS[k].texto}`;
-            return i;
-        }));
+        const chave = icones.join(' ');
+        if (est.dataset.icones !== chave) {
+            est.dataset.icones = chave;
+            est.replaceChildren(...icones.map((k) => {
+                const img = arte(ARTE.estados[k]);
+                const i = el('i', `bt-estado bt-estado--${k}`, img ? '' : ESTADOS[k].icone);
+                if (img) i.style.backgroundImage = `url('${img}')`;
+                i.title = `${ESTADOS[k].nome}: ${ESTADOS[k].texto}`;
+                return i;
+            }));
+        }
         v.setAttribute('aria-label', `${nomeVisivel(inst.id)}: ${vida} de ${max} HP, ${inst.aura} Aura${icones.length ? `, ${icones.map((k) => ESTADOS[k].nome).join(', ')}` : ''}`);
     }
 
@@ -477,17 +483,43 @@
         return mapa;
     }
 
+    // No online o estado já é a visão do jogador; no local a visão (um clone) fica em cache
+    // enquanto o estado não muda.
+    let visaoLocal = null;
+    const visaoDoJogador = () => {
+        if (online) return estado;
+        if (visaoLocal?.estado !== estado) visaoLocal = { estado, visao: R.visaoDe(estado, EU) };
+        return visaoLocal.visao;
+    };
+
     function desenhar() {
         if (!mesa || !estado) return;
         const antes = posicoes();
-        const visao = R.visaoDe(estado, EU);
+        // A carta que fica no mesmo lugar dispensa a segunda medida do FLIP — desde que a vaga
+        // dela não tenha se mexido (a dica do centro, o relógio, a barra do lado mexem a mesa toda).
+        const lugarAntes = new Map();
+        const vasilhas = new Set();
+        for (const [uid, v] of cartasVivas) {
+            if (!v.parentElement) continue;
+            lugarAntes.set(uid, { pai: v.parentElement, i: Array.prototype.indexOf.call(v.parentElement.children, v) });
+            vasilhas.add(v.parentElement);
+        }
+        const caixasAntes = new Map([...vasilhas].map((el) => [el, el.getBoundingClientRect()]));
+        const maoAntes = [...mesa.mao.children].map((v) => v.dataset.uid).join();
+        const paradas = new Set();
+        const postos = new Map();
+        const visao = visaoDoJogador();
         const usados = new Set();
         const por = (inst, onde, lutando = true) => {
             const v = cartaViva(inst);
+            const era = lugarAntes.get(inst.uid);
+            const i = postos.get(onde) || 0;
+            postos.set(onde, i + 1);
             usados.add(inst.uid);
             atualizarHud(v, inst, lutando);
             v.className = 'bt-carta';
             onde.appendChild(v);
+            if (era?.pai === onde && era.i === i) paradas.add(inst.uid);
             return v;
         };
 
@@ -525,9 +557,13 @@
         // Mão do NPC (costas) e a sua.
         // Depois da Câmera do Drone Vigia, a mão do NPC fica virada para cima até o fim do seu turno.
         const espiada = espiadaVisivel();
-        mesa.maoNpc.replaceChildren(...(espiada
-            ? espiada.map((id) => UI.carta(id))
-            : Array.from({ length: visao.jogadores[NPC].mao }, () => UI.verso(''))));
+        const maoVirada = espiada ? `virada:${espiada.join()}` : `costas:${visao.jogadores[NPC].mao}`;
+        if (mesa.maoNpc.dataset.mao !== maoVirada) {
+            mesa.maoNpc.dataset.mao = maoVirada;
+            mesa.maoNpc.replaceChildren(...(espiada
+                ? espiada.map((id) => UI.carta(id))
+                : Array.from({ length: visao.jogadores[NPC].mao }, () => UI.verso(''))));
+        }
         mesa.maoNpc.classList.toggle('bt-mao--espiada', !!espiada);
         mesa.maoNpc.title = espiada ? `Mão de ${dele()} (Câmera): toque para ver` : '';
         mesa.mao.replaceChildren();
@@ -538,6 +574,8 @@
             v.style.setProperty('--i', i - (minhaMao.length - 1) / 2);
         });
         mesa.mao.style.setProperty('--n', minhaMao.length);
+        // Fila diferente = largura/sobreposição diferentes: todas as cartas da mão se mexem.
+        if (minhaMao.map((c) => c.uid).join() !== maoAntes) for (const c of minhaMao) paradas.delete(c.uid);
         // Mão cheia: as cartas se sobrepõem mais para caber na largura.
         const primeira = mesa.mao.firstElementChild;
         if (primeira && minhaMao.length > 1) {
@@ -551,19 +589,29 @@
 
         marcarPossiveis(preparando);
         atualizarAcoes(preparando);
-        flip(antes);
+        flip(antes, paradas, caixasAntes);
     }
 
     /** As cartas deslizam da posição antiga para a nova. */
-    function flip(antes) {
+    function flip(antes, paradas, caixasAntes) {
         if (semMovimento()) return;
+        // Mede de uma vez só, antes de qualquer animação: as cartas que mudaram e as vagas das paradas.
+        const depois = new Map();
+        for (const [uid, v] of cartasVivas) if (!paradas.has(uid)) depois.set(uid, v.getBoundingClientRect());
+        for (const [vasilha, caixa] of caixasAntes) {
+            const agora = vasilha.getBoundingClientRect();
+            if (Math.abs(agora.left - caixa.left) < 1 && Math.abs(agora.top - caixa.top) < 1
+                && Math.abs(agora.width - caixa.width) < 1 && Math.abs(agora.height - caixa.height) < 1) continue;
+            for (const [uid, v] of cartasVivas) if (v.parentElement === vasilha) depois.set(uid, v.getBoundingClientRect());
+        }
         for (const [uid, v] of cartasVivas) {
             const a = antes.get(uid);
             if (!a) {
                 animar(v, [{ opacity: 0, transform: 'translateY(20px) scale(.8)' }, { opacity: 1, transform: 'none' }], { duration: 260 });
                 continue;
             }
-            const b = v.getBoundingClientRect();
+            const b = depois.get(uid);
+            if (!b) continue;
             const dx = a.left - b.left;
             const dy = a.top - b.top;
             if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(a.width - b.width) < 1) continue;
@@ -907,6 +955,7 @@
 
     function apertar(e, alvo, origem) {
         if (e.button !== 0 || ocupado || !estado || !mesa) return;
+        if (arrasto) fimArrasto();   // dois toques ao mesmo tempo não deixam o fantasma do primeiro preso
         arrasto = { alvo, origem, x0: e.clientX, y0: e.clientY, id: e.pointerId, vivo: false };
         window.addEventListener('pointermove', moverArrasto);
         window.addEventListener('pointerup', soltarArrasto);
@@ -1073,6 +1122,7 @@
         if (estado && estado.fase !== 'fim' && !(await perguntar(aviso, 'Sair'))) return;
         pararOnline();
         estado = null;
+        depoisDaMoeda = null;
         partida++;
         telaMenu();
     }
@@ -1095,22 +1145,23 @@
         ocupado = true;
         fecharPainel();
         const antes = estado;
-        let r;
         try {
-            r = R.aplicar(estado, jogada);
-        } catch (err) {
+            let r;
+            try {
+                r = R.aplicar(estado, jogada);
+            } catch (err) {
+                balao(mesa.raiz, err.message, 'erro');
+                return;
+            }
+            estado = r.estado;
+            for (const ev of r.eventos) {
+                registrarEvento(ev, antes);
+                try { await tocar(ev, antes); } catch (err) { console.error(err); }
+            }
+        } finally {
             ocupado = false;
-            balao(mesa.raiz, err.message, 'erro');
             desenhar();
-            return;
         }
-        estado = r.estado;
-        for (const ev of r.eventos) {
-            registrarEvento(ev, antes);
-            try { await tocar(ev, antes); } catch (err) { console.error(err); }
-        }
-        ocupado = false;
-        desenhar();
     }
 
     /** NPC joga (e, no modo automático, o robô joga por você também). */
@@ -1160,12 +1211,17 @@
         }
     }
 
+    // O ouvinte de login da tela online fica guardado para ser desligado ao trocar de tela.
+    let pararAoMudar = null;
+
     function pararOnline() {
         if (online?.timer) clearTimeout(online.timer);
         if (online?.relogioTimer) clearInterval(online.relogioTimer);
         online = null;
         esperaSala?.parar();
         esperaSala = null;
+        pararAoMudar?.();
+        pararAoMudar = null;
     }
 
     let esperaSala = null;   // { parar } enquanto espera alguém entrar na sala
@@ -1198,7 +1254,7 @@
         if (situacao === 'login') {
             msg('Para jogar online, entre com a sua conta Google (é o mesmo login do site).');
             corpo.appendChild(botao('bt-botao bt-botao--forte', 'Entrar com Google', () => Conta()?.pedirLogin()));
-            const desligar = Conta()?.aoMudar?.(() => { if (Conta()?.usuario) { desligar?.(); telaOnline(); } });
+            pararAoMudar = Conta()?.aoMudar?.(() => { if (Conta()?.usuario) telaOnline(); }) || null;
             return;
         }
         let atual;
@@ -1325,7 +1381,7 @@
         EU = d.eu;
         NPC = 1 - d.eu;
         partida++;
-        log = [];
+        depoisDaMoeda = null;
         online = { id: d.id, versao: d.versao, prazo: d.prazo, dif: d.agora - Date.now(), timer: null, relogioTimer: null };
         estado = d.visao;
         montarMesa();
@@ -1446,8 +1502,6 @@
 
     // ---------------------------------------------------------------- histórico
     function registrar(texto) {
-        log.unshift(texto);
-        log = log.slice(0, 60);
         if (!mesa) return;
         const li = el('li', '', texto);
         mesa.log.prepend(li);
@@ -1504,8 +1558,9 @@
             { transform: 'translate(-50%, -110%) scale(1) rotate(-3deg)', opacity: 1, offset: 0.8 },
             { transform: 'translate(-50%, -140%) scale(.9)', opacity: 0 },
         ], { duration: 1100 });
-        fim.then(() => b.remove());
+        // sem animação a promessa resolve na hora: quem tira o balão da tela é o setTimeout.
         if (semMovimento()) setTimeout(() => b.remove(), 600);
+        else fim.then(() => b.remove());
         return fim;
     }
 
@@ -1521,8 +1576,8 @@
             { transform: 'translate(-50%, -120%) scale(1)', opacity: 1, offset: 0.75 },
             { transform: 'translate(-50%, -170%) scale(.9)', opacity: 0 },
         ], { duration: 1000 });
-        fim.then(() => n.remove());
         if (semMovimento()) setTimeout(() => n.remove(), 700);
+        else fim.then(() => n.remove());
     }
 
     function voar(de, para, classe, conteudo) {
@@ -1732,7 +1787,7 @@
         const promessas = [];
         for (let i = 0; i < n; i++) {
             const ang = (i / n) * Math.PI * 2 - Math.PI / 2;
-            promessas.push(peca(nome, alvo, {
+            promessas.push(peca(nome, c, {
                 ...opcoes,
                 dx: (opcoes.dx || 0) + Math.cos(ang) * (c.w || 100) * (opcoes.raio ?? 0.85),
                 dy: (opcoes.dy || 0) + Math.sin(ang) * (c.h || 60) * (opcoes.raio ?? 0.85),
@@ -1852,13 +1907,7 @@
                 await vooImg('fx-virgula', at, alvo, { tam: .7, arco: 140, girar: 2, dur: 460 });
                 await vooImg('fx-virgula', alvo, at, { tam: .7, arco: 140, girar: -2, dur: 380 });
             },
-            'Escudo de Parênteses': async (at, alvo) => {
-                const c = caixaDe(alvo);
-                await Promise.all([
-                    peca('fx-parentese', alvo, { tam: 1.1, alto: 1.7, dx: -c.w * .46, deDx: -c.w * .9, dur: 420 }),
-                    peca('fx-parentese', alvo, { tam: 1.1, alto: 1.7, dx: c.w * .46, deDx: c.w * .9, espelhar: true, dur: 420 }),
-                ]);
-            },
+            // O ataque de escudo não tem efeito próprio: os parênteses são do evento 'escudo'.
         },
         'o-inominavel': {
             'Bala Dourada': async (at, alvo) => {
@@ -2010,6 +2059,8 @@
         },
     };
 
+    const LIMITE_EFEITO = 1200;   // teto de espera do efeito próprio, para a fila não travar
+
     /**
      * O bote já rolou: agora o efeito próprio do ataque (e o joinha do banco, que é um poder
      * passivo e por isso não tem evento 'poder' — ele sai quando o dono ataca). No máximo ~1,2 s.
@@ -2021,7 +2072,7 @@
         const doBanco = stand && elDe(stand.uid) ? vooImg('fx-joinha', elDe(stand.uid), at, { tam: .45, dur: 420 }) : null;
         await Promise.race([
             Promise.all([proprio ? proprio(at, alvo, ev) : null, doBanco]),
-            esperar(1200),
+            esperar(LIMITE_EFEITO),
         ]);
     }
 
@@ -2158,10 +2209,11 @@
                 if (!alvo) break;
                 await balao(alvo, `✨ ${ev.nome}`, 'poder');
                 const proprio = EFEITOS_PODER[idDe(ev.uid)]?.[ev.nome];
-                if (proprio) await Promise.race([proprio(alvo, ativoDoOutro(ev.uid), ev), esperar(1200)]);
+                if (proprio) await Promise.race([proprio(alvo, ativoDoOutro(ev.uid), ev), esperar(LIMITE_EFEITO)]);
                 break;
             }
             case 'ataqueFalhou': {
+                depoisDaMoeda = null;
                 const alvo = elDe(ev.uid);
                 if (alvo) await balao(alvo, '💘 Iludido! Errou!', 'estado');
                 break;
@@ -2261,7 +2313,6 @@
         mesa.raiz.appendChild(caixa);
         animar(miolo, [{ transform: 'scale(.3) rotate(-10deg)', opacity: 0 }, { transform: 'scale(1.08) rotate(-2deg)', opacity: 1, offset: 0.7 }, { transform: 'none', opacity: 1 }], { duration: 600 });
         acoes.querySelector('button').focus({ preventScroll: true });
-        window.EnzoBatalha.ultimoResultado = { vencedor: v, motivo: estado.motivo, turno: estado.turno };
     }
 
     // ---------------------------------------------------------------- início
@@ -2273,7 +2324,6 @@
         jogar: (jogada) => executar(jogada),
         get ocupado() { return ocupado; },
         comecar, telaMenu, DECKS, ARTE,
-        ultimoResultado: null,
     };
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape' || !mesa) return;

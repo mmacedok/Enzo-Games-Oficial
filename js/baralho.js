@@ -50,9 +50,13 @@
     }
 
     // ------------------------------------------------------------ desenho da carta
+    /** Zonas com mola: o pointermove de lá mede uma vez e cuida do brilho da carta de dentro. */
+    const ZONAS = new WeakSet();
+
     /** Brilho que segue o mouse (foil do épico, reflexo do lendário). */
     function seguirMouse(elemento) {
         elemento.addEventListener('pointermove', (evento) => {
+            if (ZONAS.has(elemento.closest('.juice-balanca'))) return;
             const r = elemento.getBoundingClientRect();
             elemento.style.setProperty('--mx', `${(((evento.clientX - r.left) / r.width) * 100).toFixed(1)}%`);
             elemento.style.setProperty('--my', `${(((evento.clientY - r.top) / r.height) * 100).toFixed(1)}%`);
@@ -252,6 +256,7 @@
         };
         const mexer = () => { if (!quadro) quadro = requestAnimationFrame(passo); };
         if (!semMovimento()) {
+            ZONAS.add(zona);
             zona.addEventListener('pointermove', (evento) => {
                 const r = zona.getBoundingClientRect();
                 const nx = Math.max(-1, Math.min(1, ((evento.clientX - r.left) / r.width) * 2 - 1));
@@ -259,6 +264,12 @@
                 meta.ry = nx * forca;
                 meta.rx = -ny * forca;
                 meta.s = 1.07;
+                // O brilho da carta sob o ponteiro sai da mesma medida (um rect por evento).
+                const carta = evento.target?.closest?.('.carta-tcg');
+                if (carta) {
+                    carta.style.setProperty('--mx', `${(((evento.clientX - r.left) / r.width) * 100).toFixed(1)}%`);
+                    carta.style.setProperty('--my', `${(((evento.clientY - r.top) / r.height) * 100).toFixed(1)}%`);
+                }
                 mexer();
             });
             zona.addEventListener('pointerleave', () => { meta.rx = 0; meta.ry = 0; meta.s = 1; mexer(); });
@@ -398,9 +409,41 @@
         });
     }
 
+    /**
+     * Aviso na faixa do topo. Já mostra a mensagem sem redesenhar os quadros;
+     * no erro a aba inteira é redesenhada (a tela pode ter mudado no servidor).
+     */
     function avisar(texto, tipo = 'ok') {
         aviso = { texto, tipo };
-        desenhar();
+        mostrarAviso();
+        if (tipo === 'erro') desenhar();
+    }
+
+    /** Mostra (ou tira) a faixa de aviso sem tocar nos quadros. */
+    function mostrarAviso() {
+        const grade = area?.querySelector('.baralho-grade');
+        if (!grade) return;
+        const velha = grade.querySelector('.baralho-aviso');
+        if (!aviso) { velha?.remove(); return; }
+        const faixa = velha || el('p', 'baralho-aviso');
+        faixa.className = `baralho-aviso baralho-aviso--${aviso.tipo}`;
+        faixa.textContent = aviso.texto;
+        faixa.setAttribute('role', aviso.tipo === 'erro' ? 'alert' : 'status');
+        grade.prepend(faixa);
+    }
+
+    /** Os números da carteira, sem recriar o quadro. */
+    function atualizarCarteira() {
+        for (const moeda of ['creditos', 'po']) {
+            const alvo = area?.querySelector(`.baralho-moeda--${moeda} .ficha-estouro`);
+            if (alvo) alvo.textContent = numero(dados.carteira[moeda]);
+        }
+    }
+
+    /** Troca só um quadro da aba pelo recém-desenhado. */
+    function trocarQuadro(seletor, novo) {
+        const velho = area?.querySelector(seletor);
+        if (velho) velho.replaceWith(novo);
     }
 
     function quadroCarteira() {
@@ -562,15 +605,11 @@
     function desenhar() {
         if (!area || !dados) return;
         const grade = el('div', 'baralho-grade');
-        if (aviso) {
-            const faixa = el('p', `baralho-aviso baralho-aviso--${aviso.tipo}`, aviso.texto);
-            faixa.setAttribute('role', aviso.tipo === 'erro' ? 'alert' : 'status');
-            grade.appendChild(faixa);
-        }
         const batalha = el('a', 'baralho-batalha', '⚔️ Batalha dos Torados: jogar com as cartas');
         batalha.href = 'batalha.html';
         grade.append(batalha, quadroCarteira(), quadroInventario(), quadroLoja(), quadroFichario());
         area.replaceChildren(grade);
+        mostrarAviso();
     }
 
     async function carregar() {
@@ -601,6 +640,9 @@
         const { ok, dados: resposta } = await pedir('/api/baralho/comprar', { tipo: p.id, moeda });
         if (!ok) { avisar(resposta?.error ? `Não comprou: ${resposta.error}.` : 'Não deu para comprar agora.', 'erro'); return; }
         dados = resposta;
+        atualizarCarteira();
+        trocarQuadro('.quadro--inventario', quadroInventario());
+        trocarQuadro('.quadro--loja', quadroLoja());
         avisar(`${p.nome} foi para o inventário!`);
     }
 
@@ -609,6 +651,9 @@
         const { ok, dados: resposta } = await pedir('/api/baralho/po', corpo);
         if (!ok) { avisar(resposta?.error ? `Não transformou: ${resposta.error}.` : 'Não deu para transformar agora.', 'erro'); return; }
         dados = resposta;
+        atualizarCarteira();
+        trocarQuadro('.quadro--fichario', quadroFichario());
+        trocarQuadro('.quadro--loja', quadroLoja());
         avisar(`+${numero(resposta.ganhou)} de pó de estrela (${resposta.cartas} ${resposta.cartas === 1 ? 'carta' : 'cartas'}).`);
     }
 
@@ -701,7 +746,8 @@
         function mostrarPacote() {
             const p = abertos[atual];
             const def = B.pacote(p.tipo);
-            pintarFundo(def?.cores || ['#e65100', '#ff9900', '#1b1b1b']);
+            const cores = def?.cores || ['#e65100', '#ff9900', '#1b1b1b'];
+            pintarFundo(cores);
             titulo.textContent = def?.nome || 'Pacote';
             contador.textContent = abertos.length > 1 ? `Pacote ${atual + 1} de ${abertos.length}` : '';
             rodape.replaceChildren();
@@ -722,7 +768,7 @@
                 embrulho.classList.add('abertura-pacote--apertando');
                 await esperar(650);
                 // ...e estoura em papel picado.
-                confete(palco, [def.cores[1], def.cores[0], '#fff5d1', '#111111']);
+                confete(palco, [cores[1], cores[0], '#fff5d1', '#111111']);
                 tremer();
                 embrulho.classList.add('abertura-pacote--estourou');
                 await esperar(260);

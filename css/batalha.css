@@ -297,35 +297,24 @@
 .bt-carta:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .bt-carta .carta-tcg { pointer-events: none; }
 .bt-carta .carta-tcg-tarja { pointer-events: auto; }
-.bt-carta--pode { animation: bt-pode 1.4s ease-in-out infinite; }
-@keyframes bt-pode {
-    0%, 100% { box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.9), 0 0 10px rgba(255, 204, 0, 0.5); }
-    50% { box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.9), 0 0 22px rgba(255, 204, 0, 0.9); }
+/* O brilho da carta jogável vive num ::after e só a opacidade anima (o box-shadow fica parado). */
+.bt-carta--pode::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: 8px;
+    pointer-events: none;
+    box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.9), 0 0 22px rgba(255, 204, 0, 0.9);
+    animation: bt-pode 1.4s ease-in-out infinite;
 }
+@keyframes bt-pode { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 .bt-carta--alvo { cursor: crosshair; animation: bt-alvo 0.9s ease-in-out infinite; }
 @keyframes bt-alvo {
     0%, 100% { box-shadow: 0 0 0 3px #ff3b30, 0 0 12px #ff3b30; }
     50% { box-shadow: 0 0 0 5px #ff3b30, 0 0 26px #ff3b30; }
 }
 .bt-carta--apagada { filter: grayscale(0.8) brightness(0.6); cursor: not-allowed; }
-.bt-carta--ativo-escolhido, .bt-carta--banco-escolhido { transform: translateY(-14px); }
-.bt-carta--ativo-escolhido { box-shadow: 0 0 0 4px var(--orange), 0 0 20px var(--orange); }
-.bt-carta--banco-escolhido { box-shadow: 0 0 0 4px #4fc3f7, 0 0 16px #4fc3f7; }
-.bt-carta--ativo-escolhido::after, .bt-carta--banco-escolhido::after {
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    z-index: 3;
-    padding: 1px 6px;
-    font-family: var(--font-heading);
-    font-size: 0.75rem;
-    color: var(--ink);
-    border: 2px solid var(--ink);
-    border-radius: 4px;
-    transform: translateX(-50%);
-}
-.bt-carta--ativo-escolhido::after { content: 'ATIVO'; background: var(--orange); }
-.bt-carta--banco-escolhido::after { content: 'BANCO'; background: #4fc3f7; }
 .bt-carta--ferida .carta-tcg { filter: brightness(1.6) sepia(1) hue-rotate(-40deg) saturate(4); }
 .bt-carta--atacando { z-index: 20; }
 
@@ -759,7 +748,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-regras-texto p { margin: 0 0 8px; line-height: 1.35; }
 
 @media (prefers-reduced-motion: reduce) {
-    .bt-carta--pode, .bt-carta--alvo, .bt-aura--pronta .bt-orbe, .bt-confete { animation: none; }
+    .bt-carta--pode::after, .bt-carta--alvo, .bt-aura--pronta .bt-orbe, .bt-confete { animation: none; }
 }
 .bt-pergunta-texto { font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 0.5px; }
 

@@ -138,6 +138,8 @@ module.exports = [
         partida_id TEXT
     )`,
     'CREATE INDEX IF NOT EXISTS idx_tcg_salas_criador ON tcg_salas(criador)',
+    // A limpeza apaga por expira_em (api/tcg.js) e isso roda a cada sala/partida criada.
+    'CREATE INDEX IF NOT EXISTS idx_tcg_salas_expira ON tcg_salas(expira_em)',
     // estado = partida completa, com a sorte: NUNCA sai do servidor (o navegador recebe visaoDe).
     // versao sobe a cada jogada e trava duas jogadas ao mesmo tempo (UPDATE ... WHERE versao = ?).
     `CREATE TABLE IF NOT EXISTS tcg_partidas (
@@ -161,6 +163,8 @@ module.exports = [
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_a ON tcg_partidas(jogador_a, status)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_b ON tcg_partidas(jogador_b, status)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_criado ON tcg_partidas(criado_em)',
+    // A limpeza apaga as partidas terminadas por atualizado_em (api/tcg.js, limpar()).
+    'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_atualizado ON tcg_partidas(atualizado_em)',
     // n = versão da partida depois da jogada; eventos completos (filtrados por jogador na leitura).
     `CREATE TABLE IF NOT EXISTS tcg_jogadas (
         partida_id TEXT NOT NULL REFERENCES tcg_partidas(id) ON DELETE CASCADE,

@@ -19,7 +19,6 @@ const { HttpError } = require('./http.js');
 const admin = require('./admin.js');
 const Baralho = require('../js/baralho-dados.js');
 
-const MOEDAS = Object.freeze({ creditos: 'creditos', po: 'po' });
 const ID = /^[0-9a-z-]{1,64}$/i;
 
 /** Sorteador padrão: inteiro em [0, max). Os testes trocam por um previsível. */
@@ -159,7 +158,7 @@ const rotas = [
             const { tipo, moeda = 'creditos', quantidade } = await ctx.corpo();
             const p = Baralho.pacote(tipo);
             if (!p) throw new HttpError(400, 'pacote desconhecido');
-            const coluna = Object.hasOwn(MOEDAS, moeda) ? MOEDAS[moeda] : null;
+            const coluna = moeda === 'creditos' || moeda === 'po' ? moeda : null;
             if (!coluna) throw new HttpError(400, 'moeda: creditos ou po');
             if (!(p.preco[moeda] > 0)) throw new HttpError(400, `${p.nome} não se compra com ${moeda === 'po' ? 'pó' : 'créditos'}`);
             const n = lerQuantidade(quantidade);
