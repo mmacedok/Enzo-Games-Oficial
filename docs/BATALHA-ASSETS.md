@@ -184,6 +184,9 @@ grosso de gibi, cores chapadas e fortes, fundo transparente, sem texto.` + bloco
 ---
 
 ## Depois (fase 7): efeitos especiais por ataque
+> **Agora tem arquivo próprio: `docs/BATALHA-EFEITOS.md`** (40 imagens com prompts e quadros). A lista
+> abaixo foi a primeira ideia.
+
 Não precisa agora. Quando chegar a hora, cada ataque pode ganhar uma **sequência de 4 a 6 quadros**
 (PNG transparente, 512×512) que toca por cima do alvo. Candidatos:
 - **Macarronada a 300%** (Enzo Games): almôndegas em chamas caindo como meteoros.

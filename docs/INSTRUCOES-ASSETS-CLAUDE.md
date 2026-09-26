@@ -60,6 +60,18 @@ exemplo, duas mesas parecidas), pergunte antes de salvar.
 Imagens do torneio (`mapa-torneio`, `rival-*`, `caixa-herois`, `vitoria`...) são **para depois**
 (`docs/PLANO-BATALHA-COMPLETA.md`): se chegarem, salve com o nome do plano, mas o jogo ainda não usa.
 
+**Efeitos dos ataques** (fase 7): vão numa pasta própria, **`assets/Batalha/efeitos/`**, com os
+40 nomes `fx-*.png` listados em `docs/BATALHA-EFEITOS.md` (seção 6). Cuidados a mais:
+- Todos **transparentes**, sem contorno branco em volta do objeto.
+- **Folhas de quadros** (`fx-impacto`, `fx-poeira`, `fx-explosao-macarronada`, `fx-fumaca-roxa`,
+  `fx-chama-rosa`, `fx-rachadura`, `fx-glitch`): a largura tem que ser **4 vezes a altura**
+  (ex. 2048×512), com 4 quadros do mesmo tamanho e sem linhas entre eles. Se vier com outra proporção,
+  não corte nem estique: avise o Henrique. Se vierem os quadros separados (`fx-impacto-1.png` a
+  `-4.png`), salve assim mesmo, com esses nomes.
+- Confira o texto dos que têm letreiro (lista no fim da seção 6 do `BATALHA-EFEITOS.md`).
+- O jogo ainda **não usa** os efeitos (o código vem depois das imagens). Não precisa conferir na tela:
+  basta o build registrar (`grep -c "assets/Batalha/efeitos/" js/images.generated.js`).
+
 Qualquer outro nome o jogo **não usa** (a lista está em `js/batalha.js`, constante `ARTE`). Não
 invente nomes novos nem mude o código para aceitar outro nome.
 

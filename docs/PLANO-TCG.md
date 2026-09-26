@@ -224,7 +224,7 @@ animações (Web Animations API). O motor gera os eventos; uma **fila de animaç
 | 4 | **Montador de deck** (próximo; agora parte do plano em `docs/PLANO-BATALHA-COMPLETA.md`) | aba "Batalha" na Ficha: montar e salvar decks (todas as cartas liberadas), deck pronto para quem não quer montar | |
 | 5 | Tutorial | 1ª batalha guiada, passo a passo, contra o NPC fácil | |
 | 6 | Servidor e prêmios | rotas, semente, conferência da partida, créditos com limite diário, conquistas | |
-| 7 | Efeitos especiais | animação própria para cada ataque, fundos dos campos | |
+| 7 | Efeitos especiais | animação própria para cada ataque; **arte primeiro** (`docs/BATALHA-EFEITOS.md`), código depois | arte em andamento |
 | 8 | Contra outro jogador | desafiar pela ficha pública, batalha pelo servidor | depois |
 | 9 | Conteúdo novo | cartas de **Truque** (itens: Macarronada cura 30, Bala "Blasfêmia"...), cores de Aura e fraquezas | depois |
 
