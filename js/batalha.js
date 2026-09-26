@@ -1585,6 +1585,446 @@
         return fim.then(() => esperar(450)).then(() => caixa.remove());
     }
 
+    // ------------------------------------------------------- efeitos com imagem
+    // As imagens ficam em assets/Batalha/efeitos/ (a lista e onde cada uma aparece está em
+    // docs/EFEITOS-ONDE-VAO.md). Cada primitiva põe um <div class="bt-fx"> na camada dos
+    // efeitos, se mexe sozinha e sai da tela. Sem a imagem (arte() devolve null) ou com
+    // redução de movimento, a primitiva não faz nada e resolve na hora.
+    const fx = (nome) => arte(`assets/Batalha/efeitos/${nome}.png`);
+
+    /**
+     * Os 4 quadros de uma folha: as imagens soltas (`<nome>-1.png` ... `<nome>-4.png`) ou,
+     * se só existir a folha inteira (2048x512), a mesma URL marcada como folha — aí o
+     * recorte é feito com background-size 400% e background-position (ver o CSS).
+     */
+    function quadros(nome) {
+        const partes = [1, 2, 3, 4].map((i) => fx(`${nome}-${i}`));
+        if (partes.every(Boolean)) return { urls: partes, folha: false };
+        const inteira = fx(nome);
+        return inteira ? { urls: [inteira], folha: true } : null;
+    }
+
+    /** A caixa de um alvo: um elemento da mesa ou um ponto { x, y, w, h } já calculado. */
+    const caixaDe = (alvo) => (alvo && alvo.nodeType ? centro(alvo) : alvo);
+
+    /** Centralizado no ponto, com escala (espelhar troca de lado) e giro em graus. */
+    const tf = (espelhar, escala, giro, x, y) =>
+        `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${(espelhar ? -1 : 1) * escala}) rotate(${giro}deg)`;
+
+    /** Um <div class="bt-fx"> com a imagem, centrado no alvo. null se a imagem não existe. */
+    function divFx(url, alvo, opcoes = {}) {
+        const c = caixaDe(alvo);
+        if (!url || !c || !mesa) return null;
+        const lado = opcoes.lado || Math.max(24, (c.w || 100) * (opcoes.tam ?? 1));
+        const d = el('div', 'bt-fx');
+        d.style.width = `${lado}px`;
+        d.style.height = `${lado * (opcoes.alto ?? 1)}px`;
+        d.style.left = `${c.x + (opcoes.dx || 0)}px`;
+        d.style.top = `${c.y + (opcoes.dy || 0)}px`;
+        d.style.backgroundImage = `url('${url}')`;
+        if (opcoes.filtro) d.style.filter = opcoes.filtro;
+        mesa.efeitos.appendChild(d);
+        return d;
+    }
+
+    /**
+     * Uma peça parada: entra crescendo no lugar (ou deslizando, com deDx/deDy) e sai sumindo.
+     * tam é a fração da largura da carta alvo; alto é a altura em relação a isso.
+     */
+    function peca(nome, alvo, opcoes = {}) {
+        const url = fx(nome);
+        if (!url || semMovimento()) return Promise.resolve();
+        const d = divFx(url, alvo, opcoes);
+        if (!d) return Promise.resolve();
+        const escala = opcoes.escala ?? 1;
+        const giro = opcoes.girar || 0;
+        const x = opcoes.dx || 0;
+        const y = opcoes.dy || 0;
+        const entrada = escala * (opcoes.deDx || opcoes.deDy ? 1 : 0.35);
+        const fim = animar(d, [
+            { transform: tf(opcoes.espelhar, entrada, 0, x + (opcoes.deDx || 0), y + (opcoes.deDy || 0)), opacity: 0 },
+            { transform: tf(opcoes.espelhar, escala, giro / 2, x, y), opacity: 1, offset: 0.22 },
+            { transform: tf(opcoes.espelhar, escala, giro / 2, x, y), opacity: 1, offset: 0.72 },
+            { transform: tf(opcoes.espelhar, escala * 0.85, giro, x, y), opacity: 0 },
+        ], { duration: opcoes.dur ?? 700, easing: 'ease-out' });
+        return fim.then(() => d.remove());
+    }
+
+    /** A folha de 4 quadros, um atrás do outro (~70 ms cada). */
+    async function folha(nome, alvo, opcoes = {}) {
+        const q = quadros(nome);
+        if (!q || semMovimento()) return;
+        const d = divFx(q.urls[0], alvo, opcoes);
+        if (!d) return;
+        const x = opcoes.dx || 0;
+        const y = opcoes.dy || 0;
+        if (q.folha) d.classList.add('bt-fx--folha');
+        animar(d, [
+            { transform: tf(opcoes.espelhar, 0.5, 0, x, y), opacity: 0 },
+            { transform: tf(opcoes.espelhar, 1.05, 0, x, y), opacity: 1, offset: 0.25 },
+            { transform: tf(opcoes.espelhar, 1, 0, x, y), opacity: 1 },
+        ], { duration: 280, easing: 'ease-out' });
+        for (let i = 1; i <= 4; i++) {
+            if (q.folha) d.style.backgroundPosition = `${((i - 1) * 100) / 3}% 50%`;
+            else d.style.backgroundImage = `url('${q.urls[i - 1]}')`;
+            await esperar(70);
+        }
+        await animar(d, [{ opacity: 1 }, { opacity: 0 }], { duration: 120 });
+        d.remove();
+    }
+
+    /** Uma peça que voa de uma carta até a outra, em linha reta ou em arco, apontando o caminho. */
+    function vooImg(nome, de, para, opcoes = {}) {
+        const url = fx(nome);
+        const a = caixaDe(de);
+        const b = caixaDe(para);
+        if (!url || !a || !b || semMovimento()) return Promise.resolve();
+        const d = divFx(url, a, opcoes);
+        if (!d) return Promise.resolve();
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const arco = opcoes.arco || 0;
+        const ang = opcoes.reto ? 0 : (Math.atan2(dy, dx) * 180) / Math.PI;
+        const giro = ang + (opcoes.girar || 0) * 360;
+        const fim = animar(d, [
+            { transform: tf(opcoes.espelhar, 0.5, ang, 0, 0), opacity: 0.2 },
+            { transform: tf(opcoes.espelhar, 1.15, (ang + giro) / 2, dx / 2, dy / 2 - arco), opacity: 1, offset: 0.5 },
+            { transform: tf(opcoes.espelhar, 0.85, giro, dx, dy), opacity: 1 },
+        ], { duration: opcoes.dur ?? 520, easing: 'ease-in-out' });
+        return fim.then(() => d.remove());
+    }
+
+    /** Várias peças caindo do alto, espalhadas em volta do alvo. */
+    function chuva(nome, alvo, n = 4, opcoes = {}) {
+        const url = fx(nome);
+        const c = caixaDe(alvo);
+        if (!url || !c || !mesa || semMovimento()) return Promise.resolve();
+        const promessas = [];
+        for (let i = 0; i < n; i++) {
+            const x = c.x + (Math.random() - 0.5) * (c.w || 100) * (opcoes.espalhar ?? 1.8);
+            const y = c.y + (Math.random() - 0.5) * (c.h || 100) * (opcoes.espalhar ?? 1.8);
+            promessas.push(cairPeca(url, { x, y, w: c.w, h: c.h }, opcoes, i));
+        }
+        return Promise.all(promessas);
+    }
+
+    /** Uma peça da chuva: cai de cima e some no chão (opcoes.aoCair avisa onde ela caiu). */
+    function cairPeca(url, ponto, opcoes, i) {
+        const d = divFx(url, ponto, opcoes);
+        if (!d) return Promise.resolve();
+        const altura = (ponto.h || 60) * 1.6;
+        const deriva = opcoes.diagonal ? (opcoes.diagonal === true ? 80 : opcoes.diagonal) : 0;
+        const dur = opcoes.dur ?? 420;
+        const atraso = i * (opcoes.intervalo ?? 90);
+        const fim = animar(d, [
+            { transform: `translate(calc(-50% - ${deriva}px), calc(-50% - ${altura}px)) rotate(-25deg)`, opacity: 0 },
+            { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1, offset: 0.75 },
+            { transform: 'translate(-50%, -50%) scale(.9) rotate(12deg)', opacity: 0 },
+        ], { duration: dur, delay: atraso, easing: 'ease-in', fill: 'backwards' });
+        if (opcoes.aoCair) setTimeout(() => opcoes.aoCair(ponto), atraso + dur * 0.75);
+        return fim.then(() => d.remove());
+    }
+
+    /** Várias peças paradas em roda do alvo (ex.: as notificações do morcego). */
+    function volta(nome, alvo, n = 5, opcoes = {}) {
+        const c = caixaDe(alvo);
+        if (!c) return Promise.resolve();
+        const promessas = [];
+        for (let i = 0; i < n; i++) {
+            const ang = (i / n) * Math.PI * 2 - Math.PI / 2;
+            promessas.push(peca(nome, alvo, {
+                ...opcoes,
+                dx: (opcoes.dx || 0) + Math.cos(ang) * (c.w || 100) * (opcoes.raio ?? 0.85),
+                dy: (opcoes.dy || 0) + Math.sin(ang) * (c.h || 60) * (opcoes.raio ?? 0.85),
+                dur: (opcoes.dur ?? 600) + i * 40,
+            }));
+        }
+        return Promise.all(promessas);
+    }
+
+    /** A poeira do chão, embaixo da carta que caiu ou chegou. */
+    function poeira(alvo, tam = 1.1) {
+        const c = caixaDe(alvo);
+        if (!c) return Promise.resolve();
+        return folha('fx-poeira', { ...c, y: c.y + (c.h || 60) * 0.45 }, { tam });
+    }
+
+    /** A rachadura no chão, embaixo de onde a marreta bateu. */
+    function rachadura(alvo, tam = 1.2) {
+        const c = caixaDe(alvo);
+        if (!c) return Promise.resolve();
+        return folha('fx-rachadura', { ...c, y: c.y + (c.h || 60) * 0.42 }, { tam });
+    }
+
+    /** O flash de foto do poder Câmera: o único efeito sem imagem, feito em CSS. */
+    function flash() {
+        if (!mesa || semMovimento()) return Promise.resolve();
+        const d = el('div', 'bt-flash');
+        mesa.efeitos.appendChild(d);
+        return animar(d, [{ opacity: 0 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], { duration: 420, easing: 'ease-out' })
+            .then(() => d.remove());
+    }
+
+    /** A mesa escurecida da Macarronada a 300%. */
+    function escurecer(ms = 1000) {
+        if (!mesa || semMovimento()) return Promise.resolve();
+        const d = el('div', 'bt-escuro');
+        mesa.efeitos.appendChild(d);
+        return animar(d, [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], { duration: ms })
+            .then(() => d.remove());
+    }
+
+    /** As faíscas de estrela espalhadas em volta de quem levou o golpe. */
+    function faiscas(alvo, n = 4) {
+        const c = caixaDe(alvo);
+        if (!c) return Promise.resolve();
+        const promessas = [];
+        for (let i = 0; i < n; i++) {
+            const ang = Math.random() * Math.PI * 2;
+            const raio = 0.45 + Math.random() * 0.35;
+            promessas.push(peca('fx-estrela', alvo, {
+                tam: 0.3, dur: 480 + i * 70,
+                dx: Math.cos(ang) * (c.w || 100) * raio,
+                dy: Math.sin(ang) * (c.h || 60) * raio,
+            }));
+        }
+        return Promise.all(promessas);
+    }
+
+    /** O meio da mesa (letreiros e efeitos de tela cheia). */
+    const meioDaMesa = () => (mesa ? centro(mesa.raiz) : null);
+    /** O id (a chave de js/tcg-cartas.js) da carta viva de um uid. */
+    const idDe = (uid) => elDe(uid)?.dataset.id || acharInst(estado, uid)?.inst.id || null;
+    /** De que lado está a carta de um uid. */
+    const ladoDe = (uid) => acharInst(estado, uid)?.jogador ?? EU;
+    /** O ativo do outro lado (a vítima dos poderes que reagem a um ataque). */
+    function ativoDoOutro(uid) {
+        const dono = acharInst(estado, uid);
+        const outro = dono ? estado.jogadores[1 - dono.jogador] : null;
+        return outro?.ativo ? elDe(outro.ativo.uid) : null;
+    }
+    /** A mão de quem usou o poder (para onde a carta do círculo mágico vai). */
+    const maoDe = (uid) => (ladoDe(uid) === EU ? mesa.mao : mesa.maoNpc);
+
+    /** O resultado da moeda só sai depois do bote: o Glitch do Bug do Discord espera por ela. */
+    let depoisDaMoeda = null;
+
+    /**
+     * O efeito próprio de cada ataque: EFEITOS_ATAQUE[idDaCarta][nomeDoAtaque], chamado com as
+     * cartas na mesa (atacante e alvo). O que não estiver no mapa (ou ainda não tiver imagem)
+     * usa só os genéricos. Os efeitos seguem a coluna "Onde aparece" do docs/EFEITOS-ONDE-VAO.md.
+     */
+    const EFEITOS_ATAQUE = {
+        // ---- Lendários -------------------------------------------------------
+        'enzo-games': {
+            'Almôndega': async (at, alvo) => {
+                await vooImg('fx-almondega', at, alvo, { tam: .84, girar: 2, dur: 480 });
+                const c = caixaDe(alvo);
+                await peca('fx-molho', alvo, { tam: .75, dy: (c.h || 60) * .08, deDy: -(c.h || 60) * 0.5, dur: 900, escala: 1.05 });
+            },
+            'Macarronada a 300%': async (at, alvo) => {
+                const escuro = escurecer(1000);
+                const letreiro = peca('fx-300', meioDaMesa(), { lado: 150, dur: 800 });
+                const meteoro = (async () => {
+                    await esperar(260);
+                    await chuva('fx-meteoro', alvo, 5, {
+                        tam: .55, diagonal: 80, dur: 300, intervalo: 90,
+                        aoCair: (p) => folha('fx-explosao-macarronada', p, { tam: .9 }),
+                    });
+                })();
+                await Promise.all([letreiro, meteoro]);
+                await escuro;
+            },
+        },
+        'cabo-coco': {
+            'Arquivo Confidencial': async (at, alvo) => {
+                await vooImg('fx-pasta-confidencial', at, alvo, { tam: .8, reto: true, dur: 520 });
+                await peca('fx-pasta-confidencial', alvo, { tam: 1.2, dur: 700 });
+                for (let i = 0; i < 3; i++) {
+                    const c = caixaDe(alvo);
+                    peca('fx-tarja-censura', alvo, { tam: 1.15, alto: .24, dy: (i - 1) * (c.h || 60) * .26, deDx: -220, dur: 320 });
+                    await esperar(130);
+                }
+            },
+        },
+        'degustador-da-noite': {
+            'Vírgula-rangue': async (at, alvo) => {
+                await vooImg('fx-virgula', at, alvo, { tam: .7, arco: 140, girar: 2, dur: 460 });
+                await vooImg('fx-virgula', alvo, at, { tam: .7, arco: 140, girar: -2, dur: 380 });
+            },
+            'Escudo de Parênteses': async (at, alvo) => {
+                const c = caixaDe(alvo);
+                await Promise.all([
+                    peca('fx-parentese', alvo, { tam: 1.1, alto: 1.7, dx: -c.w * .46, deDx: -c.w * .9, dur: 420 }),
+                    peca('fx-parentese', alvo, { tam: 1.1, alto: 1.7, dx: c.w * .46, deDx: c.w * .9, espelhar: true, dur: 420 }),
+                ]);
+            },
+        },
+        'o-inominavel': {
+            'Bala Dourada': async (at, alvo) => {
+                await vooImg('fx-bala-dourada', at, alvo, { tam: .5, dur: 720 });
+            },
+        },
+        'superkid': {
+            'Farmar Aura': async (at) => {
+                await peca('fx-aura-coluna', at, { tam: 1.3, alto: 1.5, dur: 800 });
+            },
+            'Aura de 67 Segundos': async (at, alvo) => {
+                peca('fx-relogio', at, { tam: 1.5, girar: 360, dur: 900 });
+                await peca('fx-aura-coluna', at, { tam: .9, alto: 1.4, dur: 620 });
+                await vooImg('fx-aura-coluna', at, alvo, { tam: .8, alto: 1.3, dur: 460 });
+            },
+        },
+
+        // ---- Épicos e raros --------------------------------------------------
+        'chorao': {
+            'Birra': async (at, alvo) => {
+                await vooImg('fx-lagrima', at, alvo, { tam: .3, arco: 160, dur: 420 });
+                await chuva('fx-lagrima', alvo, 6, { tam: .28, dur: 320, intervalo: 70 });
+            },
+        },
+        'sombra-do-degustador': {
+            'Teemo no Top': async (at, alvo) => {
+                const c = caixaDe(alvo);
+                await peca('fx-cogumelo', alvo, { tam: .5, dy: c.h * .42, deDy: c.h * .2, dur: 500 });
+                // A fumaça roxa pintada de verde (o cogumelo venenoso).
+                await folha('fx-fumaca-roxa', alvo, { tam: 1.3, filtro: 'hue-rotate(200deg) saturate(1.4)' });
+            },
+            'Fumaça Roxa': async (at, alvo) => {
+                await folha('fx-fumaca-roxa', at, { tam: .8 });
+                await folha('fx-fumaca-roxa', alvo, { tam: 1.7 });
+            },
+        },
+        'hatsune-neves': {
+            'Porta do Quarto': async (at, alvo) => {
+                await vooImg('fx-porta', at, alvo, { tam: 1.1, dur: 560 });
+                await peca('fx-porta', alvo, { tam: .85, escala: 1.05, girar: -6, dur: 420 });
+            },
+        },
+        'italolol': {
+            'Au! Aura!': async (at, alvo) => {
+                const c = caixaDe(alvo);
+                for (let i = 0; i < 3; i++) {
+                    peca('fx-au', at, { tam: .9 + i * .35, dx: 40 + i * 34, dy: -(c.h || 60) * .3, dur: 520 });
+                    await esperar(90);
+                }
+            },
+            '0/14/2': async (at) => {
+                const c = caixaDe(at);
+                await peca('fx-kda', at, { tam: .9, dy: -(c.h || 60) * .5, dur: 1000 });
+            },
+        },
+        'stand-do-joinha': {
+            'Joinha': async (at, alvo) => {
+                await peca('fx-joinha', alvo, { tam: .9, deDy: -420, dur: 380 });
+            },
+        },
+        'encantadora': {
+            'Vem Cá, Meu Gadinho': async (at, alvo, ev) => {
+                await vooImg('fx-laco', at, alvo, { tam: .7, arco: 140, dur: 460 });
+                // A carta puxada vai para a vaga do ativo: o laço a arrasta até lá.
+                const vaga = ladoDe(ev.uid) === EU ? mesa.npc.ativo : mesa.eu.ativo;
+                const antigo = vaga.firstElementChild;
+                if (antigo?.classList.contains('bt-carta')) await vooImg('fx-laco', alvo, antigo, { tam: .7, arco: 140, dur: 420 });
+            },
+            'Chama Rosa': async (at, alvo) => {
+                await folha('fx-chama-rosa', alvo, { tam: 1.3 });
+            },
+        },
+        'marreteiro-do-coracao': {
+            'Quebrar Tudo': async () => {
+                const campo = mesa.campo.querySelector('.bt-carta') || mesa.campo;
+                await peca('fx-marreta', campo, { tam: 1.3, alto: 1.2, deDy: -360, girar: -30, dur: 360 });
+                await rachadura(campo, 1.3);
+            },
+            'Marretada': async (at, alvo) => {
+                await peca('fx-marreta', alvo, { tam: 1.5, deDy: -420, girar: -120, dur: 400 });
+                await rachadura(alvo, 1.2);
+            },
+        },
+        'moderador-do-ban': {
+            'Ban de 7 Dias': async (at, alvo) => {
+                await peca('fx-martelo-ban', alvo, { tam: .9, deDy: -380, girar: -20, dur: 400 });
+                await peca('fx-carimbo-ban', alvo, { tam: .75, escala: 1.1, dur: 800 });
+            },
+        },
+
+        // ---- Comuns ----------------------------------------------------------
+        'cara-de-coracao': {
+            'Soco Iludido': async (at, alvo, ev) => {
+                const eu = estado.jogadores[ladoDe(ev.uid)];
+                const grande = [eu.ativo, ...eu.banco].some((c) => c?.id === 'encantadora');
+                await vooImg('fx-soco-coracao', at, alvo, { tam: grande ? 1.1 : .8, dur: 420 });
+            },
+        },
+        'bug-do-discord': {
+            // A moeda do ataque só sai depois do bote: o glitch fica guardado esperando ela.
+            'Glitch': (at, alvo) => {
+                depoisDaMoeda = (resultado) => folha('fx-glitch', resultado === 'coroa' ? at : alvo, { tam: 1 });
+                return Promise.resolve();
+            },
+        },
+        'notificacao-morcego': {
+            '@everyone': async (at, alvo) => {
+                await volta('fx-notificacao', alvo, 6, { tam: .4, raio: .95 });
+            },
+        },
+        'emoji-pistola': {
+            'Reação 😡': async (at, alvo, ev) => {
+                const eu = estado.jogadores[ladoDe(ev.uid)];
+                const goons = [eu.ativo, ...eu.banco].filter((c) => c && def(c.id).tipo === 'goon').length;
+                await chuva('fx-emoji-bravo', alvo, Math.max(1, goons), { tam: .3, espalhar: 1.6, dur: 380 });
+            },
+        },
+        'drone-vigia': {
+            'Facho': async (at, alvo) => {
+                const c = caixaDe(alvo);
+                const varre = { x: c.x - c.w * 1.6, y: c.y + c.h * .3, w: c.w, h: c.h };
+                await vooImg('fx-facho', at, varre, { tam: 1.2, reto: true, dur: 380 });
+                await vooImg('fx-facho', varre, alvo, { tam: .9, reto: true, dur: 300 });
+            },
+        },
+    };
+
+    /** Os poderes com imagem: EFEITOS_PODER[idDaCarta][nomeDoPoder] (mesma assinatura). */
+    const EFEITOS_PODER = {
+        'o-inominavel': {
+            'Besteira no Discord': async (at, alvo) => {
+                await vooImg('fx-balao-discord', at, alvo, { tam: .8, arco: 90, dur: 520 });
+                await peca('fx-balao-discord', alvo, { tam: .8, escala: 1.05, dur: 700 });
+            },
+        },
+        'chorao': {
+            'Vou te Processar!': async (at, alvo) => {
+                await vooImg('fx-processo', at, alvo, { tam: .65, girar: 1, dur: 520 });
+            },
+        },
+        'hatsune-neves': {
+            'Invoco uma Carta de Magic': async (at) => {
+                await peca('fx-circulo-magico', at, { tam: 1.3, dy: (caixaDe(at).h || 60) * .45, girar: 360, dur: 900 });
+                await voar(at, maoDe(at.dataset.uid), 'bt-voo--carta', el('div', 'bt-fx-carta'));
+            },
+        },
+        'drone-vigia': {
+            'Câmera': () => flash(),
+        },
+    };
+
+    /**
+     * O bote já rolou: agora o efeito próprio do ataque (e o joinha do banco, que é um poder
+     * passivo e por isso não tem evento 'poder' — ele sai quando o dono ataca). No máximo ~1,2 s.
+     */
+    async function efeitoDoAtaque(ev, at, alvo) {
+        const proprio = EFEITOS_ATAQUE[idDe(ev.uid)]?.[ev.nome] || null;
+        const banco = estado.jogadores[ladoDe(ev.uid)].banco;
+        const stand = banco.find((c) => R.combate(c.id)?.poder?.tipo === 'bonusDoBanco');
+        const doBanco = stand && elDe(stand.uid) ? vooImg('fx-joinha', elDe(stand.uid), at, { tam: .45, dur: 420 }) : null;
+        await Promise.race([
+            Promise.all([proprio ? proprio(at, alvo, ev) : null, doBanco]),
+            esperar(1200),
+        ]);
+    }
+
     async function tocar(ev, antes) {
         if (!mesa) return;
         switch (ev.tipo) {
@@ -1613,6 +2053,7 @@
                     { transform: 'none' },
                 ], { duration: 560, easing: 'cubic-bezier(.5,0,.3,1)' });
                 a.classList.remove('bt-carta--atacando');
+                await efeitoDoAtaque(ev, a, alvo);
                 break;
             }
             case 'dano': {
@@ -1625,6 +2066,12 @@
                     hp.style.setProperty('--vida', `${(100 * vida) / ev.hp}%`);
                 }
                 numero(alvo, `-${ev.valor}`, 'dano');
+                // O impacto e as faíscas de todo golpe (leva 1); o letreiro é dos golpes de 50+.
+                folha('fx-impacto', alvo, { tam: 1.15 });
+                faiscas(alvo, 3 + Math.floor(Math.random() * 3));
+                if (ev.valor >= 50) {
+                    peca(Math.random() < 0.5 ? 'fx-pow' : 'fx-bam', alvo, { tam: 1.35, dy: -(caixaDe(alvo).h || 60) * .35, dur: 800 });
+                }
                 alvo.classList.add('bt-carta--ferida');
                 setTimeout(() => alvo.classList.remove('bt-carta--ferida'), 350);
                 await tremer(alvo, 6 + Math.min(10, ev.valor / 10));
@@ -1633,7 +2080,11 @@
             }
             case 'cura': {
                 const alvo = elDe(ev.uid);
-                if (alvo) { numero(alvo, `+${ev.valor}`, 'cura'); await esperar(350); }
+                if (alvo) {
+                    numero(alvo, `+${ev.valor}`, 'cura');
+                    peca('fx-cura', alvo, { tam: .85, dy: -(caixaDe(alvo).h || 60) * .2, dur: 900 });
+                    await esperar(350);
+                }
                 break;
             }
             case 'nocaute': {
@@ -1641,6 +2092,8 @@
                 if (!alvo) break;
                 const lado = ev.para === EU ? mesa.eu : mesa.npc;
                 balao(alvo, 'NOCAUTE!', 'nocaute');
+                poeira(alvo, 1.2);
+                peca('fx-ko', alvo, { tam: .85, dur: 900 });
                 await animar(alvo, [
                     { transform: 'none', filter: 'none', opacity: 1 },
                     { transform: 'scale(1.1) rotate(-6deg)', filter: 'brightness(2) saturate(0)', opacity: 1, offset: 0.25 },
@@ -1655,6 +2108,12 @@
             }
             case 'moeda':
                 await moeda(ev.resultado);
+                // O Glitch do Bug do Discord só sabe onde piscar depois da moeda do ataque.
+                if (ev.motivo === 'ataque' && depoisDaMoeda) {
+                    const depois = depoisDaMoeda;
+                    depoisDaMoeda = null;
+                    depois(ev.resultado);
+                }
                 break;
             case 'estado': {
                 const alvo = elDe(ev.uid);
@@ -1662,8 +2121,14 @@
                 break;
             }
             case 'escudo': {
+                // O escudo tem evento próprio (tcg-regras), não é um 'estado': dois parênteses
+                // fecham dos lados da carta que ganhou o escudo (o da direita é espelhado).
                 const alvo = elDe(ev.uid);
-                if (alvo) await balao(alvo, '( 🛡️ )', 'estado');
+                if (!alvo) break;
+                const c = caixaDe(alvo);
+                peca('fx-parentese', alvo, { tam: 1.1, alto: 1.7, dx: -c.w * .46, dur: 700 });
+                peca('fx-parentese', alvo, { tam: 1.1, alto: 1.7, dx: c.w * .46, espelhar: true, dur: 700 });
+                await balao(alvo, '( 🛡️ )', 'estado');
                 break;
             }
             case 'imune': {
@@ -1690,7 +2155,10 @@
             }
             case 'poder': {
                 const alvo = elDe(ev.uid);
-                if (alvo) await balao(alvo, `✨ ${ev.nome}`, 'poder');
+                if (!alvo) break;
+                await balao(alvo, `✨ ${ev.nome}`, 'poder');
+                const proprio = EFEITOS_PODER[idDe(ev.uid)]?.[ev.nome];
+                if (proprio) await Promise.race([proprio(alvo, ativoDoOutro(ev.uid), ev), esperar(1200)]);
                 break;
             }
             case 'ataqueFalhou': {
@@ -1707,6 +2175,7 @@
                         { transform: 'scale(1.3) rotate(10deg)', opacity: 1, offset: 0.7 },
                         { transform: 'none', opacity: 1 },
                     ], { duration: 700 });
+                    poeira(carta);   // o campo chegando no meio da mesa
                 }
                 await banner(nomeVisivel(ev.id).toUpperCase(), 'campo');
                 break;
@@ -1716,7 +2185,14 @@
                 if (carta) await animar(carta, [{ transform: 'none', opacity: 1 }, { transform: 'scale(.3) rotate(90deg)', opacity: 0 }], { duration: 400, fill: 'forwards' });
                 break;
             }
-            case 'baixar':
+            case 'baixar': {
+                // A carta que chega no banco levanta poeira embaixo (leva 1).
+                desenhar();
+                const carta = elDe(ev.uid);
+                if (carta) poeira(carta);
+                await esperar(380);
+                break;
+            }
             case 'troca':
             case 'novoAtivo':
             case 'descartar':

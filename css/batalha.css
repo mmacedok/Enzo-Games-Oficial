@@ -665,6 +665,44 @@
 .bt-moeda-face--coroa { transform: rotateY(180deg); background-color: #cfd8dc; }
 .bt-moeda-rotulo { font-family: var(--font-heading); font-size: 1.6rem; color: var(--caution); text-shadow: 2px 2px 0 var(--ink); }
 
+/* As peças dos efeitos de ataque (assets/Batalha/efeitos/): o JS posiciona e anima. */
+.bt-fx {
+    position: absolute;
+    z-index: 1;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+/* Folha inteira (2048x512): o JS anda com o background-position pelos 4 quadros. */
+.bt-fx--folha { background-size: 400% 100%; }
+/* A mesa escurecida da Macarronada a 300%, por baixo das peças. */
+.bt-escuro {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba(0, 0, 0, 0.32);
+    pointer-events: none;
+}
+/* O flash de foto da Câmera do Drone Vigia. */
+.bt-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: #fff;
+    pointer-events: none;
+}
+/* O cartãozinho que sai do círculo mágico da Hatsune e voa para a mão. */
+.bt-fx-carta {
+    width: 30px;
+    height: 42px;
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 3px 3px 0 var(--ink);
+}
+
 /* ------------------------------------------------------------------ fim */
 .bt-fim {
     position: absolute;
