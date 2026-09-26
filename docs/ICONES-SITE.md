@@ -129,7 +129,7 @@ passam a usar os `estado-*.png` que já existem (só código).
   (`assets/ui/figurinha-*.png`).
 - **✔ e · do terminal admin**: o admin é de propósito um terminal de texto.
 - **😡 e 👍 nos nomes e frases das cartas** ("Reação 😡", "Num tem eu, num tem 👍"): fazem parte da
-  piada (reação do Discord). **Decisão do Henrique:** manter como texto ou trocar por imagem inline.
+  piada (reação do Discord). **Decisão do Henrique (2026-09-26): ficam como emoji.**
 
 ---
 
