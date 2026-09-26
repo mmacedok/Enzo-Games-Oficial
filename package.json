@@ -10,12 +10,14 @@
     "build:deploy": "node atualizar.js && node tools/dist.js && node tools/build-function.mjs",
     "test": "node --test \"test/*.test.js\"",
     "qa": "node tools/qa.mjs",
-    "qa:site": "node tools/qa-all.mjs"
+    "qa:site": "node tools/qa-all.mjs",
+    "build:cloudflare": "node atualizar.js && node tools/dist.js && node tools/build-cloudflare.mjs"
   },
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "esbuild": "^0.28.2"
+    "esbuild": "^0.28.2",
+    "jose": "^6.2.12"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

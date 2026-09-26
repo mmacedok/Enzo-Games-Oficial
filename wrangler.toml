@@ -1,0 +1,11 @@
+# Cloudflare Pages: site estático em dist/ + API em dist/_worker.js.
+# Build no painel da Cloudflare: `npm run build:cloudflare`, pasta de saída `dist`.
+name = "enzo-games-oficial"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+
+# Segredos (GOOGLE_CLIENT_ID, SESSION_SECRET, ADMIN_EMAILS, DATABASE_URL) vão no painel, como "Secret".
+# Sem [vars] NODE_ENV aqui: a Cloudflare usa [vars] também no build, e com NODE_ENV=production
+# o npm não instala esbuild/jose. O cookie já sai "Secure" porque o site é https.

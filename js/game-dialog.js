@@ -12,7 +12,7 @@
      * @param {string} opcoes.descricaoCanvas
      * @param {number} opcoes.largura
      * @param {number} opcoes.altura
-     * @param {number} [opcoes.espacoExtra] px reservados abaixo do canvas (ex.: botões de toque)
+     * @param {number|function} [opcoes.espacoExtra] px reservados abaixo do canvas (ex.: botões de toque); pode ser uma função
      * @param {string} [opcoes.ranking] id do jogo no ranking global (mostra o botão 🏆 Ranking)
      */
     function create(opcoes = {}) {
@@ -56,7 +56,8 @@
         function ajustarTamanho() {
             const margem = 16;
             const livreW = innerWidth - margem * 2;
-            const livreH = innerHeight - margem * 2 - 56 - espacoExtra; // botão Fechar e extras
+            const extra = typeof espacoExtra === 'function' ? espacoExtra() : espacoExtra;
+            const livreH = innerHeight - margem * 2 - 56 - extra; // botão Fechar e extras
             escala = Math.max(0.3, Math.min(livreW / largura, livreH / altura));
             const dpr = Math.min(devicePixelRatio || 1, 3);
             canvas.style.width = `${Math.round(largura * escala)}px`;
