@@ -58,6 +58,677 @@
       }
     ]
   },
+  "assets/Batalha/efeitos/fx-300.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/6f7cd0f8d2ad5643-512.webp",
+        "bytes": 75672
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-almondega.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/95c1a7c8f056235f-512.webp",
+        "bytes": 81728
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-au.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/0e179cbfed651fef-512.webp",
+        "bytes": 53440
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-aura-coluna.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/7576da5495a990b4-512.webp",
+        "bytes": 116450
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-bala-dourada.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/ff55c26949f75095-512.webp",
+        "bytes": 51192
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-balao-discord.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/c88cd5b85b6d3824-512.webp",
+        "bytes": 67144
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-bam.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/d86ad89c3ca29cdc-512.webp",
+        "bytes": 65214
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-carimbo-ban.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/cf53ed91acaa5f86-512.webp",
+        "bytes": 88350
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-chama-rosa-1.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/d7c07dbfa589f238-512.webp",
+        "bytes": 4496
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-chama-rosa-2.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/2944f5472f413c04-512.webp",
+        "bytes": 26772
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-chama-rosa-3.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/f0b96d428340385e-512.webp",
+        "bytes": 61704
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-chama-rosa-4.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/86b19bb9105f00c7-512.webp",
+        "bytes": 39526
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-circulo-magico.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/cf675398a88d36a2-512.webp",
+        "bytes": 95388
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-cogumelo.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/15317fe24b54b7a3-512.webp",
+        "bytes": 61238
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-cura.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/045a4d1edd839ee4-512.webp",
+        "bytes": 63804
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-emoji-bravo.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/178fb0e9fa470487-256.webp",
+        "bytes": 21626
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-estrela.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/95d85ae75270a270-256.webp",
+        "bytes": 9300
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-explosao-macarronada-1.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/081215920b3938cf-512.webp",
+        "bytes": 19890
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-explosao-macarronada-2.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/caa79aad05ea83d1-512.webp",
+        "bytes": 66792
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-explosao-macarronada-3.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/66d1b3784112e397-512.webp",
+        "bytes": 100306
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-explosao-macarronada-4.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/aaac7ff499afb957-512.webp",
+        "bytes": 28142
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-facho.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/65c79e80aebd4d6d-512.webp",
+        "bytes": 39864
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-fumaca-roxa-1.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/bcd0fa31134415ba-512.webp",
+        "bytes": 7716
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-fumaca-roxa-2.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/047b49774fb6d8ec-512.webp",
+        "bytes": 37304
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-fumaca-roxa-3.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/159de6c16f1c6575-512.webp",
+        "bytes": 82520
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-fumaca-roxa-4.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/c2709fb14339b605-512.webp",
+        "bytes": 39746
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-glitch-1.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/d31ae99120a92f82-512.webp",
+        "bytes": 14074
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-glitch-2.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/2cbf7f5844282f93-512.webp",
+        "bytes": 49202
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-glitch-3.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/bd5fbff726bf9d5c-512.webp",
+        "bytes": 139180
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-glitch-4.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/f2f9d910770172be-512.webp",
+        "bytes": 9874
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-impacto-1.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/a93164f3183f33a5-512.webp",
+        "bytes": 6802
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-impacto-2.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/90ad0526ce1e9e06-512.webp",
+        "bytes": 46594
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-impacto-3.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/8a4a882091dbf80c-512.webp",
+        "bytes": 90714
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-impacto-4.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/63ef85fdbc51ce0a-512.webp",
+        "bytes": 31386
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-joinha.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/0518231b78e56f11-512.webp",
+        "bytes": 74532
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-kda.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/ba6fb84d4e8312b7-512.webp",
+        "bytes": 66180
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-ko.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/c764fa9d90f3a8a4-512.webp",
+        "bytes": 67212
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-laco.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/55862d580a5893ca-512.webp",
+        "bytes": 67516
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-lagrima.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/edc78e2d7c640b1d-256.webp",
+        "bytes": 14970
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-marreta.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/8db0149c1b6ae063-512.webp",
+        "bytes": 94324
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-martelo-ban.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/2bb65ac77eb27c1e-512.webp",
+        "bytes": 100004
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-meteoro.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/6f4edd4c269ffef7-512.webp",
+        "bytes": 67262
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-molho.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/19c9fd36f746e67a-512.webp",
+        "bytes": 82100
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-notificacao.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/81ea506617d1811b-256.webp",
+        "bytes": 12192
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-parentese.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/2c18e6a1c382e70c-512.webp",
+        "bytes": 32782
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-pasta-confidencial.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/fcb26974741000ba-512.webp",
+        "bytes": 83658
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-poeira-1.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/107a627e556a8f92-512.webp",
+        "bytes": 8196
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-poeira-2.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/8c9887f47f8ae8bc-512.webp",
+        "bytes": 43870
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-poeira-3.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/76892a54a9094424-512.webp",
+        "bytes": 69678
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-poeira-4.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/27dea6e04ccd7c23-512.webp",
+        "bytes": 22662
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-porta.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/26897aabdbb1da1c-512.webp",
+        "bytes": 77892
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-pow.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/ac27c3e4894ce1c6-512.webp",
+        "bytes": 61254
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-processo.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/21bb34e50c1564d6-512.webp",
+        "bytes": 44908
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-rachadura-1.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/0025839e216383e5-512.webp",
+        "bytes": 4242
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-rachadura-2.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/62c6683c5ebc090c-512.webp",
+        "bytes": 34088
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-rachadura-3.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/687df77a6ac69f0a-512.webp",
+        "bytes": 114360
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-rachadura-4.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/fc0c97e2c9af1d42-512.webp",
+        "bytes": 67978
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-relogio.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/e18954dec9912ce4-512.webp",
+        "bytes": 92882
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-soco-coracao.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/23ed682c5c038e87-512.webp",
+        "bytes": 63642
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-tarja-censura.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/a5bdf5a01977dbbc-512.webp",
+        "bytes": 38208
+      }
+    ]
+  },
+  "assets/Batalha/efeitos/fx-virgula.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/7c635b1592dd1dc3-512.webp",
+        "bytes": 68340
+      }
+    ]
+  },
   "assets/Batalha/estado-escudo.png": {
     "width": 128,
     "height": 128,
