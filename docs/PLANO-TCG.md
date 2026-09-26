@@ -1,43 +1,30 @@
-# Plano do Duelo Enzo (o "game" do TCG)
+# Plano da Batalha dos Torados (o jogo de cartas do Baralho Enzo)
 
-> Plano de jogo e de implementação do jogo de cartas do Baralho Enzo. **Fica só no branch `TCG`**
-> (ver `CLAUDE.md`). Rascunho de 2026-09-26: regras e números são proposta, o Henrique aprova ou muda.
+> Plano de jogo e de implementação. **Fica só no branch `TCG`** (ver `CLAUDE.md`).
+> Decidido com o Henrique em 2026-09-26. Regras e números valem o que está em `js/tcg-regras.js` e
+> `js/tcg-cartas.js`; se este texto e o código discordarem, o código manda e este texto é corrigido.
 
-## 1. Qual sistema usar
+## 1. Decisões do Henrique (2026-09-26)
+- **Nome:** Batalha dos Torados.
+- **Regras:** Pokémon TCG Pocket (o Pokémon de celular), adaptadas: deck de 15, energia automática
+  (a **Aura**), 3 pontos para vencer, cartas de campo como o Estádio do Pokémon.
+- **Todas as cartas liberadas** para montar deck. Ligar o deck ao fichário de cada leitor pode voltar
+  quando a coleção crescer (o motor já aceita: `validarDeck(ids, { colecao })`).
+- **Os números das 24 cartas** (seção 3) foram aprovados.
+- **Visual interativo** estilo Hearthstone (as cartas se movem e atacam) com efeitos chamativos estilo
+  Card Wars (Hora de Aventura). Ver seção 5.
+- **Adversário:** contra o computador (NPC) primeiro. **Contra outro jogador depois**, mas a base já é
+  feita para isso (seção 4).
 
-**Recomendação: as regras do Pokémon TCG Pocket (o Pokémon de celular, 2024), adaptadas.**
+Por que o Pocket e não o Pokémon clássico: sem deck de 60 nem cartas de energia, partidas de 5 a 10
+minutos, fácil para quem nunca jogou. As 3 categorias que já existem viram as 3 peças do jogo:
+**personagem** = o "Pokémon" forte, **goon** = o básico e barato, **campo** = o Estádio.
 
-| | Pokémon clássico | **Pokémon Pocket** | Marvel Snap |
-|---|---|---|---|
-| Tamanho do deck | 60 cartas | **20** (aqui: 15) | 12 |
-| Energia | cartas de energia no deck | **1 por turno, automática** | sobe sozinha (1, 2, 3...) |
-| Partida | 20–40 min | **5–10 min** | 3 min |
-| Como vence | 6 cartas-prêmio | **3 pontos** | ganhar 2 de 3 lugares |
-| Encaixa nas cartas de campo? | sim (Estádio) | sim (Estádio) | só se virarem os "lugares" |
-| Fácil para quem nunca jogou | não | **sim** | sim |
-
-Por que o Pocket:
-- É Pokémon (a ideia do Henrique), mas sem o que o torna difícil: não tem 60 cartas nem cartas de energia no deck.
-- A coleção tem só 24 cartas e cada leitor tem poucas. Um deck de 60 seria impossível; um de 15 dá.
-- As 3 categorias que já existem viram as 3 peças do jogo sem inventar tipos novos:
-  **personagem** = o "Pokémon" forte, **goon** = o "Pokémon" básico e barato, **campo** = o Estádio.
-- É por turnos, um de cada vez. Isso é bom para jogar contra o computador no site e, depois, para
-  jogar contra outro leitor sem servidor em tempo real (o Netlify não tem websocket).
-
-O Marvel Snap é a alternativa: partidas de 3 minutos, jogadas ao mesmo tempo, os campos seriam os
-3 lugares da mesa. Só que ele é menos "Pokémon", os campos sairiam do deck e jogar contra outro
-leitor exige os dois online ao mesmo tempo.
-
-## 2. Regras (proposta)
+## 2. Regras
 
 ### O deck
 - **15 cartas**, no máximo **2 cópias** da mesma carta e **1 de cada lendário**.
 - Precisa de **pelo menos 1 personagem ou goon**.
-- **Só entra carta que o leitor tem**: para colocar 2 Cara de Coração, precisa ter 2 no fichário.
-- **Cartas da Casa (emprestadas):** quem tem menos de 15 cartas completa o deck com cópias cinzas
-  emprestadas, só de cartas comuns. Assim todo mundo joga desde o 1º pacote, e abrir pacotes deixa o deck melhor.
-- Virar repetida em pó pode deixar um deck salvo inválido. O deck é conferido de novo no começo de
-  cada partida e mostra o que falta.
 
 ### A mesa
 - **Ativo** (1 vaga): quem luta.
@@ -47,37 +34,44 @@ leitor exige os dois online ao mesmo tempo.
 
 ### Aura (a energia)
 - Todo turno o jogador ganha **1 Aura** e prende em **um** personagem ou goon seu (ativo ou banco).
-- Quem começa **não ganha Aura nem ataca** no 1º turno (é a regra do Pocket, compensa a vantagem).
 - Ataques custam Aura (1, 2 ou 3). A Aura fica presa na carta; se ela cair, a Aura vai junto.
-- Versão 1 sem cores de Aura. Cores (tipos e fraquezas) ficam para a fase 7.
+- **Quem começa não ataca no 1º turno.**
+- **Aura de Reforço:** quem joga em segundo ganha **+1 Aura no seu 1º turno**, que só pode ir para o **banco**.
+  - *Por quê:* o simulador mostrou que sem compensação quem começa vence 63% (com a regra do Pocket
+    original, só 34%). Com a Aura de Reforço fica **49%**.
+- Versão 1 sem cores de Aura. Cores (tipos e fraquezas) ficam para depois (seção 6, fase 8).
 
 ### O turno
 1. Compra 1 carta.
 2. Em qualquer ordem:
-   - põe personagens e goons no banco (quantos quiser, até 3);
-   - joga **1 campo** (troca o que está na mesa, que vai para o descarte do dono; não pode jogar o mesmo campo que já está lá);
+   - põe personagens e goons no banco (até 3 no banco);
+   - joga **1 campo**: troca o que está na mesa, que vai para o descarte do dono; não pode repetir o campo que já está lá;
    - prende a Aura do turno;
-   - usa os **Poderes** das cartas;
+   - usa os **Poderes** das cartas (os que se ativam: 1 vez por turno cada carta);
    - **recua** o ativo para o banco (uma vez, pagando o custo de recuo em Aura).
-3. **Ataca** com o ativo (opcional). Atacar acaba o turno.
+3. **Ataca** com o ativo (opcional). Atacar acaba o turno; "Passar" também.
 
 ### Dano, nocaute e pontos
 - Dano fica marcado na carta até ela cair ou ser curada. HP 0 = **nocaute**: a carta vai para o descarte.
-- O dono põe outro do banco no ativo.
+- O dono escolhe outro do banco para o ativo (antes do jogo seguir).
 - Nocautear **goon, personagem comum, raro ou épico = 1 ponto**; **lendário = 2 pontos**.
-- **Vence** quem fizer **3 pontos** ou deixar o outro sem ninguém na mesa.
-- Deck vazio: o jogador só não compra; ninguém perde por isso. Limite de 30 turnos, e aí vence quem tiver mais pontos (empate vale empate).
+- **Vence** quem fizer **3 pontos** ou deixar o outro sem ninguém na mesa. Se os dois chegarem juntos,
+  vence quem tiver mais pontos (igual = empate).
+- Deck vazio: o jogador só não compra; ninguém perde por isso.
+- **Limite de 30 turnos** (somando os dois): vence quem tiver mais pontos, senão é empate.
+- **Desistir** encerra na hora a favor do outro.
 
 ### Começo
 - Cada um compra **5 cartas**. Se não tiver personagem/goon na mão, embaralha e compra de novo (sem castigo).
-- Os dois escolhem o ativo e o banco escondidos; aí revelam. Moeda decide quem começa.
+- Os dois escolhem o ativo e o banco escondidos; aí revelam. A moeda decide quem começa.
 
 ### Estados (3, com nomes do universo)
-- **Notificado** (veneno): leva 10 no fim de cada turno do dono. Sai ao recuar.
+- **Notificado** (veneno): leva 10 entre um turno e outro. Sai ao voltar para o banco.
 - **Silenciado** (paralisia): não ataca nem recua no próximo turno do dono.
-- **Iludido** (confusão): ao atacar, moeda; se der coroa, o ataque falha e ele leva 20. Sai ao recuar.
+- **Iludido** (confusão): ao atacar, moeda; se der coroa, o ataque falha e ele leva 20. Sai ao voltar para o banco.
+- Qualquer carta que volta para o banco (recuo ou puxada pela Encantadora) perde os estados.
 
-## 3. As 24 cartas no jogo (proposta de números)
+## 3. As 24 cartas no jogo (aprovadas em 2026-09-26)
 
 Legenda: **HP**, ataques como `Nome (custo em Aura): dano + efeito`, **Poder** (sem custo), **Recuo**.
 Base: goon comum 40–70 HP, raro 70–100, épico 90–110, lendário 120–140; ~25 de dano por Aura.
@@ -126,70 +120,118 @@ Base: goon comum 40–70 HP, raro 70–100, épico 90–110, lendário 120–140
 | Casa do Enzo Games (comum) | 1 vez por turno, cada jogador pode descartar 1 carta da mão para comprar 1. |
 | São João do Butico (comum) | Comporta secreta: ataques não acertam o banco. |
 
-Esses números são o chute inicial. A fase 2 roda **milhares de partidas robô contra robô** e mostra
-quais cartas ganham demais ou de menos, para acertar antes de alguém jogar.
+Os números estão em `js/tcg-cartas.js`. O simulador (`node tools/tcg-simular.mjs 5000`) roda
+milhares de partidas robô contra robô com decks sorteados. Resultado em 2026-09-26: toda carta fica entre
+**46% e 53%** de vitória. O Marreteiro é o mais fraco (46%, custa 3 Aura e recua por 3); o Chorão e o Cabo
+Côco são os mais fortes (53%). Está bom para começar; dá para ajustar depois de jogar de verdade.
 
-## 4. Como vai funcionar por dentro
+## 4. Como funciona por dentro
 
-### Arquivos novos
+### Já feito (fase 1 e 2, 2026-09-26)
 - **`js/tcg-cartas.js`**: HP, ataques, poderes e recuo de cada carta, pelo mesmo `id` do
-  `baralho-dados.js`. O arquivo é separado para dar para balancear o jogo sem mexer no sorteio dos pacotes.
-- **`js/tcg-regras.js`**: o motor do jogo. É JavaScript puro, sem tela. Roda igual no navegador e
-  no servidor (mesmo formato do `baralho-dados.js`). Recebe `estado + jogada` e devolve o novo estado.
-  É **determinístico**: toda sorte (embaralhar, moeda) vem de uma semente, então a mesma semente com
-  as mesmas jogadas dá sempre a mesma partida.
-- **`js/tcg-robo.js`**: o adversário do computador (fácil e normal). É regra simples: prende Aura
-  no ativo, ataca se derruba, recua se vai morrer, e assim por diante.
-- **`js/tcg.js`** + CSS: a tela da partida (tela cheia, como a abertura de pacotes) e o montador de deck.
-- **`api/tcg.js`**: rotas de decks e partidas. **`test/tcg-regras.test.js`**, **`test/tcg.test.js`**.
+  `baralho-dados.js`. Separado para balancear o jogo sem mexer no sorteio dos pacotes.
+- **`js/tcg-regras.js`**: o motor. JavaScript puro, sem tela; roda igual no navegador e no servidor.
+  - `criarPartida`, `jogadasValidas`, `aplicar(estado, jogada) -> { estado, eventos }`.
+  - **Determinístico:** toda sorte (embaralhar, moeda) vem de uma semente guardada no estado. A mesma
+    semente com as mesmas jogadas dá sempre a mesma partida (`repetir`).
+  - **Eventos:** cada jogada devolve a lista do que aconteceu, em ordem (`ataque`, `dano`, `nocaute`,
+    `moeda`, `estado`, `troca`, `campo`, `turno`, `fim`...). A tela só anima esses eventos; ela nunca
+    muda o estado sozinha. Isso é o que permite o visual estilo Hearthstone sem bagunçar as regras.
+  - **`visaoDe(estado, jogador)`**: o estado sem a mão e o deck do outro (nem a ordem do próprio deck,
+    nem a semente). É o que o servidor vai mandar para cada jogador no multiplayer.
+- **`js/tcg-robo.js`**: o NPC, com 2 níveis. **Normal** pensa: derruba se dá, recua quem vai morrer,
+  guarda Aura para o ataque maior, puxa o mais fraco com a Encantadora. **Fácil** às vezes erra de
+  propósito. O normal vence o fácil 86% das vezes.
+- **`tools/tcg-simular.mjs`**: partidas robô contra robô; mostra quem começa, turnos e vitória por carta.
+- **`test/tcg-regras.test.js`**: 46 testes: cada regra, cada carta com efeito, 300 partidas aleatórias sem
+  erro (nenhuma carta some ou duplica) e a repetição da partida.
 
-### Banco de dados
-- `decks(id, user_id, nome, cartas, atualizado_em)`: `cartas` = lista de ids; até 5 decks por leitor.
-- `duelos(id, user_id, semente, deck, adversario, status, jogadas, resultado, criado_em)`.
-
-### Contra o computador (anti-trapaça sem esforço)
-1. "Duelar" → o servidor confere o deck contra o fichário (`colecao`), sorteia a **semente** e cria o duelo.
+### Contra o computador (próximo)
+1. "Batalhar" → o servidor sorteia a **semente** e cria o registro da partida.
 2. A partida roda **no navegador** (rápida, sem esperar o servidor a cada jogada).
-3. No fim, o navegador manda a **lista de jogadas**. O servidor **refaz a partida** com o mesmo motor
-   e a mesma semente. Só se der vitória de verdade ele credita a recompensa. É a mesma ideia da
-   "partida verificada" dos outros jogos.
+3. No fim, o navegador manda a **lista de jogadas**. O servidor **refaz a partida** com o mesmo motor e
+   a mesma semente, e o robô do outro lado também é conferido. Só se der vitória de verdade ele dá o prêmio.
+   É a mesma ideia da "partida verificada" dos outros jogos.
 
-### Contra outro leitor (depois)
-- **Por turnos guardados no banco**: cada jogada é uma chamada à API, que roda o motor e salva o estado.
-  O outro recebe a vez (atualiza a cada poucos segundos, ou quando volta para a aba).
-  Dá para jogar ao vivo ou "por correspondência" (uma jogada por dia, como xadrez online).
-- Aqui o motor roda **no servidor**, e o navegador não vê a mão nem o deck do outro.
+### Contra outro jogador (depois, mas já previsto)
+- O motor roda **no servidor**: cada jogada é uma chamada à API, que confere, aplica e salva o estado.
+  Cada jogador recebe só a `visaoDe` dele e os eventos que pode ver (o `espiar` do Drone é privado).
+- O Netlify não tem conexão em tempo real (websocket), então o outro recebe a vez perguntando ao
+  servidor a cada 1 ou 2 segundos durante a partida. Dá para jogar ao vivo ou "por correspondência".
+- Nada no motor muda para isso: o mesmo `aplicar` serve aos dois modos.
 
-### Recompensas (proposta)
+### Banco de dados (quando chegar a hora)
+- `decks(id, user_id, nome, cartas, atualizado_em)`: até 5 decks por leitor.
+- `batalhas(id, semente, jogadores, decks, modo, jogadas, estado, vencedor, criado_em)`.
+
+### Recompensas (proposta, decidir na fase 6)
 - Vitória contra o robô normal: **+30 créditos**, até **5 vitórias por dia** com prêmio.
-  Contra o robô fácil, só as primeiras vezes (tutorial).
-- Conquistas: "Primeiro Duelo", "Vencer com deck só de goons", "Nocautear o Cabo Côco".
+- Conquistas: "Primeira Batalha", "Vencer com deck só de goons", "Nocautear o Cabo Côco".
 
-## 5. Fases
+## 5. O visual: estilo Hearthstone + Card Wars
 
-| # | Fase | Resultado | Quem |
+A tela da batalha é uma **mesa em tela cheia** (como a abertura de pacotes), feita em HTML/CSS com
+animações (Web Animations API). O motor gera os eventos; uma **fila de animação** toca um por vez.
+
+### A mesa
+- Metade de baixo é a sua, metade de cima a do adversário. Ativo no centro, banco de 3 atrás, mão em
+  leque na borda de baixo (a do NPC de costas em cima).
+- O **campo muda a mesa inteira** (a ideia do Card Wars): a carta de campo entra girando no centro e o
+  fundo vira a arte daquele lugar (piscina de macarronada borbulhando, caverna roxa da Toradolândia,
+  estacionamento escuro com o carro balançando...). Sem campo, fundo neutro de feltro.
+- Placar de pontos (3 bolinhas cada lado), contador de deck, botão "Passar" grande.
+
+### Como se joga (o toque)
+- **Arrastar** carta da mão para o banco ou para o campo; as vagas possíveis acendem.
+- **Aura**: um orbe no canto; arrasta até a carta, ele voa e gruda com brilho.
+- **Atacar**: clica no ativo, os ataques aparecem como botões com custo e **previsão de dano**
+  (`calcularDano`); ataque com alvo desenha uma **seta** até a carta escolhida (igual ao Hearthstone).
+- Tudo que não pode ser feito fica apagado, com o motivo no toque (o motor já devolve o motivo em português).
+- No celular: tocar em vez de arrastar funciona sempre.
+
+### Animações (por evento)
+| Evento | Animação |
+|---|---|
+| `baixar` | carta sai da mão, voa até a vaga e "carimba" na mesa com poeirinha |
+| `aura` | orbe voa até a carta; contador de Aura pulsa |
+| `ataque` | o atacante **dá um bote até o alvo** (avança, bate e volta com mola), como no Hearthstone |
+| `dano` | número vermelho grande pulando da carta, carta treme; tela treme em dano ≥ 90 |
+| `nocaute` | carta racha e se desfaz em pedaços/fumaça; ponto voa para o placar |
+| `moeda` | moeda 3D gira no centro (cara = Enzo, coroa = Torado) |
+| `estado` | ícone gruda na carta: sino (Notificado), cadeado BAN (Silenciado), coraçãozinho (Iludido) |
+| `campo` | carta gira no centro e o fundo da mesa se transforma |
+| `troca` | as duas cartas trocam de lugar em arco |
+| `escudo` / `bloqueado` | parênteses gigantes se fecham na frente da carta |
+| `cura` | número verde e brilho de macarronada |
+| `fim` | "VITÓRIA" / "DERROTA" em letras de gibi, confete ou chuva |
+
+- **Efeito especial por ataque** (o toque Card Wars): cada ataque pode ter um efeito próprio. Exemplos:
+  Macarronada a 300% joga almôndegas em chamas; Vírgula-rangue lança vírgulas girando; Bala Dourada
+  risca a tela em câmera lenta; Glitch do Bug pixeliza o alvo; Reação 😡 chove emojis; Marretada racha a mesa.
+  A base toca um efeito genérico por tipo; os especiais entram aos poucos (fase 7).
+- Arte nova **não é obrigatória**: partículas e ícones saem em CSS/SVG. Se o Henrique quiser, dá para
+  gerar fundos das mesas de campo depois (prompts prontos quando chegar a hora).
+- `prefers-reduced-motion`: sem bote nem tremor, só troca de números.
+
+## 6. Fases
+
+| # | Fase | Resultado | Situação |
 |---|---|---|---|
-| 0 | **Aprovar regras e números** (este documento) | Henrique diz sim/muda | Henrique + Claude |
-| 1 | **Motor + testes** | `tcg-regras.js`, `tcg-cartas.js`, testes de cada regra e de cada carta | Claude |
-| 2 | **Robô + simulador** | robô fácil/normal; script `node tools/tcg-simular.mjs` roda 10 mil partidas e dá a taxa de vitória de cada carta | Claude (as rodadas longas podem ir para o Gemini) |
-| 3 | **Montador de deck** | aba "Decks" na Ficha: arrastar do fichário, contagem 15/15, cartas emprestadas, erros claros; rotas de deck | Claude |
-| 4 | **Tela do duelo contra o robô + tutorial** | mesa, arrastar carta, ataques, dano, nocaute, animações (reaproveita o 3D das cartas); 1º duelo guiado passo a passo | Claude |
-| 5 | **Verificação e prêmios** | servidor refaz a partida, credita, limite diário, conquistas | Claude |
-| 6 | **Contra outro leitor** | desafiar pela ficha pública, partida por turnos, histórico | Claude |
-| 7 | **Conteúdo novo** | cartas de **Truque** (itens: Macarronada cura 30, Bala "Blasfêmia"...), cores de Aura e fraquezas, a próxima coleção | Henrique (ideias e arte) + Claude |
+| 0 | Regras e números | este documento | **feito** |
+| 1 | Motor + testes | `tcg-regras.js`, `tcg-cartas.js`, 46 testes | **feito** |
+| 2 | Robô + simulador | `tcg-robo.js` (fácil/normal), `tools/tcg-simular.mjs`, Aura de Reforço | **feito** |
+| 3 | **Tela da batalha contra o NPC** | mesa, arrastar, ataques, fila de animações, fim de jogo; decks prontos para os dois lados | próximo |
+| 4 | Montador de deck | aba "Batalha" na Ficha: montar e salvar decks (todas as cartas liberadas), deck pronto para quem não quer montar | |
+| 5 | Tutorial | 1ª batalha guiada, passo a passo, contra o NPC fácil | |
+| 6 | Servidor e prêmios | rotas, semente, conferência da partida, créditos com limite diário, conquistas | |
+| 7 | Efeitos especiais | animação própria para cada ataque, fundos dos campos | |
+| 8 | Contra outro jogador | desafiar pela ficha pública, batalha pelo servidor | depois |
+| 9 | Conteúdo novo | cartas de **Truque** (itens: Macarronada cura 30, Bala "Blasfêmia"...), cores de Aura e fraquezas | depois |
 
-Cada fase fica testável sozinha. A 1 e a 2 não têm tela; dá para ver funcionando pelo simulador.
-
-## 6. O que a carta precisa mostrar
-Hoje a carta tem arte, nome, número, raridade e frase. No jogo ela precisa de **HP**, **ataques com
-custo**, **poder** e **recuo**. Proposta:
-- no fichário e na carta grande, um verso ou um "virar" mostra os números (a frente continua bonita);
-- na mesa, a carta pequena mostra só HP, Aura presa e dano; tocar abre os detalhes.
-- Nenhuma arte nova é obrigatória. Ícones (Aura, recuo, estados) dá para fazer em CSS/SVG.
-
-## 7. Perguntas para o Henrique
-1. **Pocket ou Snap?** (recomendado: Pocket)
-2. **15 cartas, 3 pontos para vencer:** ok?
-3. **Cartas da Casa** emprestadas para quem tem pouca carta: ok?
-4. Os **poderes e ataques** da seção 3 combinam com os personagens? Algum está fora do jeito deles?
-5. Nome do modo: "Duelo Enzo"? Outra ideia?
+## 7. O que a carta precisa mostrar
+Hoje a carta tem arte, nome, número, raridade e frase. Na batalha ela precisa de **HP**, **ataques com
+custo**, **poder** e **recuo**.
+- Na mesa: carta menor com HP (barra e número), bolinhas de Aura, ícones de estado.
+- Tocar/passar o mouse numa carta abre a **carta grande** com a frente normal e, embaixo, o quadro de
+  combate (ataques, poder, recuo), no estilo das cartas de Pokémon.
+- No fichário, a carta grande ganha o mesmo quadro.
