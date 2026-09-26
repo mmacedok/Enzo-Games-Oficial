@@ -50,6 +50,12 @@
     };
     /** URL da versão web da imagem, ou null se ela ainda não existe (usa o placeholder). */
     const arte = (caminho) => (caminho && window.SiteImages?.[caminho] ? window.siteImageUrl(caminho) : null);
+    /** Igual, mas para o que aparece grande (fundo da mesa, logo): a maior versão de até 1280 px. */
+    const arteGrande = (caminho) => {
+        const v = caminho && window.SiteImages?.[caminho]?.variants;
+        if (!v?.length) return null;
+        return (v.filter((x) => x.width <= 1280).at(-1) || v[0]).src;
+    };
 
     const DECKS = [
         { id: 'turma', nome: 'Turma do Enzo', texto: 'Heróis fortes que curam e compram cartas.',
@@ -163,9 +169,9 @@
         raiz.className = 'batalha batalha--menu';
         const caixa = el('div', 'bt-menu');
         const titulo = el('h1', 'bt-logo');
-        if (arte(ARTE.logo)) {
+        if (arteGrande(ARTE.logo)) {
             const img = el('img');
-            img.src = arte(ARTE.logo);
+            img.src = arteGrande(ARTE.logo);
             img.alt = 'Batalha dos Torados';
             titulo.appendChild(img);
         } else {
@@ -267,6 +273,7 @@
 
     function montarMesa() {
         cartasVivas.clear();
+        fundoAtual = undefined;   // mesa nova: o fundo precisa ser pintado de novo
         raiz.replaceChildren();
         raiz.className = 'batalha batalha--jogo';
         const m = {};
@@ -521,7 +528,7 @@
         fundoAtual = campoId;
         const aplicar = (alvo) => {
             alvo.dataset.campo = campoId || 'nenhum';
-            const img = arte(campoId ? ARTE.campos[campoId] : ARTE.mesa);
+            const img = arteGrande(campoId ? ARTE.campos[campoId] : ARTE.mesa);
             alvo.style.backgroundImage = img ? `url('${img}')` : '';
             alvo.classList.toggle('bt-fundo--arte', !!img);
         };

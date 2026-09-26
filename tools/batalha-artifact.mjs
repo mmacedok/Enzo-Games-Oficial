@@ -20,7 +20,9 @@ const imagens = JSON.parse(ler('data/images.json'));
 const siteImages = {};
 for (const [original, info] of Object.entries(imagens)) {
     if (!/^assets\/(Cartas|Batalha)\//.test(original)) continue;
-    const menor = info.variants[0];
+    // Fundos da mesa e o logo aparecem grandes: usam a versão de até 1280; o resto, a menor.
+    const grande = /^assets\/Batalha\/(mesa|logo)/.test(original);
+    const menor = grande ? info.variants.filter((v) => v.width <= 1280).at(-1) : info.variants[0];
     const destino = `cartas/${path.basename(menor.src)}`;
     fs.copyFileSync(path.join(ROOT, menor.src), path.join(saida, destino));
     siteImages[original] = { width: info.width, height: info.height, variants: [{ width: menor.width, src: destino }] };
