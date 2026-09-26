@@ -529,17 +529,685 @@
                 e.dir = c.alvo.x > o.x ? 1 : -1;
             },
         },
+        // ================================================ EXPANSÃO
+        // ------------------------------------------------ Esgoto do Chorume
+
+        // Rato do Comentário: corre rápido, vira na beirada e dá bote quando você chega perto.
+        rato: {
+            nome: 'Rato do Comentário', w: 20, h: 14, vida: 3, dano: 1, virgulas: 4, peso: 0.9,
+            atualizar(e, c, dt) {
+                cair(e, dt);
+                e.t += dt;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                const dy = c.alvo.y - o.y;
+                let vx = 0;
+                if (e.estado === 'preparar') {
+                    if (e.t >= 0.35) {
+                        e.estado = 'bote';
+                        e.t = 0;
+                        e.vy = -230;
+                        c.evento({ tipo: 'investida', x: o.x, y: o.y });
+                    }
+                } else if (e.estado === 'bote') {
+                    vx = e.dir * 290;
+                    if (e.t > 0.1 && e.noChao) { e.estado = 'andar'; e.t = 0; e.recarga = 1.1; }
+                } else {
+                    vx = e.dir * 85;
+                    e.recarga = Math.max(0, (e.recarga || 0) - dt);
+                    if (paredeAFrente(c, e, e.dir) || !chaoAFrente(c, e, e.dir)) { e.dir = -e.dir; vx = 0; }
+                    if (!e.recarga && Math.abs(dy) < 30 && Math.abs(dx) < 110 && Math.sign(dx) === e.dir) {
+                        e.estado = 'preparar';
+                        e.t = 0;
+                        c.evento({ tipo: 'alerta', x: o.x, y: e.y });
+                    }
+                }
+                if (e.estado === 'preparar') vx = 0;
+                const kx = recuoChao(e, dt);
+                const r = c.mover(e, (vx + kx) * dt, e.vy * dt);
+                e.noChao = r.chao;
+                if (r.chao) e.vy = 0;
+                if (e.estado === 'bote' && (r.esq || r.dir)) e.dir = -e.dir;
+            },
+        },
+
+        // Boca-de-Lobo: parece um bueiro no chão; abre quando você passa por cima e morde para cima.
+        bocadelobo: {
+            nome: 'Boca-de-Lobo', w: 22, h: 14, vida: 4, dano: 0, virgulas: 5, peso: 99,
+            atualizar(e, c, dt) {
+                e.t += dt;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                const dy = c.alvo.y - o.y;
+                e.ataque = null;
+                if (e.estado === 'andar') { e.estado = 'fechada'; e.intangivel = true; }
+                switch (e.estado) {
+                    case 'fechada':
+                        e.dano = 0;
+                        if (Math.abs(dx) < 34 && dy < 0 && dy > -90) {
+                            e.estado = 'abrir';
+                            e.t = 0;
+                            e.intangivel = false;
+                            c.evento({ tipo: 'alerta', x: o.x, y: e.y });
+                        }
+                        break;
+                    case 'abrir':
+                        if (e.t >= 0.32) { e.estado = 'morder'; e.t = 0; c.evento({ tipo: 'impacto', x: o.x, y: e.y }); }
+                        break;
+                    case 'morder':
+                        e.dano = 1;
+                        e.ataque = { x: e.x - 2, y: e.y - 34, w: e.w + 4, h: 36 };
+                        if (e.t >= 0.4) { e.estado = 'recuar'; e.t = 0; e.dano = 0; }
+                        break;
+                    case 'recuar':
+                        if (e.t >= 0.9) { e.estado = 'fechada'; e.t = 0; e.intangivel = true; }
+                        break;
+                    default:
+                        e.estado = 'fechada';
+                }
+            },
+        },
+
+        // Bolha de Chorume: flutua devagar até você, incha e estoura em respingos.
+        bolha: {
+            nome: 'Bolha de Chorume', w: 16, h: 16, vida: 1, dano: 1, virgulas: 2, peso: 0.6, voa: true,
+            atualizar(e, c, dt) {
+                e.t += dt;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                const dy = c.alvo.y - o.y;
+                const d = Math.hypot(dx, dy) || 1;
+                if (e.estado === 'inchar') {
+                    guiar(e, 0, 0, 5, dt);
+                    if (e.t >= 0.6) {
+                        for (let i = 0; i < 6; i++) {
+                            const a = (i / 6) * Math.PI * 2 + 0.3;
+                            c.projetil({ tipo: 'chorume', x: o.x, y: o.y, vx: Math.cos(a) * 150, vy: Math.sin(a) * 150, r: 5, vida: 0.55 });
+                        }
+                        c.evento({ tipo: 'estouro', x: o.x, y: o.y });
+                        e.vivo = false;
+                    }
+                } else {
+                    const alvoVy = Math.sin(c.tempo * 1.8 + e.fase * 6) * 18;
+                    if (d < 240) guiar(e, (dx / d) * 28, (dy / d) * 28 + alvoVy, 1.5, dt);
+                    else guiar(e, 0, alvoVy, 1.5, dt);
+                    if (d < 52) { e.estado = 'inchar'; e.t = 0; c.evento({ tipo: 'alerta', x: o.x, y: e.y }); }
+                }
+                voar(c, e, dt);
+            },
+        },
+
+        // Cano que pinga chorume (não dá para acertar; é um perigo do cenário).
+        gota: {
+            nome: 'Cano pingando', w: 16, h: 10, vida: 999, dano: 0, virgulas: 0, peso: 99, voa: true,
+            atualizar(e, c, dt) {
+                e.intangivel = true;
+                e.t += dt;
+                const periodo = 1.7;
+                if (e.t >= periodo + e.fase * 0.8) {
+                    e.t = 0;
+                    const o = centro(e);
+                    c.projetil({ tipo: 'gota', x: o.x, y: e.y + e.h, vx: 0, vy: 30, r: 4, vida: 3, gravidade: 900 });
+                }
+            },
+        },
+
+        // ------------------------------------------------ Feira da Madrugada
+
+        // Pop-up: pisca e reaparece perto de você, mira e atira um X.
+        popup: {
+            nome: 'Pop-up', w: 16, h: 14, vida: 2, dano: 1, virgulas: 3, peso: 0.7, voa: true,
+            atualizar(e, c, dt) {
+                e.t += dt;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                const dy = c.alvo.y - o.y;
+                const d = Math.hypot(dx, dy) || 1;
+                e.dir = dx > 0 ? 1 : -1;
+                switch (e.estado) {
+                    case 'piscar':
+                        guiar(e, 0, 0, 8, dt);
+                        e.alpha = Math.max(0, 1 - e.t / 0.3);
+                        if (e.t >= 0.3) {
+                            const lugar = c.lugarLivre(c.alvo.x, c.alvo.y, 70, 130, e.w, e.h);
+                            if (lugar) { e.x = lugar.x; e.y = lugar.y; }
+                            e.estado = 'mirar';
+                            e.t = 0;
+                            e.alpha = 1;
+                            e.intangivel = false;
+                        }
+                        break;
+                    case 'mirar':
+                        guiar(e, 0, 0, 8, dt);
+                        if (e.t >= 0.45) {
+                            c.projetil({ tipo: 'botaoX', x: o.x, y: o.y, vx: (dx / d) * 175, vy: (dy / d) * 175, r: 5, vida: 3 });
+                            e.estado = 'pairar';
+                            e.t = 0;
+                        }
+                        break;
+                    default: {
+                        const hx = e.x0 + Math.sin(c.tempo * 1.2 + e.fase * 5) * 16 - e.x;
+                        const hy = e.y0 + Math.sin(c.tempo * 2 + e.fase * 5) * 8 - e.y;
+                        guiar(e, hx * 2, hy * 2, 3, dt);
+                        if (e.t >= 2.2 && d < 300) {
+                            e.estado = 'piscar';
+                            e.t = 0;
+                            e.intangivel = true;
+                            c.evento({ tipo: 'piscou', x: o.x, y: o.y });
+                        }
+                    }
+                }
+                voar(c, e, dt, 0);
+            },
+        },
+
+        // Golpista do Pix: corre até você, rouba vírgulas no toque e foge (derrubado, devolve).
+        golpista: {
+            nome: 'Golpista do Pix', w: 14, h: 24, vida: 3, dano: 1, virgulas: 3, peso: 0.9, ladrao: true,
+            atualizar(e, c, dt) {
+                cair(e, dt);
+                e.t += dt;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                const dy = c.alvo.y - o.y;
+                let vx = 0;
+                if (e.estado === 'fugir') {
+                    e.dir = dx > 0 ? -1 : 1;
+                    vx = e.dir * 175;
+                    if (paredeAFrente(c, e, e.dir)) {
+                        // Encurralado: pula a parede se der, senão fica tremendo.
+                        if (e.noChao && e.t > 0.4) { e.vy = -420; e.t = 0; } else vx = 0;
+                    } else if (!chaoAFrente(c, e, e.dir) && e.noChao) {
+                        e.vy = -380;
+                    }
+                } else if (e.estado === 'correr') {
+                    e.dir = dx > 0 ? 1 : -1;
+                    vx = e.dir * 150;
+                    if (!chaoAFrente(c, e, e.dir) || paredeAFrente(c, e, e.dir)) vx = 0;
+                    if (Math.abs(dx) > 260 || Math.abs(dy) > 80) { e.estado = 'andar'; e.t = 0; }
+                } else {
+                    vx = e.dir * 40;
+                    if (paredeAFrente(c, e, e.dir) || !chaoAFrente(c, e, e.dir)) { e.dir = -e.dir; vx = 0; }
+                    if (Math.abs(dx) < 200 && Math.abs(dy) < 40) {
+                        e.estado = 'correr';
+                        e.t = 0;
+                        c.evento({ tipo: 'alerta', x: o.x, y: e.y });
+                    }
+                }
+                const kx = recuoChao(e, dt);
+                const r = c.mover(e, (vx + kx) * dt, e.vy * dt);
+                e.noChao = r.chao;
+                if (r.chao || (r.teto && e.vy < 0)) e.vy = 0;
+            },
+        },
+
+        // Boneco de Posto: fica no lugar se debatendo; os braços machucam dos dois lados.
+        boneco: {
+            nome: 'Boneco de Posto', w: 18, h: 40, vida: 3, dano: 1, virgulas: 4, peso: 99,
+            atualizar(e, c, dt) {
+                e.t += dt;
+                const balanco = Math.sin(c.tempo * 5 + e.fase * 6);
+                e.balanco = balanco;
+                const lado = balanco > 0 ? 1 : -1;
+                const alcance = 8 + Math.abs(balanco) * 14;
+                e.ataque = { x: lado > 0 ? e.x + e.w - 2 : e.x - alcance + 2, y: e.y + 4, w: alcance, h: 18 };
+            },
+        },
+
+        // ------------------------------------------------ Ruínas do Orkut
+
+        // Scrap Fantasma: flutua devagar ATRAVÉS das paredes e dá um bote.
+        scrap: {
+            nome: 'Scrap Fantasma', w: 20, h: 18, vida: 3, dano: 1, virgulas: 4, peso: 0.8, voa: true,
+            atualizar(e, c, dt) {
+                e.t += dt;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                const dy = c.alvo.y - o.y;
+                const d = Math.hypot(dx, dy) || 1;
+                e.dir = dx > 0 ? 1 : -1;
+                if (e.estado === 'preparar') {
+                    guiar(e, 0, 0, 6, dt);
+                    if (e.t >= 0.45) { e.estado = 'atacar'; e.t = 0; e.vx = (dx / d) * 185; e.vy = (dy / d) * 185; }
+                } else if (e.estado === 'atacar') {
+                    if (e.t >= 0.45) { e.estado = 'pairar'; e.t = 0; }
+                } else {
+                    if (d < 280) guiar(e, (dx / d) * 38, (dy / d) * 38, 1.5, dt);
+                    else guiar(e, 0, Math.sin(c.tempo * 2 + e.fase * 4) * 12, 2, dt);
+                    if (e.t >= 2.6 && d < 150) { e.estado = 'preparar'; e.t = 0; c.evento({ tipo: 'alerta', x: o.x, y: e.y }); }
+                }
+                // Atravessa paredes: anda direto, só não sai da sala.
+                const s = c.sala;
+                e.x = limitar(e.x + e.vx * dt, s.x, s.x + s.w - e.w);
+                e.y = limitar(e.y + e.vy * dt, s.y, s.y + s.h - e.h);
+            },
+        },
+
+        // Fake: um saco de vírgulas de mentira que acorda e pula em você.
+        fake: {
+            nome: 'Fake', w: 14, h: 14, vida: 3, dano: 0, virgulas: 12, peso: 0.8,
+            atualizar(e, c, dt) {
+                cair(e, dt);
+                e.t += dt;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                const dy = c.alvo.y - o.y;
+                let vx = 0;
+                if (e.estado === 'andar') e.estado = 'disfarce';
+                if (e.estado === 'disfarce') {
+                    e.dano = 0;
+                    if ((Math.abs(dx) < 46 && Math.abs(dy) < 40) || e.vida < e.vidaMax) {
+                        e.estado = 'revelar';
+                        e.t = 0;
+                        c.evento({ tipo: 'alerta', x: o.x, y: e.y });
+                    }
+                } else if (e.estado === 'revelar') {
+                    e.dano = 1;
+                    if (e.t >= 0.3) { e.estado = 'pular'; e.t = 0; }
+                } else {
+                    e.dano = 1;
+                    e.dir = dx > 0 ? 1 : -1;
+                    if (e.noChao && e.t >= 0.35) { e.vy = -360; e.t = 0; }
+                    if (!e.noChao) vx = e.dir * 120;
+                }
+                const kx = recuoChao(e, dt);
+                const r = c.mover(e, (vx + kx) * dt, e.vy * dt);
+                e.noChao = r.chao;
+                if (r.chao) e.vy = 0;
+                if (r.teto && e.vy < 0) e.vy = 0;
+            },
+        },
+
+        // Recado Cintilante: torre grudada na parede, atira 3 estrelinhas.
+        recado: {
+            nome: 'Recado Cintilante', w: 16, h: 16, vida: 3, dano: 1, virgulas: 4, peso: 99, voa: true,
+            atualizar(e, c, dt) {
+                e.t += dt;
+                const o = centro(e);
+                const d = Math.hypot(c.alvo.x - o.x, c.alvo.y - o.y);
+                e.vx = 0;
+                e.vy = 0;
+                e.dir = c.alvo.x > o.x ? 1 : -1;
+                if (e.estado === 'mirar') {
+                    if (e.t >= 0.5) { leque(c, e, 3, 0.28, 150, 'estrela', 5); e.estado = 'andar'; e.t = 0; }
+                } else if (e.t >= 2.4 + e.fase && d < 300) {
+                    e.estado = 'mirar';
+                    e.t = 0;
+                }
+            },
+        },
+
+        // ================================================ CHEFES DA EXPANSÃO
+
+        // Ratão do Ratio (Dung Defender): rola quicando nas paredes, mergulha no chão e sai
+        // embaixo de você, arremessa tampas de bueiro.
+        ratao: {
+            nome: 'Ratão do Ratio', w: 44, h: 50, vida: 34, dano: 1, virgulas: 80, peso: 99, chefe: true,
+            atualizar(e, c, dt) {
+                cair(e, dt);
+                e.t += dt;
+                const fase2 = e.vida <= e.vidaMax / 2;
+                const k = fase2 ? 0.72 : 1;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                let vx = 0;
+                e.ataque = null;
+                switch (e.estado) {
+                    case 'inicio':
+                        if (e.t > 1.1) { e.estado = 'ocioso'; e.t = 0; }
+                        break;
+                    case 'ocioso':
+                        e.dir = dx > 0 ? 1 : -1;
+                        if (e.t >= 0.75 * k) {
+                            const opcoes = ['rolarPrep', 'arremessarPrep', 'mergulharPrep'];
+                            let escolha = opcoes[Math.floor(c.rng() * opcoes.length)];
+                            if (escolha === e.ultimo) escolha = opcoes[(opcoes.indexOf(escolha) + 1) % opcoes.length];
+                            e.ultimo = escolha;
+                            e.estado = escolha;
+                            e.t = 0;
+                            c.evento({ tipo: 'ataqueChefe', ataque: escolha, x: o.x, y: o.y });
+                        }
+                        break;
+                    case 'rolarPrep':
+                        e.dir = dx > 0 ? 1 : -1;
+                        if (e.t >= 0.5 * k) { e.estado = 'rolar'; e.t = 0; e.quiques = 0; }
+                        break;
+                    case 'rolar':
+                        vx = e.dir * (fase2 ? 360 : 310);
+                        break;
+                    case 'atordoado':
+                        if (e.t >= 1.0) { e.estado = 'ocioso'; e.t = 0; }
+                        break;
+                    case 'arremessarPrep':
+                        e.dir = dx > 0 ? 1 : -1;
+                        if (e.t >= 0.55 * k) {
+                            e.estado = 'arremessar';
+                            e.t = 0;
+                            const n = fase2 ? 2 : 1;
+                            for (let i = 0; i < n; i++) {
+                                const tempo = 0.9 + i * 0.25;
+                                c.projetil({ tipo: 'tampa', x: o.x, y: e.y + 8, vx: limitar((dx + (i ? e.dir * 60 : 0)) / tempo, -320, 320), vy: -430, r: 10, vida: 3, gravidade: 900 });
+                            }
+                        }
+                        break;
+                    case 'arremessar':
+                        if (e.t >= 0.5) { e.estado = 'ocioso'; e.t = 0; }
+                        break;
+                    case 'mergulharPrep':
+                        if (e.t >= 0.45 * k) {
+                            e.estado = 'submerso';
+                            e.t = 0;
+                            e.intangivel = true;
+                            c.evento({ tipo: 'impacto', x: o.x, y: e.y + e.h, forte: false });
+                        }
+                        break;
+                    case 'submerso':
+                        // Nada por baixo do chorume até embaixo de você.
+                        vx = limitar(dx * 4, -220, 220);
+                        e.aviso = { x: o.x - 22, y: e.y + e.h - 6, w: 44, h: 6, t: Math.min(1, e.t / (1.1 * k)) };
+                        if (e.t >= 1.1 * k) { e.estado = 'emergir'; e.t = 0; }
+                        break;
+                    case 'emergir':
+                        e.aviso = null;
+                        if (!e.saiu) {
+                            e.saiu = true;
+                            e.intangivel = false;
+                            e.vy = -620;
+                            for (let i = -1; i <= 1; i++) {
+                                c.projetil({ tipo: 'chorume', x: o.x + i * 12, y: e.y + e.h - 10, vx: i * 130, vy: -380, r: 6, vida: 2.5, gravidade: 900 });
+                            }
+                            c.evento({ tipo: 'impacto', x: o.x, y: e.y + e.h, forte: true });
+                        }
+                        e.ataque = { x: e.x - 4, y: e.y - 6, w: e.w + 8, h: e.h + 6 };
+                        break;
+                    default:
+                        e.estado = 'inicio';
+                        e.t = 0;
+                }
+                const kx = e.estado === 'ocioso' ? recuoChao(e, dt) : 0;
+                const r = c.mover(e, (vx + kx) * dt, e.vy * dt);
+                if (r.chao) {
+                    e.vy = 0;
+                    if (e.estado === 'emergir' && e.t > 0.15) { e.estado = 'ocioso'; e.t = 0; e.saiu = false; }
+                }
+                if (e.estado === 'rolar' && (r.esq || r.dir)) {
+                    e.dir = -e.dir;
+                    e.quiques++;
+                    c.evento({ tipo: 'impacto', x: o.x + e.dir * 20, y: o.y, forte: true });
+                    if (fase2) entulho(c, e, 2);
+                    if (e.quiques >= (fase2 ? 3 : 2)) { e.estado = 'atordoado'; e.t = 0; }
+                }
+            },
+        },
+
+        // Coach Quântico: leque de notas falsas, invoca Pop-ups, palestra correndo e pulo com onda de som.
+        coach: {
+            nome: 'Coach Quântico', w: 30, h: 54, vida: 36, dano: 1, virgulas: 90, peso: 99, chefe: true,
+            atualizar(e, c, dt) {
+                cair(e, dt);
+                e.t += dt;
+                const fase2 = e.vida <= e.vidaMax / 2;
+                const k = fase2 ? 0.72 : 1;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                const pe = e.y + e.h;
+                let vx = 0;
+                e.ataque = null;
+                switch (e.estado) {
+                    case 'inicio':
+                        if (e.t > 1.1) { e.estado = 'ocioso'; e.t = 0; }
+                        break;
+                    case 'ocioso':
+                        e.dir = dx > 0 ? 1 : -1;
+                        if (e.t >= 0.8 * k) {
+                            const opcoes = ['jogarPrep', 'palestraPrep', 'puloPrep'];
+                            if (c.contar('popup') < 2) opcoes.push('invocar');
+                            let escolha = opcoes[Math.floor(c.rng() * opcoes.length)];
+                            if (escolha === e.ultimo) escolha = opcoes[(opcoes.indexOf(escolha) + 1) % opcoes.length];
+                            e.ultimo = escolha;
+                            e.estado = escolha;
+                            e.t = 0;
+                            c.evento({ tipo: 'ataqueChefe', ataque: escolha, x: o.x, y: o.y });
+                        }
+                        break;
+                    case 'jogarPrep':
+                        e.dir = dx > 0 ? 1 : -1;
+                        if (e.t >= 0.5 * k) { e.estado = 'jogar'; e.t = 0; leque(c, e, 5, 0.22, 205, 'nota', 6); }
+                        break;
+                    case 'jogar':
+                        if (fase2 && e.t >= 0.35 && !e.segunda) { e.segunda = true; leque(c, e, 4, 0.3, 225, 'nota', 6); }
+                        if (e.t >= 0.6) { e.estado = 'ocioso'; e.t = 0; e.segunda = false; }
+                        break;
+                    case 'invocar':
+                        if (e.t >= 0.55 && !e.invocou) {
+                            e.invocou = true;
+                            const s = c.sala;
+                            c.invocar('popup', s.x + 70, s.y + 90);
+                            c.invocar('popup', s.x + s.w - 86, s.y + 90);
+                        }
+                        if (e.t >= 1.0) { e.estado = 'ocioso'; e.t = 0; e.invocou = false; }
+                        break;
+                    case 'palestraPrep':
+                        e.dir = dx > 0 ? 1 : -1;
+                        if (e.t >= 0.55 * k) { e.estado = 'palestra'; e.t = 0; }
+                        break;
+                    case 'palestra':
+                        vx = e.dir * (fase2 ? 350 : 310);
+                        e.ataque = { x: e.dir > 0 ? e.x + e.w - 4 : e.x - 10, y: e.y + 10, w: 14, h: 30 };
+                        break;
+                    case 'cansado':
+                        if (e.t >= 0.9) { e.estado = 'ocioso'; e.t = 0; }
+                        break;
+                    case 'puloPrep':
+                        if (e.t >= 0.45 * k) {
+                            e.vy = -660;
+                            e.vxSalto = limitar(dx / 0.72, -320, 320);
+                            e.estado = 'pulo';
+                            e.t = 0;
+                        }
+                        break;
+                    case 'pulo':
+                        vx = e.vxSalto;
+                        break;
+                    default:
+                        e.estado = 'inicio';
+                        e.t = 0;
+                }
+                const r = c.mover(e, vx * dt, e.vy * dt);
+                if (r.chao) {
+                    e.vy = 0;
+                    if (e.estado === 'pulo' && e.t > 0.1) {
+                        for (const lado of [-1, 1]) {
+                            c.projetil({ tipo: 'anel', x: o.x + lado * 20, y: pe - 16, w: 18, h: 16, vx: lado * (fase2 ? 260 : 225), vy: 0, vida: 4, chao: true });
+                        }
+                        c.evento({ tipo: 'impacto', x: o.x, y: pe, forte: true });
+                        e.estado = 'ocioso';
+                        e.t = 0;
+                    }
+                }
+                if (e.estado === 'palestra' && (r.esq || r.dir)) {
+                    e.estado = 'cansado';
+                    e.t = 0;
+                    c.evento({ tipo: 'impacto', x: o.x + e.dir * 16, y: o.y, forte: true });
+                }
+            },
+        },
+
+        // A Scrapeira (Soul Master): teleporta, corações teleguiados, mergulho e grito de recados.
+        scrapeira: {
+            nome: 'A Scrapeira', w: 40, h: 60, vida: 40, dano: 1, virgulas: 100, peso: 99, voa: true, chefe: true,
+            atualizar(e, c, dt) {
+                e.t += dt;
+                const fase2 = e.vida <= e.vidaMax / 2;
+                const k = fase2 ? 0.75 : 1;
+                const o = centro(e);
+                const s = c.sala;
+                const chao = e.chaoY;
+                e.ataque = null;
+                if (e.fila && e.fila.length) {
+                    e.fila[0].espera -= dt;
+                    if (e.fila[0].espera <= 0) c.projetil(e.fila.shift().p);
+                }
+                switch (e.estado) {
+                    case 'inicio':
+                        guiar(e, 0, 0, 4, dt);
+                        if (e.t > 1.3) { e.estado = 'flutuar'; e.t = 0; }
+                        break;
+                    case 'flutuar': {
+                        const hx = (e.pontoX ?? o.x) + Math.sin(c.tempo * 1.3) * 24 - o.x;
+                        const hy = chao - 150 + Math.sin(c.tempo * 2.2) * 12 - o.y;
+                        guiar(e, hx * 2, hy * 2, 3, dt);
+                        if (e.t >= 1.1 * k) {
+                            const opcoes = ['sumir', 'conjurar', 'mergulhoPrep'];
+                            if (fase2) opcoes.push('grito');
+                            let escolha = opcoes[Math.floor(c.rng() * opcoes.length)];
+                            if (escolha === e.ultimo) escolha = opcoes[(opcoes.indexOf(escolha) + 1) % opcoes.length];
+                            e.ultimo = escolha;
+                            e.estado = escolha;
+                            e.t = 0;
+                            if (escolha === 'grito') gritar(c, e, fase2, RECADOS);
+                            c.evento({ tipo: 'ataqueChefe', ataque: escolha, x: o.x, y: o.y });
+                        }
+                        break;
+                    }
+                    case 'sumir':
+                        guiar(e, 0, 0, 6, dt);
+                        e.intangivel = e.t > 0.15;
+                        e.alpha = Math.max(0, 1 - e.t / 0.4);
+                        if (e.t >= 0.4) {
+                            e.pontoX = s.x + 80 + c.rng() * (s.w - 160);
+                            e.x = e.pontoX - e.w / 2;
+                            e.y = chao - 150 - e.h / 2;
+                            e.estado = 'aparecer';
+                            e.t = 0;
+                        }
+                        break;
+                    case 'aparecer':
+                        e.alpha = Math.min(1, e.t / 0.3);
+                        if (e.t >= 0.3) { e.estado = 'flutuar'; e.t = 0; e.intangivel = false; e.alpha = 1; }
+                        break;
+                    case 'conjurar':
+                        guiar(e, 0, 0, 5, dt);
+                        if (e.t >= 0.6 && !e.conjurou) {
+                            e.conjurou = true;
+                            const n = fase2 ? 5 : 3;
+                            for (let i = 0; i < n; i++) {
+                                const a = -Math.PI / 2 + (i - (n - 1) / 2) * 0.5;
+                                c.projetil({ tipo: 'coracao', x: o.x, y: o.y, vx: Math.cos(a) * 120, vy: Math.sin(a) * 120, r: 7, vida: 4.5, guiado: 115, espera: i * 0.08 });
+                            }
+                        }
+                        if (e.t >= 1.2) { e.estado = 'flutuar'; e.t = 0; e.conjurou = false; }
+                        break;
+                    case 'mergulhoPrep':
+                        // Sobe um pouco em cima de você e avisa.
+                        guiar(e, limitar((c.alvo.x - o.x) * 3, -260, 260), -60, 4, dt);
+                        if (e.t >= 0.6 * k) { e.estado = 'mergulho'; e.t = 0; e.vx = 0; e.vy = 520; }
+                        break;
+                    case 'mergulho':
+                        e.ataque = { x: e.x, y: e.y + e.h - 10, w: e.w, h: 14 };
+                        break;
+                    case 'subir':
+                        guiar(e, 0, -140, 4, dt);
+                        if (e.t >= 0.8) { e.estado = 'flutuar'; e.t = 0; e.pontoX = o.x; }
+                        break;
+                    case 'grito':
+                        guiar(e, 0, 0, 5, dt);
+                        if (e.t >= (fase2 ? 3.6 : 3.1) && !(e.fila && e.fila.length)) { e.estado = 'flutuar'; e.t = 0; }
+                        break;
+                    default:
+                        e.estado = 'inicio';
+                        e.t = 0;
+                }
+                const r = voar(c, e, dt, 0);
+                if (e.estado === 'mergulho' && (r.chao || e.t > 1.2)) {
+                    e.estado = 'subir';
+                    e.t = 0;
+                    e.vy = 0;
+                    c.evento({ tipo: 'impacto', x: o.x, y: e.y + e.h, forte: true });
+                    for (const lado of [-1, 1]) {
+                        c.projetil({ tipo: 'estrela', x: o.x, y: e.y + e.h - 8, vx: lado * 170, vy: -160, r: 5, vida: 2, gravidade: 500 });
+                    }
+                }
+                e.dir = c.alvo.x > o.x ? 1 : -1;
+            },
+        },
+
+        // Degustador Glitch (chefe secreto): imita você; corre, pula, dá dash, coronhada e rajada.
+        glitch: {
+            nome: 'Degustador Glitch', w: 14, h: 26, vida: 30, dano: 1, virgulas: 150, peso: 3, chefe: true,
+            atualizar(e, c, dt) {
+                cair(e, dt);
+                e.t += dt;
+                const fase2 = e.vida <= e.vidaMax / 2;
+                const k = fase2 ? 0.7 : 1;
+                const o = centro(e);
+                const dx = c.alvo.x - o.x;
+                const dy = c.alvo.y - o.y;
+                let vx = 0;
+                e.ataque = null;
+                e.recarga = Math.max(0, (e.recarga ?? 0.8) - dt);
+                switch (e.estado) {
+                    case 'inicio':
+                        if (e.t > 1.0) { e.estado = 'perseguir'; e.t = 0; }
+                        break;
+                    case 'perseguir':
+                        e.dir = dx > 0 ? 1 : -1;
+                        vx = e.dir * (fase2 ? 185 : 165);
+                        if (Math.abs(dx) < 16) vx = 0;
+                        if (e.noChao && dy < -50 && e.recarga <= 0) { e.vy = -560; e.recarga = 0.6; }
+                        if (e.recarga <= 0) {
+                            if (Math.abs(dx) < 42 && Math.abs(dy) < 40) { e.estado = 'golpePrep'; e.t = 0; }
+                            else if (Math.abs(dx) > 170 && Math.abs(dy) < 40) { e.estado = c.rng() < 0.5 ? 'rajadaPrep' : 'dashPrep'; e.t = 0; }
+                        }
+                        break;
+                    case 'golpePrep':
+                        if (e.t >= 0.22 * k) { e.estado = 'golpe'; e.t = 0; c.evento({ tipo: 'golpeGlitch', x: o.x, y: o.y, lado: e.dir }); }
+                        break;
+                    case 'golpe':
+                        e.ataque = { x: e.dir > 0 ? e.x + e.w - 4 : e.x - 30, y: e.y - 4, w: 34, h: e.h + 4 };
+                        if (e.t >= 0.14) { e.estado = 'perseguir'; e.t = 0; e.recarga = 0.45 * k; }
+                        break;
+                    case 'rajadaPrep':
+                        e.dir = dx > 0 ? 1 : -1;
+                        if (e.t >= 0.35 * k) {
+                            c.projetil({ tipo: 'rajadaGlitch', x: e.dir > 0 ? e.x + e.w : e.x - 30, y: e.y + 4, w: 30, h: 14, vx: e.dir * 360, vy: 0, vida: 1.4 });
+                            e.estado = 'perseguir';
+                            e.t = 0;
+                            e.recarga = 0.9 * k;
+                        }
+                        break;
+                    case 'dashPrep':
+                        e.dir = dx > 0 ? 1 : -1;
+                        if (e.t >= 0.25 * k) { e.estado = 'dash'; e.t = 0; }
+                        break;
+                    case 'dash':
+                        vx = e.dir * 470;
+                        e.vy = 0;
+                        if (e.t >= 0.22) { e.estado = 'perseguir'; e.t = 0; e.recarga = 0.5 * k; }
+                        break;
+                    default:
+                        e.estado = 'inicio';
+                        e.t = 0;
+                }
+                const kx = recuoChao(e, dt);
+                const r = c.mover(e, (vx + kx) * dt, e.vy * dt);
+                e.noChao = r.chao;
+                if (r.chao || (r.teto && e.vy < 0)) e.vy = 0;
+                if (e.estado === 'dash' && (r.esq || r.dir)) { e.estado = 'perseguir'; e.t = 0; }
+            },
+        },
     };
 
     const PALAVRAS = ['OFENSA', 'BUEIRO', 'LIXO', 'CRINGE', 'BAN', 'L', 'RATIO', 'SPAM'];
+    const RECADOS = ['SCRAP', 'FAKE', 'DEPOIMENTO', 'ME ADD', 'KKKK', 'SDDS', 'TESTE', 'BJS'];
 
     /** Grito de Fossa: palavras voando rente ao chão (pule) ou na altura da cabeça (fique no chão). */
-    function gritar(c, e, fase2) {
+    function gritar(c, e, fase2, palavras = PALAVRAS) {
         const s = c.sala;
         const lado = c.alvo.x > s.x + s.w / 2 ? -1 : 1; // vêm do lado oposto ao jogador
         const padrao = fase2 ? ['baixo', 'alto', 'baixo', 'baixo', 'alto', 'baixo'] : ['baixo', 'alto', 'baixo', 'alto'];
         e.fila = padrao.map((altura, i) => {
-            const texto = PALAVRAS[Math.floor(c.rng() * PALAVRAS.length)];
+            const texto = palavras[Math.floor(c.rng() * palavras.length)];
             const w = 16 + texto.length * 10;
             const y = altura === 'baixo' ? e.chaoY - 20 : e.chaoY - 62;
             return {

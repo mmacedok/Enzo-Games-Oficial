@@ -59,9 +59,9 @@ const SALA_LIVRE = [
 
 // ------------------------------------------------------------------ mundo
 
-test('o mundo carrega: 15 salas, sem sobreposição e com aberturas que batem', () => {
+test('o mundo carrega: 28 salas (15 + 13 da expansão), sem sobreposição e com aberturas que batem', () => {
     const nivel = C.carregarMundo(MUNDO);
-    assert.equal(nivel.salas.length, 15);
+    assert.equal(nivel.salas.length, 28);
     assert.deepEqual(C.aberturasSemPar(nivel), []);
     for (const s of nivel.salas) {
         assert.ok(MUNDO.areas[s.area], `${s.id}: área sem nome`);
@@ -71,12 +71,12 @@ test('o mundo carrega: 15 salas, sem sobreposição e com aberturas que batem', 
     assert.ok(nivel.lojas.length >= 1);
 });
 
-test('cada habilidade aparece uma vez no mundo e os dois chefes existem', () => {
+test('cada habilidade aparece uma vez no mundo e os seis chefes existem', () => {
     const nivel = C.carregarMundo(MUNDO);
     const habs = nivel.itens.filter((i) => i.tipo === 'habilidade').map((i) => i.habilidade).sort();
-    assert.deepEqual(habs, ['dash', 'parede', 'pulo2', 'rajada']);
+    assert.deepEqual(habs, ['bigorna', 'buzz', 'dash', 'parede', 'pipa', 'pulo2', 'rajada']);
     const chefes = nivel.salas.filter((s) => s.chefeDef).map((s) => s.chefeDef.tipo).sort();
-    assert.deepEqual(chefes, ['capangaMor', 'opressor']);
+    assert.deepEqual(chefes, ['capangaMor', 'coach', 'glitch', 'opressor', 'ratao', 'scrapeira']);
     // Os fragmentos espalhados pelo mundo completam pelo menos um cogumelo.
     assert.ok(nivel.itens.filter((i) => i.tipo === 'fragmento').length >= 4);
 });
