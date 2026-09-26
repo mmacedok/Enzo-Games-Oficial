@@ -95,3 +95,21 @@ test('zlib: PNG gerado pode ser reinflado (IDAT consistente)', () => {
     }
     assert.equal(sawIdat, true, 'o PNG precisa conter um chunk IDAT');
 });
+
+test('removeWhiteBackground mantém o branco cercado pela arte', () => {
+    // 5x5: fundo branco, anel preto 3x3 e um pixel branco no meio do anel.
+    const width = 5;
+    const height = 5;
+    const rgba = new Uint8Array(width * height * 4).fill(255);
+    for (let y = 1; y <= 3; y++) {
+        for (let x = 1; x <= 3; x++) {
+            if (x === 2 && y === 2) continue;
+            rgba.set([0, 0, 0, 255], (y * width + x) * 4);
+        }
+    }
+    const result = mask.removeWhiteBackground({ width, height, rgba });
+    const meio = (result.width - 1) / 2;
+    const centro = (meio * result.width + meio) * 4;
+    assert.equal(result.rgba[3], 0, 'o fundo da borda some');
+    assert.deepEqual([...result.rgba.slice(centro, centro + 4)], [255, 255, 255, 255], 'branco interno continua opaco');
+});

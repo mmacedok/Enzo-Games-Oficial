@@ -50,6 +50,8 @@
     function unlock(card) {
         card.dataset.locked = 'false';
         card.querySelector('.crime-scene-overlay').hidden = true;
+        const img = card.querySelector('img');
+        if (img.dataset.nome) img.alt = img.dataset.nome;
         card.querySelector('.character-name').textContent = card.querySelector('img').alt;
         card.setAttribute('aria-label', `Abrir ficha: ${card.querySelector('img').alt}`);
     }

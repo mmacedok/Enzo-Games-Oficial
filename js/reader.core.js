@@ -521,8 +521,8 @@
     /** Aplica a conta ao capítulo aberto: tarja liberada e "continuar de onde parou". */
     function applyAccount() {
         const account = conta();
+        if (!state.unlocked && account?.temConquista?.('cabo-coco')) unlockCensorship();   // vale também sem login (conquista no aparelho)
         if (!account?.usuario || !state.comic) return;
-        if (!state.unlocked && account.temConquista('cabo-coco')) unlockCensorship();
         // Edições lidas antes desta conquista existir também contam.
         account.verificarColecoes?.(state.db);
         const chapter = state.comic.chapters?.[state.chapterIndex];

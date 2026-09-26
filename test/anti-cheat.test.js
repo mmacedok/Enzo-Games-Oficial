@@ -3,7 +3,7 @@
 // ============================================================================
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { tetoFlappy, tetoRonda, validarPontuacao, pontuacaoMaxima } = require('../api/anti-cheat.js');
+const { tetoFlappy, validarPontuacao, pontuacaoMaxima } = require('../api/anti-cheat.js');
 
 test('tetoFlappy respeita o tempo físico dos talheres', () => {
     // Primeiro par leva 2,28 s para atravessar a tela
@@ -11,15 +11,6 @@ test('tetoFlappy respeita o tempo físico dos talheres', () => {
     assert.equal(tetoFlappy(2.3), 1, 'logo após o primeiro par');
     // Intervalo entre talheres é 210 px / 150 px/s = 1,4 s
     assert.equal(tetoFlappy(2.3 + 1.4 * 10), 11, '10 intervalos depois');
-});
-
-test('tetoRonda nunca diminui com o tempo (função monotônica)', () => {
-    let anterior = 0;
-    for (let s = 0; s <= 600; s += 5) {
-        const teto = tetoRonda(s);
-        assert.ok(teto >= anterior, `teto diminuiu aos ${s} s (${teto} < ${anterior})`);
-        anterior = teto;
-    }
 });
 
 test('validarPontuacao aceita partidas possíveis e recusa violações', () => {

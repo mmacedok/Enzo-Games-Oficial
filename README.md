@@ -93,7 +93,7 @@ leitor. Plano completo: [docs/PLANO-OAUTH-SCORES.md](docs/PLANO-OAUTH-SCORES.md)
 - Sessão: cookie `sid` HttpOnly/SameSite=Lax; o banco guarda só o HMAC do token.
 - Anti-cheat: cada partida pede um `run_token` ao começar; no fim, o servidor
   compara os pontos com o máximo possível naquele tempo, calculado com as
-  regras de `js/flappy-core.js` e `js/ronda-core.js` (`api/anti-cheat.js`).
+  regras de `js/flappy-core.js` (`api/anti-cheat.js`).
 - Convidado continua jogando com recorde local. No primeiro login os recordes
   locais viram "recorde pessoal" da conta (não entram no ranking, porque não
   dá para provar que foram jogados).
