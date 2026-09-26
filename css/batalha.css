@@ -86,14 +86,15 @@
 
 /* ------------------------------------------------------------------ mesa */
 .bt-mesa {
-    --w-ativo: min(clamp(84px, 26vw, 150px), 12.5vh);
-    --w-banco: min(clamp(60px, 18vw, 104px), 9.5vh);
-    --w-mao: min(clamp(62px, 17vw, 108px), 10vh);
-    --w-campo: min(clamp(48px, 12vw, 80px), 7.5vh);
+    --w-ativo: min(clamp(96px, 30vw, 190px), 14.5vh);
+    --w-banco: min(clamp(66px, 20vw, 140px), 11.5vh);
+    --w-mao: min(clamp(74px, 22vw, 150px), 13vh);
+    --w-campo: min(clamp(52px, 14vw, 104px), 9vh);
     --gap: clamp(5px, 1.3vw, 12px);
     position: relative;
     display: grid;
     grid-template-rows: auto auto 1fr auto auto;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--gap);
     max-width: 980px;
     min-height: calc(100dvh - 12px);
@@ -168,6 +169,9 @@
 .bt-lado .bt-info { grid-area: info; justify-self: center; width: min(520px, calc(100vw - 28px)); }
 .bt-lado .bt-vaga--ativo { grid-area: ativo; }
 .bt-lado .bt-banco { display: contents; }
+.bt-lado .bt-vaga--banco:nth-child(1) { grid-area: b1; }
+.bt-lado .bt-vaga--banco:nth-child(2) { grid-area: b2; }
+.bt-lado .bt-vaga--banco:nth-child(3) { grid-area: b3; }
 .bt-info {
     display: flex;
     flex-wrap: wrap;
@@ -329,8 +333,8 @@
 .bt-auras { position: absolute; left: -4px; bottom: -4px; z-index: 2; display: flex; flex-wrap: wrap; gap: 2px; max-width: 70%; }
 .bt-aura-pip {
     display: inline-block;
-    width: 12px;
-    height: 12px;
+    width: 15px;
+    height: 15px;
     background: radial-gradient(circle at 35% 35%, #fff9c4, #ffcc00 50%, #e65100);
     border: 2px solid var(--ink);
     border-radius: 50%;
@@ -354,16 +358,43 @@
 
 /* ------------------------------------------------------------------ mãos */
 .bt-mao { display: flex; justify-content: center; align-items: flex-end; }
-.bt-mao--eu { min-height: calc(var(--w-mao) * 88 / 63 + 8px); padding: 0 12px; }
+.bt-mao--eu { min-width: 0; min-height: calc(var(--w-mao) * 88 / 63 + 8px); padding: 0 12px; }
 .bt-mao--eu .bt-carta { width: var(--w-mao); flex: none; transition: transform 0.15s ease, box-shadow 0.2s ease; }
-.bt-mao--eu .bt-carta + .bt-carta { margin-left: calc(var(--w-mao) * -0.18); }
+.bt-mao--eu .bt-carta + .bt-carta { margin-left: var(--sobrepor, calc(var(--w-mao) * -0.15)); }
 @media (hover: hover) {
-    .bt-mao--eu .bt-carta:hover { z-index: 5; transform: translateY(-16px) scale(1.12); }
+    .bt-mao--eu .bt-carta:hover { z-index: 5; transform: translateY(-22px) scale(1.25); }
 }
 .bt-mao--npc { gap: 0; margin-left: auto; }
 .bt-mao--npc .carta-tcg { width: 22px; flex: none; border-width: 2px; box-shadow: none; }
 .bt-mao--npc .carta-tcg + .carta-tcg { margin-left: -12px; }
 .bt-mao--npc .carta-tcg-verso-marca, .bt-mao--npc .carta-tcg-verso-selo { display: none; }
+/* Mão do NPC virada para cima depois da Câmera do Drone Vigia */
+.bt-mao--espiada { cursor: zoom-in; }
+.bt-mao--espiada .carta-tcg { width: 30px; }
+.bt-mao--espiada .carta-tcg + .carta-tcg { margin-left: -8px; }
+.bt-espiada-titulo { margin: 0; font-family: var(--font-heading); font-size: 1.6rem; font-weight: 400; letter-spacing: 0.5px; }
+.bt-espiada-cartas { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: min(640px, 86vw); }
+.bt-espiada-cartas .carta-tcg { width: clamp(76px, 22vw, 120px); }
+.bt-espiada-nota { font-size: 0.85rem; opacity: 0.8; }
+
+/* ------------------------------------------------------------------ arrastar */
+.bt-mesa { -webkit-user-select: none; user-select: none; }
+.bt-carta, .bt-aura { touch-action: none; }
+.bt-fantasma {
+    position: fixed;
+    z-index: 1000;
+    margin: 0 !important;
+    pointer-events: none;
+    filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.6));
+    transition: none !important;
+    animation: none !important;
+}
+.bt-arrastando { opacity: 0.3; }
+.bt-zona, .bt-zona--nao { border-radius: 8px; transition: box-shadow 0.12s ease, transform 0.12s ease; }
+.bt-zona { box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.8), 0 0 16px rgba(255, 204, 0, 0.45); border-color: rgba(255, 204, 0, 0.8) !important; }
+.bt-zona.bt-zona--sobre { box-shadow: 0 0 0 5px #ffcc00, 0 0 28px #ffcc00; transform: scale(1.06); }
+.bt-zona--nao.bt-zona--sobre { box-shadow: 0 0 0 4px #ff3b30, 0 0 18px #ff3b30; }
+.bt-mao--eu.bt-zona { box-shadow: inset 0 0 0 3px rgba(255, 204, 0, 0.6); }
 
 /* ------------------------------------------------------------------ ações */
 .bt-aura {
@@ -673,3 +704,22 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     .bt-carta--pode, .bt-carta--alvo, .bt-aura--pronta .bt-orbe, .bt-confete { animation: none; }
 }
 .bt-pergunta-texto { font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 0.5px; }
+
+/* ------------------------------------------------------------------ tela larga e baixa
+   (computador): a barra de cada jogador vai para o lado das cartas, sobrando altura para cartas maiores. */
+@media (min-width: 900px) and (min-aspect-ratio: 5 / 4) {
+    .bt-mesa {
+        --w-ativo: min(210px, 21vh);
+        --w-banco: min(150px, 16vh);
+        --w-mao: min(160px, 16vh);
+        --w-campo: min(104px, 10.5vh);
+        max-width: 1180px;
+    }
+    .bt-lado { grid-template-columns: 230px var(--w-ativo) repeat(3, var(--w-banco)) 230px; }
+    .bt-lado--npc { grid-template-areas: "info ativo b1 b2 b3 ."; align-items: end; }
+    .bt-lado--eu { grid-template-areas: ". ativo b1 b2 b3 info"; align-items: start; }
+    .bt-lado .bt-info { width: 230px; align-self: center; }
+    .bt-lado--npc .bt-info { padding-right: 8px; }
+    .bt-lado--eu .bt-info .bt-aura { margin-left: 0; }
+    .bt-mao--eu { margin-bottom: calc(var(--w-mao) * -0.35); }
+}

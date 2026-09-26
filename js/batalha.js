@@ -10,6 +10,9 @@
 // Imagens que ainda não existem usam placeholder em CSS. Quando o Henrique puser a arte em
 // assets/Batalha/ e rodar `npm run build`, ela aparece sozinha (lista e prompts: docs/BATALHA-ASSETS.md).
 //
+// Jogar é ARRASTAR (mão → banco, campo → meio, banco → ativo, Aura → carta, ativo → adversário).
+// Tocar numa carta só abre o painel com o que ela faz (e botões, para quem não consegue arrastar).
+//
 // Teste: batalha.html?auto=1 faz o robô jogar pelos dois lados; &rapido=1 sem esperas.
 // ============================================================================
 (() => {
@@ -210,12 +213,13 @@
             ['Objetivo', 'Faça 3 pontos. Derrubar uma carta vale 1 ponto; um lendário vale 2.'],
             ['Deck', '15 cartas. Você começa com 5 na mão e compra 1 por turno.'],
             ['Mesa', 'Um ATIVO (quem luta) e até 3 no BANCO (quem espera). O CAMPO é da mesa inteira e vale para os dois.'],
-            ['Aura', 'Todo turno você ganha 1 Aura e prende numa carta sua. Ataques custam Aura.'],
+            ['Aura', 'Todo turno você ganha 1 Aura e arrasta para uma carta sua. A Aura fica presa naquela carta e vai acumulando de um turno para o outro (as bolinhas amarelas na carta). Para atacar, o ativo precisa ter a Aura do ataque presa nele (atacar não gasta).'],
             ['Seu turno', 'Ponha cartas no banco, jogue 1 campo, prenda a Aura, use poderes, recue se precisar e ATAQUE. Atacar acaba o turno.'],
-            ['Recuar', 'Troca o ativo por um do banco, pagando a Aura de recuo. Voltar para o banco tira os estados.'],
+            ['Recuar', 'Arraste uma carta do banco para o ativo. Custa a Aura de recuo, que sai da Aura presa no ativo. Voltar para o banco tira os estados.'],
             ['Começo', 'Quem começa não ataca no 1º turno. Quem joga em segundo ganha +1 Aura de Reforço (só para o banco).'],
             ['Estados', '🔔 Notificado: leva 10 por turno. 🔇 Silenciado: não ataca nem recua. 💘 Iludido: pode errar o ataque.'],
-            ['Dica', 'Toque em qualquer carta para ver os ataques e o que dá para fazer com ela.'],
+            ['Jogar', 'Arraste as cartas: da mão para o banco, o campo para o meio da mesa, a Aura para uma carta, e o seu ativo até o ativo do NPC para atacar.'],
+            ['Dica', 'Toque em qualquer carta (até as do NPC) para ver os ataques e o que ela faz.'],
         ];
         for (const [t, d] of itens) {
             const p = el('p');
@@ -307,7 +311,7 @@
 
         m.acoes = el('div', 'bt-acoes');
         m.aura = botao('bt-aura', null, () => {
-            if (!minhaVez()) return;
+            if (!minhaVez() || acabouDeArrastar) return;
             modo = modo?.tipo === 'aura' ? null : { tipo: 'aura' };
             desenhar();
         });
@@ -315,12 +319,14 @@
         const orbe = el('span', 'bt-orbe');
         if (arte(ARTE.aura)) orbe.style.backgroundImage = `url('${arte(ARTE.aura)}')`;
         m.aura.append(orbe, m.auraQtd);
+        m.aura.addEventListener('pointerdown', (e) => apertar(e, orbe, { tipo: 'aura' }));
         m.passar = botao('bt-passar', 'Passar', () => minhaVez() && executar({ tipo: 'passar' }));
         m.cancelar = botao('bt-cancelar', 'Cancelar', () => { modo = null; desenhar(); });
         m.pronto = botao('bt-passar bt-pronto', 'Começar!', confirmarPreparo);
         m.eu.info.append(m.aura, m.passar, m.cancelar, m.pronto);
 
         m.maoNpc = el('div', 'bt-mao bt-mao--npc');
+        m.maoNpc.addEventListener('click', () => { const e = espiadaVisivel(); if (e) mostrarEspiada(e); });
         m.npc.info.appendChild(m.maoNpc);
         m.mao = el('div', 'bt-mao bt-mao--eu');
 
@@ -368,7 +374,8 @@
             const hud = el('div', 'bt-hud');
             hud.append(el('span', 'bt-hp'), el('span', 'bt-auras'), el('span', 'bt-estados'));
             v.appendChild(hud);
-            v.addEventListener('click', () => clicarCarta(v.dataset.uid));
+            v.addEventListener('click', () => { if (!acabouDeArrastar) clicarCarta(v.dataset.uid); });
+            v.addEventListener('pointerdown', (e) => apertar(e, v, { tipo: 'carta', uid: v.dataset.uid }));
             cartasVivas.set(inst.uid, v);
         }
         return v;
@@ -439,6 +446,12 @@
             lado.vagas.forEach((v) => v.replaceChildren());
             if (x.ativo) por(x.ativo, lado.ativo);
             x.banco.forEach((c, i) => por(c, lado.vagas[i]));
+            if (preparando && j === EU) {
+                // Na preparação as escolhas ainda estão na mão: mostra cada uma na vaga para onde foi arrastada.
+                const daMao = (u) => x.mao.find((c) => c.uid === u);
+                if (modo.ativo) por(daMao(modo.ativo), lado.ativo, false);
+                modo.banco.forEach((u, i) => por(daMao(u), lado.vagas[i], false));
+            }
             lado.l.classList.toggle('bt-lado--vez', estado.fase === 'jogo' && estado.vez === j && !estado.pendentes.length);
         }
 
@@ -450,14 +463,28 @@
         trocarFundo(campoId);
 
         // Mão do NPC (costas) e a sua.
-        mesa.maoNpc.replaceChildren(...Array.from({ length: visao.jogadores[NPC].mao }, () => UI.verso('')));
+        // Depois da Câmera do Drone Vigia, a mão do NPC fica virada para cima até o fim do seu turno.
+        const espiada = espiadaVisivel();
+        mesa.maoNpc.replaceChildren(...(espiada
+            ? espiada.map((id) => UI.carta(id))
+            : Array.from({ length: visao.jogadores[NPC].mao }, () => UI.verso(''))));
+        mesa.maoNpc.classList.toggle('bt-mao--espiada', !!espiada);
+        mesa.maoNpc.title = espiada ? 'Mão do NPC (Câmera): toque para ver' : '';
         mesa.mao.replaceChildren();
-        const minhaMao = visao.jogadores[EU].mao;
+        const escolhidas = preparando ? [modo.ativo, ...modo.banco] : [];
+        const minhaMao = visao.jogadores[EU].mao.filter((c) => !escolhidas.includes(c.uid));
         minhaMao.forEach((c, i) => {
             const v = por(c, mesa.mao, false);
             v.style.setProperty('--i', i - (minhaMao.length - 1) / 2);
         });
         mesa.mao.style.setProperty('--n', minhaMao.length);
+        // Mão cheia: as cartas se sobrepõem mais para caber na largura.
+        const primeira = mesa.mao.firstElementChild;
+        if (primeira && minhaMao.length > 1) {
+            const w = primeira.offsetWidth;
+            const livre = Math.min(mesa.raiz.clientWidth, window.innerWidth) - 44;
+            mesa.mao.style.setProperty('--sobrepor', `${Math.min(-0.15 * w, (livre - minhaMao.length * w) / (minhaMao.length - 1))}px`);
+        }
 
         // Tira da tela as cartas que saíram (descarte).
         for (const [uid, v] of cartasVivas) if (!usados.has(uid)) { v.remove(); cartasVivas.delete(uid); }
@@ -511,10 +538,8 @@
         if (preparando) {
             const eu = estado.jogadores[EU];
             for (const c of eu.mao) {
-                if (!R.ehLutador(c.id)) { marca(c.uid, 'bt-carta--apagada'); continue; }
-                if (modo.ativo === c.uid) marca(c.uid, 'bt-carta--ativo-escolhido');
-                else if (modo.banco.includes(c.uid)) marca(c.uid, 'bt-carta--banco-escolhido');
-                else marca(c.uid, 'bt-carta--pode');
+                if (!R.ehLutador(c.id)) marca(c.uid, 'bt-carta--apagada');
+                else if (modo.ativo !== c.uid && !modo.banco.includes(c.uid)) marca(c.uid, 'bt-carta--pode');
             }
             return;
         }
@@ -535,7 +560,7 @@
         for (const c of eu.mao) {
             if (acoesDaCarta(c.uid).some((a) => a.valida)) marca(c.uid, 'bt-carta--pode');
         }
-        if (eu.ativo && acoesDaCarta(eu.ativo.uid).some((a) => a.valida && a.jogada.tipo === 'atacar')) marca(eu.ativo.uid, 'bt-carta--pode');
+        if (eu.ativo && acoesDaCarta(eu.ativo.uid).some((a) => a.valida && a.jogada?.tipo === 'atacar')) marca(eu.ativo.uid, 'bt-carta--pode');
     }
 
     function atualizarAcoes(preparando) {
@@ -557,12 +582,12 @@
         if (modo?.tipo !== 'alvo') mesa.seta.classList.remove('bt-seta--viva');
 
         let dica = '';
-        if (preparando) dica = modo.ativo ? 'Escolha até 3 cartas para o banco (opcional) e toque em Começar!' : 'Escolha seu ATIVO: toque num personagem ou goon da mão.';
+        if (preparando) dica = modo.ativo ? 'Arraste até 3 cartas para o banco (opcional) e toque em Começar!' : 'Arraste um personagem ou goon da mão para o ATIVO. Toque numa carta para ver o que ela faz.';
         else if (estado.fase === 'fim') dica = '';
         else if (modo?.tipo === 'alvo') dica = modo.texto;
-        else if (modo?.tipo === 'aura') dica = 'Toque na carta que vai receber a Aura.';
-        else if (estado.pendentes.some((p) => p.jogador === EU)) dica = 'Seu ativo caiu! Escolha quem sai do banco.';
-        else if (vez) dica = estado.turno === 1 ? 'Seu 1º turno: prepare a mesa (ainda não dá para atacar).' : 'Sua vez! Toque numa carta para ver o que ela faz.';
+        else if (modo?.tipo === 'aura') dica = 'Toque na carta que vai receber a Aura. Ela fica presa ali e acumula.';
+        else if (estado.pendentes.some((p) => p.jogador === EU)) dica = 'Seu ativo caiu! Arraste uma carta do banco para o ativo.';
+        else if (vez) dica = estado.turno === 1 ? 'Seu 1º turno: arraste cartas para o banco e a Aura para uma carta (ainda não dá para atacar).' : 'Sua vez! Arraste as cartas para jogar (o ativo até o NPC ataca).';
         else if (estado.fase === 'jogo') dica = 'Vez do NPC...';
         mesa.dica.textContent = dica;
     }
@@ -570,7 +595,6 @@
     // ---------------------------------------------------------------- cliques
     function clicarCarta(uid) {
         if (!estado || ocupado) return;
-        if (modo?.tipo === 'preparar') return escolherPreparo(uid);
         if (modo?.tipo === 'alvo') {
             if (modo.alvos.includes(uid)) {
                 const jogada = { ...modo.jogada, alvo: uid };
@@ -583,20 +607,26 @@
             if (valida({ tipo: 'aura', alvo: uid })) { modo = null; executar({ tipo: 'aura', alvo: uid }); }
             return;
         }
-        if (estado.pendentes.some((p) => p.jogador === EU)) {
-            if (estado.jogadores[EU].banco.some((c) => c.uid === uid)) executar({ tipo: 'novoAtivo', uid });
-            return;
-        }
         abrirPainel(uid);
     }
 
-    function escolherPreparo(uid) {
+    /** Preparação: põe a carta no ativo, no banco ou de volta na mão ('mao'). */
+    function escolherPreparo(uid, onde) {
         const c = estado.jogadores[EU].mao.find((x) => x.uid === uid);
         if (!c || !R.ehLutador(c.id)) return;
-        if (modo.ativo === uid) modo.ativo = null;
-        else if (modo.banco.includes(uid)) modo.banco = modo.banco.filter((u) => u !== uid);
-        else if (!modo.ativo) modo.ativo = uid;
-        else if (modo.banco.length < R.VAGAS_BANCO) modo.banco.push(uid);
+        const tinhaAtivo = modo.ativo;
+        const eraAtivo = tinhaAtivo === uid;
+        const vagaAntiga = modo.banco.indexOf(uid);
+        if (eraAtivo) modo.ativo = null;
+        if (vagaAntiga >= 0) modo.banco.splice(vagaAntiga, 1);
+        if (onde === 'ativo') {
+            modo.ativo = uid;
+            // Quem estava no ativo troca de lugar com ela (ou volta para a mão se o banco estiver cheio).
+            if (tinhaAtivo && !eraAtivo && modo.banco.length < R.VAGAS_BANCO) modo.banco.splice(Math.max(0, vagaAntiga), 0, tinhaAtivo);
+        } else if (onde === 'banco') {
+            if (modo.banco.length < R.VAGAS_BANCO) modo.banco.push(uid);
+            else balao(mesa.eu.l, 'O banco já tem 3 cartas.', 'erro');
+        }
         desenhar();
     }
 
@@ -612,6 +642,23 @@
         const eu = estado.jogadores[EU];
         const ele = estado.jogadores[NPC];
         const acoes = [];
+        if (modo?.tipo === 'preparar') {
+            const c = eu.mao.find((x) => x.uid === uid);
+            if (!c || !R.ehLutador(c.id)) return acoes;
+            const fazer = (onde) => () => escolherPreparo(uid, onde);
+            if (modo.ativo !== uid) acoes.push({ rotulo: 'Pôr no ativo', valida: true, fazer: fazer('ativo') });
+            if (!modo.banco.includes(uid)) {
+                const cheio = modo.banco.length >= R.VAGAS_BANCO;
+                acoes.push({ rotulo: 'Pôr no banco', valida: !cheio, motivo: cheio ? 'o banco já tem 3' : null, fazer: fazer('banco') });
+            }
+            if (modo.ativo === uid || modo.banco.includes(uid)) acoes.push({ rotulo: 'Voltar para a mão', valida: true, fazer: fazer('mao') });
+            return acoes;
+        }
+        if (estado.pendentes.some((p) => p.jogador === EU)) {
+            if (eu.banco.some((c) => c.uid === uid)) acoes.push({ rotulo: 'Pôr no ativo', valida: true, jogada: { tipo: 'novoAtivo', uid } });
+            return acoes;
+        }
+        if (!minhaVez()) return acoes;
         const add = (rotulo, jogada, extra = {}) => {
             const m = motivo(jogada.alvo === '?' ? { ...jogada, alvo: extra.alvos?.[0] } : jogada);
             acoes.push({ rotulo, jogada, valida: !m, motivo: m, ...extra });
@@ -629,7 +676,7 @@
         const poder = R.combate(minha.id).poder;
         if (poder?.ativavel) add(`Usar poder: ${poder.nome}`, { tipo: 'poder', uid });
         if (eu.banco.some((c) => c.uid === uid) && eu.ativo) {
-            add(`Recuar: esta vira o ativo (custa ${R.custoRecuo(estado, eu.ativo)} Aura)`, { tipo: 'recuar', para: uid });
+            add(`Recuar: esta vira o ativo (gasta ${R.custoRecuo(estado, eu.ativo)} da Aura presa no ativo, que tem ${eu.ativo.aura})`, { tipo: 'recuar', para: uid });
         }
         if (eu.ativo?.uid === uid) {
             R.combate(minha.id).ataques.forEach((a, i) => {
@@ -682,7 +729,7 @@
             }
         }
 
-        const acoes = jogador === EU && minhaVez() ? acoesDaCarta(uid) : [];
+        const acoes = jogador === EU && !ocupado ? acoesDaCarta(uid) : [];
         const ataquesDasAcoes = new Map(acoes.filter((a) => a.ataque).map((a) => [a.ataque, a]));
         if (c.ataques) {
             const lista = el('div', 'bt-ataques');
@@ -703,7 +750,7 @@
         }
         const outras = el('div', 'bt-painel-acoes');
         for (const a of acoes.filter((x) => !x.ataque)) {
-            const b = botao('bt-botao', a.rotulo, () => { fecharPainel(); executar(a.jogada); });
+            const b = botao('bt-botao', a.rotulo, () => { fecharPainel(); if (a.fazer) a.fazer(); else executar(a.jogada); });
             b.disabled = !a.valida;
             if (!a.valida) b.title = a.motivo;
             outras.appendChild(b);
@@ -733,13 +780,16 @@
     function moverSeta(e) {
         if (modo?.tipo !== 'alvo' || !mesa) return;
         const origem = cartasVivas.get(estado.jogadores[EU].ativo?.uid);
-        if (!origem) return;
+        if (origem) desenharSeta(origem, e.clientX, e.clientY);
+    }
+
+    function desenharSeta(origem, px, py) {
         const caixa = mesa.raiz.getBoundingClientRect();
         const o = origem.getBoundingClientRect();
         const x1 = o.left + o.width / 2 - caixa.left;
         const y1 = o.top - caixa.top;
-        const x2 = e.clientX - caixa.left;
-        const y2 = e.clientY - caixa.top;
+        const x2 = px - caixa.left;
+        const y2 = py - caixa.top;
         const meioX = (x1 + x2) / 2;
         const meioY = Math.min(y1, y2) - 60;
         mesa.seta.setAttribute('viewBox', `0 0 ${caixa.width} ${caixa.height}`);
@@ -761,6 +811,196 @@
             mesa.raiz.appendChild(fundo);
             acoes.lastChild.focus({ preventScroll: true });
         });
+    }
+
+    // ---------------------------------------------------------------- Câmera (mão do NPC)
+    /** Ids da mão do NPC que a Câmera mostrou, enquanto ainda é o seu turno (depois a mão muda). */
+    function espiadaVisivel() {
+        const e = estado?.jogadores[EU].espiada;
+        return Array.isArray(e) && estado.vez === EU && estado.fase === 'jogo' ? e : null;
+    }
+
+    function mostrarEspiada(ids) {
+        if (!mesa) return;
+        mesa.raiz.querySelector('.bt-espiada')?.remove();
+        const fundo = el('div', 'bt-fim bt-espiada');
+        const miolo = el('div', 'bt-fim-miolo');
+        const cartas = el('div', 'bt-espiada-cartas');
+        ids.forEach((id) => cartas.appendChild(UI.carta(id)));
+        miolo.append(el('h2', 'bt-espiada-titulo', '📷 Câmera: a mão do NPC'),
+            ids.length ? cartas : el('p', '', 'A mão dele está vazia.'),
+            el('p', 'bt-espiada-nota', 'Fica virada para cima até o fim do seu turno.'),
+            botao('bt-botao bt-botao--forte', 'Fechar', () => fundo.remove()));
+        fundo.appendChild(miolo);
+        fundo.addEventListener('click', (e) => { if (e.target === fundo) fundo.remove(); });
+        mesa.raiz.appendChild(fundo);
+        animar(miolo, [{ transform: 'scale(.6)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260 });
+    }
+
+    // ---------------------------------------------------------------- arrastar
+    // Jogar é arrastar: um toque sem arrastar vira clique e só abre o painel da carta.
+    let arrasto = null;
+    let acabouDeArrastar = false;
+    const LIMIAR = 8;   // px até o toque virar arrasto
+
+    function apertar(e, alvo, origem) {
+        if (e.button !== 0 || ocupado || !estado || !mesa) return;
+        arrasto = { alvo, origem, x0: e.clientX, y0: e.clientY, id: e.pointerId, vivo: false };
+        window.addEventListener('pointermove', moverArrasto);
+        window.addEventListener('pointerup', soltarArrasto);
+        window.addEventListener('pointercancel', cancelarArrasto);
+    }
+
+    /** Para onde dá para soltar: { el, jogada } (vale), { el, motivo } (não vale e diz por quê), ou especiais. */
+    function zonasDoArrasto(origem) {
+        const zonas = [];
+        const eu = estado.jogadores[EU];
+        const ele = estado.jogadores[NPC];
+        const zona = (alvoEl, jogada) => {
+            if (!alvoEl) return;
+            const m = motivo(jogada);
+            zonas.push(m ? { el: alvoEl, motivo: m } : { el: alvoEl, jogada });
+        };
+        if (modo?.tipo === 'preparar') {
+            const c = origem.tipo === 'carta' && eu.mao.find((x) => x.uid === origem.uid);
+            if (!c || !R.ehLutador(c.id)) return zonas;
+            zonas.push({ el: mesa.eu.ativo, preparo: 'ativo' });
+            mesa.eu.vagas.forEach((v) => zonas.push({ el: v, preparo: 'banco' }));
+            if (modo.ativo === c.uid || modo.banco.includes(c.uid)) zonas.push({ el: mesa.mao, preparo: 'mao' });
+            return zonas;
+        }
+        if (estado.pendentes.some((p) => p.jogador === EU)) {
+            if (origem.tipo === 'carta' && eu.banco.some((c) => c.uid === origem.uid)) zona(mesa.eu.ativo, { tipo: 'novoAtivo', uid: origem.uid });
+            return zonas;
+        }
+        if (!minhaVez() || modo) return zonas;
+        if (origem.tipo === 'aura') {
+            for (const c of R.naMesa(eu)) zona(elDe(c.uid), { tipo: 'aura', alvo: c.uid });
+            return zonas;
+        }
+        const uid = origem.uid;
+        const naMao = eu.mao.find((c) => c.uid === uid);
+        if (naMao) {
+            if (R.ehLutador(naMao.id)) {
+                const jogada = { tipo: 'baixar', uid };
+                const m = motivo(jogada);
+                for (const v of mesa.eu.vagas) {
+                    if (m) zonas.push({ el: v, motivo: m });
+                    else if (!v.firstElementChild) zonas.push({ el: v, jogada });
+                }
+            }
+            if (R.ehCampo(naMao.id)) zona(mesa.campo, { tipo: 'campo', uid });
+            return zonas;
+        }
+        if (eu.banco.some((c) => c.uid === uid)) {
+            zona(mesa.eu.ativo, { tipo: 'recuar', para: uid });
+            return zonas;
+        }
+        if (eu.ativo?.uid === uid) {
+            // Ativo até o adversário: ataca. Ataques que acertam qualquer um aceitam o banco também.
+            const podeBanco = R.combate(eu.ativo.id).ataques.some((a) => a.alvo === 'qualquer');
+            for (const c of R.naMesa(ele)) {
+                if (c === ele.ativo || podeBanco) zonas.push({ el: elDe(c.uid), atacar: c.uid });
+            }
+        }
+        return zonas;
+    }
+
+    function comecarArrasto() {
+        const zonas = zonasDoArrasto(arrasto.origem);
+        if (!zonas.length) return false;
+        fecharPainel();
+        const caixa = arrasto.alvo.getBoundingClientRect();
+        const fantasma = arrasto.alvo.cloneNode(true);
+        fantasma.classList.add('bt-fantasma');
+        fantasma.classList.remove('bt-carta--pode');
+        Object.assign(fantasma.style, { left: `${caixa.left}px`, top: `${caixa.top}px`, width: `${caixa.width}px`, height: `${caixa.height}px` });
+        document.body.appendChild(fantasma);
+        arrasto.alvo.classList.add('bt-arrastando');
+        for (const z of zonas) z.el.classList.add(z.motivo ? 'bt-zona--nao' : 'bt-zona');
+        Object.assign(arrasto, { vivo: true, zonas, fantasma, sobre: null });
+        mesa.raiz.classList.add('bt-mesa--arrastando');
+        return true;
+    }
+
+    function zonaEm(x, y) {
+        const embaixo = document.elementsFromPoint(x, y);
+        // A mais específica primeiro: carta antes da vaga, vaga antes da mão inteira.
+        let melhor = null;
+        for (const z of arrasto.zonas) {
+            const i = embaixo.findIndex((n) => z.el === n || z.el.contains(n));
+            if (i >= 0 && (!melhor || i < melhor.i)) melhor = { z, i };
+        }
+        return melhor?.z || null;
+    }
+
+    function moverArrasto(e) {
+        if (!arrasto || e.pointerId !== arrasto.id) return;
+        const dx = e.clientX - arrasto.x0;
+        const dy = e.clientY - arrasto.y0;
+        if (!arrasto.vivo) {
+            if (Math.hypot(dx, dy) < LIMIAR) return;
+            if (!comecarArrasto()) { fimArrasto(); return; }
+        }
+        e.preventDefault();
+        arrasto.fantasma.style.transform = `translate(${dx}px, ${dy}px) rotate(${Math.max(-12, Math.min(12, dx / 20))}deg) scale(1.08)`;
+        const z = zonaEm(e.clientX, e.clientY);
+        if (z !== arrasto.sobre) {
+            arrasto.sobre?.el.classList.remove('bt-zona--sobre');
+            z?.el.classList.add('bt-zona--sobre');
+            arrasto.sobre = z;
+        }
+        if (arrasto.origem.tipo === 'carta' && arrasto.zonas.some((x) => x.atacar)) desenharSeta(arrasto.alvo, e.clientX, e.clientY);
+    }
+
+    function soltarArrasto(e) {
+        if (!arrasto || e.pointerId !== arrasto.id) return;
+        const { vivo, origem } = arrasto;
+        const z = vivo ? zonaEm(e.clientX, e.clientY) : null;
+        fimArrasto();
+        if (!vivo) return;
+        acabouDeArrastar = true;
+        setTimeout(() => { acabouDeArrastar = false; }, 0);
+        if (!z) return;
+        if (z.preparo) escolherPreparo(origem.uid, z.preparo);
+        else if (z.motivo) balao(z.el, z.motivo, 'erro');
+        else if (z.atacar) soltarAtaque(z.atacar, z.el);
+        else if (z.jogada) executar(z.jogada);
+    }
+
+    function cancelarArrasto(e) {
+        if (arrasto && e.pointerId === arrasto.id) fimArrasto();
+    }
+
+    function fimArrasto() {
+        window.removeEventListener('pointermove', moverArrasto);
+        window.removeEventListener('pointerup', soltarArrasto);
+        window.removeEventListener('pointercancel', cancelarArrasto);
+        if (!arrasto) return;
+        arrasto.fantasma?.remove();
+        arrasto.alvo.classList.remove('bt-arrastando');
+        for (const z of arrasto.zonas || []) z.el.classList.remove('bt-zona', 'bt-zona--nao', 'bt-zona--sobre');
+        mesa?.raiz.classList.remove('bt-mesa--arrastando');
+        mesa?.seta.classList.remove('bt-seta--viva');
+        arrasto = null;
+    }
+
+    /** Soltou o ativo em cima de uma carta do NPC: um ataque só ataca direto; mais de um abre o painel. */
+    function soltarAtaque(alvoUid, alvoEl) {
+        const eu = estado.jogadores[EU];
+        const ele = estado.jogadores[NPC];
+        const ataques = acoesDaCarta(eu.ativo.uid).filter((a) => a.ataque);
+        const noAtivo = alvoUid === ele.ativo?.uid;
+        const servem = ataques.filter((a) => a.valida && (a.ataque.alvo === 'qualquer' ? a.alvos.includes(alvoUid) : noAtivo));
+        if (!servem.length) {
+            const m = ataques.find((a) => !a.valida)?.motivo || 'nenhum ataque acerta essa carta';
+            balao(alvoEl, `Não dá: ${m}`, 'erro');
+            return;
+        }
+        if (servem.length > 1) { abrirPainel(eu.ativo.uid); return; }
+        const [acao] = servem;
+        if (acao.ataque.alvo === 'qualquer') executar({ ...acao.jogada, alvo: alvoUid });
+        else escolherAtaque(acao);
     }
 
     async function sair() {
@@ -849,7 +1089,7 @@
             case 'poder': registrar(`${n(ev.uid)} usou o poder ${ev.nome}.`); break;
             case 'moeda': registrar(`Moeda: ${ev.resultado}.`); break;
             case 'ataqueFalhou': registrar(`${n(ev.uid)} estava Iludido e errou!`); break;
-            case 'espiar': if (ev.jogador === EU) registrar(`Câmera: a próxima carta do NPC é ${nomeVisivel(ev.id)}.`); break;
+            case 'espiar': if (ev.jogador === EU) registrar(`Câmera: a mão do NPC tem ${ev.ids.map(nomeVisivel).join(', ') || 'nada'}.`); break;
             case 'novoAtivo': registrar(`${quem(ev.jogador)} pôs ${n(ev.uid)} no ativo.`); break;
             case 'descartar': registrar(`${quem(ev.jogador)} descartou ${nomeVisivel(ev.id)}.`); break;
             case 'fim': registrar(ev.vencedor === 'empate' ? 'Empate!' : `${quem(ev.vencedor)} venceu!`); break;
@@ -1099,7 +1339,10 @@
                 }
                 break;
             case 'espiar':
-                if (ev.jogador === EU) await banner(`👁 ${nomeVisivel(ev.id)}`, 'campo');
+                if (ev.jogador === EU) {
+                    await banner('📷 Câmera!', 'campo');
+                    if (!AUTO) mostrarEspiada(ev.ids);
+                }
                 break;
             case 'preparado':
                 if (ev.jogador === EU) desenhar();
@@ -1114,7 +1357,7 @@
 
     // ---------------------------------------------------------------- fim
     function telaFim() {
-        if (!mesa || mesa.raiz.querySelector('.bt-fim')) return;
+        if (!mesa || mesa.raiz.querySelector('.bt-fim--vitoria, .bt-fim--derrota, .bt-fim--empate')) return;
         desenhar();
         const v = estado.vencedor;
         const tipo = v === 'empate' ? 'empate' : (v === EU ? 'vitoria' : 'derrota');

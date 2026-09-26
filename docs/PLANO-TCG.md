@@ -88,7 +88,7 @@ Base: goon comum 40–70 HP, raro 70–100, épico 90–110, lendário 120–140
 ### Épicos
 | Carta | HP | Recuo | Poder / Ataques |
 |---|---|---|---|
-| Chorão | 110 | 3 | **Poder, Vou te Processar!:** quem ataca o Chorão leva 20 de volta. **Birra (2):** 50. |
+| Chorão | 110 | 2 | **Poder, Vou te Processar!:** quem ataca o Chorão leva 20 de volta. **Birra (2):** 50. |
 | Sombra do Degustador | 90 | 0 | **Teemo no Top (1):** 20 e Notificado. **Fumaça Roxa (2):** 50. |
 
 ### Raros
@@ -98,7 +98,7 @@ Base: goon comum 40–70 HP, raro 70–100, épico 90–110, lendário 120–140
 | ItaloLOL | 90 | 1 | **Au! Aura! (1):** 20. **0/14/2 (2):** 70, mas o ItaloLOL leva 30 (a culpa é do jungle). |
 | Stand do Joinha | 70 | 1 | **Poder, Num Tem Eu:** do banco, dá +10 de dano aos ataques do seu ativo (não soma com outro Stand). **Joinha (1):** 20. |
 | Encantadora (goon) | 70 | 1 | **Vem Cá, Meu Gadinho (1):** troca o ativo do outro por uma carta do banco dele, à sua escolha. **Chama Rosa (2):** 30 e Iludido. |
-| Marreteiro do Coração (goon) | 100 | 3 | **Quebrar Tudo (1):** descarta o campo da mesa. **Marretada (3):** 90. |
+| Marreteiro do Coração (goon) | 100 | 2 | **Quebrar Tudo (1):** descarta o campo da mesa. **Marretada (3):** 90. |
 | Moderador do BAN (goon) | 90 | 2 | **Ban de 7 Dias (2):** 30 e Silenciado. |
 
 ### Comuns (goons)
@@ -108,7 +108,7 @@ Base: goon comum 40–70 HP, raro 70–100, épico 90–110, lendário 120–140
 | Bug do Discord | 50 | 1 | **Glitch (1):** moeda; cara = 40, coroa = 0. |
 | Notificação Morcego | 40 | 0 | **@everyone (1):** 10 e Notificado. |
 | Emoji Pistola | 60 | 1 | **Reação 😡 (1):** 10 + 10 por goon na sua mesa. |
-| Drone Vigia | 60 | 1 | **Poder, Câmera:** 1 vez por turno, olha a carta de cima do deck do outro. **Facho (1):** 20. |
+| Drone Vigia | 60 | 1 | **Poder, Câmera:** 1 vez por turno, olha a mão do outro (as cartas aparecem viradas para cima na tela). **Facho (1):** 20. |
 
 ### Campos (ficam na mesa e valem para os dois)
 | Carta | Efeito |
@@ -122,7 +122,7 @@ Base: goon comum 40–70 HP, raro 70–100, épico 90–110, lendário 120–140
 
 Os números estão em `js/tcg-cartas.js`. O simulador (`node tools/tcg-simular.mjs 5000`) roda
 milhares de partidas robô contra robô com decks sorteados. Resultado em 2026-09-26: toda carta fica entre
-**46% e 53%** de vitória. O Marreteiro é o mais fraco (46%, custa 3 Aura e recua por 3); o Chorão e o Cabo
+**46% e 53%** de vitória. O Marreteiro é o mais fraco (46%, a Marretada custa 3 Aura); em 2026-09-26 o recuo do Chorão e do Marreteiro caiu de 3 para 2. O Chorão e o Cabo
 Côco são os mais fortes (53%). Está bom para começar; dá para ajustar depois de jogar de verdade.
 
 ## 4. Como funciona por dentro
@@ -155,7 +155,7 @@ Côco são os mais fortes (53%). Está bom para começar; dá para ajustar depoi
 
 ### Contra outro jogador (depois, mas já previsto)
 - O motor roda **no servidor**: cada jogada é uma chamada à API, que confere, aplica e salva o estado.
-  Cada jogador recebe só a `visaoDe` dele e os eventos que pode ver (o `espiar` do Drone é privado).
+  Cada jogador recebe só a `visaoDe` dele e os eventos que pode ver (o `espiar` do Drone, que mostra a mão do outro, é privado).
 - O Netlify não tem conexão em tempo real (websocket), então o outro recebe a vez perguntando ao
   servidor a cada 1 ou 2 segundos durante a partida. Dá para jogar ao vivo ou "por correspondência".
 - Nada no motor muda para isso: o mesmo `aplicar` serve aos dois modos.

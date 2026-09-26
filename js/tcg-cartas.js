@@ -48,7 +48,7 @@
         ] },
 
         // ---- Épicos ----------------------------------------------------------
-        'chorao': { hp: 110, recuo: 3,
+        'chorao': { hp: 110, recuo: 2,
             poder: { nome: 'Vou te Processar!', tipo: 'contraAtaque', ativavel: false, valor: 20,
                 texto: 'Quem ataca o Chorão leva 20 de volta.' },
             ataques: [{ nome: 'Birra', custo: 2, dano: 50 }] },
@@ -76,7 +76,7 @@
             { nome: 'Vem Cá, Meu Gadinho', custo: 1, dano: 0, efeitos: [{ tipo: 'puxar' }] },
             { nome: 'Chama Rosa', custo: 2, dano: 30, efeitos: [{ tipo: 'estado', estado: 'iludido' }] },
         ] },
-        'marreteiro-do-coracao': { hp: 100, recuo: 3, ataques: [
+        'marreteiro-do-coracao': { hp: 100, recuo: 2, ataques: [
             { nome: 'Quebrar Tudo', custo: 1, dano: 0, efeitos: [{ tipo: 'descartarCampo' }] },
             { nome: 'Marretada', custo: 3, dano: 90 },
         ] },
@@ -98,8 +98,8 @@
             { nome: 'Reação 😡', custo: 1, dano: 10, efeitos: [{ tipo: 'bonusPorGoon', valor: 10 }] },
         ] },
         'drone-vigia': { hp: 60, recuo: 1,
-            poder: { nome: 'Câmera', tipo: 'espiarDeck', ativavel: true,
-                texto: '1 vez por turno: olha a carta de cima do deck do adversário.' },
+            poder: { nome: 'Câmera', tipo: 'espiarMao', ativavel: true,
+                texto: '1 vez por turno: olha a mão do adversário.' },
             ataques: [{ nome: 'Facho', custo: 1, dano: 20 }] },
 
         // ---- Campos (ficam na mesa e valem para os dois) --------------------

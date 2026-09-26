@@ -360,7 +360,7 @@ test('Estacionamento Noturno: goons recuam de graça', () => {
     const e = mesa({ eu: { ativo: { id: 'moderador-do-ban' }, banco: ['bug-do-discord'] }, campo: 'estacionamento-noturno' });
     assert.equal(R.custoRecuo(e, EU(e).ativo), 0);
     const chorao = mesa({ eu: { ativo: 'chorao' }, campo: 'estacionamento-noturno' });
-    assert.equal(R.custoRecuo(chorao, EU(chorao).ativo), 3);
+    assert.equal(R.custoRecuo(chorao, EU(chorao).ativo), 2);
     assert.doesNotThrow(() => jogar(e, { tipo: 'recuar', para: EU(e).banco[0].uid }));
 });
 
@@ -518,12 +518,14 @@ test('Emoji Pistola: 10 + 10 por goon na sua mesa (conta ele mesmo)', () => {
     assert.equal(atacar(e, 0).estado.jogadores[1].ativo.dano, 30);
 });
 
-test('Drone Vigia: Câmera mostra a carta de cima do deck do adversário (só para quem espiou)', () => {
-    const e = mesa({ eu: { ativo: 'drone-vigia' }, ele: { deck: ['enzo-games', 'bug-do-discord'] } });
+test('Drone Vigia: Câmera mostra a mão do adversário (só para quem espiou)', () => {
+    const e = mesa({ eu: { ativo: 'drone-vigia' }, ele: { mao: ['enzo-games', 'bug-do-discord'] } });
     const r = jogar(e, { tipo: 'poder', uid: EU(e).ativo.uid });
-    assert.equal(EU(r.estado).espiada, 'enzo-games');
-    assert.ok(r.eventos.some((ev) => ev.tipo === 'espiar' && ev.privado));
+    assert.deepEqual(EU(r.estado).espiada, ['enzo-games', 'bug-do-discord']);
+    assert.ok(r.eventos.some((ev) => ev.tipo === 'espiar' && ev.privado && ev.ids.length === 2));
     assert.equal(R.visaoDe(r.estado, 1).jogadores[0].espiada, null);
+    const vazia = mesa({ eu: { ativo: 'drone-vigia' } });
+    invalida(() => jogar(vazia, { tipo: 'poder', uid: EU(vazia).ativo.uid }), 'está vazia');
 });
 
 // ---- Visão, repetição e robô ---------------------------------------------------

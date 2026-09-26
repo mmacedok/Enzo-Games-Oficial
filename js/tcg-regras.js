@@ -250,7 +250,9 @@
                 if (!eu.ativo) return 'sem ativo';
                 if (silenciado(estado, eu.ativo)) return 'Silenciado não recua';
                 if (!eu.banco.some((c) => c.uid === jogada.para)) return 'escolha quem sai do banco';
-                if (eu.ativo.aura < custoRecuo(estado, eu.ativo)) return 'Aura insuficiente para recuar';
+                if (eu.ativo.aura < custoRecuo(estado, eu.ativo)) {
+                    return `Aura insuficiente para recuar: o ativo precisa ter ${custoRecuo(estado, eu.ativo)} Aura presa nele (tem ${eu.ativo.aura})`;
+                }
                 return null;
             }
             case 'poder': {
@@ -260,7 +262,7 @@
                 if (f.poderes.includes(c.uid)) return 'esse poder já foi usado neste turno';
                 if (poder.tipo === 'notificarAtivo' && !ele.ativo) return 'o adversário não tem ativo';
                 if (poder.tipo === 'comprar' && !eu.deck.length) return 'seu deck acabou';
-                if (poder.tipo === 'espiarDeck' && !ele.deck.length) return 'o deck do adversário acabou';
+                if (poder.tipo === 'espiarMao' && !ele.mao.length) return 'a mão do adversário está vazia';
                 return null;
             }
             case 'trocarCarta': {
@@ -596,9 +598,9 @@
                     eventos.push({ tipo: 'estado', uid: ele.ativo.uid, estado: 'notificado' });
                 } else if (poder.tipo === 'comprar') {
                     for (let n = 0; n < poder.valor; n++) comprar(estado, j, eventos, 'poder');
-                } else if (poder.tipo === 'espiarDeck') {
-                    eu.espiada = ele.deck[0].id;
-                    eventos.push({ tipo: 'espiar', jogador: j, id: ele.deck[0].id, privado: true });
+                } else if (poder.tipo === 'espiarMao') {
+                    eu.espiada = ele.mao.map((c) => c.id);
+                    eventos.push({ tipo: 'espiar', jogador: j, ids: eu.espiada.slice(), privado: true });
                 }
                 return;
             }
