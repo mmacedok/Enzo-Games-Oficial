@@ -1,4 +1,260 @@
 {
+  "assets/Batalha/aura.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/0b5b9c64cd5c7261-256.webp",
+        "bytes": 25332
+      }
+    ]
+  },
+  "assets/Batalha/estado-escudo.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/8aa1e2007a83afd1-128.webp",
+        "bytes": 6042
+      }
+    ]
+  },
+  "assets/Batalha/estado-iludido.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/d51dac05b0b191f0-128.webp",
+        "bytes": 6778
+      }
+    ]
+  },
+  "assets/Batalha/estado-notificado.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/0a98d5d948864047-128.webp",
+        "bytes": 5958
+      }
+    ]
+  },
+  "assets/Batalha/estado-silenciado.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/39879b985d00f988-128.webp",
+        "bytes": 6460
+      }
+    ]
+  },
+  "assets/Batalha/logo.png": {
+    "width": 1600,
+    "height": 800,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e520f665b9465a8d-640.webp",
+        "bytes": 81778
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/e520f665b9465a8d-1280.webp",
+        "bytes": 285286
+      },
+      {
+        "width": 1600,
+        "src": "assets/web/e520f665b9465a8d-1600.webp",
+        "bytes": 412880
+      }
+    ]
+  },
+  "assets/Batalha/mesa-casa-do-enzo-games.png": {
+    "width": 1536,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/646b15df68e56a19-640.webp",
+        "bytes": 151784
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/646b15df68e56a19-1280.webp",
+        "bytes": 517766
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/646b15df68e56a19-1536.webp",
+        "bytes": 657220
+      }
+    ]
+  },
+  "assets/Batalha/mesa-estacionamento-noturno.png": {
+    "width": 1536,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/19feeebd9b2c7404-640.webp",
+        "bytes": 163390
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/19feeebd9b2c7404-1280.webp",
+        "bytes": 542000
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/19feeebd9b2c7404-1536.webp",
+        "bytes": 682504
+      }
+    ]
+  },
+  "assets/Batalha/mesa-mansao-do-inominavel.png": {
+    "width": 1536,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8eaa6ecc49e53164-640.webp",
+        "bytes": 130430
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/8eaa6ecc49e53164-1280.webp",
+        "bytes": 394690
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/8eaa6ecc49e53164-1536.webp",
+        "bytes": 499940
+      }
+    ]
+  },
+  "assets/Batalha/mesa-piscina-de-macarronada.png": {
+    "width": 1536,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5e9616d5dca06c46-640.webp",
+        "bytes": 190746
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/5e9616d5dca06c46-1280.webp",
+        "bytes": 581866
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/5e9616d5dca06c46-1536.webp",
+        "bytes": 721736
+      }
+    ]
+  },
+  "assets/Batalha/mesa-sao-joao-do-butico.png": {
+    "width": 1536,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f0529858f9fa9db6-640.webp",
+        "bytes": 175414
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/f0529858f9fa9db6-1280.webp",
+        "bytes": 580568
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/f0529858f9fa9db6-1536.webp",
+        "bytes": 737704
+      }
+    ]
+  },
+  "assets/Batalha/mesa-toradolandia.png": {
+    "width": 1536,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ce3fe05624265721-640.webp",
+        "bytes": 147362
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/ce3fe05624265721-1280.webp",
+        "bytes": 530886
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/ce3fe05624265721-1536.webp",
+        "bytes": 690718
+      }
+    ]
+  },
+  "assets/Batalha/mesa.png": {
+    "width": 1536,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/2681b3417e34992d-640.webp",
+        "bytes": 77718
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/2681b3417e34992d-1280.webp",
+        "bytes": 284962
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/2681b3417e34992d-1536.webp",
+        "bytes": 371864
+      }
+    ]
+  },
+  "assets/Batalha/moeda-cara.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/14a05b008d2d1295-512.webp",
+        "bytes": 87894
+      }
+    ]
+  },
+  "assets/Batalha/moeda-coroa.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/544c6e4700614664-512.webp",
+        "bytes": 94264
+      }
+    ]
+  },
+  "assets/Batalha/npc-torado.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/cbd91a12bf9237bf-512.webp",
+        "bytes": 82026
+      }
+    ]
+  },
   "assets/Capitulo 1/Capa/Capa CAP1.png": {
     "width": 1536,
     "height": 2752,
