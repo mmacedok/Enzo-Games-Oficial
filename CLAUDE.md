@@ -1,13 +1,14 @@
 # Regras do repositório (Enzo Games)
 
-## Baralho Enzo (cartas) NUNCA vai para o GitHub
-**Regra do Henrique, extremamente importante:** nenhum push pode conter o sistema de cartas
-(Baralho Enzo) até ele dizer que está pronto.
+## Baralho Enzo (cartas) NUNCA vai para o `main`
+**Regra do Henrique, extremamente importante:** o `main` (o site no ar) não pode conter o
+sistema de cartas (Baralho Enzo) até ele dizer que está pronto.
 
-- O Baralho vive só no computador, no branch local **`baralho`** (é o branch aberto na pasta
-  `comic-reader`). **Nunca faça push do branch `baralho`** nem faça merge dele no `main`.
-- Push só do `main`, e só quando o Henrique pedir.
-- Antes de qualquer push, confira que nada do Baralho vai junto:
+- O Baralho vive no branch **`TCG`** do GitHub (no computador, o branch local `baralho`, aberto
+  na pasta `comic-reader`, acompanha o `origin/TCG`). Trabalho de cartas, inclusive na nuvem,
+  é feito e enviado no `TCG`. **Nunca faça merge do `TCG`/`baralho` no `main`.**
+- Push do `main` só quando o Henrique pedir.
+- Antes de qualquer push do `main`, confira que nada do Baralho vai junto:
   `git diff --stat origin/main main` e `git grep -il baralho main` (tem que dar só este arquivo).
   Arquivos do Baralho: `js/baralho-dados.js`, `js/baralho.js`, `api/baralho.js`,
   `test/baralho.test.js`, `docs/PLANO-BARALHO.md`, `docs/CARTAS-IDEIAS.md`,
