@@ -123,7 +123,7 @@
     ]);
 
     /** Créditos por ponto em cada partida verificada (sem limite diário). */
-    const CREDITOS_POR_PONTO = Object.freeze({ 'flappy-enzo': 10, 'ronda-noturna': 1 });
+    const CREDITOS_POR_PONTO = Object.freeze({ 'flappy-enzo': 10 });
 
     /** Pacote dado de presente no primeiro acesso ao Baralho. */
     const PACOTE_BOAS_VINDAS = 'estacionamento';
