@@ -45,6 +45,12 @@
         aura: A('aura'),
         moeda: { cara: A('moeda-cara'), coroa: A('moeda-coroa') },
         estados: { notificado: A('estado-notificado'), silenciado: A('estado-silenciado'), iludido: A('estado-iludido'), escudo: A('estado-escudo') },
+        // Menu (prompts em docs/BATALHA-ASSETS.md, parte "Menu enfeitado").
+        menu: {
+            fundo: A('fundo-menu'), faixa: A('faixa'), comoJogar: A('icone-como-jogar'),
+            caixas: { turma: A('caixa-turma'), legiao: A('caixa-legiao'), internet: A('caixa-internet') },
+            rivais: { facil: A('icone-npc-facil'), normal: A('icone-npc-normal'), pvp: A('icone-outro-jogador') },
+        },
         campos: Object.fromEntries(['piscina-de-macarronada', 'toradolandia', 'mansao-do-inominavel', 'estacionamento-noturno',
             'casa-do-enzo-games', 'sao-joao-do-butico'].map((id) => [id, A(`mesa-${id}`)])),
     };
@@ -167,6 +173,14 @@
         limparMesa();
         raiz.replaceChildren();
         raiz.className = 'batalha batalha--menu';
+        const fundoMenu = arteGrande(ARTE.menu.fundo);
+        // URL absoluta: numa variável CSS, caminho relativo seria lido a partir de css/.
+        const abs = (src) => `url('${new URL(src, document.baseURI).href}')`;
+        raiz.style.setProperty('--fundo-menu', fundoMenu ? abs(fundoMenu) : 'none');
+        raiz.classList.toggle('batalha--menu-arte', !!fundoMenu);
+        const faixa = arte(ARTE.menu.faixa);
+        raiz.style.setProperty('--faixa', faixa ? abs(faixa) : 'none');
+        raiz.classList.toggle('batalha--faixa', !!faixa);
         const caixa = el('div', 'bt-menu');
         const titulo = el('h1', 'bt-logo');
         if (arteGrande(ARTE.logo)) {
@@ -187,9 +201,17 @@
                 decks.querySelectorAll('.bt-deck').forEach((x) => x.classList.toggle('bt-deck--ativo', x === b));
             });
             b.setAttribute('aria-pressed', String(d === deckEscolhido));
-            const leque = el('div', 'bt-deck-leque');
-            d.capa.forEach((id) => leque.appendChild(UI.carta(id)));
-            b.append(leque, el('strong', 'bt-deck-nome', d.nome), el('span', 'bt-deck-texto', d.texto));
+            const imgCaixa = arte(ARTE.menu.caixas[d.id]);
+            let capa;
+            if (imgCaixa) {
+                capa = el('img', 'bt-deck-caixa');
+                capa.src = imgCaixa;
+                capa.alt = '';
+            } else {
+                capa = el('div', 'bt-deck-leque');
+                d.capa.forEach((id) => capa.appendChild(UI.carta(id)));
+            }
+            b.append(capa, el('strong', 'bt-deck-nome', d.nome), el('span', 'bt-deck-texto', d.texto));
             decks.appendChild(b);
         }
         caixa.appendChild(decks);
@@ -202,13 +224,29 @@
             botao('bt-rival', null),
         );
         const [facil, normal, pvp] = rivais.children;
-        facil.append(el('span', 'bt-rival-rosto', '🤖'), el('strong', '', 'NPC fácil'), el('span', '', 'Para aprender'));
-        normal.append(el('span', 'bt-rival-rosto', '😈'), el('strong', '', 'NPC normal'), el('span', '', 'Joga para ganhar'));
-        pvp.append(el('span', 'bt-rival-rosto', '🧑‍🤝‍🧑'), el('strong', '', 'Outro jogador'), el('span', '', 'Em breve'));
+        const rosto = (qual, emoji) => {
+            const img = arte(ARTE.menu.rivais[qual]);
+            const r = el('span', `bt-rival-rosto${img ? ' bt-rival-rosto--arte' : ''}`, img ? '' : emoji);
+            if (img) r.style.backgroundImage = `url('${img}')`;
+            return r;
+        };
+        facil.append(rosto('facil', '🤖'), el('strong', '', 'NPC fácil'), el('span', '', 'Para aprender'));
+        normal.append(rosto('normal', '😈'), el('strong', '', 'NPC normal'), el('span', '', 'Joga para ganhar'));
+        pvp.append(rosto('pvp', '🧑‍🤝‍🧑'), el('strong', '', 'Outro jogador'), el('span', '', 'Em breve'));
         pvp.disabled = true;
         caixa.appendChild(rivais);
 
-        caixa.appendChild(botao('bt-link', '📖 Como jogar', mostrarRegras));
+        const comoJogar = botao('bt-link', null, mostrarRegras);
+        const livro = arte(ARTE.menu.comoJogar);
+        if (livro) {
+            const i = el('img', 'bt-link-icone');
+            i.src = livro;
+            i.alt = '';
+            comoJogar.append(i, 'Como jogar');
+        } else {
+            comoJogar.textContent = '📖 Como jogar';
+        }
+        caixa.appendChild(comoJogar);
         raiz.appendChild(caixa);
     }
 
@@ -272,6 +310,7 @@
     }
 
     function montarMesa() {
+        raiz.classList.remove('batalha--menu-arte', 'batalha--faixa');
         cartasVivas.clear();
         fundoAtual = undefined;   // mesa nova: o fundo precisa ser pintado de novo
         raiz.replaceChildren();

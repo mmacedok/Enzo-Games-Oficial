@@ -1,5 +1,9 @@
 # Batalha dos Torados: plano para completar (arte, decks e rivais)
 
+> **PARA DEPOIS** (decisão do Henrique, 2026-09-26): gostou das ideias, mas torneio, rivais, decks
+> novos e montador esperam o jogo ter mais cartas. Agora o foco é enfeitar o menu que já existe
+> (`docs/BATALHA-ASSETS.md`, seção 7).
+>
 > **Fica só no branch `TCG`** (ver `CLAUDE.md`). Escrito em 2026-09-26, depois que as 16 primeiras
 > imagens (mesas, logo, NPC, aura, moedas, estados) entraram. Regras e números continuam em
 > `docs/PLANO-TCG.md`; prompts das imagens já feitas em `docs/BATALHA-ASSETS.md`.

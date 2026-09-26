@@ -73,6 +73,26 @@
 .bt-rival-rosto { font-size: 2.2rem; line-height: 1; }
 .bt-rival--forte { background: var(--halftone), var(--orange-light); }
 .bt-rival:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+/* Arte do menu (só aparece quando a imagem existe; senão fica o visual acima). */
+.batalha--menu-arte {
+    /* Arte quadrada: largura da tela (mínimo 700px, para o celular não achatar), e a parte de baixo
+       some no escuro para o menu continuar abaixo dela. */
+    --lado-fundo: max(100vw, 700px);
+    background:
+        linear-gradient(180deg, rgba(18, 18, 18, 0.3), rgba(18, 18, 18, 0.25) 55%, #121212 98%) center top / var(--lado-fundo) var(--lado-fundo) no-repeat,
+        var(--fundo-menu) center top / var(--lado-fundo) var(--lado-fundo) no-repeat,
+        #121212;
+}
+.batalha--faixa .bt-menu-sub {
+    min-width: min(420px, 90vw);
+    padding: 14px 48px 20px;
+    color: var(--ink);
+    background: var(--faixa) center / 100% 100% no-repeat;
+}
+.bt-deck-caixa { width: min(150px, 60%); height: 132px; object-fit: contain; filter: drop-shadow(3px 4px 0 var(--ink)); }
+.bt-deck:hover .bt-deck-caixa, .bt-deck--ativo .bt-deck-caixa { transform: rotate(-4deg) scale(1.06); transition: transform 0.2s ease; }
+.bt-rival-rosto--arte { width: 64px; height: 64px; background: center / contain no-repeat; }
+.bt-link-icone { width: 28px; height: 28px; margin-right: 6px; vertical-align: middle; object-fit: contain; }
 .bt-link {
     margin-top: 8px;
     padding: 8px 16px;

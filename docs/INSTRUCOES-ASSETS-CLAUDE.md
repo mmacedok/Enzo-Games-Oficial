@@ -45,16 +45,20 @@ exemplo, duas mesas parecidas), pergunte antes de salvar.
 | `estado-iludido.png` | Ícone: coração com olhos de hipnose, círculo rosa | ~128, **transparente** |
 | `estado-escudo.png` | Ícone: parênteses dourados como escudo, círculo verde-água | ~128, **transparente** |
 
-**Imagens da parte 2** (plano em `docs/PLANO-BATALHA-COMPLETA.md`, seção 3; o jogo passa a usar
-quando o código dessa parte entrar, até lá elas só ficam guardadas):
+**Menu enfeitado** (prompts em `docs/BATALHA-ASSETS.md`, seção 7; o jogo já usa):
 
 | Nome final em `assets/Batalha/` | O que é | Formato esperado |
 |---|---|---|
-| `fundo-menu.png` | Entrada da arena da Toradolândia | 1920×1080 |
-| `mapa-torneio.png` | Caminho com 7 plataformas subindo a caverna | 1536×1024 |
-| `rival-italolol.png`, `rival-hatsune-neves.png`, `rival-superkid.png`, `rival-degustador-da-noite.png`, `rival-o-inominavel.png` | Rosto de cada rival | quadrada, ~512 |
-| `caixa-turma.png`, `caixa-legiao.png`, `caixa-internet.png`, `caixa-herois.png`, `caixa-degustador.png`, `caixa-toradolandia.png` | Caixa de baralho de cada deck | ~768, **transparente** |
-| `vitoria.png`, `derrota.png` | Letreiros "VITÓRIA!" e "DERROTA..." | 1600×800, **transparente**; confira o texto |
+| `fundo-menu.png` | Entrada da arena da Toradolândia (fundo do menu) | quadrada, ~1536×1536 |
+| `faixa.png` | Faixa amarela de título, miolo liso e **sem texto** | 1200×260, **transparente** |
+| `caixa-turma.png`, `caixa-legiao.png`, `caixa-internet.png` | Caixa de baralho de cada deck | ~768, **transparente** |
+| `icone-npc-facil.png` | Robozinho de brinquedo de corda | ~256, **transparente** |
+| `icone-npc-normal.png` | Rosto do Torado com chifrinhos | ~256, **transparente** |
+| `icone-outro-jogador.png` | Duas mãos em duelo de cartas | ~256, **transparente** |
+| `icone-como-jogar.png` | Livro de regras aberto | ~256, **transparente** |
+
+Imagens do torneio (`mapa-torneio`, `rival-*`, `caixa-herois`, `vitoria`...) são **para depois**
+(`docs/PLANO-BATALHA-COMPLETA.md`): se chegarem, salve com o nome do plano, mas o jogo ainda não usa.
 
 Qualquer outro nome o jogo **não usa** (a lista está em `js/batalha.js`, constante `ARTE`). Não
 invente nomes novos nem mude o código para aceitar outro nome.

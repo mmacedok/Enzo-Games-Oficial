@@ -118,6 +118,71 @@ um desenho só, contorno preto grosso, fundo circular de cor chapada.
 
 ---
 
+## 7. Menu enfeitado (parte 2, pedido do Henrique em 2026-09-26)
+São **9 imagens** para o menu da batalha (a tela com o logo, "Escolha seu deck" e "Contra quem?").
+O código já está pronto: cada imagem aparece sozinha quando entra em `assets/Batalha/` e o build
+roda; a que faltar continua como está hoje.
+
+**Referência de estilo para todas:** anexe `assets/Batalha/logo.png` e diga *"use a imagem de
+referência como guia de estilo e de cores"*, e cole o bloco de estilo do começo deste arquivo. Cores
+do logo: amarelo-ouro que vira laranja, contorno preto grosso, sombra dura vermelho-escura, faíscas
+e almôndegas em chamas. Fundo e molduras puxam para o roxo escuro da Toradolândia.
+
+| Arquivo | Tamanho | Onde aparece |
+|---|---|---|
+| `fundo-menu.png` | 1536×1536 | Fundo da tela inteira do menu, atrás do logo |
+| `faixa.png` | 1200×260, transparente | Faixa atrás de "Escolha seu deck" e "Contra quem?" (o texto é do jogo) |
+| `caixa-turma.png` | 768×768, transparente | Caixa do deck Turma do Enzo (no lugar das 3 cartinhas) |
+| `caixa-legiao.png` | 768×768, transparente | Caixa do deck Legião do Mal |
+| `caixa-internet.png` | 768×768, transparente | Caixa do deck Bichos da Internet |
+| `icone-npc-facil.png` | 256×256, transparente | Botão "NPC fácil" (no lugar do 🤖) |
+| `icone-npc-normal.png` | 256×256, transparente | Botão "NPC normal" (no lugar do 😈) |
+| `icone-outro-jogador.png` | 256×256, transparente | Botão "Outro jogador" (no lugar do 🧑‍🤝‍🧑; fica cinza até existir) |
+| `icone-como-jogar.png` | 256×256, transparente | Botão "Como jogar" (no lugar do 📖) |
+
+### `fundo-menu.png`
+- **Quadrada**: no computador ocupa a largura toda; no celular mostra o meio. A parte de baixo é
+  coberta por um degradê escuro, então o importante fica no **terço de cima e no meio**.
+- **Prompt:** `Entrada de uma arena de cartas subterrânea na Toradolândia, vista de frente: grande
+  portal de pedra roxa com circuitos neon verde-água nas rachaduras, fóssil de T-Rex gravado na
+  parede, holofotes amarelos cruzando no alto, tochas feitas de almôndegas em chamas dos dois lados,
+  cartas gigantes fincadas no chão como lápides, fumaça roxa no chão. O centro é uma parede escura e
+  lisa de pedra (o logo e os botões ficam por cima), detalhes só nas bordas, a parte de baixo vai
+  escurecendo até quase preto, sem personagens, sem texto.` + bloco de estilo.
+
+### `faixa.png`
+- **Prompt:** `Faixa de papel de gibi na horizontal, estilo fita de título de desenho animado, com as
+  pontas dobradas para trás, amarelo-ouro com borda laranja e contorno preto grosso, sombra dura,
+  duas faíscas pequenas nas pontas, miolo liso e vazio para escrever por cima, fundo transparente,
+  SEM NENHUM TEXTO.` + bloco de estilo.
+- O miolo precisa ser **claro e liso**: o jogo escreve "Escolha seu deck" em preto por cima.
+
+### Caixas de deck (as 3)
+- **Prompt base:** `Caixa de papelão de baralho de cartas, em pé, vista de 3/4, com a ilustração de
+  <TEMA> na frente e a tampa um pouco aberta mostrando cartas dentro, cantos gastos, uma almôndega em
+  chamas como selo no canto, contorno preto grosso de gibi, fundo transparente, sem texto.` + bloco de estilo.
+- Use a carta principal como referência e diga *"mantenha exatamente a aparência do personagem"*.
+
+| Arquivo | `<TEMA>` | Referência |
+|---|---|---|
+| `caixa-turma.png` | Enzo Games de braços cruzados, com Superkid e Hatsune Neves atrás, cores laranja e amarelo | `assets/Cartas/enzo-games.png` |
+| `caixa-legiao.png` | O Inominável sorrindo, com a Encantadora e o Marreteiro do Coração nas sombras, cores roxo e verde | `assets/Cartas/o-inominavel.png` |
+| `caixa-internet.png` | enxame de Bugs do Discord, Notificações Morcego e Drones saindo da tela de um monitor, cores azul e ciano | `assets/Cartas/bug-do-discord.png` |
+
+### Ícones dos botões (os 4)
+Aparecem com uns 64 px: **um desenho só, grande e simples**, contorno preto grosso, cores chapadas.
+Prompt base: `Ícone de <DESENHO>, desenho único centralizado ocupando 90% da imagem, contorno preto
+grosso de gibi, cores chapadas e fortes, fundo transparente, sem texto.` + bloco de estilo.
+
+| Arquivo | `<DESENHO>` |
+|---|---|
+| `icone-npc-facil.png` | um robozinho de brinquedo de corda, redondo e fofo, com a chave de corda nas costas, segurando uma carta de cabeça para baixo, cara confusa |
+| `icone-npc-normal.png` | o rosto do Torado (imagem de referência `assets/Batalha/npc-torado.png`) com chifrinhos de diabo e sorriso convencido, segurando três cartas em leque |
+| `icone-outro-jogador.png` | duas mãos, uma de cada lado, segurando cartas uma contra a outra como um duelo, com um raio amarelo no meio |
+| `icone-como-jogar.png` | livro de regras aberto com uma carta e uma almôndega em chamas saindo das páginas |
+
+---
+
 ## Depois (fase 7): efeitos especiais por ataque
 Não precisa agora. Quando chegar a hora, cada ataque pode ganhar uma **sequência de 4 a 6 quadros**
 (PNG transparente, 512×512) que toca por cima do alvo. Candidatos:
