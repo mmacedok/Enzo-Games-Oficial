@@ -1,6 +1,6 @@
 # Cloudflare Pages: site estático em dist/ + API em dist/_worker.js.
 # Build no painel da Cloudflare: `npm run build:cloudflare`, pasta de saída `dist`.
-name = "enzo-games"
+name = "enzo-games-oficial"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
