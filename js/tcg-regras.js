@@ -24,6 +24,8 @@
 
     const { COMBATE } = TcgCartas;
 
+    /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
+    const REGRAS_VERSAO = 1;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
@@ -160,6 +162,8 @@
         return combate(inst.id).recuo;
     }
     const silenciado = (estado, inst) => inst.estados.silenciado >= estado.turno;
+    /** Quantas cartas: na visão de um jogador, a mão do outro e os decks viram só um número. */
+    const qtd = (lista) => (Array.isArray(lista) ? lista.length : Number(lista) || 0);
     const acharNaMao = (jogador, uid) => jogador.mao.find((c) => c.uid === uid) || null;
     const acharNaMesa = (jogador, uid) => naMesa(jogador).find((c) => c.uid === uid) || null;
     /** Cabo Côco no ativo do adversário impede jogar campos. */
@@ -261,15 +265,15 @@
                 if (!poder || !poder.ativavel) return 'essa carta não tem poder para usar';
                 if (f.poderes.includes(c.uid)) return 'esse poder já foi usado neste turno';
                 if (poder.tipo === 'notificarAtivo' && !ele.ativo) return 'o adversário não tem ativo';
-                if (poder.tipo === 'comprar' && !eu.deck.length) return 'seu deck acabou';
-                if (poder.tipo === 'espiarMao' && !ele.mao.length) return 'a mão do adversário está vazia';
+                if (poder.tipo === 'comprar' && !qtd(eu.deck)) return 'seu deck acabou';
+                if (poder.tipo === 'espiarMao' && !qtd(ele.mao)) return 'a mão do adversário está vazia';
                 return null;
             }
             case 'trocarCarta': {
                 if (efeitoCampo(estado)?.tipo !== 'trocarCarta') return 'só na Casa do Enzo Games';
                 if (f.trocarCarta) return 'só 1 troca por turno';
                 if (!acharNaMao(eu, jogada.uid)) return 'escolha uma carta da mão';
-                if (!eu.deck.length) return 'seu deck acabou';
+                if (!qtd(eu.deck)) return 'seu deck acabou';
                 return null;
             }
             case 'atacar': {
@@ -697,6 +701,7 @@
     function visaoDe(estado, j) {
         const v = clonar(estado);
         delete v.rng;
+        delete v.semente;
         v.jogadores.forEach((x, i) => {
             x.deck = x.deck.length;
             if (i !== j) {
@@ -708,6 +713,23 @@
         return v;
     }
 
+    /**
+     * Os eventos de uma jogada como esse jogador pode ver: some o que é privado de outro
+     * (a Câmera) e a carta que o outro comprou vira só "comprou uma carta".
+     */
+    function eventosPara(eventos, j) {
+        const saida = [];
+        for (const ev of eventos) {
+            if (ev.privado && ev.jogador !== j) continue;
+            if (ev.tipo === 'compra' && ev.jogador !== j) {
+                saida.push({ tipo: 'compra', jogador: ev.jogador, motivo: ev.motivo });
+                continue;
+            }
+            saida.push(ev);
+        }
+        return saida;
+    }
+
     /** Refaz a partida do zero (o servidor confere o resultado assim). */
     function repetir(config, jogadas) {
         let estado = criarPartida(config);
@@ -717,8 +739,8 @@
 
     return {
         TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAO_INICIAL, VAGAS_BANCO, PONTOS_VITORIA, LIMITE_TURNOS,
-        JogadaInvalida,
-        validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, repetir,
+        REGRAS_VERSAO, JogadaInvalida,
+        validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, repetir,
         hpMax, custoRecuo, calcularDano, pontosDe, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado,
     };
 });

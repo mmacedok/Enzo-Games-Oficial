@@ -550,6 +550,35 @@ test('visaoDe esconde a mão e o deck do outro, a ordem do próprio deck e a sor
     assert.equal(v.jogadores[0].deck, 10);
     assert.equal(v.jogadores[0].mao.length, 5);
     assert.equal(v.rng, undefined);
+    assert.equal(v.semente, undefined);
+});
+
+test('online: jogadasValidas e motivoInvalida dão o mesmo resultado com a visão do jogador', () => {
+    for (let s = 0; s < 15; s++) {
+        const { config, jogadas } = partidaDeRobos(s);
+        let estado = R.criarPartida(config);
+        for (const jogada of jogadas) {
+            for (const j of [0, 1]) {
+                const v = R.visaoDe(estado, j);
+                assert.deepEqual(R.jogadasValidas(v, j), R.jogadasValidas(estado, j));
+            }
+            assert.equal(R.motivoInvalida(R.visaoDe(estado, jogada.jogador), jogada), null);
+            estado = R.aplicar(estado, jogada).estado;
+        }
+    }
+});
+
+test('eventosPara: o outro não vê a carta comprada nem a espiada da Câmera', () => {
+    const eventos = [
+        { tipo: 'compra', jogador: 0, uid: '0-3', id: 'chorao', motivo: 'turno' },
+        { tipo: 'espiar', jogador: 0, ids: ['chorao'], privado: true },
+        { tipo: 'baixar', jogador: 0, uid: '0-3', id: 'chorao' },
+    ];
+    assert.deepEqual(R.eventosPara(eventos, 0), eventos);
+    assert.deepEqual(R.eventosPara(eventos, 1), [
+        { tipo: 'compra', jogador: 0, motivo: 'turno' },
+        { tipo: 'baixar', jogador: 0, uid: '0-3', id: 'chorao' },
+    ]);
 });
 
 function partidaDeRobos(semente, niveis = ['normal', 'normal']) {
