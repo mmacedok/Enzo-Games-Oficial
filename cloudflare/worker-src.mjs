@@ -5,7 +5,7 @@
 // faz a Cloudflare só chamar este código em /api/*, então páginas e imagens não
 // gastam a cota de requisições.
 // Variáveis no painel da Cloudflare: GOOGLE_CLIENT_ID, SESSION_SECRET, ADMIN_EMAILS,
-// DATABASE_URL (Neon) e NODE_ENV=production.
+// DATABASE_URL (Neon). NODE_ENV=production é posto aqui (ver wrangler.toml).
 import handler from '../api/handler.js';
 import neon from '../api/db-neon.js';
 import { criarVerificadorGoogle } from './google-id-token.mjs';
@@ -21,7 +21,7 @@ export default {
             if (!env.DATABASE_URL) return Response.json({ error: 'banco não configurado' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
             api = handler.createApi({
                 db: neon.createNeonDb(env.DATABASE_URL),
-                env,
+                env: { ...env, NODE_ENV: 'production' },
                 // google-auth-library é feita para Node; aqui a assinatura é conferida com jose (Web Crypto).
                 verificarGoogle: criarVerificadorGoogle(String(env.GOOGLE_CLIENT_ID || '').trim()),
             });
