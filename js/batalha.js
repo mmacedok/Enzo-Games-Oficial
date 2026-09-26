@@ -13,6 +13,10 @@
 // Jogar é ARRASTAR (mão → banco, campo → meio, banco → ativo, Aura → carta, ativo → adversário).
 // Tocar numa carta só abre o painel com o que ela faz (e botões, para quem não consegue arrastar).
 //
+// Online (outro jogador): o servidor é o juiz (api/tcg.js). A tela guarda só a VISÃO do jogador
+// (a mão do outro é um número), manda cada jogada para a API e toca os eventos que voltam.
+// Na vez do outro pergunta "teve jogada?" a cada 2,5 s. batalha.html?sala=TORA-XXX abre o convite.
+//
 // Teste: batalha.html?auto=1 faz o robô jogar pelos dois lados; &rapido=1 sem esperas.
 // ============================================================================
 (() => {
@@ -25,8 +29,9 @@
     const raiz = document.getElementById('batalha');
     if (!R || !Robo || !B || !UI || !raiz) return;
 
-    const EU = 0;
-    const NPC = 1;
+    // Contra o NPC você é sempre o 0. Online, quem criou a sala é o 0 e quem entrou é o 1.
+    let EU = 0;
+    let NPC = 1;           // o outro lado (NPC ou o outro jogador)
     const params = new URLSearchParams(location.search);
     const AUTO = params.has('auto');
     const RAPIDO = params.has('rapido');
@@ -103,6 +108,13 @@
     let partida = 0;            // muda a cada batalha: a vez do NPC antiga para sozinha
     let mesa = null;            // elementos fixos da mesa
     const cartasVivas = new Map();   // uid -> elemento .bt-carta (reaproveitado entre desenhos)
+    // Partida online: { id, versao, prazo, dif (relógio do servidor - o daqui), timer } ou null.
+    let online = null;
+    const convite = (params.get('sala') || '').trim().toUpperCase() || null;
+
+    /** Nome do outro lado: "o NPC" ou o nome do outro jogador. */
+    const dele = () => (online ? (String(estado?.jogadores[NPC]?.nome || '').trim().split(/\s+/)[0] || 'o outro jogador') : 'o NPC');
+    const Dele = () => { const n = dele(); return n.charAt(0).toUpperCase() + n.slice(1); };
 
     // ---------------------------------------------------------------- textos das cartas
     function textoEfeito(ef) {
@@ -150,10 +162,12 @@
     };
     const valida = (jogada) => !R.motivoInvalida(estado, { jogador: EU, ...jogada });
     const motivo = (jogada) => R.motivoInvalida(estado, { jogador: EU, ...jogada });
-    const minhaVez = () => estado && estado.fase === 'jogo' && !ocupado && Robo.quemJoga(estado) === EU;
+    const minhaVez = () => estado && estado.fase === 'jogo' && !ocupado
+        && (online ? estado.vez === EU && !estado.pendentes.length : Robo.quemJoga(estado) === EU);
 
     // ---------------------------------------------------------------- menu
     function telaMenu() {
+        pararOnline();
         limparMesa();
         raiz.replaceChildren();
         raiz.className = 'batalha batalha--menu';
@@ -216,8 +230,19 @@
         };
         facil.append(rosto('facil', '🤖'), el('strong', '', 'NPC fácil'), el('span', '', 'Para aprender'));
         normal.append(rosto('normal', '😈'), el('strong', '', 'NPC normal'), el('span', '', 'Joga para ganhar'));
-        pvp.append(rosto('pvp', '🧑‍🤝‍🧑'), el('strong', '', 'Outro jogador'), el('span', '', 'Em breve'));
+        const pvpTexto = el('span', '', 'Procurando o servidor...');
+        pvp.append(rosto('pvp', '🧑‍🤝‍🧑'), el('strong', '', convite ? `Entrar na sala ${convite}` : 'Outro jogador'), pvpTexto);
         pvp.disabled = true;
+        pvp.addEventListener('click', () => telaOnline());
+        if (convite) pvp.classList.add('bt-rival--convite');
+        verificarOnline().then((situacao) => {
+            if (!pvp.isConnected) return;
+            pvp.disabled = situacao === 'fora';
+            pvpTexto.textContent = {
+                fora: 'Só no site', login: 'Entre com o Google', partida: 'Voltar para a partida',
+                ok: convite ? 'Escolha o deck e toque aqui' : 'Com um amigo',
+            }[situacao];
+        });
         caixa.appendChild(rivais);
 
         const comoJogar = botao('bt-link', null, mostrarRegras);
@@ -262,6 +287,9 @@
 
     // ---------------------------------------------------------------- começo da partida
     function comecar(n) {
+        pararOnline();
+        EU = 0;
+        NPC = 1;
         nivel = n;
         partida++;
         const outros = DECKS.filter((d) => d !== deckEscolhido);
@@ -308,8 +336,8 @@
             const l = el('section', `bt-lado bt-lado--${quem}`);
             const info = el('div', 'bt-info');
             const rosto = el('div', 'bt-rosto');
-            if (quem === 'npc' && arte(ARTE.npc)) rosto.style.backgroundImage = `url('${arte(ARTE.npc)}')`;
-            else rosto.textContent = quem === 'npc' ? '😈' : '🙂';
+            if (quem === 'npc' && !online && arte(ARTE.npc)) rosto.style.backgroundImage = `url('${arte(ARTE.npc)}')`;
+            else rosto.textContent = quem === 'npc' ? (online ? '🧑' : '😈') : '🙂';
             const nome = el('strong', 'bt-nome');
             const pontos = el('div', 'bt-pontos');
             pontos.setAttribute('role', 'img');
@@ -337,7 +365,9 @@
         m.campoTexto = el('p', 'bt-campo-texto');
         m.dica = el('p', 'bt-dica');
         m.dica.setAttribute('aria-live', 'polite');
-        m.centro.append(m.campo, m.dica);
+        m.relogio = el('p', 'bt-relogio');
+        m.relogio.hidden = true;
+        m.centro.append(m.campo, m.dica, m.relogio);
 
         m.acoes = el('div', 'bt-acoes');
         m.aura = botao('bt-aura', null, () => {
@@ -499,7 +529,7 @@
             ? espiada.map((id) => UI.carta(id))
             : Array.from({ length: visao.jogadores[NPC].mao }, () => UI.verso(''))));
         mesa.maoNpc.classList.toggle('bt-mao--espiada', !!espiada);
-        mesa.maoNpc.title = espiada ? 'Mão do NPC (Câmera): toque para ver' : '';
+        mesa.maoNpc.title = espiada ? `Mão de ${dele()} (Câmera): toque para ver` : '';
         mesa.mao.replaceChildren();
         const escolhidas = preparando ? [modo.ativo, ...modo.banco] : [];
         const minhaMao = visao.jogadores[EU].mao.filter((c) => !escolhidas.includes(c.uid));
@@ -617,8 +647,10 @@
         else if (modo?.tipo === 'alvo') dica = modo.texto;
         else if (modo?.tipo === 'aura') dica = 'Toque na carta que vai receber a Aura. Ela fica presa ali e acumula.';
         else if (estado.pendentes.some((p) => p.jogador === EU)) dica = 'Seu ativo caiu! Arraste uma carta do banco para o ativo.';
-        else if (vez) dica = estado.turno === 1 ? 'Seu 1º turno: arraste cartas para o banco e a Aura para uma carta (ainda não dá para atacar).' : 'Sua vez! Arraste as cartas para jogar (o ativo até o NPC ataca).';
-        else if (estado.fase === 'jogo') dica = 'Vez do NPC...';
+        else if (vez) dica = estado.turno === 1 ? 'Seu 1º turno: arraste cartas para o banco e a Aura para uma carta (ainda não dá para atacar).' : `Sua vez! Arraste as cartas para jogar (o ativo até ${dele()} ataca).`;
+        else if (estado.fase === 'preparacao' && online) dica = `Esperando ${dele()} escolher o ativo...`;
+        else if (estado.pendentes.length && online) dica = `Esperando ${dele()} escolher o novo ativo...`;
+        else if (estado.fase === 'jogo') dica = `Vez de ${dele()}...`;
         mesa.dica.textContent = dica;
     }
 
@@ -857,7 +889,7 @@
         const miolo = el('div', 'bt-fim-miolo');
         const cartas = el('div', 'bt-espiada-cartas');
         ids.forEach((id) => cartas.appendChild(UI.carta(id)));
-        miolo.append(el('h2', 'bt-espiada-titulo', '📷 Câmera: a mão do NPC'),
+        miolo.append(el('h2', 'bt-espiada-titulo', `📷 Câmera: a mão de ${dele()}`),
             ids.length ? cartas : el('p', '', 'A mão dele está vazia.'),
             el('p', 'bt-espiada-nota', 'Fica virada para cima até o fim do seu turno.'),
             botao('bt-botao bt-botao--forte', 'Fechar', () => fundo.remove()));
@@ -1035,7 +1067,11 @@
 
     async function sair() {
         if (ocupado) return;
-        if (estado && estado.fase !== 'fim' && !(await perguntar('Sair desta batalha? Ela não fica salva.', 'Sair'))) return;
+        const aviso = online
+            ? 'Sair da mesa? A partida continua e o tempo corre: 3 vezes sem jogar e você perde. Dá para voltar pelo menu.'
+            : 'Sair desta batalha? Ela não fica salva.';
+        if (estado && estado.fase !== 'fim' && !(await perguntar(aviso, 'Sair'))) return;
+        pararOnline();
         estado = null;
         partida++;
         telaMenu();
@@ -1043,7 +1079,7 @@
 
     async function desistir() {
         if (!estado || estado.fase === 'fim' || ocupado) return;
-        if (!(await perguntar('Desistir desta batalha? O NPC ganha.', 'Desistir'))) return;
+        if (!(await perguntar(`Desistir desta batalha? ${Dele()} ganha.`, 'Desistir'))) return;
         executar({ tipo: 'desistir' });
     }
 
@@ -1055,6 +1091,7 @@
     }
 
     async function passo(jogada) {
+        if (online) return passoOnline(jogada);
         ocupado = true;
         fecharPainel();
         const antes = estado;
@@ -1078,6 +1115,7 @@
 
     /** NPC joga (e, no modo automático, o robô joga por você também). */
     async function continuar() {
+        if (online) { agendarBusca(); return; }
         const minha = partida;
         while (estado && estado.fase !== 'fim') {
             const quem = Robo.quemJoga(estado);
@@ -1090,6 +1128,322 @@
         if (estado?.fase === 'fim') telaFim();
     }
 
+    // ---------------------------------------------------------------- online (outro jogador)
+    const BUSCA_MS = 2500;
+    const Conta = () => window.EnzoConta || null;
+
+    async function api(metodo, caminho, corpo) {
+        const opcoes = { method: metodo, credentials: 'same-origin', headers: {} };
+        if (corpo !== undefined) {
+            opcoes.headers['content-type'] = 'application/json';
+            opcoes.body = JSON.stringify(corpo);
+        }
+        const r = await fetch(caminho, opcoes);
+        let dados = null;
+        try { dados = await r.json(); } catch { /* resposta sem JSON */ }
+        if (!r.ok) {
+            const erro = new Error(dados?.error || `erro ${r.status}`);
+            erro.status = r.status;
+            erro.dados = dados || {};
+            throw erro;
+        }
+        return dados;
+    }
+
+    /** 'ok' | 'login' (precisa entrar) | 'partida' (tem uma em andamento) | 'fora' (sem servidor: artifact, arquivo local). */
+    async function verificarOnline() {
+        try {
+            const d = await api('GET', '/api/tcg/atual');
+            return d.partida ? 'partida' : 'ok';
+        } catch (erro) {
+            return erro.status === 401 ? 'login' : 'fora';
+        }
+    }
+
+    function pararOnline() {
+        if (online?.timer) clearTimeout(online.timer);
+        if (online?.relogioTimer) clearInterval(online.relogioTimer);
+        online = null;
+        esperaSala?.parar();
+        esperaSala = null;
+    }
+
+    let esperaSala = null;   // { parar } enquanto espera alguém entrar na sala
+
+    /** Tela "Outro jogador": criar sala, entrar com código, voltar para a partida. */
+    async function telaOnline(aviso) {
+        pararOnline();
+        limparMesa();
+        raiz.replaceChildren();
+        raiz.className = 'batalha batalha--menu';
+        const fundoMenu = arteGrande(ARTE.menu.fundo);
+        if (fundoMenu) {
+            raiz.style.setProperty('--fundo-menu', `url('${new URL(fundoMenu, document.baseURI).href}')`);
+            raiz.classList.add('batalha--menu-arte');
+        }
+        const caixa = el('div', 'bt-menu bt-online');
+        caixa.append(el('h2', 'bt-menu-sub', 'Outro jogador'));
+        const corpo = el('div', 'bt-online-corpo');
+        caixa.append(corpo, botao('bt-link', '← Voltar', telaMenu));
+        raiz.appendChild(caixa);
+        const msg = (texto, tipo = '') => { const p = el('p', `bt-online-msg ${tipo}`, texto); corpo.appendChild(p); return p; };
+        if (aviso) msg(aviso, 'bt-online-msg--erro');
+
+        const situacao = await verificarOnline();
+        if (!caixa.isConnected) return;
+        if (situacao === 'fora') {
+            msg('Jogar contra outra pessoa só funciona no site do Enzo Games.');
+            return;
+        }
+        if (situacao === 'login') {
+            msg('Para jogar online, entre com a sua conta Google (é o mesmo login do site).');
+            corpo.appendChild(botao('bt-botao bt-botao--forte', 'Entrar com Google', () => Conta()?.pedirLogin()));
+            const desligar = Conta()?.aoMudar?.(() => { if (Conta()?.usuario) { desligar?.(); telaOnline(); } });
+            return;
+        }
+        let atual;
+        try { atual = await api('GET', '/api/tcg/atual'); } catch (erro) { msg(erro.message, 'bt-online-msg--erro'); return; }
+        if (!caixa.isConnected) return;
+        if (atual.partida) {
+            msg('Você tem uma partida em andamento.');
+            corpo.appendChild(botao('bt-botao bt-botao--forte', 'Voltar para a partida', () => abrirPartida(atual.partida)));
+            return;
+        }
+
+        corpo.appendChild(el('p', 'bt-online-deck', `Seu deck: ${deckEscolhido.nome}`));
+        const trocar = botao('bt-link', 'trocar deck', telaMenu);
+        corpo.lastChild.append(' ', trocar);
+
+        // Entrar numa sala (código do amigo).
+        const entrar = el('form', 'bt-online-entrar');
+        const campo = el('input', 'bt-online-codigo');
+        campo.placeholder = 'TORA-XXX';
+        campo.maxLength = 8;
+        campo.autocomplete = 'off';
+        campo.setAttribute('aria-label', 'Código da sala');
+        campo.value = convite || '';
+        const bEntrar = botao('bt-botao bt-botao--forte', 'Entrar na sala');
+        bEntrar.type = 'submit';
+        entrar.append(campo, bEntrar);
+        entrar.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            let codigo = campo.value.trim().toUpperCase().replace(/\s+/g, '');
+            if (/^[A-Z0-9]{3}$/.test(codigo)) codigo = `TORA-${codigo}`;
+            bEntrar.disabled = true;
+            try {
+                const d = await api('POST', `/api/tcg/salas/${encodeURIComponent(codigo)}/entrar`, { deck: deckEscolhido.id });
+                limparConvite();
+                comecarOnline(d);
+            } catch (erro) {
+                bEntrar.disabled = false;
+                if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
+                balao(entrar, erro.message, 'erro');
+            }
+        });
+
+        const criar = botao('bt-botao', 'Criar sala e chamar um amigo', async () => {
+            criar.disabled = true;
+            try {
+                const d = await api('POST', '/api/tcg/salas', { deck: deckEscolhido.id });
+                mostrarSala(d.codigo);
+            } catch (erro) {
+                criar.disabled = false;
+                if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
+                balao(criar, erro.message, 'erro');
+            }
+        });
+        if (convite) {
+            msg(`Você foi chamado para a sala ${convite}.`);
+            corpo.append(entrar, el('p', 'bt-online-ou', 'ou'), criar);
+        } else {
+            corpo.append(criar, el('p', 'bt-online-ou', 'ou entre na sala de um amigo:'), entrar);
+        }
+        if (atual.sala) mostrarSala(atual.sala.codigo);
+
+        function mostrarSala(codigo) {
+            corpo.replaceChildren();
+            const link = `${location.origin}${location.pathname}?sala=${codigo}`;
+            corpo.append(el('p', 'bt-online-msg', 'Mande este código (ou o link) para o seu amigo:'),
+                el('p', 'bt-online-sala', codigo));
+            const copiar = botao('bt-botao bt-botao--forte', 'Copiar link', async () => {
+                try { await navigator.clipboard.writeText(link); balao(copiar, 'Link copiado!'); } catch { balao(copiar, link); }
+            });
+            const espera = el('p', 'bt-online-espera', 'Esperando alguém entrar...');
+            const cancelar = botao('bt-botao', 'Cancelar sala', async () => {
+                esperaSala?.parar();
+                try { await api('POST', `/api/tcg/salas/${codigo}/cancelar`, {}); } catch { /* sala já sumiu */ }
+                telaOnline();
+            });
+            corpo.append(copiar, espera, cancelar);
+            // Pergunta de tempos em tempos se alguém entrou (parado com a aba escondida).
+            let timer = null;
+            const checar = async () => {
+                timer = null;
+                if (document.hidden) return;
+                try {
+                    const s = await api('GET', `/api/tcg/salas/${codigo}`);
+                    if (!caixa.isConnected || esperaSala !== controle) return;
+                    if (s.partida) { controle.parar(); abrirPartida(s.partida); return; }
+                } catch (erro) {
+                    if (erro.status === 404) { controle.parar(); telaOnline('A sala expirou. Crie outra.'); return; }
+                }
+                if (esperaSala === controle) timer = setTimeout(checar, BUSCA_MS);
+            };
+            const visivel = () => { if (!document.hidden && !timer && esperaSala === controle) checar(); };
+            const controle = {
+                parar() {
+                    if (timer) clearTimeout(timer);
+                    document.removeEventListener('visibilitychange', visivel);
+                    if (esperaSala === controle) esperaSala = null;
+                },
+            };
+            esperaSala = controle;
+            document.addEventListener('visibilitychange', visivel);
+            timer = setTimeout(checar, BUSCA_MS);
+        }
+    }
+
+    function limparConvite() {
+        if (!params.has('sala')) return;
+        params.delete('sala');
+        const q = params.toString();
+        history.replaceState(null, '', `${location.pathname}${q ? `?${q}` : ''}`);
+    }
+
+    async function abrirPartida(id) {
+        try {
+            comecarOnline(await api('GET', `/api/tcg/partidas/${encodeURIComponent(id)}?desde=-1`));
+        } catch (erro) {
+            telaOnline(erro.message);
+        }
+    }
+
+    /** Monta a mesa de uma partida online a partir da resposta do servidor. */
+    function comecarOnline(d) {
+        pararOnline();
+        if (d.regras !== R.REGRAS_VERSAO) { location.reload(); return; }
+        EU = d.eu;
+        NPC = 1 - d.eu;
+        partida++;
+        log = [];
+        online = { id: d.id, versao: d.versao, prazo: d.prazo, dif: d.agora - Date.now(), timer: null, relogioTimer: null };
+        estado = d.visao;
+        montarMesa();
+        registrar(`Partida online: você contra ${dele()}.`);
+        modo = estado.fase === 'preparacao' && !estado.jogadores[EU].preparado ? { tipo: 'preparar', ativo: null, banco: [] } : null;
+        desenhar();
+        online.relogioTimer = setInterval(atualizarRelogio, 500);
+        if (estado.fase === 'fim') telaFim();
+        else agendarBusca();
+    }
+
+    const agoraServidor = () => Date.now() + (online?.dif || 0);
+
+    function atualizarRelogio() {
+        if (!online || !mesa || !estado || estado.fase === 'fim') { if (mesa) mesa.relogio.hidden = true; return; }
+        const resta = Math.max(0, Math.ceil((online.prazo - agoraServidor()) / 1000));
+        const meu = R.quemDeve(estado).includes(EU);
+        mesa.relogio.hidden = false;
+        mesa.relogio.textContent = `⏱ ${resta}s`;
+        mesa.relogio.title = meu ? 'Seu tempo para jogar' : `Tempo de ${dele()}`;
+        mesa.relogio.classList.toggle('bt-relogio--fim', meu && resta <= 10);
+    }
+
+    /** Guarda o que o servidor mandou e toca os eventos novos. */
+    async function receber(d) {
+        if (!online || d.id !== online.id) return;
+        online.versao = d.versao;
+        online.prazo = d.prazo;
+        online.dif = d.agora - Date.now();
+        if (d.visao) {
+            const antes = estado;
+            estado = d.visao;
+            // O que eu estava fazendo pode não valer mais (o tempo acabou, o servidor escolheu por mim).
+            if (modo?.tipo === 'preparar' && estado.jogadores[EU].preparado) modo = null;
+            if (!modo && estado.fase === 'preparacao' && !estado.jogadores[EU].preparado) modo = { tipo: 'preparar', ativo: null, banco: [] };
+            if (modo && modo.tipo !== 'preparar' && !R.quemDeve(estado).includes(EU)) modo = null;
+            if (!antes.jogadores[EU].preparado && estado.jogadores[EU].preparado) fecharPainel();
+            for (const ev of d.eventos || []) {
+                registrarEvento(ev, antes);
+                try { await tocar(ev, antes); } catch (err) { console.error(err); }
+            }
+        }
+        desenhar();
+        atualizarRelogio();
+        if (estado.fase === 'fim') telaFim();
+    }
+
+    async function passoOnline(jogada) {
+        if (!online) return;
+        ocupado = true;
+        fecharPainel();
+        const id = online.id;
+        const enviar = async () => receber(await api('POST', `/api/tcg/partidas/${id}/jogada`, { jogada, versao: online.versao, regras: R.REGRAS_VERSAO }));
+        try {
+            try {
+                await enviar();
+            } catch (erro) {
+                // A mesa mudou antes (os dois se preparando juntos, o tempo do outro acabou):
+                // atualiza e, se a jogada ainda vale, manda de novo uma vez.
+                if (erro.status !== 409 || erro.dados?.recarregar || !online) throw erro;
+                await buscar(true);
+                if (!online || R.motivoInvalida(estado, jogada)) throw erro;
+                await enviar();
+            }
+        } catch (erro) {
+            if (erro.dados?.recarregar) {
+                ocupado = false;
+                if (await perguntar('O jogo foi atualizado. Recarregar a página? A partida continua.', 'Recarregar')) location.reload();
+                return;
+            }
+            balao(mesa?.raiz || raiz, erro.status ? erro.message : 'Sem conexão. Tente de novo.', 'erro');
+            if (erro.status === 409) await buscar(true);
+        } finally {
+            ocupado = false;
+            desenhar();
+        }
+    }
+
+    /** "Teve jogada?" */
+    async function buscar(forcar = false) {
+        if (!online) return;
+        if (!forcar && (ocupado || arrasto?.vivo)) { agendarBusca(600); return; }
+        const id = online.id;
+        let d = null;
+        try {
+            d = await api('GET', `/api/tcg/partidas/${id}?desde=${online.versao}`);
+        } catch (erro) {
+            if (erro.status === 404) { pararOnline(); telaOnline('Essa partida não existe mais.'); return; }
+            // Sem internet: tenta de novo mais devagar.
+        }
+        if (!online || online.id !== id) return;
+        if (d) {
+            const eraOcupado = ocupado;
+            ocupado = true;
+            try { await receber(d); } finally { ocupado = eraOcupado; }
+        }
+        if (!forcar) agendarBusca(d ? undefined : BUSCA_MS * 2);
+    }
+
+    /** Na vez do outro pergunta a cada 2,5 s; na minha, só quando o meu tempo acabar. Parado com a aba escondida. */
+    function agendarBusca(ms) {
+        if (!online || !estado || estado.fase === 'fim') return;
+        if (online.timer) clearTimeout(online.timer);
+        online.timer = null;
+        if (document.hidden) return;
+        let espera = ms;
+        if (espera === undefined) {
+            espera = R.quemDeve(estado).includes(EU)
+                ? Math.max(1000, online.prazo - agoraServidor() + 1500)
+                : BUSCA_MS;
+        }
+        online.timer = setTimeout(() => { if (online) { online.timer = null; buscar(); } }, espera);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && online && !online.timer) buscar();
+    });
+
     // ---------------------------------------------------------------- histórico
     function registrar(texto) {
         log.unshift(texto);
@@ -1100,11 +1454,12 @@
         while (mesa.log.children.length > 60) mesa.log.lastChild.remove();
     }
     function registrarEvento(ev, antes) {
-        const quem = (j) => (j === EU ? 'Você' : 'O NPC');
+        const quem = (j) => (j === EU ? 'Você' : Dele());
         const n = (uid) => nomeDoUid(uid, estado, antes);
         switch (ev.tipo) {
             case 'inicio': registrar(`${quem(ev.primeiro)} começa.`); break;
-            case 'turno': registrar(`— Turno ${ev.turno}: ${ev.jogador === EU ? 'sua vez' : 'vez do NPC'} —`); break;
+            case 'turno': registrar(`— Turno ${ev.turno}: ${ev.jogador === EU ? 'sua vez' : `vez de ${dele()}`} —`); break;
+            case 'tempo': registrar(`⏱ ${quem(ev.jogador)} ficou sem tempo (${ev.estouros} de 3).`); break;
             case 'compra': if (ev.jogador === EU) registrar(`Você comprou ${nomeVisivel(ev.id)}.`); break;
             case 'baixar': registrar(`${quem(ev.jogador)} pôs ${nomeVisivel(ev.id)} no banco.`); break;
             case 'aura': registrar(`${n(ev.uid)} ganhou Aura (${ev.aura}).`); break;
@@ -1120,7 +1475,7 @@
             case 'poder': registrar(`${n(ev.uid)} usou o poder ${ev.nome}.`); break;
             case 'moeda': registrar(`Moeda: ${ev.resultado}.`); break;
             case 'ataqueFalhou': registrar(`${n(ev.uid)} estava Iludido e errou!`); break;
-            case 'espiar': if (ev.jogador === EU) registrar(`Câmera: a mão do NPC tem ${ev.ids.map(nomeVisivel).join(', ') || 'nada'}.`); break;
+            case 'espiar': if (ev.jogador === EU) registrar(`Câmera: a mão de ${dele()} tem ${ev.ids.map(nomeVisivel).join(', ') || 'nada'}.`); break;
             case 'novoAtivo': registrar(`${quem(ev.jogador)} pôs ${n(ev.uid)} no ativo.`); break;
             case 'descartar': registrar(`${quem(ev.jogador)} descartou ${nomeVisivel(ev.id)}.`); break;
             case 'fim': registrar(ev.vencedor === 'empate' ? 'Empate!' : `${quem(ev.vencedor)} venceu!`); break;
@@ -1234,7 +1589,7 @@
         if (!mesa) return;
         switch (ev.tipo) {
             case 'inicio':
-                await banner(ev.primeiro === EU ? 'VOCÊ COMEÇA!' : 'O NPC COMEÇA!');
+                await banner(ev.primeiro === EU ? 'VOCÊ COMEÇA!' : `${Dele().toUpperCase()} COMEÇA!`);
                 break;
             case 'turno':
                 desenhar();
@@ -1383,6 +1738,9 @@
             case 'preparado':
                 if (ev.jogador === EU) desenhar();
                 break;
+            case 'tempo':
+                await banner(ev.jogador === EU ? `SEU TEMPO ACABOU! (${ev.estouros}/3)` : `${Dele().toUpperCase()} DEMOROU!`, ev.jogador === EU ? '' : 'eu');
+                break;
             case 'escolherAtivo':
                 if (ev.jogador === EU) desenhar();
                 break;
@@ -1407,7 +1765,12 @@
         miolo.append(el('h2', 'bt-fim-titulo', titulos[tipo]), el('p', '', motivos[estado.motivo] || ''),
             el('p', 'bt-fim-placar', `Placar: ${estado.jogadores[EU].pontos} × ${estado.jogadores[NPC].pontos}`));
         const acoes = el('div', 'bt-fim-acoes');
-        acoes.append(botao('bt-botao bt-botao--forte', 'Jogar de novo', () => comecar(nivel)), botao('bt-botao', 'Menu', telaMenu));
+        if (online) {
+            pararOnline();
+            acoes.append(botao('bt-botao bt-botao--forte', 'Nova partida online', () => telaOnline()), botao('bt-botao', 'Menu', telaMenu));
+        } else {
+            acoes.append(botao('bt-botao bt-botao--forte', 'Jogar de novo', () => comecar(nivel)), botao('bt-botao', 'Menu', telaMenu));
+        }
         miolo.appendChild(acoes);
         caixa.appendChild(miolo);
         if (tipo === 'vitoria' && !semMovimento()) {
@@ -1428,6 +1791,11 @@
     // ---------------------------------------------------------------- início
     window.EnzoBatalha = {
         get estado() { return estado; },
+        get online() { return online; },
+        get eu() { return EU; },
+        /** Testes: faz uma jogada como se fosse pela tela (o lado vem de EU). */
+        jogar: (jogada) => executar(jogada),
+        get ocupado() { return ocupado; },
         comecar, telaMenu, DECKS, ARTE,
         ultimoResultado: null,
     };
@@ -1436,6 +1804,7 @@
         if (!mesa.painel.hidden) fecharPainel();
         else if (modo && modo.tipo !== 'preparar') { modo = null; desenhar(); }
     });
-    telaMenu();
+    if (convite) telaOnline();
+    else telaMenu();
     if (AUTO) comecar(params.get('nivel') || 'normal');
 })();

@@ -5,9 +5,9 @@
 > continue sem precisar da conversa. Cópia em `/mnt/project-files/tcg/CONTINUAR-MULTIPLAYER.md`.
 > Plano completo: `docs/PLANO-MULTIPLAYER.md`. Regras do jogo: `docs/PLANO-TCG.md`.
 
-**Última atualização:** 2026-09-26, depois do M1.
-**Próximo passo exato:** começar o M2 (seção 5): em `js/batalha.js`, criar a camada `conexao` e o
-modo online da mesa, começando pelo menu "Outro jogador" (criar sala / entrar com código).
+**Última atualização:** 2026-09-26, depois do M2.
+**Próximo passo exato:** o Henrique testar no computador (seção 6) e dizer o que ajustar; depois o M3
+(seção 5b): reações prontas, aviso "sua vez!" no título da aba e revanche com o mesmo amigo.
 
 ## 1. Onde estamos
 | Fase | Estado |
@@ -15,7 +15,7 @@ modo online da mesa, começando pelo menu "Outro jogador" (criar sala / entrar c
 | Merge do `main` (site na Cloudflare) no `TCG` | feito (commits 6b936d6 e a1da90e) |
 | **M0.** Motor pronto para online | **feito** (39b8c40), 49 testes passando |
 | **M1.** Servidor: salas, jogadas, "teve jogada?", tempo de turno | **feito**, 7 testes em `test/tcg-online.test.js` |
-| **M2.** Tela online (criar sala, entrar pelo link, mesa online) | falta |
+| **M2.** Tela online (criar sala, entrar pelo link, mesa online) | **feito**, testado com duas janelas (Playwright) |
 | **M3.** Reações prontas e avisos ("sua vez!") | falta |
 | M4 a M6 (desafio pela Ficha, ranking, fila) | depois; só se o Henrique pedir |
 
@@ -75,12 +75,33 @@ modo online da mesa, começando pelo menu "Outro jogador" (criar sala / entrar c
   motor + JSON no servidor ≈ 0,3 ms por jogada (máx. 1 ms), bem abaixo dos 10 ms da Cloudflare;
   estado ≈ 4,6 KB.
 
-## 5. M2: tela (resumo)
-`js/batalha.js` hoje chama o motor direto. Criar dois modos de "mesa": **local** (NPC, como hoje) e
-**online** (manda a jogada para a API, recebe `visao` + `eventos` e reaproveita a mesma fila de
-animações). Na visão a mão do outro é um número: desenhar os versos por contagem. Menu "Outro
-jogador" (hoje desativado) → criar sala / colar código; `batalha.html?sala=CODIGO` entra direto.
-Relógio do turno na barra. Parar o polling com a aba escondida. O artifact continua só contra o NPC.
+## 5. M2: tela (feito)
+Tudo em `js/batalha.js` (seção "online (outro jogador)") e `css/batalha.css` (fim do arquivo):
+- `EU`/`NPC` viraram variáveis: online, quem criou a sala é o 0 e quem entrou é o 1. `NPC` = "o outro lado".
+- Online, `estado` guarda só a **visão** que o servidor mandou. `passo()` chama `passoOnline()`
+  (POST da jogada; em 409 atualiza e manda de novo uma vez, se ainda valer: acontece quando os dois se
+  preparam juntos) e `continuar()` chama `agendarBusca()`. `receber()` toca os eventos com a mesma
+  fila de animações do jogo contra o NPC.
+- Polling: `agendarBusca()` pergunta a cada 2,5 s quando não é a minha vez; na minha vez, só quando o
+  meu prazo acaba. Para com a aba escondida (`visibilitychange`) e volta ao reaparecer.
+- Menu: o card "Outro jogador" chama `verificarOnline()` (GET `/api/tcg/atual`): "Com um amigo",
+  "Entre com o Google", "Voltar para a partida" ou, sem servidor (artifact), "Só no site" desligado.
+  `telaOnline()`: criar sala (código grande, Copiar link, espera com polling da sala, Cancelar), entrar
+  com código (aceita só as 3 letras) e voltar para a partida. `batalha.html?sala=TORA-XXX` abre direto
+  nessa tela com o código preenchido.
+- Mesa: relógio `⏱ 42s` embaixo da dica (pisca vermelho nos últimos 10 s do meu tempo), textos com o
+  primeiro nome do outro no lugar de "NPC", evento `tempo` no histórico e num banner, "Sair" avisa que a
+  partida continua, fim de jogo com "Nova partida online".
+- Para testes: `window.EnzoBatalha.jogar(jogada)`, `.eu`, `.online`, `.ocupado`.
+
+## 5b. M3: o que falta (em ordem)
+1. Reações prontas (😂 👍 😱 "Boa jogada!" "Ops"): rota `POST /api/tcg/partidas/:id/reacao`, guardar
+   na partida (ex. coluna `reacoes` com as últimas 5 e a hora) e mandar na resposta do GET.
+2. Aviso de "sua vez!": título da aba piscando e som curto quando a vez chegar com a aba escondida.
+3. Revanche: no fim, "Jogar de novo" cria uma sala e avisa o outro (ele vê o botão "Aceitar").
+4. Limitar a 1 pergunta por segundo por jogador no servidor (freio que faltou no M1).
+5. Depois (M4 a M6 do plano): desafio pela Ficha, ranking online, fila "procurar partida",
+   Durable Objects no lugar do polling (só se ficar lento ou caro).
 
 ## 6. Como testar hoje
 - `node --test test/tcg-regras.test.js` (motor, 49 testes) e `node --test test/tcg-online.test.js`
@@ -89,6 +110,13 @@ Relógio do turno na barra. Parar o polling com a aba escondida. O artifact cont
 - Servidor local: `npm install`, depois `npm start` (ou `PORT=3123 node server.js`), abrir
   `http://localhost:3123/batalha.html`. Reinicie o servidor depois de mexer em `api/` ou `js/*-dados.js`.
 - Build da Cloudflare (para conferir que nada quebrou): `npm run build:cloudflare`.
+- **Online no computador, com dois jogadores falsos** (sem Google):
+  `ENZO_LOGIN_FALSO=1 ENZO_DB=memoria GOOGLE_CLIENT_ID=x.apps.googleusercontent.com SESSION_SECRET=<40 letras> PORT=3123 node server.js`.
+  Em cada janela (uma normal e uma anônima), entre pelo console do navegador:
+  `fetch('/api/auth/google',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({credential:'teste:ana:Ana da Silva Teste'})})`
+  (a credencial precisa ter 20 letras ou mais) e recarregue. Uma cria a sala, a outra entra com o código.
+- Teste automático das duas janelas: o script usado está descrito no commit do M2 (Playwright com dois
+  contextos; os robôs jogam chamando `EnzoBatalha.jogar`).
 
 ## 7. Arquivos
 `js/tcg-regras.js` (motor), `js/tcg-cartas.js` (números das cartas), `js/tcg-robo.js` (NPC),

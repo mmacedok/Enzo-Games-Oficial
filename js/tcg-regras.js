@@ -703,14 +703,22 @@
         delete v.rng;
         delete v.semente;
         v.jogadores.forEach((x, i) => {
-            x.deck = x.deck.length;
+            x.deck = qtd(x.deck);
             if (i !== j) {
-                x.mao = x.mao.length;
+                x.mao = qtd(x.mao);
                 x.espiada = null;
                 if (v.fase === 'preparacao') { x.ativo = null; x.banco = []; }
             }
         });
         return v;
+    }
+
+    /** Quem precisa agir agora (online, o relógio do turno corre para eles). */
+    function quemDeve(estado) {
+        if (estado.fase === 'fim') return [];
+        if (estado.fase === 'preparacao') return [0, 1].filter((j) => !estado.jogadores[j].preparado);
+        if (estado.pendentes.length) return [...new Set(estado.pendentes.map((p) => p.jogador))];
+        return [estado.vez];
     }
 
     /**
@@ -740,7 +748,7 @@
     return {
         TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAO_INICIAL, VAGAS_BANCO, PONTOS_VITORIA, LIMITE_TURNOS,
         REGRAS_VERSAO, JogadaInvalida,
-        validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, repetir,
+        validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, quemDeve, repetir,
         hpMax, custoRecuo, calcularDano, pontosDe, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado,
     };
 });

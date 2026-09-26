@@ -54,13 +54,7 @@ function novoCodigo(aleatorio) {
     return s;
 }
 
-/** Quem precisa agir agora (o relógio corre para eles). */
-function quemDeve(estado) {
-    if (estado.fase === 'fim') return [];
-    if (estado.fase === 'preparacao') return [0, 1].filter((j) => !estado.jogadores[j].preparado);
-    if (estado.pendentes.length) return [...new Set(estado.pendentes.map((p) => p.jogador))];
-    return [estado.vez];
-}
+const quemDeve = R.quemDeve;
 
 /** O que o servidor joga por quem estourou o tempo. */
 function jogadaAutomatica(estado, j) {
