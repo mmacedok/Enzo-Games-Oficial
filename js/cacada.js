@@ -26,7 +26,7 @@
 
     const janela = GameDialog.create({
         titulo: 'Caçada ao Inominável',
-        descricaoCanvas: 'Caçada ao Inominável: WASD anda e mira, Espaço pula, E golpeia, C dash, F rajada, segure Q para curar, segure Tab para o mapa, Esc pausa. Há também o esquema de Hollow Knight no menu.',
+        descricaoCanvas: 'Caçada ao Inominável: WASD anda e mira, Espaço pula, E golpeia, C ou Shift dash, F rajada, segure Q para curar, segure Tab para o mapa, Esc pausa. Há também o esquema de Hollow Knight no menu.',
         largura: W,
         altura: H,
         // Celular deitado: os botões ficam por cima, nas laterais (sem roubar altura).
@@ -1000,15 +1000,6 @@
             ctx.fillStyle = '#4c8c2b';
             ctx.fillRect(cx - 9, base - 30, 18, 6);
         }
-        if (j.estado === 'degustando') {
-            // Lanche e anel de carga.
-            const k = j.degustarT / (jogo.progresso.loja.has('lanche') ? CONFIG.tempoDegustarRapido : CONFIG.tempoDegustar);
-            ctx.strokeStyle = COR.amarelo;
-            ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(cx, base - 38, 9, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); ctx.stroke();
-            ctx.fillStyle = '#d98a3a';
-            ctx.beginPath(); ctx.moveTo(cx, base - 44); ctx.quadraticCurveTo(cx + 6, base - 33, cx, base - 33); ctx.quadraticCurveTo(cx - 6, base - 33, cx, base - 44); ctx.fill();
-        }
         if (jogo.fase === 'sentado') texto('SALVO', cx, base - 44, 12, COR.verde, 3);
     }
 
@@ -1816,6 +1807,23 @@
             if (img) ctx.drawImage(img, 66 + i * 20 - 9, 24 - 11, 19, 19);
             else cogumelo(66 + i * 20, 24, i < j.vida, 1);
         }
+        // Degustando: a coxinha e o anel de carga ficam no cogumelo que vai encher.
+        if (j.estado === 'degustando') {
+            const k = j.degustarT / (p.loja.has('lanche') ? CONFIG.tempoDegustarRapido : CONFIG.tempoDegustar);
+            const cx = 66 + Math.min(j.vida, p.vidaMax - 1) * 20;
+            const cy = 24;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.stroke();
+            ctx.strokeStyle = COR.amarelo;
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(cx, cy, 12, -Math.PI / 2, -Math.PI / 2 + Math.min(1, k) * Math.PI * 2); ctx.stroke();
+            // Coxinha pequena em cima do anel.
+            ctx.fillStyle = '#d98a3a';
+            ctx.strokeStyle = COR.tinta;
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(cx, cy - 22); ctx.quadraticCurveTo(cx + 6, cy - 11, cx, cy - 11); ctx.quadraticCurveTo(cx - 6, cy - 11, cx, cy - 22); ctx.fill(); ctx.stroke();
+        }
         // Fragmentos.
         if (p.fragmentos > 0) {
             const fx = 66 + p.vidaMax * 20 + 2;
@@ -2031,8 +2039,8 @@
         const ajuda = toque
             ? 'Botões: ◀▶▲▼ andam · PULAR · GOLPE · DASH · RAJADA · CURA (segure)'
             : esquema === ESQUEMAS.hk
-                ? 'setas andam/miram · Z pula · X golpe · C dash · A: toque = rajada, segure = cura · F rajada · ↑ senta · segure TAB mapa · ESC pausa'
-                : 'WASD anda/mira · ESPAÇO pula · E golpe · C dash · F rajada · segure Q cura · W senta · segure TAB mapa · ESC pausa';
+                ? 'setas andam/miram · Z pula · X golpe · C/Shift dash · A: toque = rajada, segure = cura · F rajada · ↑ senta · segure TAB mapa · ESC pausa'
+                : 'WASD anda/mira · ESPAÇO pula · E golpe · C/Shift dash · F rajada · segure Q cura · W senta · segure TAB mapa · ESC pausa';
         texto(ajuda, W / 2, H - 22, toque ? 13 : 11, '#fff', 3);
     }
 
@@ -2228,7 +2236,7 @@
 
     // Dois esquemas de teclado. O padrão usa WASD; o opcional copia Hollow Knight no PC
     // (setas, Z pula, X golpe, A tocado = magia e segurado = cura). Tab (mapa segurado),
-    // Esc (pausa) e C (dash) valem nos dois.
+    // Esc (pausa) e C ou Shift (dash) valem nos dois.
     const ESQUEMAS = {
         padrao: {
             nome: 'PADRÃO (WASD)',
@@ -2236,15 +2244,15 @@
             pulo: ['Space'], golpe: ['KeyE'], dash: ['KeyC', 'ShiftLeft', 'ShiftRight'], magia: ['KeyF'],
             cura: 'KeyQ', foco: null,
             confirma: ['Space', 'Enter', 'KeyE'],
-            nomes: { MOVE: 'A D', PULO: 'ESPAÇO', GOLPE: 'E', CURA: 'Q', CIMA: 'W', BAIXO: 'S', MIRA: 'W A S D', MAGIA: 'F', DASH: 'C', CONFIRMA: 'ESPAÇO' },
+            nomes: { MOVE: 'A D', PULO: 'ESPAÇO', GOLPE: 'E', CURA: 'Q', CIMA: 'W', BAIXO: 'S', MIRA: 'W A S D', MAGIA: 'F', DASH: 'C/SHIFT', CONFIRMA: 'ESPAÇO' },
         },
         hk: {
             nome: 'HOLLOW KNIGHT',
             mover: { ArrowLeft: 'esquerda', ArrowRight: 'direita', ArrowUp: 'cima', ArrowDown: 'baixo' },
-            pulo: ['KeyZ'], golpe: ['KeyX'], dash: ['KeyC'], magia: ['KeyF'],
+            pulo: ['KeyZ'], golpe: ['KeyX'], dash: ['KeyC', 'ShiftLeft', 'ShiftRight'], magia: ['KeyF'],
             cura: null, foco: 'KeyA',
             confirma: ['KeyZ', 'Space', 'Enter'],
-            nomes: { MOVE: '← →', PULO: 'Z', GOLPE: 'X', CURA: 'A', CIMA: '↑', BAIXO: '↓', MIRA: 'Setas', MAGIA: 'A (toque) ou F', DASH: 'C', CONFIRMA: 'Z' },
+            nomes: { MOVE: '← →', PULO: 'Z', GOLPE: 'X', CURA: 'A', CIMA: '↑', BAIXO: '↓', MIRA: 'Setas', MAGIA: 'A (toque) ou F', DASH: 'C/SHIFT', CONFIRMA: 'Z' },
         },
     };
     const NOMES_TOQUE = { MOVE: '◀ ▶', PULO: 'PULAR', GOLPE: 'GOLPE', CURA: 'CURA', CIMA: '▲', BAIXO: '▼', MIRA: 'Direcional', MAGIA: 'RAJADA', DASH: 'DASH', CONFIRMA: 'PULAR' };
