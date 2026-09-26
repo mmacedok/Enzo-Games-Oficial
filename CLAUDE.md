@@ -13,7 +13,7 @@ sistema de cartas (Baralho Enzo) até ele dizer que está pronto.
   Arquivos do Baralho: `js/baralho-dados.js`, `js/baralho.js`, `api/baralho.js`,
   `test/baralho.test.js`, `docs/PLANO-BARALHO.md`, `docs/CARTAS-IDEIAS.md`,
   a Batalha dos Torados (`batalha.html`, `js/batalha.js`, `css/batalha.css`, `js/tcg-*.js`,
-  `test/tcg-regras.test.js`, `tools/tcg-simular.mjs`, `tools/batalha-artifact.mjs`, `docs/PLANO-TCG.md`, `docs/BATALHA-ASSETS.md`, `docs/INSTRUCOES-ASSETS-CLAUDE.md`, `docs/PLANO-BATALHA-COMPLETA.md`, `docs/BATALHA-EFEITOS.md`, `docs/PLANO-MULTIPLAYER.md`, `docs/CONTINUAR-MULTIPLAYER.md`, `docs/EFEITOS-ONDE-VAO.md`, `docs/ICONES-SITE.md`, `api/tcg.js`, `test/tcg-online.test.js`, `assets/Batalha/`),
+  `test/tcg-regras.test.js`, `tools/tcg-simular.mjs`, `tools/batalha-artifact.mjs`, `docs/PLANO-TCG.md`, `docs/BATALHA-ASSETS.md`, `docs/INSTRUCOES-ASSETS-CLAUDE.md`, `docs/PLANO-BATALHA-COMPLETA.md`, `docs/BATALHA-EFEITOS.md`, `docs/PLANO-MULTIPLAYER.md`, `docs/CONTINUAR-MULTIPLAYER.md`, `docs/EFEITOS-ONDE-VAO.md`, `docs/ICONES-SITE.md`, `docs/PENDENCIAS.md`, `api/tcg.js`, `test/tcg-online.test.js`, `assets/Batalha/`),
   `assets/Cartas/` (e as variantes em `assets/web/`, `data/images.json`, `js/images.generated.js`), e trechos em `api/schema.js`, `api/handler.js`,
   `api/games.js`, `api/admin.js`, `api/leitores.js`, `js/auth-widget.js`, `js/game-dialog.js`,
   `js/admin.js`, `admin.html`, `css/style.css`, páginas `*.html`, `README.md` e
@@ -22,6 +22,11 @@ sistema de cartas (Baralho Enzo) até ele dizer que está pronto.
   separada, ex. `git worktree add ../push-main main`), faça o push de lá e depois traga para o
   `baralho` com `git cherry-pick` (ou `git merge main` no `baralho`).
 - Quando o Henrique liberar o Baralho: aí sim `git merge baralho` no `main` e push.
+
+## Pendências (docs/PENDENCIAS.md)
+- No fim de cada tarefa, atualize `docs/PENDENCIAS.md`: tire o que ficou pronto (para "Feito recentemente",
+  com a data), acrescente o que ficou pendente e siga o que o Henrique marcou ou comentou lá.
+  Mantenha curto: o que já está em `docs/TESTES-PENDENTES.md` só é citado. O arquivo fica no `TCG`.
 
 ## Outras regras
 - Commit com `git commit -- <arquivos>`: a pasta `animacao/` é de outra conversa, não mexa.
