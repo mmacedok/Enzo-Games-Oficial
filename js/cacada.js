@@ -264,6 +264,33 @@
         coposHud: ['ui/copos-0.png', 'ui/copos-1.png', 'ui/copos-2.png', 'ui/copos-3.png'],
         // Cogumelo enchendo na cura: vazio → meio cheio → cheio com brilho.
         cogGanhar: serie('ui/cogumelo-ganhar', 3),
+        // Cura, banco e Degustador (quadros extras).
+        coxinhaFx: ['efeitos/coxinha.png'],
+        anelCura: ['efeitos/anel-cura.png'],
+        curaFx: serie('efeitos/cura', 3),
+        degustarBrilho: serie('efeitos/degustar-brilho', 4),
+        salvarBrilho: serie('efeitos/salvar-brilho', 4),
+        bancoAtivo: serie('objetos/banco-ativo', 2),
+        degustarLoop: serie('degustador/degustar', 4),
+        sentadoLoop: serie('degustador/sentado', 2),
+        salvo: ['ui/salvo.png'],
+        setaInteragir: serie('ui/seta-interagir', 2),
+        // Inimigos que eram desenhados por código.
+        emoji: serie('inimigos/emoji', 2),
+        pingCaca: ['inimigos/ping-caca.png'],
+        feiticeiraConjurar: ['inimigos/feiticeira-conjurar.png'],
+        // Pausa.
+        pausaFundo: ['ui/pausa-fundo.png'],
+        pausaTitulo: ['ui/pausa-titulo.png'],
+        pausaEnfeite: ['ui/pausa-enfeite.png'],
+        botaoLaranja: ['ui/botao-laranja.png'],
+        botaoLaranjaSel: ['ui/botao-laranja-sel.png'],
+        botaoEscuro: ['ui/botao-escuro.png'],
+        botaoEscuroSel: ['ui/botao-escuro-sel.png'],
+        iconeContinuar: ['ui/icone-continuar.png'],
+        iconeMapa: ['ui/icone-mapa.png'],
+        iconeControles: ['ui/icone-controles.png'],
+        iconeInicio: ['ui/icone-inicio.png'],
         albumFundo: ['ui/album-fundo.png'],
         albumEncaixe: ['ui/album-encaixe.png'],
         albumEncaixeCheio: ['ui/album-encaixe-cheio.png'],
@@ -1096,7 +1123,8 @@
             if (b.sala !== jogo.sala.idx) continue;
             const x = b.x - cam.x;
             const y = b.y - cam.y;
-            const img = arte('banco');
+            const ativo = jogo.progresso.banco === b.id;
+            const img = (ativo && arte('bancoAtivo', visual.tempo * 4)) || arte('banco');
             if (img) {
                 if (!(jogo.fase === 'sentado' && jogo.progresso.banco === b.id)) pintar(img, x + b.w / 2, y + b.h, 0.62, 48, 46);
                 if (jogo.progresso.banco === b.id) virgula(x + b.w / 2, y - 20, 0.5, COR.laranja);
@@ -1229,7 +1257,7 @@
     function poseDoJogador() {
         const j = jogo.jogador;
         if (jogo.fase === 'morto') return ['morrer', 0];
-        if (jogo.fase === 'sentado' || jogo.fase === 'album') return ['sentado', 0];
+        if (jogo.fase === 'sentado' || jogo.fase === 'album') return ['sentadoLoop', visual.tempo * 3];
         if (j.estado === 'mergulho') return j.mergulhoT < CONFIG.mergulhoPrep ? ['mergulhoPrep', 0] : ['mergulho', visual.tempo * 16];
         if (j.estado === 'carregando') return ['buzzCarregar', visual.tempo * 12];
         if (j.estado === 'buzz') return ['buzz', visual.tempo * 20];
@@ -1246,7 +1274,7 @@
         }
         if (j.recargaMagia > CONFIG.rajadaRecarga - 0.2) return ['atirar', j.recargaMagia > CONFIG.rajadaRecarga - 0.08 ? 1 : 0];
         if (j.estado === 'dash') return ['dash', j.dashT > CONFIG.dashTempo * 0.5 ? 0 : 1];
-        if (j.estado === 'degustando') return ['degustar', visual.tempo * 5];
+        if (j.estado === 'degustando') return ['degustarLoop', visual.tempo * 8];
         if (j.invencivel > CONFIG.invencivel - 0.25 && jogo.fase === 'jogando') return ['dano', 0];
         if (j.grudado || (!j.noChao && j.parede !== 0 && j.vy > 0 && jogo.progresso.habilidades.has('parede'))) return ['parede', 0];
         if (!j.noChao && visual.tempo - visual.puloDuploEm < 0.3) return ['puloDuplo', 0];
@@ -1271,7 +1299,7 @@
         const cx = j.x + JL / 2 - cam.x;
         let base = j.y + JA - cam.y;
         // Poses da expansão sem arte ainda: usam a pose antiga mais parecida.
-        const RESERVA = { mergulhoPrep: 'pular', mergulho: 'cair', mergulhoPouso: 'golpeRasteira', buzzCarregar: 'degustar', buzz: 'dash', planar: 'cair', pegouFigurinha: 'parado' };
+        const RESERVA = { mergulhoPrep: 'pular', mergulho: 'cair', mergulhoPouso: 'golpeRasteira', buzzCarregar: 'degustar', buzz: 'dash', planar: 'cair', pegouFigurinha: 'parado', degustarLoop: 'degustar', sentadoLoop: 'sentado' };
         let img = quadroDe(pose, i);
         if (!pronta(img) && RESERVA[pose]) img = quadroDe(RESERVA[pose], i);
         desenharExtrasDoJogador(j, cx, base);
@@ -1288,6 +1316,9 @@
             const k = TAM_JOGADOR / 128;
             const treme = j.estado === 'carregando' && !calmo ? Math.sin(visual.tempo * 90) * 1.2 : 0;
             pintar(img, cx + treme, base, k, 64, 125, olhando);
+            // Coxinha na boca enquanto degusta (só com a arte: o quadro antigo já tem o lanche).
+            const coxinha = j.estado === 'degustando' && arte('coxinhaFx');
+            if (coxinha) pintar(coxinha, cx + olhando * 9, base - 30 + Math.sin(visual.tempo * 16), 13 / 48, 24, 24);
         } else {
             ctx.fillStyle = '#e040fb';
             ctx.fillRect(cx - 7, base - 26, 14, 26);
@@ -1295,7 +1326,9 @@
             ctx.fillRect(cx - 9, base - 30, 18, 6);
         }
         if (jogo.fase === 'sentado') {
-            texto('SALVO', cx, base - 44, 12, COR.verde, 3);
+            const salvo = arte('salvo');
+            if (salvo) ctx.drawImage(salvo, cx - 32, base - 54, 64, 20);
+            else texto('SALVO', cx, base - 44, 12, COR.verde, 3);
             if (jogo.progresso.figurinhas.size) texto(textoTeclas('[CIMA] Álbum'), cx, base - 58, 11, COR.amarelo, 3);
         }
     }
@@ -1319,6 +1352,10 @@
                 ctx.strokeStyle = '#ff8ca0';
                 ctx.beginPath(); ctx.moveTo(px, py + 9); ctx.quadraticCurveTo(px + 5, py + 16, px - 2, py + 22); ctx.stroke();
             }
+        }
+        if (j.estado === 'degustando') {
+            const brilho = arte('degustarBrilho', visual.tempo * 10);
+            if (brilho) pintar(brilho, cx, base - 20, 60 / 128, 64, 64);
         }
         if (j.estado === 'mergulho' && j.mergulhoT >= CONFIG.mergulhoPrep) {
             ctx.strokeStyle = 'rgba(230, 214, 255, 0.6)';
@@ -1460,6 +1497,7 @@
                 ctx.fillStyle = 'rgba(255, 60, 60, 0.3)';
                 ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
             }
+            if (caca && spriteInimigo('pingCaca', 0, cx, cy + Math.sin(visual.tempo * 30) * 1.5, 30, 32, e.dir < 0, flash)) return;
             if (spriteInimigo('ping', visual.tempo * (caca ? 16 : 9) + e.fase * 3, cx, cy, 30, 32, e.dir < 0, flash)) return;
             const asa = Math.sin(visual.tempo * 30 + e.fase * 9) * 5;
             ctx.fillStyle = flash ? '#fff' : '#3a0d14';
@@ -1474,6 +1512,7 @@
             texto('!', cx, cy + 1, 12, '#fff', 0);
         },
         emoji(e, cx, cy, flash) {
+            if (spriteInimigo('emoji', visual.tempo * 10 + e.fase * 3, cx, cy, 30, 32, (e.vx || 0) < 0, flash)) return;
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(Math.sin(visual.tempo * 6 + e.fase) * 0.3);
@@ -1594,7 +1633,7 @@
                 ctx.beginPath(); ctx.arc(cx + e.dir * 10, cy - 4, 6 + e.t * 10, 0, Math.PI * 2); ctx.fill();
             }
             // Conjurando: os quadros com a mão acesa (a arte "feiticeira-conjurar" veio com outro personagem).
-            const quadro = e.estado === 'conjurar' ? ['feiticeira', 2 + (Math.floor(visual.tempo * 8) % 2)] : e.estado === 'sumir' || e.estado === 'aparecer' ? ['feiticeiraSumir', 0] : ['feiticeira', visual.tempo * 6];
+            const quadro = e.estado === 'conjurar' ? (arte('feiticeiraConjurar') ? ['feiticeiraConjurar', 0] : ['feiticeira', 2 + (Math.floor(visual.tempo * 8) % 2)]) : e.estado === 'sumir' || e.estado === 'aparecer' ? ['feiticeiraSumir', 0] : ['feiticeira', visual.tempo * 6];
             if (!spriteInimigo(quadro[0], quadro[1], cx, cy, 42, 64, OLHA_ESQUERDA.has('feiticeira') ? olhaDireita : !olhaDireita, flash)) {
                 contorno(flash, '#b04dff');
                 ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
@@ -2353,6 +2392,7 @@
                 case 'curou':
                     textoFlutuante(`+${(e.ate ?? 1) - (e.de ?? 0)}`, e.x, e.y - 20, '#ff8ca0');
                     particulas(e.x, e.y, 8, '#ff8ca0', 60);
+                    efeito('curaFx', e.x, e.y - 20, 64, 0.25);
                     if (e.de != null) visual.cogGanhou = { inicio: visual.tempo, de: e.de, ate: e.ate };
                     break;
                 case 'impacto': tremer(e.forte ? 0.25 : 0.12); particulas(e.x, e.y, 10, '#d8c4a0', 120); efeito('poeira', e.x, e.y - 8, e.forte ? 48 : 34, 0.3); break;
@@ -2372,7 +2412,7 @@
                     }
                     if (e.areaNova) visual.area = { nome: MUNDO.areas[jogo.sala.area]?.nome || '', inicio: visual.tempo };
                     break;
-                case 'banco': salvar(); particulas(e.x, e.y, 10, COR.verde, 60); break;
+                case 'banco': salvar(); particulas(e.x, e.y, 10, COR.verde, 60); efeito('salvarBrilho', e.x, e.y - 24, 72, 0.4); break;
                 case 'arena':
                     visual.chefeNome = core.Inimigos.TIPOS[e.chefe].nome;
                     tremer(0.3);
@@ -2488,7 +2528,22 @@
         return linhas.length;
     }
 
+    const CORTE_BOTAO = { botaoEscuro: [0, 56], botaoLaranjaSel: [9, 67] };
+    const ICONE_BOTAO = { continuar: 'iconeContinuar', mapa: 'iconeMapa', controles: 'iconeControles', titulo: 'iconeInicio' };
     function botaoTela(rotulo, x, y, w, h, cor, id, ativo = false) {
+        const tipo = cor === COR.laranja ? 'botaoLaranja' : cor === '#2a2a3a' ? 'botaoEscuro' : null;
+        const painel = tipo && (arte(ativo ? `${tipo}Sel` : tipo) || null);
+        if (painel) {
+            // Arte de 600×76 esticada no botão (a borda dourada do selecionado já vem nela).
+            // Algumas vieram recortadas com um pedaço do botão vizinho: só a faixa do botão.
+            const [sy, sh] = CORTE_BOTAO[ativo ? `${tipo}Sel` : tipo] || [0, painel.naturalHeight];
+            ctx.drawImage(painel, 0, sy, painel.naturalWidth, sh, x - 4, y - 2, w + 8, h + 4);
+            const icone = ICONE_BOTAO[id] && arte(ICONE_BOTAO[id]);
+            if (icone) ctx.drawImage(icone, x + 14, y + h / 2 - 11, 22, 22);
+            texto(icone ? rotulo.replace(/^▶\s*/, '') : rotulo, x + w / 2 + (icone ? 12 : 0), y + h / 2 + 1, rotulo.length > 20 ? 15 : 18, '#fff', 4);
+            areas.push({ x, y, w, h, id });
+            return;
+        }
         ctx.fillStyle = cor;
         ctx.strokeStyle = ativo ? COR.amarelo : COR.tinta;
         ctx.lineWidth = ativo ? 4 : 3;
@@ -2582,14 +2637,27 @@
             ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.lineWidth = 5;
             ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.stroke();
-            ctx.strokeStyle = COR.amarelo;
-            ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(cx, cy, 12, -Math.PI / 2, -Math.PI / 2 + Math.min(1, k) * Math.PI * 2); ctx.stroke();
+            const anel = arte('anelCura');
+            if (anel) {
+                // A arte é o anel inteiro: aparece em sentido horário conforme a carga.
+                ctx.save();
+                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, 20, -Math.PI / 2, -Math.PI / 2 + Math.min(1, k) * Math.PI * 2); ctx.closePath(); ctx.clip();
+                ctx.drawImage(anel, cx - 15, cy - 15, 30, 30);
+                ctx.restore();
+            } else {
+                ctx.strokeStyle = COR.amarelo;
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(cx, cy, 12, -Math.PI / 2, -Math.PI / 2 + Math.min(1, k) * Math.PI * 2); ctx.stroke();
+            }
             // Coxinha pequena em cima do anel.
+            const coxinha = arte('coxinhaFx');
+            if (coxinha) ctx.drawImage(coxinha, cx - 7, cy - 24, 14, 14);
+            else {
             ctx.fillStyle = '#d98a3a';
             ctx.strokeStyle = COR.tinta;
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(cx, cy - 22); ctx.quadraticCurveTo(cx + 6, cy - 11, cx, cy - 11); ctx.quadraticCurveTo(cx - 6, cy - 11, cx, cy - 22); ctx.fill(); ctx.stroke();
+            }
         }
         // Fragmentos.
         if (p.fragmentos > 0) {
@@ -2681,7 +2749,15 @@
         }
         // Dica de ↑ perto de banco ou loja.
         const perto = [...nivel.bancos, ...nivel.lojas].find((b) => b.sala === jogo.sala.idx && core.colide({ x: j.x, y: j.y, w: JL, h: JA }, core.zonaDeUso(b)));
-        if (perto && jogo.fase === 'jogando') texto(textoTeclas('[CIMA]'), j.x + JL / 2 - visual.cam.x, j.y - 14 - visual.cam.y + Math.sin(visual.tempo * 6) * 2, 16, COR.amarelo, 3);
+        if (perto && jogo.fase === 'jogando') {
+            const sx = j.x + JL / 2 - visual.cam.x;
+            const sy = j.y - 14 - visual.cam.y + Math.sin(visual.tempo * 6) * 2;
+            const seta = arte('setaInteragir', visual.tempo * 4);
+            if (seta) {
+                ctx.drawImage(seta, sx - 8, sy - 10, 16, 16);
+                texto(textoTeclas('[CIMA]'), sx, sy - 18, 11, COR.amarelo, 3);
+            } else texto(textoTeclas('[CIMA]'), sx, sy, 16, COR.amarelo, 3);
+        }
     }
 
     /** Figurinha desenhada por código (enquanto a arte não chega): cartão com um símbolo. */
@@ -2941,9 +3017,20 @@
     }
 
     function desenharPausa() {
-        ctx.fillStyle = 'rgba(7, 4, 26, 0.8)';
-        ctx.fillRect(0, 0, W, H);
-        texto('PAUSADO', W / 2, 80, 44, '#fff', 7);
+        const fundo = arte('pausaFundo');
+        if (fundo) {
+            ctx.globalAlpha = 0.85;
+            ctx.drawImage(fundo, 0, 0, W, H);
+            ctx.globalAlpha = 1;
+        } else {
+            ctx.fillStyle = 'rgba(7, 4, 26, 0.8)';
+            ctx.fillRect(0, 0, W, H);
+        }
+        const titulo = arte('pausaTitulo');
+        if (titulo) ctx.drawImage(titulo, W / 2 - 130, 38, 260, 65);
+        else texto('PAUSADO', W / 2, 80, 44, '#fff', 7);
+        const enfeite = arte('pausaEnfeite');
+        if (enfeite) ctx.drawImage(enfeite, W / 2 - 128, 101, 256, 16);
         areas = [];
         const opcoes = opcoesPausa();
         const passo = opcoes.length > 3 ? 44 : 50;
