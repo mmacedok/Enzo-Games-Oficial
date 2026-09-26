@@ -63,23 +63,7 @@
         return (v.filter((x) => x.width <= 1280).at(-1) || v[0]).src;
     };
 
-    const DECKS = [
-        { id: 'turma', nome: 'Turma do Enzo', texto: 'Heróis fortes que curam e compram cartas.',
-            capa: ['enzo-games', 'superkid', 'hatsune-neves'],
-            cartas: ['enzo-games', 'superkid', 'degustador-da-noite', 'italolol', 'italolol', 'hatsune-neves', 'hatsune-neves',
-                'stand-do-joinha', 'stand-do-joinha', 'chorao', 'chorao', 'casa-do-enzo-games', 'casa-do-enzo-games',
-                'piscina-de-macarronada', 'sombra-do-degustador'] },
-        { id: 'legiao', nome: 'Legião do Mal', texto: 'Veneno, ban e capangas que batem forte.',
-            capa: ['o-inominavel', 'encantadora', 'marreteiro-do-coracao'],
-            cartas: ['o-inominavel', 'cabo-coco', 'encantadora', 'encantadora', 'cara-de-coracao', 'cara-de-coracao',
-                'marreteiro-do-coracao', 'marreteiro-do-coracao', 'moderador-do-ban', 'moderador-do-ban',
-                'emoji-pistola', 'emoji-pistola', 'mansao-do-inominavel', 'mansao-do-inominavel', 'sombra-do-degustador'] },
-        { id: 'internet', nome: 'Bichos da Internet', texto: 'Um enxame de goons baratos e rápidos.',
-            capa: ['notificacao-morcego', 'bug-do-discord', 'drone-vigia'],
-            cartas: ['bug-do-discord', 'bug-do-discord', 'notificacao-morcego', 'notificacao-morcego', 'emoji-pistola',
-                'emoji-pistola', 'drone-vigia', 'drone-vigia', 'moderador-do-ban', 'moderador-do-ban', 'cara-de-coracao',
-                'cara-de-coracao', 'estacionamento-noturno', 'estacionamento-noturno', 'toradolandia'] },
-    ];
+    const DECKS = window.EnzoTcgCartas.DECKS_PRONTOS;
 
     const ESTADOS = {
         notificado: { icone: '🔔', nome: 'Notificado', texto: 'Leva 10 entre um turno e outro. Sai ao voltar para o banco.' },

@@ -5,15 +5,16 @@
 > continue sem precisar da conversa. Cópia em `/mnt/project-files/tcg/CONTINUAR-MULTIPLAYER.md`.
 > Plano completo: `docs/PLANO-MULTIPLAYER.md`. Regras do jogo: `docs/PLANO-TCG.md`.
 
-**Última atualização:** 2026-09-26, depois do M0.
-**Próximo passo exato:** começar o M1 (seção 4) criando `api/tcg.js` e as tabelas em `api/schema.js`.
+**Última atualização:** 2026-09-26, depois do M1.
+**Próximo passo exato:** começar o M2 (seção 5): em `js/batalha.js`, criar a camada `conexao` e o
+modo online da mesa, começando pelo menu "Outro jogador" (criar sala / entrar com código).
 
 ## 1. Onde estamos
 | Fase | Estado |
 |---|---|
 | Merge do `main` (site na Cloudflare) no `TCG` | feito (commits 6b936d6 e a1da90e) |
 | **M0.** Motor pronto para online | **feito** (39b8c40), 49 testes passando |
-| **M1.** Servidor: salas, jogadas, "teve jogada?", tempo de turno | falta |
+| **M1.** Servidor: salas, jogadas, "teve jogada?", tempo de turno | **feito**, 7 testes em `test/tcg-online.test.js` |
 | **M2.** Tela online (criar sala, entrar pelo link, mesa online) | falta |
 | **M3.** Reações prontas e avisos ("sua vez!") | falta |
 | M4 a M6 (desafio pela Ficha, ranking, fila) | depois; só se o Henrique pedir |
@@ -47,35 +48,32 @@
   posição no deck pronto, que é conhecido).
 - **Cuidado que continua valendo:** nunca mande o `estado` completo ao navegador, só `visaoDe`.
 
-## 4. M1: servidor (o que fazer, em ordem)
-1. **Tabelas** no fim de `api/schema.js` (só `CREATE ... IF NOT EXISTS`, um comando por item):
-   - `tcg_salas (codigo TEXT PK, criador TEXT REFERENCES users(id), deck TEXT, criado_em BIGINT, expira_em BIGINT, partida_id TEXT)`
-   - `tcg_partidas (id TEXT PK, jogador_a TEXT, jogador_b TEXT, deck_a TEXT, deck_b TEXT, estado JSONB,
-     versao INT, regras INT, prazo BIGINT, estouros_a INT, estouros_b INT, status TEXT, vencedor INT,
-     motivo TEXT, criado_em BIGINT, atualizado_em BIGINT)` + índice por jogador e status.
-   - `tcg_jogadas (partida_id TEXT, n INT, jogador INT, jogada TEXT, eventos TEXT, criado_em BIGINT, PK(partida_id, n))`
-   - `tcg_resultados (partida_id TEXT PK, vencedor TEXT, perdedor TEXT, decks TEXT, turnos INT, motivo TEXT, fim_em BIGINT)`
-2. **`api/tcg.js`** no mesmo formato de `api/baralho.js` (`const rotas = [{metodo, caminho, login:true, executar(ctx)}]`)
-   e somar `...tcg.rotas` em `ROTAS` do `api/handler.js`. Rotas:
-   - `POST /api/tcg/salas {deck}`: cria sala (código tipo `TORA-7K2`, expira em 15 min).
-   - `POST /api/tcg/salas/:codigo/entrar {deck}`: cria a partida com `criarPartida({semente: aleatória do servidor, decks, nomes})`.
-   - `GET /api/tcg/partidas/atual`: partida em andamento do jogador (reconectar).
-   - `GET /api/tcg/partidas/:id?desde=<versao>`: se nada mudou, `{versao, prazo}`; se mudou,
-     `{versao, prazo, visao: visaoDe(...), eventos: eventosPara(eventos das jogadas > desde)}`.
-   - `POST /api/tcg/partidas/:id/jogada {jogada, versao, regras}`: força `jogada.jogador` = lado do usuário,
-     `aplicar`, salva com `UPDATE ... WHERE id=$1 AND versao=$2` (se não salvou: 409 "atualize").
-   - `POST /api/tcg/partidas/:id/reacao {reacao}` (M3).
-   - Os decks prontos ficam em `js/batalha.js` (constante dos 3 decks): mover a lista para
-     `js/tcg-cartas.js` (ex. `DECKS_PRONTOS`) para o servidor e a tela usarem a mesma.
-3. **Relógio preguiçoso:** a cada GET/POST, se `agora > prazo`, o servidor aplica `passar` (ou, se
-   houver `pendentes`/`preparacao`, uma escolha automática com `jogadasValidas(...)[0]`), soma o
-   estouro daquele lado e, no 3º seguido, `desistir` por ele. Jogar zera os estouros do lado.
-4. **Freios:** 50 partidas/dia no site, 10 por jogador; 1 GET por segundo por jogador; limpeza de
-   partidas terminadas há 7 dias "de carona" na criação de sala.
-5. **Teste** `test/tcg-online.test.js` no molde de `test/baralho.test.js` (API com PGlite e login falso):
-   dois robôs (`js/tcg-robo.js`) jogam uma partida inteira pela API usando só a visão; conferir que
-   ninguém recebe a mão do outro, jogada fora da vez dá erro, versão velha dá 409, estouro de tempo
-   passa a vez e 3 estouros dão derrota. Medir chamadas e tempo de CPU por jogada.
+## 4. M1: servidor (feito)
+- **Tabelas** no fim de `api/schema.js`: `tcg_salas`, `tcg_partidas` (estado completo em TEXT/JSON,
+  `versao`, `prazo`, `estouros_a/b`, `status`), `tcg_jogadas` (n = versão depois da jogada, eventos
+  completos, `automatica`) e `tcg_resultados`.
+- **`api/tcg.js`** (ligado em `ROTAS` do `api/handler.js`). Rotas, todas com login:
+  | Rota | Resposta |
+  |---|---|
+  | `POST /api/tcg/salas {deck}` | `{codigo, expira, deck}` (código `TORA-XXX`; uma sala aberta por jogador) |
+  | `GET /api/tcg/salas/:codigo` | `{codigo, deck, criador, minha, expira, partida}` (partida ≠ null = começou) |
+  | `POST /api/tcg/salas/:codigo/entrar {deck}` | cria a partida; responde como o GET da partida |
+  | `POST /api/tcg/salas/:codigo/cancelar` | `{ok}` |
+  | `GET /api/tcg/atual` | `{partida, sala, regras}` (para reconectar) |
+  | `GET /api/tcg/partidas/:id?desde=n` | sempre `{id, versao, prazo, agora, eu, estouros, status, regras}`; se `versao ≠ desde`, também `{decks, visao, eventos}` (eventos só das jogadas depois de `desde`; `desde=-1` = só a visão) |
+  | `POST /api/tcg/partidas/:id/jogada {jogada, versao, regras}` | igual ao GET com `desde` = versão de antes: os eventos da jogada e a visão nova. Erros: 400 jogada inválida (mensagem do motor), 409 versão velha (`{versao}`), 409 `{recarregar:true}` regras diferentes |
+- Jogador A (índice 0) = quem criou a sala; B (1) = quem entrou. O servidor troca `jogada.jogador` pelo
+  lado do login. Decks prontos agora em `js/tcg-cartas.js` (`DECKS_PRONTOS`); `js/batalha.js` usa de lá.
+- **Relógio preguiçoso** (`conferirRelogio`): a cada chamada, se `agora > prazo`, quem devia agir
+  (`quemDeve`: preparo, escolha pendente ou a vez) ganha um estouro e o servidor joga por ele
+  (`passar` ou a 1ª escolha válida); no 3º seguido, `desistir`. Evento novo `{tipo:'tempo', jogador,
+  estouros}` (a tela precisa mostrar). O prazo só recomeça quando muda quem precisa agir, então o
+  turno inteiro tem 60 s. Jogar zera os estouros de quem jogou.
+- **Freios feitos:** 50 partidas/dia no site, 10 por jogador (429), limpeza de salas e partidas velhas
+  ao criar sala. **Falta:** limitar a 1 pergunta por segundo por jogador (fazer no M3 se precisar).
+- **Medido:** partida de robôs = ~42 jogadas e ~130 chamadas (sem contar as perguntas de espera);
+  motor + JSON no servidor ≈ 0,3 ms por jogada (máx. 1 ms), bem abaixo dos 10 ms da Cloudflare;
+  estado ≈ 4,6 KB.
 
 ## 5. M2: tela (resumo)
 `js/batalha.js` hoje chama o motor direto. Criar dois modos de "mesa": **local** (NPC, como hoje) e
@@ -85,7 +83,8 @@ jogador" (hoje desativado) → criar sala / colar código; `batalha.html?sala=CO
 Relógio do turno na barra. Parar o polling com a aba escondida. O artifact continua só contra o NPC.
 
 ## 6. Como testar hoje
-- `node --test test/tcg-regras.test.js` (motor, 49 testes). `npm test` tem ~12 falhas antigas por
+- `node --test test/tcg-regras.test.js` (motor, 49 testes) e `node --test test/tcg-online.test.js`
+  (servidor, 7 testes, ~20 s). `npm test` tem ~12 falhas antigas por
   falta dos dados gerados dos gibis, sem relação com a batalha.
 - Servidor local: `npm install`, depois `npm start` (ou `PORT=3123 node server.js`), abrir
   `http://localhost:3123/batalha.html`. Reinicie o servidor depois de mexer em `api/` ou `js/*-dados.js`.
@@ -94,7 +93,7 @@ Relógio do turno na barra. Parar o polling com a aba escondida. O artifact cont
 ## 7. Arquivos
 `js/tcg-regras.js` (motor), `js/tcg-cartas.js` (números das cartas), `js/tcg-robo.js` (NPC),
 `js/batalha.js` + `css/batalha.css` + `batalha.html` (tela), `api/handler.js` + `api/schema.js` +
-`api/tcg.js` (servidor, a criar), `test/tcg-regras.test.js`, `test/tcg-online.test.js` (a criar),
+`api/tcg.js` (servidor), `test/tcg-regras.test.js`, `test/tcg-online.test.js`,
 `docs/PLANO-MULTIPLAYER.md`, este arquivo. Todos são do Baralho: só no `TCG`.
 
 ## 8. Enviar

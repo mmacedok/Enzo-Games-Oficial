@@ -127,4 +127,59 @@ module.exports = [
         primeira_em BIGINT NOT NULL,
         PRIMARY KEY (user_id, card_id)
     )`,
+    // ---- Batalha dos Torados online (api/tcg.js) ----------------------------
+    // Sala com código: some em 15 min se ninguém entrar.
+    `CREATE TABLE IF NOT EXISTS tcg_salas (
+        codigo TEXT PRIMARY KEY,
+        criador TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        deck TEXT NOT NULL,
+        criado_em BIGINT NOT NULL,
+        expira_em BIGINT NOT NULL,
+        partida_id TEXT
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_tcg_salas_criador ON tcg_salas(criador)',
+    // estado = partida completa, com a sorte: NUNCA sai do servidor (o navegador recebe visaoDe).
+    // versao sobe a cada jogada e trava duas jogadas ao mesmo tempo (UPDATE ... WHERE versao = ?).
+    `CREATE TABLE IF NOT EXISTS tcg_partidas (
+        id TEXT PRIMARY KEY,
+        jogador_a TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        jogador_b TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        deck_a TEXT NOT NULL,
+        deck_b TEXT NOT NULL,
+        estado TEXT NOT NULL,
+        versao INTEGER NOT NULL DEFAULT 0,
+        regras INTEGER NOT NULL,
+        prazo BIGINT NOT NULL,
+        estouros_a INTEGER NOT NULL DEFAULT 0,
+        estouros_b INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'jogando',
+        vencedor INTEGER,
+        motivo TEXT,
+        criado_em BIGINT NOT NULL,
+        atualizado_em BIGINT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_a ON tcg_partidas(jogador_a, status)',
+    'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_b ON tcg_partidas(jogador_b, status)',
+    'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_criado ON tcg_partidas(criado_em)',
+    // n = versão da partida depois da jogada; eventos completos (filtrados por jogador na leitura).
+    `CREATE TABLE IF NOT EXISTS tcg_jogadas (
+        partida_id TEXT NOT NULL REFERENCES tcg_partidas(id) ON DELETE CASCADE,
+        n INTEGER NOT NULL,
+        jogador INTEGER NOT NULL,
+        jogada TEXT NOT NULL,
+        eventos TEXT NOT NULL,
+        automatica BOOLEAN NOT NULL DEFAULT FALSE,
+        criado_em BIGINT NOT NULL,
+        PRIMARY KEY (partida_id, n)
+    )`,
+    // Fica para sempre (pequeno): a partida e as jogadas somem 7 dias depois do fim.
+    `CREATE TABLE IF NOT EXISTS tcg_resultados (
+        partida_id TEXT PRIMARY KEY,
+        vencedor TEXT,
+        perdedor TEXT,
+        decks TEXT NOT NULL,
+        turnos INTEGER NOT NULL,
+        motivo TEXT,
+        fim_em BIGINT NOT NULL
+    )`,
 ];

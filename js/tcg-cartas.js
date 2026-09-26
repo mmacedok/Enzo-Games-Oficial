@@ -117,5 +117,25 @@
             texto: 'Comporta secreta: ataques não acertam o banco.' } },
     };
 
-    return congelar({ COMBATE });
+
+    // Decks prontos (a tela e o servidor do online usam a mesma lista).
+    const DECKS_PRONTOS = [
+        { id: 'turma', nome: 'Turma do Enzo', texto: 'Heróis fortes que curam e compram cartas.',
+            capa: ['enzo-games', 'superkid', 'hatsune-neves'],
+            cartas: ['enzo-games', 'superkid', 'degustador-da-noite', 'italolol', 'italolol', 'hatsune-neves', 'hatsune-neves',
+                'stand-do-joinha', 'stand-do-joinha', 'chorao', 'chorao', 'casa-do-enzo-games', 'casa-do-enzo-games',
+                'piscina-de-macarronada', 'sombra-do-degustador'] },
+        { id: 'legiao', nome: 'Legião do Mal', texto: 'Veneno, ban e capangas que batem forte.',
+            capa: ['o-inominavel', 'encantadora', 'marreteiro-do-coracao'],
+            cartas: ['o-inominavel', 'cabo-coco', 'encantadora', 'encantadora', 'cara-de-coracao', 'cara-de-coracao',
+                'marreteiro-do-coracao', 'marreteiro-do-coracao', 'moderador-do-ban', 'moderador-do-ban',
+                'emoji-pistola', 'emoji-pistola', 'mansao-do-inominavel', 'mansao-do-inominavel', 'sombra-do-degustador'] },
+        { id: 'internet', nome: 'Bichos da Internet', texto: 'Um enxame de goons baratos e rápidos.',
+            capa: ['notificacao-morcego', 'bug-do-discord', 'drone-vigia'],
+            cartas: ['bug-do-discord', 'bug-do-discord', 'notificacao-morcego', 'notificacao-morcego', 'emoji-pistola',
+                'emoji-pistola', 'drone-vigia', 'drone-vigia', 'moderador-do-ban', 'moderador-do-ban', 'cara-de-coracao',
+                'cara-de-coracao', 'estacionamento-noturno', 'estacionamento-noturno', 'toradolandia'] },
+    ];
+
+    return congelar({ COMBATE, DECKS_PRONTOS });
 });
