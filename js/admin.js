@@ -261,7 +261,7 @@
             const qtd = bInfo.colecao?.[carta.id];
             return [
                 String(carta.numero),
-                carta.nome,
+                carta.censurada && !window.EnzoConta?.temConquista?.('cabo-coco') ? '???' : carta.nome,
                 carta.raridade,
                 qtd ? String(qtd) : span('apagado', '·'),
             ];

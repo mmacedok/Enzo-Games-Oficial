@@ -267,7 +267,7 @@ const rotas = [
                 for (const [cardId, n] of Object.entries(cartas)) {
                     if (!Baralho.carta(cardId)) throw new HttpError(400, `carta desconhecida: ${cardId}`);
                     if (!Number.isInteger(n) || n < 1) throw new HttpError(400, 'quantas: número inteiro a partir de 1');
-                    if (n > (tenho.get(cardId) ?? 0) - 1) throw new HttpError(409, `${Baralho.carta(cardId).nome}: fique com pelo menos 1`);
+                    if (n > (tenho.get(cardId) ?? 0) - 1) throw new HttpError(409, 'fique com pelo menos 1 de cada carta');
                     pedido[cardId] = n;
                 }
             }

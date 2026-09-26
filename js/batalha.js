@@ -124,7 +124,7 @@
             case 'escudo': return `Leva −${ef.valor} no próximo ataque.`;
             case 'auraSi': return `Prende +${ef.valor} Aura nele.`;
             case 'bonusPorAura': return `+${ef.valor} por Aura nele.`;
-            case 'bonusSeAliado': return `+${ef.valor} com ${def(ef.carta).nome} na sua mesa.`;
+            case 'bonusSeAliado': return `+${ef.valor} com ${nomeVisivel(ef.carta)} na sua mesa.`;
             case 'bonusPorGoon': return `+${ef.valor} por goon na sua mesa.`;
             case 'moeda': return `Moeda: cara ${ef.cara}, coroa ${ef.coroa}.`;
             case 'puxar': return 'Troca o ativo dele por quem você escolher do banco dele.';
