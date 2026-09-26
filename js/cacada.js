@@ -196,6 +196,8 @@
         chorume: serie('perigos/chorume', 2),
         grade: serie('objetos/grade-bueiro', 3),
         tampaBueiro: ['objetos/tampa-bueiro.png'],
+        bueiroFechado: ['objetos/bueiro-fechado.png'],
+        bueiroAberto: ['objetos/bueiro-aberto.png'],
         cano: ['objetos/cano-decor.png'],
         raOcioso: serie('chefes/ratao-ocioso', 2),
         raRolarPrep: ['chefes/ratao-rolar-prep.png'],
@@ -849,6 +851,12 @@
         const primeira = grade[tx - 1] !== 'Z';
         let n = 0;
         while (grade[tx + n - (primeira ? 0 : 1)] === 'Z') n++;
+        // Arte nova: um pedaço de chão de 2 tiles (128×64) com o bueiro já encaixado.
+        const peca = arte(aberta ? 'bueiroAberto' : 'bueiroFechado');
+        if (peca) {
+            if (primeira) ctx.drawImage(peca, x, y, n * TL, TL);
+            return;
+        }
         const img = arte('tampaBueiro');
         if (aberta) {
             const fundo = ctx.createLinearGradient(0, y, 0, y + TL);
