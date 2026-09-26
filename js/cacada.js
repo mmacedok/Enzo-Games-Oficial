@@ -895,7 +895,10 @@
     /** Chorume: líquido que machuca (parte de baixo do tile). */
     function desenharChorume(x, y, tx, ty) {
         const acima = ty > 0 ? nivel.grade[ty - 1][tx] : '#';
+        const abaixo = nivel.grade[ty + 1]?.[tx] ?? '#';
         const img = arte('chorume', visual.tempo * 6 + tx);
+        // Coluna de chorume = cachoeira: só o miolo da arte (sem a superfície), correndo para baixo.
+        if (img && (acima === '~' || abaixo === '~')) { desenharCachoeira(img, x, y, tx, ty, acima !== '~', abaixo !== '~'); return; }
         if (img) { ctx.drawImage(img, x, y, TL, TL); return; }
         const topo = acima === '~' ? 0 : 7;
         ctx.fillStyle = '#8a4a1a';
@@ -905,6 +908,72 @@
         const b = (visual.tempo * 1.7 + tx * 0.37) % 1;
         ctx.fillStyle = `rgba(255, 106, 42, ${1 - b})`;
         ctx.beginPath(); ctx.arc(x + 5 + ((tx * 7) % 10), y + TL - 4 - b * (TL - topo - 4), 2 + b * 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    /** Um tile da cachoeira: chorume escorrendo (gradiente, veios e bolhas descendo), com bordas escuras e pingos no fim. */
+    function desenharCachoeira(img, x, y, tx, ty, inicio, fim) {
+        const esq = nivel.grade[ty][tx - 1] !== '~';
+        const dir = nivel.grade[ty][tx + 1] !== '~';
+        const alto = fim ? TL * 0.7 : TL;
+        const t = visual.tempo;
+        // Beiradas onduladas: o contorno da queda balança enquanto escorre.
+        const onda = (yy) => 1.8 + Math.sin((ty * TL + yy - t * 140) / 5) * 1.2;
+        const contornoQueda = () => {
+            // 1 px a mais em cima e embaixo para não sobrar costura entre os tiles.
+            const de = inicio ? 0 : -1;
+            const ate = fim ? alto : alto + 1;
+            ctx.beginPath();
+            ctx.moveTo(x + (esq ? onda(de) : -0.5), y + de);
+            for (let yy = de + 1; yy <= ate; yy += 1) ctx.lineTo(x + (esq ? onda(yy) : -0.5), y + yy);
+            for (let yy = ate; yy >= de; yy -= 1) ctx.lineTo(x + TL - (dir ? onda(yy + 7) : -0.5), y + yy);
+            ctx.closePath();
+        };
+        ctx.save();
+        contornoQueda(); ctx.clip();
+        // Mais escuro nas beiradas da queda, mais claro no meio.
+        const g = ctx.createLinearGradient(x, 0, x + TL, 0);
+        g.addColorStop(0, esq ? '#3a1806' : '#7a3a10');
+        g.addColorStop(1, dir ? '#3a1806' : '#7a3a10');
+        ctx.fillStyle = g;
+        ctx.fillRect(x, y, TL, alto);
+        // Veios que escorrem: faixas de luz descendo em velocidades diferentes.
+        for (let k = 0; k < 3; k++) {
+            const vx = x + 3 + ((tx * 5 + k * 6) % 15);
+            const vel = 90 + k * 35;
+            const comp = 14 + k * 5;
+            const ciclo = comp + 26;
+            const vy = y + (((ty * TL + t * vel + k * 17) % ciclo) + ciclo) % ciclo - comp;
+            ctx.fillStyle = k === 1 ? 'rgba(255, 160, 70, 0.45)' : 'rgba(190, 95, 30, 0.7)';
+            ctx.fillRect(vx, vy, k === 1 ? 1 : 2, comp);
+        }
+        // Bolhas de sujeira descendo junto.
+        const bv = (ty * TL + t * 80 + tx * 11) % (TL * 2);
+        ctx.fillStyle = '#5e2c0c';
+        ctx.beginPath(); ctx.arc(x + 6 + ((tx * 3) % 8), y + bv - TL / 2, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255, 106, 42, 0.7)';
+        ctx.beginPath(); ctx.arc(x + 13 - ((tx * 5) % 6), y + ((bv + TL) % (TL * 2)) - TL / 2, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = COR.tinta;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (esq) { ctx.moveTo(x + onda(0), y); for (let yy = 2; yy <= alto; yy += 2) ctx.lineTo(x + onda(yy), y + yy); }
+        if (dir) { ctx.moveTo(x + TL - onda(7), y); for (let yy = 2; yy <= alto; yy += 2) ctx.lineTo(x + TL - onda(yy + 7), y + yy); }
+        ctx.stroke();
+        if (inicio) {
+            // Boca do cano no teto.
+            ctx.fillStyle = '#2a2a24';
+            ctx.fillRect(x - (esq ? 3 : 0), y - 2, TL + (esq ? 3 : 0) + (dir ? 3 : 0), 5);
+            ctx.fillStyle = COR.tinta;
+            ctx.fillRect(x - (esq ? 3 : 0), y + 3, TL + (esq ? 3 : 0) + (dir ? 3 : 0), 1);
+        }
+        if (fim) {
+            // Pingos que se soltam no fim da queda.
+            ctx.fillStyle = '#c8641e';
+            for (let k = 0; k < 3; k++) {
+                const t = (visual.tempo * 1.6 + k / 3 + tx * 0.21) % 1;
+                ctx.beginPath(); ctx.arc(x + 4 + k * 6, y + alto + t * 14, 1.8 * (1 - t) + 0.6, 0, Math.PI * 2); ctx.fill();
+            }
+        }
     }
 
     /** Corrente de vento (sobe planando com a Pipa). */
@@ -1830,7 +1899,30 @@
         gota(e, cx, cy) {
             // Cano enferrujado saindo do teto.
             const img = arte('cano');
-            if (img) { pintar(img, cx, e.y - visual.cam.y, 40 / 128, 64, 20); return; }
+            if (img) {
+                // A arte é um cano que sai da parede e faz a curva para baixo (boca em x≈108, y≈96).
+                // Um tubo desce do teto até a flange, para o cano não ficar voando.
+                const k = 40 / 128;
+                const boca = e.y + e.h - visual.cam.y;
+                const fx = cx - (108 - 12) * k;
+                const fy = boca - (96 - 55) * k;
+                const tx = Math.floor((cx - (108 - 12) * k + visual.cam.x) / TL);
+                let ty = Math.floor(e.y / TL);
+                while (ty > 0 && !['#', 'X'].includes(nivel.grade[ty - 1]?.[tx])) ty--;
+                const teto = ty * TL - visual.cam.y;
+                if (teto < fy - 2) {
+                    ctx.save();
+                    ctx.translate(Math.round(fx), Math.round(teto));
+                    ctx.rotate(Math.PI / 2);
+                    // Trecho reto do cano (x 26..60, y 43..67), esticado na vertical.
+                    ctx.drawImage(img, 26, 43, 34, 24, 0, -12 * k, fy - teto, 24 * k);
+                    ctx.restore();
+                    ctx.fillStyle = COR.tinta;
+                    ctx.fillRect(Math.round(fx) - 6, Math.round(teto), 12, 3);
+                }
+                pintar(img, cx, boca, k, 108, 96);
+                return;
+            }
             ctx.fillStyle = '#5a4030';
             ctx.strokeStyle = COR.tinta;
             ctx.lineWidth = 1.5;
