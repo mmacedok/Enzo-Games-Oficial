@@ -4,3 +4,7 @@ name = "enzo-games"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
+
+# Segredos (GOOGLE_CLIENT_ID, SESSION_SECRET, ADMIN_EMAILS, DATABASE_URL) vão no painel, como "Secret".
+[vars]
+NODE_ENV = "production"
