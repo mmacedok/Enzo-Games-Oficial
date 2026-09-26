@@ -88,7 +88,12 @@ O build gera as versões web em `assets/web/` e registra as imagens em `data/ima
 
 ## 5. Olhar na tela
 Rode `npm run serve` e abra `http://localhost:3000/batalha.html` (a porta aparece no terminal).
-Comece uma batalha e confira:
+No **menu** confira: o fundo da arena atrás do logo, a faixa amarela atrás de "Escolha seu deck"
+e "Contra quem?" (o texto tem que dar para ler), as caixas no lugar das cartinhas de cada deck e os
+ícones nos botões dos NPCs, do "Outro jogador" e do "Como jogar". Veja também no celular (janela
+estreita, uns 400 px).
+
+Depois comece uma batalha e confira:
 - o logo no menu; a mesa de fundo (e a mesa muda quando alguém joga um campo);
 - o rosto do NPC na barra dele; a orbe de Aura no botão ao lado de "Passar";
 - a moeda aparece quando alguém tira cara ou coroa (Bug do Discord, Iludido);
