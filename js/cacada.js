@@ -787,7 +787,7 @@
                     if (p.quebrados.has(nivel.grupoB.get(ty * nivel.largura + tx))) continue;
                     desenharQuebravel(c, x, y);
                 } else if (c === 'Z') {
-                    if (!p.loja.has('chave')) desenharTampa(x, y, tx);
+                    desenharTampa(x, y, tx, ty, area, p.loja.has('chave'));
                 } else if (c === '~') desenharChorume(x, y, tx, ty);
                 else if (c === 'w') desenharVento(x, y, tx, ty);
                 else if (c === 'X') ctx.drawImage(TILES.caixa, x, y);
@@ -839,18 +839,49 @@
         }
     }
 
-    /** Tampa de bueiro (fechada até comprar a Chave do Bueiro). */
-    function desenharTampa(x, y, tx) {
+    /**
+     * Tampa de bueiro no chão (a fila de 'Z' é um bueiro só). Fechada até comprar a Chave
+     * do Bueiro: chão da área com uma tampa redonda deitada nele. Aberta: o buraco escuro
+     * e a tampa encostada no chão ao lado.
+     */
+    function desenharTampa(x, y, tx, ty, area, aberta) {
+        const grade = nivel.grade[ty];
+        const primeira = grade[tx - 1] !== 'Z';
+        let n = 0;
+        while (grade[tx + n - (primeira ? 0 : 1)] === 'Z') n++;
         const img = arte('tampaBueiro');
-        if (img) { ctx.drawImage(img, x, y, TL, TL); return; }
+        if (aberta) {
+            const fundo = ctx.createLinearGradient(0, y, 0, y + TL);
+            fundo.addColorStop(0, '#000');
+            fundo.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+            ctx.fillStyle = fundo;
+            ctx.fillRect(x, y, TL, TL);
+            if (!primeira) return;
+            // Tampa arrastada para a esquerda, deitada no chão.
+            if (img) ctx.drawImage(img, x - TL * 2 - 4, y - 10, TL * 2, 18);
+            else { ctx.fillStyle = '#3c3d44'; ctx.fillRect(x - TL * 1.5, y - 3, TL * 1.2, 3); }
+            return;
+        }
+        // A primeira desenha o chão da fila toda e a tampa por cima (as outras não pintam nada,
+        // senão cobririam a tampa).
+        if (!primeira) return;
+        const chao = arte(`topo_${area}`);
+        for (let k = 0; k < n; k++) {
+            if (chao) ctx.drawImage(chao, x + k * TL, y, TL, TL);
+            else ctx.drawImage((TILES_AREA[area] || TILES_AREA.telhados).topo, x + k * TL, y);
+        }
+        const w = n * TL;
+        if (img) {
+            // A arte é a tampa vista de cima: achatada, ela fica deitada no chão.
+            ctx.drawImage(img, x - 9, y - 10, w + 18, 24);
+            return;
+        }
         ctx.fillStyle = '#2b2b30';
-        ctx.fillRect(x, y, TL, TL);
-        ctx.fillStyle = '#55565e';
-        ctx.fillRect(x, y, TL, 5);
-        ctx.fillStyle = '#3c3d44';
-        for (let k = (tx % 2) * 3; k < TL; k += 6) ctx.fillRect(x + k, y + 1, 3, 3);
+        ctx.strokeStyle = '#55565e';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(x + w / 2, y + 2, w / 2, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         ctx.fillStyle = COR.amarelo;
-        if (tx % 2 === 0) ctx.fillRect(x + TL - 3, y + 1, 3, 3);   // brilho da fechadura
+        ctx.fillRect(x + w / 2 - 1, y + 1, 3, 2);   // brilho da fechadura
     }
 
     /** Chorume: líquido que machuca (parte de baixo do tile). */
