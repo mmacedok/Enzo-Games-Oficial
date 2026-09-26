@@ -22,8 +22,8 @@
 
 - [ ] **Saldo do DeepSeek no fim (US$ 0,17).** Dá para ~3 tarefas médias. Recarregar uns US$ 5 ou
   usar a reserva grátis da NVIDIA (`--provedor nvidia`, lenta). 🧑
-- [ ] **Push do `TCG`.** O local está à frente do GitHub (merge do `main` com a limpeza dos sprites,
-  lista de ícones). 🤖 quando o Henrique pedir.
+- [ ] **Push do `main` e do `TCG`.** Os dois estão à frente do GitHub com as otimizações de código de
+  2026-09-26 (testadas no navegador). 🤖 quando o Henrique pedir.
 
 ## 🟠 Próximos
 
@@ -63,40 +63,34 @@
 
 ## 🟡 Decisões em aberto (🧑)
 
-- [ ] **Capa do Capítulo 2 (glitch) e brilho das capas no celular:** as animações rodam o tempo todo e
-  custam um pouco de desempenho. Opções:
-  - manter como está;
-  - glitch só com o mouse em cima (no celular o olho quase não aparece);
-  - brilho parado no celular.
+- [ ] **Brilho das capas no celular:** anima o tempo todo (custa um pouco). Manter ou deixar parado?
 - [ ] **Arte crua por link direto:** quem abre o endereço da imagem vê o Cabo Côco sem tarja, e a
   senha está no código do site. Decidido em 2026-09-26: **fica assim** (é easter egg). Só mudar se
   quiser a versão com servidor.
 
 ## 🔵 Melhorias de código (sem pressa) 🤖/🐋
 
-- [ ] **Janela de senha repetida em 3 lugares** (`reader.core.js`, `characters.js`, `baralho.js`) e
-  com regras de texto diferentes. Juntar num módulo só.
-- [ ] **4 cópias do "pedir para a API"** (`auth-widget`, `baralho`, `comentarios`, `admin`), com
-  contratos diferentes. Juntar num `js/api-cliente.js`.
-- [ ] **Lista de cursores repetida 4 vezes** no `css/style.css`. Juntar num seletor.
-- [ ] **Paginação das cartas dos leitores:** usa só a data como cursor, e duas cartas no mesmo
-  milissegundo fazem uma sumir. Usar o par (data, id) na API e no site.
-- [ ] **Caçada:**
-  - física roda a 120 passos por segundo (o dobro do comum);
-  - mecânica da telha que cai (`Q`) sem uso;
-  - eventos sem ninguém ouvindo (servem para som, que ainda não existe);
-  - gravidade dos inimigos duplicada.
-- [ ] **Testes:** faltam o pacote `jose` (2 testes de `cloudflare` falham) e a máscara gerada do Cabo
-  Côco numa cópia nova (`npm run build` resolve).
-- [ ] **Build no `main` quis acrescentar 400+ imagens** que não são do site: conferir o
-  `lib/web-images.js` antes do próximo build no `main`.
-
+- [ ] **Caçada:** física roda a 120 passos por segundo (o dobro do comum). Não mexido de propósito:
+  muda a sensação do jogo. Os eventos sem ouvinte ficam (servem para o som, que ainda não existe).
+- [ ] `moverY` da Caçada ainda devolve `tx`/`ty` que ninguém lê (sobra da telha). Detalhe.
 ## 📦 Guardado (não é pendência, é para lembrar)
 - **Degustação Noturna (Ronda):** em `arquivo/ronda/` desde 2026-09-26, com README de como voltar.
 
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-26 (tarde):
+  - **Otimizações de código:**
+    - `js/senha.js` (uma janela de senha só, aceita acento e espaço);
+    - `js/api-cliente.js` (um pedido à API só; o Baralho também usa);
+    - paginação das cartas por (data, id);
+    - cursores numa lista só;
+    - telha que cai e gravidade duplicada fora da Caçada;
+    - build sem versão web dos sprites da Caçada;
+    - pacote `jose` instalado (testes do `cloudflare` passam).
+  - **Capa do Capítulo 2:** glitch só com o mouse em cima; sem hover, capa normal.
+  - **Agente DeepSeek:** NVIDIA grátis primeiro; se não responder em 240 s, API oficial; sem saldo,
+    OpenRouter.
 - 2026-09-26:
   - **Caçada:** sprites limpos, sem linhas fantasma (Capanga-Mor, Degustador, Sombra, punho) e sem
     pedaços soltos (13 sprites). No ar.
