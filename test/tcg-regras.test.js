@@ -492,7 +492,7 @@ test('Marreteiro: Quebrar Tudo descarta o campo; Marretada 90', () => {
     assert.equal(atacar(e, 1).estado.jogadores[1].ativo.dano, 90);
 });
 
-test('Moderador do BAN: Silenciado não ataca nem recua no próximo turno, depois passa', () => {
+test('Moderador do Discord: Silenciado não ataca nem recua no próximo turno, depois passa', () => {
     const e = mesa({ eu: { ativo: { id: 'moderador-do-ban', aura: 2 } }, ele: { ativo: { id: 'italolol', aura: 1 }, banco: ['bug-do-discord'] } });
     let s = atacar(e, 0).estado; // turno 6 é do jogador 1
     invalida(() => R.aplicar(s, { tipo: 'atacar', jogador: 1, ataque: 0 }), 'Silenciado');
@@ -500,6 +500,19 @@ test('Moderador do BAN: Silenciado não ataca nem recua no próximo turno, depoi
     s = R.aplicar(s, { tipo: 'passar', jogador: 1 }).estado;
     s = R.aplicar(s, { tipo: 'passar', jogador: 0 }).estado;
     assert.doesNotThrow(() => R.aplicar(s, { tipo: 'atacar', jogador: 1, ataque: 0 }));
+});
+
+test('Moderador do Discord: não silencia de novo quem acabou de sair do Silenciado', () => {
+    const e = mesa({ eu: { ativo: { id: 'moderador-do-ban', aura: 2 } }, ele: { ativo: { id: 'chorao', aura: 2 } } });
+    let s = atacar(e, 0).estado;                                     // silencia no turno 5 (vale no 6)
+    s = R.aplicar(s, { tipo: 'passar', jogador: 1 }).estado;
+    const r = R.aplicar(s, { tipo: 'atacar', jogador: 0, ataque: 0 });   // turno 7: não pega
+    assert.ok(r.eventos.some((ev) => ev.tipo === 'imune'));
+    assert.ok(!r.eventos.some((ev) => ev.tipo === 'estado' && ev.estado === 'silenciado'));
+    assert.doesNotThrow(() => R.aplicar(r.estado, { tipo: 'atacar', jogador: 1, ataque: 0 }));
+    s = R.aplicar(r.estado, { tipo: 'passar', jogador: 1 }).estado;
+    const depois = R.aplicar(s, { tipo: 'atacar', jogador: 0, ataque: 0 });   // turno 9: pega de novo
+    assert.ok(depois.eventos.some((ev) => ev.tipo === 'estado' && ev.estado === 'silenciado'));
 });
 
 test('Cara de Coração: +20 com Encantadora na mesa', () => {

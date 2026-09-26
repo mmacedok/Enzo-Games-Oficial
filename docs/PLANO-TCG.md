@@ -67,7 +67,7 @@ minutos, fácil para quem nunca jogou. As 3 categorias que já existem viram as 
 
 ### Estados (3, com nomes do universo)
 - **Notificado** (veneno): leva 10 entre um turno e outro. Sai ao voltar para o banco.
-- **Silenciado** (paralisia): não ataca nem recua no próximo turno do dono.
+- **Silenciado** (paralisia): não ataca nem recua no próximo turno do dono. Quem acabou de sair do Silenciado não pode ser silenciado de novo logo em seguida (evita travar o ativo para sempre).
 - **Iludido** (confusão): ao atacar, moeda; se der coroa, o ataque falha e ele leva 20. Sai ao voltar para o banco.
 - Qualquer carta que volta para o banco (recuo ou puxada pela Encantadora) perde os estados.
 
@@ -99,7 +99,7 @@ Base: goon comum 40–70 HP, raro 70–100, épico 90–110, lendário 120–140
 | Stand do Joinha | 70 | 1 | **Poder, Num Tem Eu:** do banco, dá +10 de dano aos ataques do seu ativo (não soma com outro Stand). **Joinha (1):** 20. |
 | Encantadora (goon) | 70 | 1 | **Vem Cá, Meu Gadinho (1):** troca o ativo do outro por uma carta do banco dele, à sua escolha. **Chama Rosa (2):** 30 e Iludido. |
 | Marreteiro do Coração (goon) | 100 | 2 | **Quebrar Tudo (1):** descarta o campo da mesa. **Marretada (3):** 90. |
-| Moderador do BAN (goon) | 90 | 2 | **Ban de 7 Dias (2):** 30 e Silenciado. |
+| Moderador do Discord (goon) | 90 | 2 | **Ban de 7 Dias (2):** 30 e Silenciado (não funciona em quem acabou de sair do Silenciado). |
 
 ### Comuns (goons)
 | Carta | HP | Recuo | Poder / Ataques |

@@ -63,7 +63,7 @@
         { id: 'marreteiro-do-coracao', numero: 12, nome: 'Marreteiro do Coração', tipo: 'goon', raridade: 'raro', peso: 1,
             arte: 'assets/Cartas/marreteiro-do-coracao.png', foco: '50% 30%',
             frase: 'EU VOU QUEBRAR TUDO POR ELA!' },
-        { id: 'moderador-do-ban', numero: 13, nome: 'Moderador do BAN', tipo: 'goon', raridade: 'raro', peso: 1,
+        { id: 'moderador-do-ban', numero: 13, nome: 'Moderador do Discord', tipo: 'goon', raridade: 'raro', peso: 1,
             arte: 'assets/Cartas/moderador-do-ban.png', foco: '50% 30%',
             frase: 'Você foi silenciado por 7 dias.' },
         { id: 'cara-de-coracao', numero: 14, nome: 'Cara de Coração', tipo: 'goon', raridade: 'comum', peso: 2,

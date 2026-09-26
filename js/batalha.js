@@ -71,7 +71,7 @@
 
     const ESTADOS = {
         notificado: { icone: '🔔', nome: 'Notificado', texto: 'Leva 10 entre um turno e outro. Sai ao voltar para o banco.' },
-        silenciado: { icone: '🔇', nome: 'Silenciado', texto: 'Não ataca nem recua no próximo turno.' },
+        silenciado: { icone: '🔇', nome: 'Silenciado', texto: 'Não ataca nem recua no próximo turno. Depois não pode ser silenciado de novo logo em seguida.' },
         iludido: { icone: '💘', nome: 'Iludido', texto: 'Ao atacar, moeda: coroa = erra e leva 20.' },
         escudo: { icone: '🛡️', nome: 'Escudo', texto: 'Leva menos dano no próximo ataque.' },
     };
@@ -217,7 +217,7 @@
             ['Seu turno', 'Ponha cartas no banco, jogue 1 campo, prenda a Aura, use poderes, recue se precisar e ATAQUE. Atacar acaba o turno.'],
             ['Recuar', 'Arraste uma carta do banco para o ativo. Custa a Aura de recuo, que sai da Aura presa no ativo. Voltar para o banco tira os estados.'],
             ['Começo', 'Quem começa não ataca no 1º turno. Quem joga em segundo ganha +1 Aura de Reforço (só para o banco).'],
-            ['Estados', '🔔 Notificado: leva 10 por turno. 🔇 Silenciado: não ataca nem recua. 💘 Iludido: pode errar o ataque.'],
+            ['Estados', '🔔 Notificado: leva 10 por turno. 🔇 Silenciado: não ataca nem recua no próximo turno (e não dá para silenciar a mesma carta dois turnos seguidos). 💘 Iludido: pode errar o ataque.'],
             ['Jogar', 'Arraste as cartas: da mão para o banco, o campo para o meio da mesa, a Aura para uma carta, e o seu ativo até o ativo do NPC para atacar.'],
             ['Dica', 'Toque em qualquer carta (até as do NPC) para ver os ataques e o que ela faz.'],
         ];
@@ -1085,6 +1085,7 @@
             case 'cura': registrar(`${n(ev.uid)} curou ${ev.valor}.`); break;
             case 'nocaute': registrar(`💥 ${nomeVisivel(ev.id)} caiu! +${ev.pontos} ${ev.pontos === 1 ? 'ponto' : 'pontos'} para ${quem(ev.para).toLowerCase()}.`); break;
             case 'estado': registrar(`${n(ev.uid)} ficou ${ESTADOS[ev.estado].nome}.`); break;
+            case 'imune': registrar(`${n(ev.uid)} acabou de ser ${ESTADOS[ev.estado].nome.toLowerCase()} e não pode ser de novo agora.`); break;
             case 'troca': registrar(`${n(ev.entra)} entrou no lugar de ${n(ev.sai)}.`); break;
             case 'poder': registrar(`${n(ev.uid)} usou o poder ${ev.nome}.`); break;
             case 'moeda': registrar(`Moeda: ${ev.resultado}.`); break;
@@ -1278,6 +1279,11 @@
             case 'escudo': {
                 const alvo = elDe(ev.uid);
                 if (alvo) await balao(alvo, '( 🛡️ )', 'estado');
+                break;
+            }
+            case 'imune': {
+                const alvo = elDe(ev.uid);
+                if (alvo) await balao(alvo, `Já foi ${ESTADOS[ev.estado].nome}!`, 'estado');
                 break;
             }
             case 'bloqueado': {

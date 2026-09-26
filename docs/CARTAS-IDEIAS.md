@@ -25,7 +25,7 @@
 | 010 | Sombra do Degustador | Épico | Personagem | Ei, eu vou pegar Teemo no top. |
 | 011 | Encantadora | Raro | Capanga | Vem cá, meu gadinho. |
 | 012 | Marreteiro do Coração | Raro | Capanga | EU VOU QUEBRAR TUDO POR ELA! |
-| 013 | Moderador do BAN | Raro | Capanga | Você foi silenciado por 7 dias. |
+| 013 | Moderador do Discord (era Moderador do BAN) | Raro | Capanga | Você foi silenciado por 7 dias. |
 | 014 | Cara de Coração | Comum | Capanga | Iludido, mas sempre está lá por ela. |
 | 015 | Bug do Discord | Comum | Capanga | Não é bug, é feature da Legião. |
 | 016 | Notificação Morcego | Comum | Capanga | @everyone às 3 da manhã. |
@@ -148,7 +148,7 @@ Formato de cada item:
 - **Frase:** *"EU VOU QUEBRAR TUDO POR ELA!"*
 - **Prompt:** `Brutamontes musculoso de barba, bandana vermelha, camiseta branca rasgada com coração vermelho no peito, jeans rasgado e botas, erguendo uma marreta de pedra gigante acima da cabeça com cara de fúria, lascas de concreto voando, fundo de estacionamento à noite.` + raro.
 
-**#013 Moderador do BAN** — `moderador-do-ban` · goon · **Raro**
+**#013 Moderador do Discord** (antes Moderador do BAN) — `moderador-do-ban` · goon · **Raro**
 - **Ref.:** sprite do cavaleiro de armadura escura com escudo azul "MOD" e marreta "BAN"
 - **Frase:** *"Você foi silenciado por 7 dias."*
 - **Prompt:** `Cavaleiro baixinho de armadura cinza-escura com detalhes dourados e visor amarelo brilhante, escudo azul e martelo preto e dourado, desferindo uma martelada, fundo de servidor de Discord com canais em roxo.` + raro.

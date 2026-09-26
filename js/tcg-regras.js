@@ -455,11 +455,19 @@
         for (const ef of efeitos) {
             switch (ef.tipo) {
                 case 'estado':
-                    if (alvo === ele.ativo) {
-                        if (ef.estado === 'silenciado') alvo.estados.silenciado = estado.turno + 1;
-                        else alvo.estados[ef.estado] = true;
-                        eventos.push({ tipo: 'estado', uid: alvo.uid, estado: ef.estado });
+                    if (alvo !== ele.ativo) break;
+                    if (ef.estado === 'silenciado') {
+                        // Quem acabou de ficar Silenciado não pode ser silenciado de novo no turno seguinte
+                        // (senão dois Moderadores travam o ativo do outro para sempre).
+                        if (alvo.estados.silenciado > 0 && alvo.estados.silenciado >= estado.turno - 1) {
+                            eventos.push({ tipo: 'imune', uid: alvo.uid, estado: ef.estado });
+                            break;
+                        }
+                        alvo.estados.silenciado = estado.turno + 1;
+                    } else {
+                        alvo.estados[ef.estado] = true;
                     }
+                    eventos.push({ tipo: 'estado', uid: alvo.uid, estado: ef.estado });
                     break;
                 case 'curarSi': {
                     const valor = Math.min(ef.valor, atacante.dano);
