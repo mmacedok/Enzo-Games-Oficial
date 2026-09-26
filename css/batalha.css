@@ -280,6 +280,20 @@
     justify-self: start;
 }
 .bt-dica:empty { display: none; }
+/* Efeito do campo em jogo, ao lado da vaga do campo. */
+.bt-campo-texto {
+    grid-column: 2;
+    justify-self: start;
+    max-width: 34ch;
+    margin: 0;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: #fff0c2;
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+}
+.bt-campo-texto:empty { display: none; }
 
 /* ------------------------------------------------------------------ cartas */
 .bt-carta {

@@ -366,7 +366,7 @@
         m.dica.setAttribute('aria-live', 'polite');
         m.relogio = el('p', 'bt-relogio');
         m.relogio.hidden = true;
-        m.centro.append(m.campo, m.dica, m.relogio);
+        m.centro.append(m.campo, m.dica, m.relogio, m.campoTexto);
 
         m.acoes = el('div', 'bt-acoes');
         m.aura = botao('bt-aura', null, () => {
