@@ -388,7 +388,7 @@ test('Enzo Games: Almôndega 30 e Macarronada a 300% 120', () => {
     assert.equal(s.jogadores[0].pontos, 1);
 });
 
-test('Cabo Côco: no ativo impede o adversário de jogar campo; Copo de Lágrimas cura 20', () => {
+test('Cabo Côco: no ativo impede o adversário de jogar campo; Arquivo Confidencial cura 20', () => {
     const e = mesa({ eu: { mao: ['toradolandia'] }, ele: { ativo: 'cabo-coco' } });
     invalida(() => jogar(e, { tipo: 'campo', uid: EU(e).mao[0].uid }), 'Conteúdo Banido');
     const c = mesa({ eu: { ativo: { id: 'cabo-coco', aura: 2, dano: 50 } }, ele: { ativo: 'chorao' } });

@@ -65,6 +65,8 @@
 
     /** Cabo Côco só aparece sem tarja para quem descobriu a senha (conquista Acesso Confidencial). */
     const censurada = (def) => def.censurada && !window.EnzoConta?.temConquista?.('cabo-coco');
+    /** Nome que pode aparecer (inclusive para leitor de tela): o do Cabo Côco é "???" até a senha. */
+    const nomeVisivel = (def) => (censurada(def) ? '???' : def.nome);
 
     /** Tarja de cena do crime (a mesma da página de personagens); clicar pede a senha. */
     function tarja(card, def) {
@@ -136,7 +138,7 @@
         const r = B.raridade(def.raridade);
         const card = el('article', `carta-tcg carta-tcg--${def.raridade}${def.tipo === 'campo' ? ' carta-tcg--campo' : ''}`);
         card.dataset.carta = def.id;
-        const nome = censurada(def) ? '???' : def.nome;
+        const nome = nomeVisivel(def);
         card.setAttribute('aria-label', `${nome}: carta ${def.numero} de ${B.CARTAS.length}, ${r.nome}.`);
 
         const topo = el('div', 'carta-tcg-topo');
@@ -531,7 +533,7 @@
                 continue;
             }
             const abrirGrande = botao('fichario-carta');
-            abrirGrande.setAttribute('aria-label', `${def.nome} (${B.raridade(def.raridade).nome}), você tem ${qtd}. Ver carta grande`);
+            abrirGrande.setAttribute('aria-label', `${nomeVisivel(def)} (${B.raridade(def.raridade).nome}), você tem ${qtd}. Ver carta grande`);
             // Balança na página e inclina em 3D com o mouse (mesma mola da abertura).
             abrirGrande.appendChild(vivo(carta(def.id), { forca: 14 }).raiz);
             abrirGrande.addEventListener('click', () => verCarta(def.id, qtd));
@@ -540,7 +542,7 @@
                 celula.appendChild(el('span', 'fichario-qtd', `×${qtd}`));
                 poTotal += (qtd - 1) * B.valorPo(def.id);
                 const acao = botao('fichario-acao', `✨ Repetidas: ${qtd - 1}`);
-                acao.setAttribute('aria-label', `Transformar repetidas de ${def.nome} em pó de estrela`);
+                acao.setAttribute('aria-label', `Transformar repetidas de ${nomeVisivel(def)} em pó de estrela`);
                 acao.addEventListener('click', () => escolherPo(celula, def, qtd));
                 celula.appendChild(acao);
             }
@@ -622,7 +624,7 @@
     function verCarta(cardId, qtd) {
         const def = B.carta(cardId);
         const janela = el('dialog', 'carta-zoom');
-        janela.setAttribute('aria-label', def.nome);
+        janela.setAttribute('aria-label', nomeVisivel(def));
         const fechar = botao('pagina-fechar', '×');
         fechar.setAttribute('aria-label', 'Fechar a carta');
         fechar.addEventListener('click', () => janela.close());
@@ -751,7 +753,7 @@
 
         const rotuloDaCarta = (c) => {
             const def = B.carta(c.id);
-            return `${def.nome}, ${B.raridade(def.raridade).nome}${c.nova ? ', nova!' : `, repetida ×${c.copia}`}`;
+            return `${nomeVisivel(def)}, ${B.raridade(def.raridade).nome}${c.nova ? ', nova!' : `, repetida ×${c.copia}`}`;
         };
 
         /** Efeito de quando a carta aparece: tranco, raios (épico/lendário) e clarão (lendário). */

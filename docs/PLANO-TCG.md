@@ -80,7 +80,7 @@ Base: goon comum 40–70 HP, raro 70–100, épico 90–110, lendário 120–140
 | Carta | HP | Recuo | Poder / Ataques |
 |---|---|---|---|
 | Enzo Games | 140 | 2 | **Almôndega (1):** 30. **Macarronada a 300% (3):** 120. |
-| Cabo Côco | 130 | 2 | **Poder, Conteúdo Banido:** com ele no ativo, o outro não joga campos. **Copo de Lágrimas (2):** 60 e cura 20 dele. |
+| Cabo Côco | 130 | 2 | **Poder, Conteúdo Banido:** com ele no ativo, o outro não joga campos. **Arquivo Confidencial (2):** 60 e cura 20 dele. |
 | Degustador da Noite | 130 | 1 | **Vírgula-rangue (1):** 20 em qualquer carta do outro (inclusive banco). **Escudo de Parênteses (3):** 90 e leva −30 de dano no próximo turno. |
 | O Inominável | 120 | 2 | **Poder, Besteira no Discord:** 1 vez por turno, deixa o ativo do outro Notificado. **Bala Dourada (3):** 60 em qualquer carta do outro. |
 | Superkid | 130 | 2 | **Farmar Aura (1):** prende +1 Aura nele. **Aura de 67 Segundos (2):** 20 + 20 por Aura nele. |
@@ -235,3 +235,12 @@ custo**, **poder** e **recuo**.
 - Tocar/passar o mouse numa carta abre a **carta grande** com a frente normal e, embaixo, o quadro de
   combate (ataques, poder, recuo), no estilo das cartas de Pokémon.
 - No fichário, a carta grande ganha o mesmo quadro.
+
+### Cabo Côco: sempre banido (pedido do Henrique, 2026-09-26)
+Em **todo lugar** em que o Cabo Côco aparece (fichário, carta grande, abertura, ficha pública, capa,
+batalha, montador de deck, placar, mensagens), ele aparece com a **tarja de cena do crime "Conteúdo
+banido em 456 países"**, com a arte borrada e o nome **"???"**. Tocar na tarja pede a senha do site.
+Só quem já tem a conquista Acesso Confidencial vê a carta normal.
+- A batalha desenha as cartas sempre com `EnzoBaralhoUI.carta()`, que já faz isso, e usa o mesmo
+  `nomeVisivel()` para textos, avisos e leitor de tela. O nome real nunca aparece para quem não tem a conquista.
+- Nenhum texto da carta pode dar a senha: por isso o ataque dele se chama **Arquivo Confidencial**.

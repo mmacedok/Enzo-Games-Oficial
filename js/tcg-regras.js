@@ -242,7 +242,7 @@
                 if (!c || !ehCampo(c.id)) return 'essa carta não é um campo';
                 if (f.campo) return 'só 1 campo por turno';
                 if (estado.campo?.carta.id === c.id) return 'esse campo já está na mesa';
-                if (camposBanidos(estado, j)) return 'Conteúdo Banido: o Cabo Côco não deixa jogar campos';
+                if (camposBanidos(estado, j)) return 'Conteúdo Banido: o ativo do adversário não deixa jogar campos';
                 return null;
             }
             case 'recuar': {

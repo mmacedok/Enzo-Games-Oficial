@@ -30,7 +30,7 @@
             poder: { nome: 'Conteúdo Banido', tipo: 'banirCampos', ativavel: false,
                 texto: 'Com ele no ativo, o adversário não joga campos.' },
             ataques: [
-                { nome: 'Copo de Lágrimas', custo: 2, dano: 60, efeitos: [{ tipo: 'curarSi', valor: 20 }] },
+                { nome: 'Arquivo Confidencial', custo: 2, dano: 60, efeitos: [{ tipo: 'curarSi', valor: 20 }] },
             ] },
         'degustador-da-noite': { hp: 130, recuo: 1, ataques: [
             { nome: 'Vírgula-rangue', custo: 1, dano: 20, alvo: 'qualquer' },
