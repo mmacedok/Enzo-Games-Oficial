@@ -39,7 +39,6 @@
         laranja: '#ff6600',
         amarelo: '#ffd400',
         rosa: '#ff4fd8',
-        branco: '#ffffff',
         lilas: '#e6d6ff',
         verde: '#5aff78',
         roxo: '#a046ff',
@@ -315,8 +314,6 @@
     }
     Object.assign(ARQUIVOS, EXPANSAO);
     const EXISTEM = new Set(window.CACADA_ARTES_NOVAS || []);
-    // As artes olham para a direita.
-    const OLHA_ESQUERDA = new Set();
     const ARTE = {};
     for (const [nome, lista] of Object.entries(ARQUIVOS)) {
         ARTE[nome] = lista.map((arquivo) => {
@@ -345,9 +342,10 @@
     }
     const quadroDe = (nome, i = 0) => ARTE[nome][Math.abs(Math.floor(i)) % ARTE[nome].length];
 
-    /** Sprite com uma camada de cor por cima, mantendo o desenho (em cache). */
-    function tingidoLeve(img, cor) {
-        const chave = `leve|${img.src}|${cor}`;
+    /** Sprite pintado de uma cor (piscar de dano, sombra, chefe). Guardado em cache. `leve` pinta por cima sem apagar o desenho. */
+    const tintas = new Map();
+    function tingido(img, cor, leve = false) {
+        const chave = `${leve ? 'leve|' : ''}${img.src}|${cor}`;
         let c = tintas.get(chave);
         if (c) return c;
         c = document.createElement('canvas');
@@ -363,30 +361,20 @@
         tintas.set(chave, c);
         return c;
     }
-
-    /** Sprite pintado de uma cor (piscar de dano, sombra, chefe). Guardado em cache. */
-    const tintas = new Map();
-    function tingido(img, cor) {
-        const chave = `${img.src}|${cor}`;
-        let c = tintas.get(chave);
-        if (c) return c;
-        c = document.createElement('canvas');
-        c.width = img.naturalWidth;
-        c.height = img.naturalHeight;
-        const g = c.getContext('2d');
-        g.drawImage(img, 0, 0);
-        g.globalCompositeOperation = 'source-atop';
-        g.fillStyle = cor;
-        g.fillRect(0, 0, c.width, c.height);
-        tintas.set(chave, c);
-        return c;
-    }
+    const tingidoLeve = (img, cor) => tingido(img, cor, true);
 
     // ------------------------------------------------------------- save
+    // O save lido é guardado em cache: a tela de título consulta todo quadro.
+    let saveBruto;
+    let saveCache = null;
     function lerSave() {
         try {
             const bruto = localStorage.getItem(SAVE);
-            return bruto ? JSON.parse(bruto) : null;
+            if (bruto !== saveBruto) {
+                saveBruto = bruto;
+                saveCache = bruto ? JSON.parse(bruto) : null;
+            }
+            return saveCache;
         } catch {
             return null;
         }
@@ -394,6 +382,7 @@
     function salvar() {
         if (!jogo.jogador) return;
         try { localStorage.setItem(SAVE, JSON.stringify(core.exportarSave(jogo))); } catch { /* modo privado */ }
+        saveBruto = undefined;   // o save gravou: a próxima leitura faz o parse
         visual.salvouEm = visual.tempo;
     }
 
@@ -734,6 +723,16 @@
         const y0 = Math.max(0, Math.floor(cam.y / TL));
         const y1 = Math.min(nivel.altura - 1, Math.floor((cam.y + H) / TL));
         const p = jogo.progresso;
+        // Artes de topo/meio resolvidas uma vez por área (a tela pode mostrar mais de uma).
+        const artesDe = new Map();
+        const artesArea = (area) => {
+            let a = artesDe.get(area);
+            if (!a) {
+                a = { topo: arte(`topo_${area}`), meio: arte(`meio_${area}`) };
+                artesDe.set(area, a);
+            }
+            return a;
+        };
         for (let ty = y0; ty <= y1; ty++) {
             for (let tx = x0; tx <= x1; tx++) {
                 const c = nivel.grade[ty][tx];
@@ -746,7 +745,7 @@
                 if (c === '#') {
                     const acima = ty > 0 ? nivel.grade[ty - 1][tx] : '#';
                     const dentro = acima === '#' || acima === 'X' || acima === 'r' || acima === 'B';
-                    const img = arte(`${dentro ? 'meio' : 'topo'}_${area}`);
+                    const img = dentro ? artesArea(area).meio : artesArea(area).topo;
                     if (img) ctx.drawImage(img, x, y, TL, TL);
                     else ctx.drawImage(dentro ? tiles.meio : tiles.topo, x, y);
                 } else if (c === 'r') {
@@ -758,7 +757,7 @@
                     const vida = jogo.vidaParedes.get(id) ?? CONFIG.vidaParede;
                     const treme = vida < CONFIG.vidaParede && !calmo ? Math.sin(visual.tempo * 50) * 0.6 : 0;
                     const rach = area === 'telhados' && arte('rachada', CONFIG.vidaParede - Math.max(1, vida));
-                    const meio = arte(`meio_${area}`);
+                    const meio = artesArea(area).meio;
                     if (rach) ctx.drawImage(rach, x + treme, y, TL, TL);
                     else if (meio) {
                         // Outras áreas: o tijolo da área com rachaduras por cima.
@@ -1345,17 +1344,20 @@
     const revelados = new Set();
     function desenharSegredos() {
         const j = jogo.jogador;
+        const cam = visual.cam;
         const cx = j.x + JL / 2;
         const cy = j.y + JA / 2;
+        const tiles = TILES_AREA[jogo.sala.area] || TILES_AREA.telhados;
+        const meio = arte(`meio_${jogo.sala.area}`);
         nivel.segredos.forEach((sg, i) => {
             if (revelados.has(i) || sg.sala !== jogo.sala.idx) return;
             if (cx > sg.x && cx < sg.x + sg.w && cy > sg.y && cy < sg.y + sg.h) { revelados.add(i); return; }
-            const tiles = TILES_AREA[jogo.sala.area] || TILES_AREA.telhados;
+            // Fora da câmera não aparece na tela: não gasta o laço de tiles.
+            if (sg.x + sg.w < cam.x || sg.x > cam.x + W || sg.y + sg.h < cam.y || sg.y > cam.y + H) return;
             for (let y = sg.y; y < sg.y + sg.h; y += TL) {
-                const meio = arte(`meio_${jogo.sala.area}`);
                 for (let x = sg.x; x < sg.x + sg.w; x += TL) {
-                    if (meio) ctx.drawImage(meio, Math.round(x - visual.cam.x), Math.round(y - visual.cam.y), TL, TL);
-                    else ctx.drawImage(tiles.meio, Math.round(x - visual.cam.x), Math.round(y - visual.cam.y));
+                    if (meio) ctx.drawImage(meio, Math.round(x - cam.x), Math.round(y - cam.y), TL, TL);
+                    else ctx.drawImage(tiles.meio, Math.round(x - cam.x), Math.round(y - cam.y));
                 }
             }
         });
@@ -1581,6 +1583,11 @@
     }
 
     const contorno = (flash, cor) => { ctx.fillStyle = flash ? '#fff' : cor; ctx.strokeStyle = COR.tinta; ctx.lineWidth = 1.5; };
+    /** Sem arte: o corpo do inimigo vira um retângulo na cor dele. */
+    const retanguloSemArte = (e, cx, cy, flash, cor) => {
+        contorno(flash, cor);
+        ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
+    };
 
     const DESENHOS = {
         capanga(e, cx, cy, flash) {
@@ -1594,10 +1601,7 @@
             ctx.translate(-cx, -(e.y + e.h - visual.cam.y));
             const ok = spriteInimigo('capanga', passo, cx, e.y + e.h - visual.cam.y - pulinho, 34, 125, e.dir < 0, flash);
             ctx.restore();
-            if (!ok) {
-                contorno(flash, '#e0245e');
-                ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
-            }
+            if (!ok) retanguloSemArte(e, cx, cy, flash, '#e0245e');
         },
         ping(e, cx, cy, flash) {
             const caca = e.estado === 'caca';
@@ -1642,10 +1646,7 @@
                 ctx.beginPath(); ctx.arc(cx, cy, 16, 0, Math.PI * 2); ctx.fill();
             }
             const mirando = e.estado === 'mirar';
-            if (!spriteInimigo(mirando ? 'droneMirar' : 'drone', visual.tempo * 20, cx, cy, 34, 64, e.dir < 0, flash)) {
-                contorno(flash, '#2ecc71');
-                ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
-            }
+            if (!spriteInimigo(mirando ? 'droneMirar' : 'drone', visual.tempo * 20, cx, cy, 34, 64, e.dir < 0, flash)) retanguloSemArte(e, cx, cy, flash, '#2ecc71');
         },
         troll(e, cx, cy, flash) {
             const treme = e.estado === 'preparar' && !calmo ? Math.sin(visual.tempo * 70) * 1.5 : 0;
@@ -1742,10 +1743,7 @@
             }
             // Conjurando: os quadros com a mão acesa (a arte "feiticeira-conjurar" veio com outro personagem).
             const quadro = e.estado === 'conjurar' ? (arte('feiticeiraConjurar') ? ['feiticeiraConjurar', 0] : ['feiticeira', 2 + (Math.floor(visual.tempo * 8) % 2)]) : e.estado === 'sumir' || e.estado === 'aparecer' ? ['feiticeiraSumir', 0] : ['feiticeira', visual.tempo * 6];
-            if (!spriteInimigo(quadro[0], quadro[1], cx, cy, 42, 64, OLHA_ESQUERDA.has('feiticeira') ? olhaDireita : !olhaDireita, flash)) {
-                contorno(flash, '#b04dff');
-                ctx.fillRect(cx - e.w / 2, cy - e.h / 2, e.w, e.h);
-            }
+            if (!spriteInimigo(quadro[0], quadro[1], cx, cy, 42, 64, !olhaDireita, flash)) retanguloSemArte(e, cx, cy, flash, '#b04dff');
         },
         sombra(e, cx, cy, flash) {
             ctx.fillStyle = 'rgba(160, 70, 255, 0.22)';
@@ -1780,10 +1778,7 @@
             const fase2 = e.vida <= e.vidaMax / 2 && !flash ? 'rgba(200, 0, 40, 1)' : null;
             if (spriteInimigo(quadro[0], quadro[1], cx, base + 2, 76, 187, e.dir < 0, flash, fase2 && Math.sin(visual.tempo * 8) > 0.6 ? fase2 : null)) return;
             // Sem arte: o capanga normal tingido e a marreta desenhada.
-            if (!spriteInimigo('capanga', est === 'corrida' ? visual.tempo * 12 : 0, cx, base + 2, 84, 125, e.dir < 0, flash, 'rgba(120, 0, 30, 1)')) {
-                contorno(flash, '#8a1030');
-                ctx.fillRect(e.x - visual.cam.x, e.y - visual.cam.y, e.w, e.h);
-            }
+            if (!spriteInimigo('capanga', est === 'corrida' ? visual.tempo * 12 : 0, cx, base + 2, 84, 125, e.dir < 0, flash, 'rgba(120, 0, 30, 1)')) retanguloSemArte(e, cx, cy, flash, '#8a1030');
             if (est === 'atordoado') {
                 for (let k = 0; k < 3; k++) {
                     const a = visual.tempo * 5 + (k * Math.PI * 2) / 3;
@@ -1829,13 +1824,6 @@
             ctx.fillStyle = flash ? '#fff' : 'rgba(12, 4, 22, 0.95)';
             ctx.beginPath(); ctx.arc(cx + lado * 38, cy + 6, 11, 0, Math.PI * 2); ctx.fill();
             ctx.fillRect(cx + lado * 38 - 4, cy - 16, 8, 16);
-            if (e.aviso) {
-                const a = e.aviso;
-                ctx.fillStyle = `rgba(160, 70, 255, ${0.3 + a.t * 0.5})`;
-                ctx.fillRect(a.x - visual.cam.x, a.y - visual.cam.y, a.w, a.h);
-                ctx.fillStyle = `rgba(160, 70, 255, ${0.08 + a.t * 0.12})`;
-                ctx.fillRect(a.x - visual.cam.x, jogo.sala.px.y - visual.cam.y, a.w, a.y - jogo.sala.px.y);
-            }
         },
     };
 
@@ -2879,7 +2867,8 @@
             paragrafo(textoTeclas(placa.texto), W / 2, H - 52, W - 110, 14, '#fff');
         }
         // Dica de ↑ perto de banco ou loja.
-        const perto = [...nivel.bancos, ...nivel.lojas].find((b) => b.sala === jogo.sala.idx && core.colide({ x: j.x, y: j.y, w: JL, h: JA }, core.zonaDeUso(b)));
+        const pertoUso = (b) => b.sala === jogo.sala.idx && core.colide({ x: j.x, y: j.y, w: JL, h: JA }, core.zonaDeUso(b));
+        const perto = nivel.bancos.find(pertoUso) || nivel.lojas.find(pertoUso);
         if (perto && jogo.fase === 'jogando') {
             const sx = j.x + JL / 2 - visual.cam.x;
             const sy = j.y - 14 - visual.cam.y + Math.sin(visual.tempo * 6) * 2;
@@ -2913,6 +2902,9 @@
         return t.replace(/\[([A-Z]+)\]/g, (m, k) => nomes[k] ?? m);
     }
 
+    // Vizinhos usados no contorno do mapa (constante fora dos laços).
+    const VIZINHOS_MAPA = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
     function desenharMapa() {
         ctx.fillStyle = 'rgba(7, 4, 26, 0.92)';
         ctx.fillRect(0, 0, W, H);
@@ -2937,10 +2929,11 @@
                 for (let tx = 0; tx < s.w; tx += passo) {
                     const c = nivel.grade[s.ty + ty][s.tx + tx];
                     if (c === '#' || c === 'X') {
-                        const vizinhoVazio = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => {
-                            const cc = nivel.grade[s.ty + ty + b]?.[s.tx + tx + a];
-                            return cc && cc !== '#' && cc !== 'X' && cc !== 'r';
-                        });
+                        let vizinhoVazio = false;
+                        for (let v = 0; v < VIZINHOS_MAPA.length; v++) {
+                            const cc = nivel.grade[s.ty + ty + VIZINHOS_MAPA[v][1]]?.[s.tx + tx + VIZINHOS_MAPA[v][0]];
+                            if (cc && cc !== '#' && cc !== 'X' && cc !== 'r') { vizinhoVazio = true; break; }
+                        }
                         if (vizinhoVazio) ctx.fillRect(x + tx * escala, y + ty * escala, Math.max(1, escala * passo), Math.max(1, escala * passo));
                     }
                 }
@@ -3023,7 +3016,7 @@
         const tecla = textoTeclas(hab.tecla);
         texto(`Botão: ${tecla}`, W / 2, 206 + dy, 20, COR.amarelo, 4);
         areas = [];
-        botaoTela('CONTINUAR', W / 2 - 80, 276 + (icone ? 20 : 0) - (icone ? 20 : 0), 160, 40, COR.laranja, 'continuar');
+        botaoTela('CONTINUAR', W / 2 - 80, 276, 160, 40, COR.laranja, 'continuar');
     }
 
     function desenharLojaTela() {
@@ -3338,10 +3331,25 @@
     // ------------------------------------------------------------- fluxo
     function novoJogo(save = null) {
         core.iniciar(jogo, save);
+        revelados.clear();
         visual.pausado = false;
         visual.mapa = false;
         visual.particulas = [];
         visual.textos = [];
+        visual.fx = [];
+        visual.cadaveres = [];
+        visual.hitstop = 0;
+        visual.tremor = 0;
+        visual.flashDano = 0;
+        visual.flashBranco = 0;
+        visual.morteEm = 0;
+        visual.fimEm = 0;
+        visual.area = null;
+        visual.figurinhaNova = null;
+        visual.puloDuploEm = -9;
+        visual.pousoEm = -9;
+        visual.figurinhaEm = -9;
+        visual.molas.clear();
         visual.opcao = 0;
         soltarTudo();
         tratarEventos();
@@ -3484,6 +3492,10 @@
         return opcoesPausa().length;
     }
 
+    /** O jogo está numa tela de menu (sem controle do Degustador)? */
+    const emMenu = () => jogo.fase === 'titulo' || jogo.fase === 'final' || visual.pausado || jogo.fase === 'pegou'
+        || visual.mapa || jogo.fase === 'loja' || jogo.fase === 'album';
+
     function navegarMenu(delta, total) {
         visual.opcao = (visual.opcao + delta + total) % total;
     }
@@ -3621,10 +3633,8 @@
                 event.preventDefault();
                 botao.setPointerCapture?.(event.pointerId);
                 botao.classList.add('is-apertado');
-                const emMenu = jogo.fase === 'titulo' || jogo.fase === 'final' || visual.pausado || jogo.fase === 'pegou' || visual.mapa || jogo.fase === 'loja' || jogo.fase === 'album';
                 const teclas = tecla.split(' ');
-                if (emMenu && teclas.length > 1) return;
-                if (emMenu) {
+                if (emMenu()) {
                     if (visual.mapa) { visual.mapa = false; return; }
                     if (jogo.fase === 'loja') {
                         const n = itensLoja().length;
@@ -3672,7 +3682,6 @@
         let dedo = null;
         let centro = null;
         let atual = { esquerda: false, direita: false, cima: false, baixo: false };
-        const emMenu = () => jogo.fase === 'titulo' || jogo.fase === 'final' || visual.pausado || jogo.fase === 'pegou' || visual.mapa || jogo.fase === 'loja' || jogo.fase === 'album';
         function aplicarDirecao(novo) {
             if (emMenu()) {
                 // Nos menus, empurrar para cima/baixo anda uma opção por vez.

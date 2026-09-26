@@ -14,35 +14,35 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { HttpError } = require('./http.js');
 const { nomePublico } = require('./auth.js');
-const { ehAdmin } = require('./admin.js');
+const { ehAdmin, registrar } = require('./admin.js');
+const { UUID, ID, CONTROLE_TEXTO, LINK } = require('./validacao.js');
 
 const TEXTO_MAX = 500;
 const POR_PAGINA = 30;
 const INTERVALO = 30 * 1000;
 const POR_DIA = 30;
+const DIA = 24 * 60 * 60 * 1000;
 const TRECHOS_MAX = 50;
 const TARJA_MAX = 12;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-const ID = /^[a-z0-9-]{1,64}$/;
-// Invisíveis e de controle, menos a quebra de linha (inclui os que invertem o texto).
-const CONTROLE = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f​-‏‪-‮⁠-⁩﻿]/g;
-const LINK = /(https?:|www\.|\.(com|net|org|br|io|gg|xyz|me)\b)/i;
 
 // ------------------------------------------------------------ capítulos que existem
 // Na Netlify Function o esbuild troca process.env.ENZO_CAPITULOS pela lista
 // (tools/build-function.mjs); no computador ela vem de data/database.json.
 let capitulos = null;
 let lidoEm = 0;
+let falhouEm = 0;
 function capitulosValidos() {
     const embutido = process.env.ENZO_CAPITULOS;
     if (embutido) return (capitulos ??= new Set(JSON.parse(embutido)));
     if (capitulos && Date.now() - lidoEm < 60_000) return capitulos;
+    if (Date.now() - falhouEm < 60_000) return null;   // falhou agora há pouco: não relê o catálogo
     try {
         const catalogo = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'database.json'), 'utf8'));
         capitulos = new Set(catalogo.comics.flatMap((c) => (c.chapters || []).map((cap) => `${c.id}/${cap.id}`)));
         lidoEm = Date.now();
     } catch {
         capitulos = null;   // sem catálogo: só confere o formato dos ids
+        falhouEm = Date.now();
     }
     return capitulos;
 }
@@ -60,7 +60,7 @@ function exigirCapitulo(comicId, chapterId) {
 /** Texto limpo: sem invisíveis, espaços juntados, no máximo uma linha em branco seguida. */
 function limparTexto(texto) {
     if (typeof texto !== 'string') throw new HttpError(400, 'escreva alguma coisa');
-    const limpo = texto.normalize('NFC').replace(/\r\n?/g, '\n').replace(CONTROLE, ' ')
+    const limpo = texto.normalize('NFC').replace(/\r\n?/g, '\n').replace(CONTROLE_TEXTO, ' ')
         .split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).join('\n')
         .replace(/\n{3,}/g, '\n\n').trim();
     if (!limpo) throw new HttpError(400, 'escreva alguma coisa');
@@ -120,13 +120,10 @@ function comentario(ctx, l, admin) {
     return c;
 }
 
-async function registrar(ctx, acao, alvo, detalhe) {
-    await ctx.db.query(
-        'INSERT INTO admin_log (id, admin_id, acao, alvo, detalhe, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
-        [crypto.randomUUID(), ctx.usuario.id, acao, alvo, String(detalhe).slice(0, 200), ctx.agora()]);
-}
-
+// ------------------------------------------------------------ consultas
 const CAMPOS = `c.id, c.user_id, c.texto, c.censuras, c.created_at, u.display_name, u.avatar_url, u.email`;
+
+const FILTROS = `c.comic_id = $1 AND c.chapter_id = $2 AND c.apagado_em IS NULL AND u.role <> 'banned'`;
 
 async function buscar(ctx, id) {
     if (!UUID.test(id)) throw new HttpError(404, 'comentário não encontrado');
@@ -146,18 +143,25 @@ const rotas = [
             const antes = Number.parseInt(busca.get('antes'), 10);
             const admin = ehAdmin(ctx.config, ctx.usuario);
             const linhas = await ctx.db.query(
-                `SELECT ${CAMPOS} FROM comments c JOIN users u ON u.id = c.user_id
-                  WHERE c.comic_id = $1 AND c.chapter_id = $2 AND c.apagado_em IS NULL AND u.role <> 'banned'
-                    AND ($3::bigint IS NULL OR c.created_at < $3)
-                  ORDER BY c.created_at DESC, c.id LIMIT $4`,
+                `SELECT * FROM (
+                     SELECT ${CAMPOS}, c.comic_id, c.chapter_id, COUNT(*) OVER () AS total
+                       FROM comments c JOIN users u ON u.id = c.user_id
+                      WHERE ${FILTROS}
+                 ) t
+                 WHERE $3::bigint IS NULL OR t.created_at < $3
+                 ORDER BY t.created_at DESC, t.id LIMIT $4`,
                 [comicId, chapterId, Number.isSafeInteger(antes) ? antes : null, POR_PAGINA + 1]);
-            const [{ total }] = await ctx.db.query(
-                `SELECT COUNT(*) AS total FROM comments c JOIN users u ON u.id = c.user_id
-                  WHERE c.comic_id = $1 AND c.chapter_id = $2 AND c.apagado_em IS NULL AND u.role <> 'banned'`,
-                [comicId, chapterId]);
+            // Página vazia não traz o total: aí conta na mão (caso raro).
+            let total = linhas.length ? Number(linhas[0].total) : null;
+            if (total === null) {
+                const [{ total: contado }] = await ctx.db.query(
+                    `SELECT COUNT(*) AS total FROM comments c JOIN users u ON u.id = c.user_id
+                      WHERE ${FILTROS}`, [comicId, chapterId]);
+                total = Number(contado);
+            }
             return {
                 comments: linhas.slice(0, POR_PAGINA).map((l) => comentario(ctx, l, admin)),
-                total: Number(total),
+                total,
                 maisAntigos: linhas.length > POR_PAGINA,
                 admin,
             };
@@ -170,17 +174,26 @@ const rotas = [
             const { comicId, chapterId } = exigirCapitulo(corpo.comicId, corpo.chapterId);
             const texto = limparTexto(corpo.texto);
             const agora = ctx.agora();
-            const [{ ultimo, hoje }] = await ctx.db.query(
-                `SELECT MAX(created_at) AS ultimo, COUNT(*) FILTER (WHERE created_at > $2) AS hoje
-                   FROM comments WHERE user_id = $1`, [ctx.usuario.id, agora - 24 * 60 * 60 * 1000]);
-            if (ultimo !== null && agora - Number(ultimo) < INTERVALO) {
-                throw new HttpError(429, 'calma! espere uns segundos antes de mandar outra carta');
-            }
-            if (Number(hoje) >= POR_DIA) throw new HttpError(429, `limite de ${POR_DIA} cartas por dia`);
+            // Confere o intervalo e o limite do dia já na inserção: sem corrida entre
+            // duas cartas mandadas no mesmo instante.
             const id = crypto.randomUUID();
-            await ctx.db.query(
+            const criadas = await ctx.db.query(
                 `INSERT INTO comments (id, user_id, comic_id, chapter_id, texto, created_at)
-                 VALUES ($1, $2, $3, $4, $5, $6)`, [id, ctx.usuario.id, comicId, chapterId, texto, agora]);
+                 SELECT $1, $2, $3, $4, $5, $6
+                  WHERE NOT EXISTS (SELECT 1 FROM comments
+                                     WHERE user_id = $2 AND created_at > $6::bigint - $7::bigint)
+                    AND (SELECT COUNT(*) FROM comments
+                          WHERE user_id = $2 AND created_at > $6::bigint - $8::bigint) < $9::int
+                 RETURNING id`,
+                [id, ctx.usuario.id, comicId, chapterId, texto, agora, INTERVALO, DIA, POR_DIA]);
+            if (criadas.length === 0) {
+                const [{ ultimo }] = await ctx.db.query(
+                    'SELECT MAX(created_at) AS ultimo FROM comments WHERE user_id = $1', [ctx.usuario.id]);
+                if (ultimo !== null && agora - Number(ultimo) < INTERVALO) {
+                    throw new HttpError(429, 'calma! espere uns segundos antes de mandar outra carta');
+                }
+                throw new HttpError(429, `limite de ${POR_DIA} cartas por dia`);
+            }
             const l = await buscar(ctx, id);
             return { comment: comentario(ctx, l, ehAdmin(ctx.config, ctx.usuario)) };
         },

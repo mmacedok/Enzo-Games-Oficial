@@ -261,8 +261,7 @@
             largura: W, altura: H, larguraPx: W * T, alturaPx: H * T,
             grade, salaIdx, salas, salaPorId: new Map(), areas: def.areas || {},
             inicio: null, bancos: [], placas: [], lojas: [], cameos: [], itens: [], alavancas: [],
-            serras: [], plataformas: [], grupoB: new Map(), gruposB: new Map(), temDinamicos: false, segredos: [],
-            deslocamento: { x: minX, y: minY },
+            serras: [], plataformas: [], grupoB: new Map(), gruposB: new Map(), segredos: [],
         };
         for (const s of salas) {
             s.tx -= minX;
@@ -317,12 +316,11 @@
                         if (s.premio) nivel.itens.push({ id: `${s.id}:premio`, sala: s.idx, tipo: 'habilidade', habilidade: s.premio, premioDe: s.chefeDef.id, x, y: base - 20, w: 20, h: 20 });
                     } else if (c === 'O' || c === 'H' || c === 'U') {
                         nivel.serras.push({ tipo: c, sala: s.idx, cx: x + T / 2, cy: y + T / 2, fase: nivel.serras.length * 0.7 });
-                        if (c !== 'O') { nivel.temDinamicos = true; s.temDinamicos = true; }
+                        if (c !== 'O') s.temDinamicos = true;
                     } else if (c === 'M' && s.linhas[ly][lx - 1] !== 'M') {
                         let n = 1;
                         while (s.linhas[ly][lx + n] === 'M') n++;
                         nivel.plataformas.push({ id: nivel.plataformas.length, sala: s.idx, x0: x, y, w: n * T, h: CONFIG.plataformaA });
-                        nivel.temDinamicos = true;
                         s.temDinamicos = true;
                     }
                 }
@@ -429,7 +427,7 @@
             parede: 0, grudado: 0, coiotaParede: 0, ultimaParede: 0,
             trava: 0, travaLado: 0, semCorte: false,
             estado: 'normal',    // 'normal' | 'dash' | 'degustando' | 'mergulho' | 'carregando' | 'buzz'
-            lado: 0, plataforma: -1, descendo: 0,
+            plataforma: -1, descendo: 0,
             mergulhoT: 0, carga: 0, buzzT: 0, planando: false,
             soltarCura: false, dashT: 0, dashLado: 1, dashRecarga: 0, dashDisponivel: true, puloDuploUsado: false,
             recuo: 0, recuoVx: 0, atordoado: 0,
@@ -887,15 +885,14 @@
         return null;
     }
 
-    /** Caixa da coronhada. */
     /**
      * Área da coronhada. g.gx/g.gy é a direção (8 direções): frente, cima, baixo
      * e as diagonais. Para baixo no chão vira uma rasteira na altura dos pés.
      */
     function caixaGolpe(j, g) {
         const R = CONFIG.golpeAlcance * (g.longo ? CONFIG.coronhaComprida : 1);
-        const gx = g.gx ?? (g.dir === 'frente' ? g.lado : 0);
-        const gy = g.gy ?? (g.dir === 'cima' ? -1 : g.dir === 'baixo' ? 1 : 0);
+        const gx = g.gx;
+        const gy = g.gy;
         if (gx === 0 && gy < 0) return { x: j.x - 9, y: j.y - R, w: L + 18, h: R + 4 };
         if (gx === 0 && gy > 0) {
             if (g.noChao) return { x: j.x - 16, y: j.y + A - 16, w: L + 32, h: 20 };
@@ -973,6 +970,10 @@
         jogo.vidaParedes = new Map();
         jogo.eventos = [];
         jogo.fimEm = 0;
+        jogo.tempo = 0;
+        jogo.acumulado = 0;
+        jogo.faseT = 0;
+        jogo.pegou = null;
         const banco = bancoSalvo(jogo);
         if (banco) {
             posicionarNoBanco(jogo, banco);
@@ -1106,7 +1107,12 @@
                 }
                 return null;
             },
-            contar: (tipo) => jogo.inimigos.filter((i) => i.vivo && i.tipo === tipo).length + novos.filter((i) => i.tipo === tipo).length,
+            contar: (tipo) => {
+                let n = 0;
+                for (const i of jogo.inimigos) if (i.vivo && i.tipo === tipo) n++;
+                for (const i of novos) if (i.tipo === tipo) n++;
+                return n;
+            },
         };
     }
 
@@ -1266,6 +1272,8 @@
         jogo.progresso.banco = banco.id;
         jogo.mortos.clear();
         jogo.inimigos = inimigosDaSala(jogo, jogo.sala);
+        jogo.projeteis = [];
+        jogo.tiros = [];
         jogo.fase = 'sentado';
         jogo.eventos.push({ tipo: 'banco', id: banco.id, x: banco.x + banco.w / 2, y: banco.y });
     }
@@ -1684,7 +1692,11 @@
             en.flash = Math.max(0, en.flash - dt);
             if (en.chefe && jogo.arena == null) continue;
             Inimigos.TIPOS[en.tipo].atualizar(en, c, dt);
-            if (!en.voa && en.y > jogo.nivel.alturaPx + 40) en.vivo = false;
+            if (!en.voa && en.y > jogo.nivel.alturaPx + 40) {
+                // Caiu fora do mundo: some como os derrotados, mas sem virgulas nem evento.
+                en.vivo = false;
+                if (en.id) jogo.mortos.add(en.id);
+            }
         }
         if (novos.length) jogo.inimigos.push(...novos);
         if (jogo.inimigos.length > 40) jogo.inimigos = jogo.inimigos.filter((e) => e.vivo);
@@ -1740,7 +1752,9 @@
 
     /** Um passo fixo da partida. */
     function passo(jogo, e, dt) {
-        jogo.tempo += dt;
+        // O relógio do mundo só corre com o Degustador em jogo: nas outras telas
+        // (sentado, perigo, morto…) as serras e plataformas móveis ficam paradas.
+        if (jogo.fase === 'jogando') jogo.tempo += dt;
         const j = jogo.jogador;
         if (jogo.fimEm && jogo.tempo >= jogo.fimEm && jogo.fase !== 'final') {
             jogo.fase = 'final';

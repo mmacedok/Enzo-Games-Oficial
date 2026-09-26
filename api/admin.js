@@ -20,9 +20,9 @@ const crypto = require('node:crypto');
 const { HttpError } = require('./http.js');
 const { jogoValido } = require('./anti-cheat.js');
 const { limparFala } = require('./leitores.js');
+const { exigirUuid } = require('./validacao.js');
 const Conquistas = require('../js/conquistas.js');
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const POR_PAGINA = 50;
 const SEGMENTO = '([^/]{1,64})';
 
@@ -33,13 +33,8 @@ function lerAdmins(valor) {
 
 const ehAdmin = (config, usuario) => Boolean(usuario?.email) && config.admins.has(String(usuario.email).toLowerCase());
 
-function exigirUuid(id, oque = 'conta') {
-    if (!UUID.test(id)) throw new HttpError(404, `${oque} não encontrada`);
-    return id;
-}
-
 async function exigirUsuario(ctx, id) {
-    const [usuario] = await ctx.db.query('SELECT id, display_name, email, role FROM users WHERE id = $1', [exigirUuid(id)]);
+    const [usuario] = await ctx.db.query('SELECT id, display_name, email, role FROM users WHERE id = $1', [exigirUuid(id, 'conta não encontrada')]);
     if (!usuario) throw new HttpError(404, 'conta não encontrada');
     return usuario;
 }
@@ -95,12 +90,14 @@ const rotas = [
             const filtro = busca ? `%${busca.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
             const linhas = await ctx.db.query(
                 `SELECT u.id, u.display_name, u.email, u.role, u.avatar_url, u.fala, u.created_at, u.last_login_at,
-                        (SELECT COUNT(*) FROM user_achievements a
-                          WHERE a.user_id = u.id AND a.achievement_id NOT LIKE 'enzo-secreto-%') AS conquistas,
-                        (SELECT COUNT(*) FROM user_achievements a
-                          WHERE a.user_id = u.id AND a.achievement_id LIKE 'enzo-secreto-%') AS secretos,
-                        (SELECT COUNT(*) FROM game_scores s WHERE s.user_id = u.id) AS partidas
+                        COALESCE(a.conquistas, 0) AS conquistas, COALESCE(a.secretos, 0) AS secretos,
+                        COALESCE(s.partidas, 0) AS partidas
                    FROM users u
+                   LEFT JOIN (SELECT user_id,
+                                     COUNT(*) FILTER (WHERE achievement_id NOT LIKE 'enzo-secreto-%') AS conquistas,
+                                     COUNT(*) FILTER (WHERE achievement_id LIKE 'enzo-secreto-%') AS secretos
+                                FROM user_achievements GROUP BY user_id) a ON a.user_id = u.id
+                   LEFT JOIN (SELECT user_id, COUNT(*) AS partidas FROM game_scores GROUP BY user_id) s ON s.user_id = u.id
                   WHERE $1::text IS NULL OR u.display_name ILIKE $1 OR u.email ILIKE $1 OR u.id = $4
                   ORDER BY u.last_login_at DESC, u.id
                   LIMIT $2 OFFSET $3`,
@@ -120,7 +117,7 @@ const rotas = [
     {
         metodo: 'GET', caminho: new RegExp(`^/api/admin/users/${SEGMENTO}$`), admin: true,
         async executar(ctx) {
-            const id = exigirUuid(ctx.params[0]);
+            const id = exigirUuid(ctx.params[0], 'conta não encontrada');
             const [u] = await ctx.db.query('SELECT * FROM users WHERE id = $1', [id]);
             if (!u) throw new HttpError(404, 'conta não encontrada');
             const conquistas = await ctx.db.query(
@@ -213,7 +210,7 @@ const rotas = [
     {
         metodo: 'POST', caminho: new RegExp(`^/api/admin/scores/${SEGMENTO}/verify$`), admin: true,
         async executar(ctx) {
-            const id = exigirUuid(ctx.params[0], 'partida');
+            const id = exigirUuid(ctx.params[0], 'partida não encontrada');
             const { verified } = await ctx.corpo();
             if (typeof verified !== 'boolean') throw new HttpError(400, 'verified deve ser true ou false');
             const [s] = await ctx.db.query(
@@ -226,7 +223,7 @@ const rotas = [
     {
         metodo: 'POST', caminho: new RegExp(`^/api/admin/scores/${SEGMENTO}/delete$`), admin: true,
         async executar(ctx) {
-            const id = exigirUuid(ctx.params[0], 'partida');
+            const id = exigirUuid(ctx.params[0], 'partida não encontrada');
             const [s] = await ctx.db.query(
                 'DELETE FROM game_scores WHERE id = $1 RETURNING user_id, game_id, score', [id]);
             if (!s) throw new HttpError(404, 'partida não encontrada');
@@ -240,4 +237,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, lerAdmins, ehAdmin };
+module.exports = { rotas, lerAdmins, ehAdmin, registrar };

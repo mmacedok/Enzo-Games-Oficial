@@ -37,11 +37,20 @@
             return img;
         }
         const span = document.createElement('span');
-        span.className = `${className} ui-icone--emoji`;
+        span.className = className;
         span.setAttribute('aria-hidden', 'true');
         span.textContent = emoji;
         return span;
     };
+
+    /** Empilha os avisos: cada um sobe acima dos anteriores (--toast-offset no CSS). */
+    function stackToasts() {
+        let offset = 0;
+        for (const node of document.querySelectorAll('.achievement-popup')) {
+            node.style.setProperty('--toast-offset', `${offset}px`);
+            if (node.classList.contains('show')) offset += node.offsetHeight + 12;
+        }
+    }
 
     /**
      * Aviso de rodapé no estilo recordatório de gibi (conquistas, leitura retomada).
@@ -72,16 +81,14 @@
         corpo.append(rotulo, texto);
         popup.append(icone, corpo);
         document.body.appendChild(popup);
+        stackToasts();
         void popup.offsetWidth;
         popup.classList.add('show');
         setTimeout(() => {
             popup.classList.remove('show');
-            setTimeout(() => popup.remove(), 600);
+            setTimeout(() => { popup.remove(); stackToasts(); }, 600);
         }, 4200);
     };
-
-    // Navegação direta (a antiga cortina de macarronada foi removida a pedido).
-    window.playMacaroniTransition = url => { location.href = url; };
 
     // Logo: após a entrada das letras, liga os pulinhos em repouso.
     const logo = document.querySelector('.garfield-classic-logo');

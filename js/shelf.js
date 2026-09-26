@@ -136,19 +136,26 @@
             item.addEventListener('pointerenter', () => onIntent(entry), { once: true });
             item.addEventListener('focus', () => onIntent(entry), { once: true });
         }
-        attachHolo(item);
         return item;
     }
 
-    /** Inclinação + brilho holográfico seguindo o mouse. */
+    /** Inclinação + brilho holográfico seguindo o mouse. Devolve um cancelador. */
     function attachHolo(item) {
-        if (!finePointer() || reducedMotion()) return;
+        if (!finePointer() || reducedMotion()) return null;
         const book = item.querySelector('.book');
         let frame = 0;
+        let rect = null;
+        // A caixa do gibi só é medida ao entrar com o mouse e ao redimensionar.
+        const measure = () => { rect = book.getBoundingClientRect(); };
+        const forget = () => { rect = null; }; // rolar move o gibi: a caixa medida deixa de valer
+
+        item.addEventListener('pointerenter', measure);
+        window.addEventListener('resize', measure);
+        window.addEventListener('scroll', forget, { passive: true });
 
         item.addEventListener('pointermove', (event) => {
             if (event.pointerType !== 'mouse') return;
-            const rect = book.getBoundingClientRect();
+            if (!rect) measure();
             const nx = Math.min(1, Math.max(-1, ((event.clientX - rect.left) / rect.width) * 2 - 1));
             const ny = Math.min(1, Math.max(-1, ((event.clientY - rect.top) / rect.height) * 2 - 1));
             cancelAnimationFrame(frame);
@@ -168,6 +175,12 @@
         };
         item.addEventListener('pointerleave', reset);
         item.addEventListener('pointercancel', reset);
+
+        return () => {
+            cancelAnimationFrame(frame);
+            window.removeEventListener('resize', measure);
+            window.removeEventListener('scroll', forget);
+        };
     }
 
     /**
@@ -180,6 +193,7 @@
         container.replaceChildren();
 
         const books = entries.map((entry) => buildBook(entry, onOpen, onIntent));
+        const holos = books.map(attachHolo);
         let columns = 0;
 
         function layout() {
@@ -210,16 +224,28 @@
         }
 
         layout();
-        const observer = new ResizeObserver(() => layout());
+        // Um quadro, uma medição: o ResizeObserver dispara várias vezes durante o arrasto.
+        let layoutFrame = 0;
+        const scheduleLayout = () => {
+            if (layoutFrame) return;
+            layoutFrame = requestAnimationFrame(() => { layoutFrame = 0; layout(); });
+        };
+        const observer = new ResizeObserver(scheduleLayout);
         observer.observe(container);
 
         // Paralaxe: o ponto de fuga da estante acompanha o mouse.
+        let shelfRect = null;
+        const measureShelf = () => { shelfRect = container.getBoundingClientRect(); };
         const onMove = (event) => {
-            const rect = container.getBoundingClientRect();
-            container.style.setProperty('--vx', `${(((event.clientX - rect.left) / rect.width) * 100).toFixed(1)}%`);
+            if (!shelfRect) measureShelf();
+            container.style.setProperty('--vx', `${(((event.clientX - shelfRect.left) / shelfRect.width) * 100).toFixed(1)}%`);
         };
         const onLeave = () => container.style.removeProperty('--vx');
+        const onScroll = () => { shelfRect = null; };
         if (finePointer() && !reducedMotion()) {
+            container.addEventListener('pointerenter', measureShelf);
+            window.addEventListener('resize', measureShelf);
+            window.addEventListener('scroll', onScroll, { passive: true });
             container.addEventListener('pointermove', onMove);
             container.addEventListener('pointerleave', onLeave);
         }
@@ -227,6 +253,11 @@
         return {
             destroy() {
                 observer.disconnect();
+                cancelAnimationFrame(layoutFrame);
+                for (const cancel of holos) cancel?.();
+                container.removeEventListener('pointerenter', measureShelf);
+                window.removeEventListener('resize', measureShelf);
+                window.removeEventListener('scroll', onScroll);
                 container.removeEventListener('pointermove', onMove);
                 container.removeEventListener('pointerleave', onLeave);
             },

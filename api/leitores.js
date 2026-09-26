@@ -8,13 +8,10 @@
 // ============================================================================
 const { HttpError } = require('./http.js');
 const { nomePublico } = require('./auth.js');
+const { CONTROLE, LINK, exigirUuid } = require('./validacao.js');
 
 const POR_PAGINA = 60;
 const FALA_MAX = 80;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-// Invisíveis e de controle (inclui os que invertem a direção do texto).
-const CONTROLE = /[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁩﻿]/g;
-const LINK = /(https?:|www\.|\.(com|net|org|br|io|gg|xyz|me)\b)/i;
 
 /** Fala limpa (uma linha, até 80 letras, sem links) ou null para voltar à fala do Enzo. */
 function limparFala(texto) {
@@ -27,13 +24,10 @@ function limparFala(texto) {
 }
 
 // Número de leitor: ordem de chegada ao site (o 1º a entrar é o Nº 1).
-const NUMERO = `(SELECT COUNT(*) FROM users x WHERE x.created_at < u.created_at
-                 OR (x.created_at = u.created_at AND x.id <= u.id))`;
-
-function exigirUuid(id) {
-    if (!UUID.test(id)) throw new HttpError(404, 'leitor não encontrado');
-    return id;
-}
+// Mesma conta de antes (created_at, id), agora numa varredura só.
+const NUMERADOS = `WITH numerados AS (
+    SELECT id, ROW_NUMBER() OVER (ORDER BY created_at, id) AS numero FROM users
+)`;
 
 const rotas = [
     {
@@ -41,12 +35,13 @@ const rotas = [
         async executar(ctx) {
             const pagina = Math.max(0, Math.min(1000, Number.parseInt(ctx.url.searchParams.get('pagina'), 10) || 0));
             const linhas = await ctx.db.query(
-                `SELECT u.id, u.display_name, u.fala, u.avatar_url, ${NUMERO} AS numero,
+                `${NUMERADOS}
+                 SELECT u.id, u.display_name, u.fala, u.avatar_url, n.numero AS numero,
                         (SELECT COUNT(*) FROM user_achievements a
                           WHERE a.user_id = u.id AND a.achievement_id NOT LIKE 'enzo-secreto-%') AS conquistas,
                         (SELECT COUNT(*) FROM user_achievements a
                           WHERE a.user_id = u.id AND a.achievement_id LIKE 'enzo-secreto-%') AS secretos
-                   FROM users u
+                   FROM users u JOIN numerados n ON n.id = u.id
                   WHERE u.role <> 'banned'
                   ORDER BY u.last_login_at DESC, u.id
                   LIMIT $1 OFFSET $2`,
@@ -70,10 +65,12 @@ const rotas = [
     {
         metodo: 'GET', caminho: /^\/api\/readers\/([^/]{1,64})$/,
         async executar(ctx) {
-            const id = exigirUuid(ctx.params[0]);
+            const id = exigirUuid(ctx.params[0], 'leitor não encontrado');
             const [leitor] = await ctx.db.query(
-                `SELECT u.id, u.display_name, u.fala, u.avatar_url, u.created_at, ${NUMERO} AS numero
-                   FROM users u WHERE u.id = $1 AND u.role <> 'banned'`, [id]);
+                `${NUMERADOS}
+                 SELECT u.id, u.display_name, u.fala, u.avatar_url, u.created_at, n.numero AS numero
+                   FROM users u JOIN numerados n ON n.id = u.id
+                  WHERE u.id = $1 AND u.role <> 'banned'`, [id]);
             if (!leitor) throw new HttpError(404, 'leitor não encontrado');
             const conquistas = await ctx.db.query(
                 'SELECT achievement_id FROM user_achievements WHERE user_id = $1 ORDER BY unlocked_at', [id]);

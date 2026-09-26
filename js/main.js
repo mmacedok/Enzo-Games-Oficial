@@ -72,17 +72,22 @@
         else localStorage.removeItem('currentChapterId');
         const url = readerUrl(edition);
         if (!source || !window.EnzoOpen) {
-            window.playMacaroniTransition(url);
+            window.location.href = url;
             return;
         }
         const coverImg = source.querySelector('img');
-        await window.EnzoOpen.fly({
-            source,
-            coverSrc: coverImg?.currentSrc || siteImageUrl(edition.cover),
-            coverSource: edition.cover,
-            pageSrc: window.EnzoOpen.largeImageUrl(edition.firstPage),
-        });
-        location.href = url;
+        try {
+            await window.EnzoOpen.fly({
+                source,
+                coverSrc: coverImg?.currentSrc || siteImageUrl(edition.cover),
+                coverSource: edition.cover,
+                pageSrc: window.EnzoOpen.largeImageUrl(edition.firstPage),
+            });
+        } catch (error) {
+            console.error('Falha na animação de abrir o gibi:', error);
+        } finally {
+            location.href = url;
+        }
     }
 
     function preloadFirstPage(edition) {
@@ -249,11 +254,13 @@
 
     // ----------------------------------------------------- easter egg: jogo
     // Os arquivos de cada jogo só baixam no 1º clique.
+    const scriptsCarregados = new Set();
     function carregarScript(src) {
+        if (scriptsCarregados.has(src)) return Promise.resolve();
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = src;
-            script.onload = resolve;
+            script.onload = () => { scriptsCarregados.add(src); resolve(); };
             script.onerror = () => reject(new Error(`Falha ao carregar ${src}`));
             document.body.appendChild(script);
         });
@@ -261,8 +268,8 @@
 
     // Cada easter egg: scripts em ordem e o objeto global que abre o jogo.
     const JOGOS = {
-        flappy: { scripts: ['js/game-dialog.js?v=5', 'js/flappy-core.js?v=1', 'js/flappy.js?v=4'], global: 'FlappyEnzo' },
-        ronda: { scripts: ['js/game-dialog.js?v=5', 'js/cacada-inimigos.js?v=2', 'js/cacada-core.js?v=8', 'js/cacada-artes.js?v=1', 'js/cacada-mundo-expansao.js?v=1', 'js/cacada-mundo.js?v=7', 'js/cacada.js?v=13'], global: 'CacadaInominavel', exigeLogin: true },
+        flappy: { scripts: ['js/game-dialog.js?v=rev0926', 'js/flappy-core.js?v=1', 'js/flappy.js?v=rev0926'], global: 'FlappyEnzo' },
+        ronda: { scripts: ['js/game-dialog.js?v=rev0926', 'js/cacada-inimigos.js?v=2', 'js/cacada-core.js?v=rev0926', 'js/cacada-artes.js?v=1', 'js/cacada-mundo-expansao.js?v=1', 'js/cacada-mundo.js?v=7', 'js/cacada.js?v=rev0926'], global: 'CacadaInominavel', exigeLogin: true },
     };
     const carregando = {};
     let esperandoLogin = null; // jogo que abre sozinho quando a pessoa terminar de entrar

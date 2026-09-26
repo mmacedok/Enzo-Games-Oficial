@@ -74,6 +74,21 @@
         return ctx.createPattern(tile, 'repeat');
     })();
 
+    // Gradiente do céu e brilho da macarronada: criados uma vez (o canvas tem tamanho fixo).
+    const ceu = (() => {
+        const g = ctx.createLinearGradient(0, 0, 0, CONFIG.chao);
+        g.addColorStop(0, '#7cc6ec');
+        g.addColorStop(0.7, '#bfe3f2');
+        g.addColorStop(1, '#ffd9a0');
+        return g;
+    })();
+    const brilho = (() => {
+        const g = ctx.createRadialGradient(0, 0, 4, 0, 0, MACARRONADA_LARGURA * 0.9);
+        g.addColorStop(0, 'rgba(255, 236, 150, 0.55)');
+        g.addColorStop(1, 'rgba(255, 236, 150, 0)');
+        return g;
+    })();
+
 
     // ------------------------------------------------------------- desenho
     function texto(conteudo, x, y, tamanho, cor = '#fff', contorno = 5) {
@@ -89,10 +104,6 @@
     }
 
     function desenharCeu() {
-        const ceu = ctx.createLinearGradient(0, 0, 0, CONFIG.chao);
-        ceu.addColorStop(0, '#7cc6ec');
-        ceu.addColorStop(0.7, '#bfe3f2');
-        ceu.addColorStop(1, '#ffd9a0');
         ctx.fillStyle = ceu;
         ctx.fillRect(0, 0, W, CONFIG.chao);
         ctx.fillStyle = reticula;
@@ -173,15 +184,13 @@
         const x = 292 + fuga * 260;
         const y = alvoY + Math.sin(visual.tempo * 2.4) * 14 - fuga * 180;
         ctx.save();
+        ctx.translate(x, y);
         ctx.globalAlpha = 0.95;
         // Brilho sagrado.
-        const brilho = ctx.createRadialGradient(x, y, 4, x, y, w * 0.9);
-        brilho.addColorStop(0, 'rgba(255, 236, 150, 0.55)');
-        brilho.addColorStop(1, 'rgba(255, 236, 150, 0)');
         ctx.fillStyle = brilho;
-        ctx.fillRect(x - w, y - w, w * 2, w * 2);
-        if (img) ctx.drawImage(img, x - w / 2, y - h / 2, w, h);
-        else { ctx.fillStyle = '#d84913'; ctx.beginPath(); ctx.arc(x, y, w / 3, 0, Math.PI * 2); ctx.fill(); }
+        ctx.fillRect(-w, -w, w * 2, w * 2);
+        if (img) ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        else { ctx.fillStyle = '#d84913'; ctx.beginPath(); ctx.arc(0, 0, w / 3, 0, Math.PI * 2); ctx.fill(); }
         ctx.restore();
     }
 
@@ -271,7 +280,7 @@
         visual.fimEm = visual.tempo;
         visual.novoRecorde = jogo.pontos > recorde;
         if (visual.novoRecorde) { recorde = jogo.pontos; salvarRecorde(recorde); }
-        janela.enviarPartida(jogo.pontos, { talheres: jogo.pontos });
+        janela.enviarPartida(jogo.pontos);
     }
 
     // ------------------------------------------------------------- controles

@@ -5,9 +5,9 @@ const crypto = require('node:crypto');
 const { HttpError } = require('./http.js');
 const { jogoValido, PONTOS_MAX } = require('./anti-cheat.js');
 const { usuarioPublico } = require('./auth.js');
+const { ID } = require('./validacao.js');
 // Lista única de conquistas (a mesma que o site mostra na aba Conquistas).
 const Conquistas = require('../js/conquistas.js');
-const ID = /^[a-z0-9-]{1,64}$/;
 const MAX_PROGRESSOS = 300;
 
 const idValido = (valor) => typeof valor === 'string' && ID.test(valor);
@@ -20,14 +20,15 @@ function exigirId(valor, campo) {
 /** Tudo que o site precisa da conta: conquistas, recordes e onde parou de ler. */
 async function estadoDoUsuario(ctx) {
     const id = ctx.usuario.id;
-    const conquistas = await ctx.db.query(
-        'SELECT achievement_id FROM user_achievements WHERE user_id = $1 ORDER BY unlocked_at', [id]);
-    const recordes = await ctx.db.query(
-        `SELECT game_id, MAX(score) AS melhor, MAX(score) FILTER (WHERE verified) AS melhor_verificado
-           FROM game_scores WHERE user_id = $1 GROUP BY game_id`, [id]);
-    const progresso = await ctx.db.query(
-        `SELECT comic_id, chapter_id, last_page, zoom_level, completed, updated_at
-           FROM reading_progress WHERE user_id = $1 ORDER BY updated_at DESC LIMIT ${MAX_PROGRESSOS}`, [id]);
+    const [conquistas, recordes, progresso] = await Promise.all([
+        ctx.db.query('SELECT achievement_id FROM user_achievements WHERE user_id = $1 ORDER BY unlocked_at', [id]),
+        ctx.db.query(
+            `SELECT game_id, MAX(score) AS melhor, MAX(score) FILTER (WHERE verified) AS melhor_verificado
+               FROM game_scores WHERE user_id = $1 GROUP BY game_id`, [id]),
+        ctx.db.query(
+            `SELECT comic_id, chapter_id, last_page, zoom_level, completed, updated_at
+               FROM reading_progress WHERE user_id = $1 ORDER BY updated_at DESC LIMIT ${MAX_PROGRESSOS}`, [id]),
+    ]);
     const leitura = progresso.map((p) => ({
         comicId: p.comic_id, chapterId: p.chapter_id, page: Number(p.last_page),
         zoom: Number(p.zoom_level), completed: Boolean(p.completed), updatedAt: Number(p.updated_at),
@@ -103,18 +104,19 @@ const rotas = [
             if (!Number.isSafeInteger(page) || page < 0 || page > 10_000) throw new HttpError(400, 'page inválida');
             if (typeof zoom !== 'number' || !(zoom >= 0.5 && zoom <= 3)) throw new HttpError(400, 'zoom inválido');
             const id = ctx.usuario.id;
-            const [{ total, existe }] = await ctx.db.query(
-                `SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE comic_id = $2 AND chapter_id = $3) AS existe
-                   FROM reading_progress WHERE user_id = $1`, [id, comicId, chapterId]);
-            if (Number(existe) === 0 && Number(total) >= MAX_PROGRESSOS) throw new HttpError(400, 'progresso demais salvo');
-            await ctx.db.query(
+            const salvo = await ctx.db.query(
                 `INSERT INTO reading_progress (user_id, comic_id, chapter_id, last_page, zoom_level, completed, updated_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7)
+                 SELECT $1, $2, $3, $4, $5, $6, $7
+                  WHERE EXISTS (SELECT 1 FROM reading_progress
+                                 WHERE user_id = $1 AND comic_id = $2 AND chapter_id = $3)
+                     OR (SELECT COUNT(*) FROM reading_progress WHERE user_id = $1) < $8::int
                  ON CONFLICT (user_id, comic_id, chapter_id) DO UPDATE SET last_page = EXCLUDED.last_page,
                      zoom_level = EXCLUDED.zoom_level,
                      completed = reading_progress.completed OR EXCLUDED.completed,
-                     updated_at = EXCLUDED.updated_at`,
-                [id, comicId, chapterId, page, zoom, corpo.completed === true, ctx.agora()]);
+                     updated_at = EXCLUDED.updated_at
+                 RETURNING user_id`,
+                [id, comicId, chapterId, page, zoom, corpo.completed === true, ctx.agora(), MAX_PROGRESSOS]);
+            if (salvo.length === 0) throw new HttpError(400, 'progresso demais salvo');
             return { saved: true };
         },
     },
