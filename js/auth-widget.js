@@ -63,6 +63,7 @@
             estado.loginAtivo = Boolean(config.dados?.enabled && config.dados.clientId);
             estado.clientId = config.dados?.clientId || null;
             if (estado.loginAtivo) await carregarConta();
+            if (estado.loginAtivo && !estado.usuario) convidarNaChegada();
         } catch { /* sem API (site estático): segue como convidado */ }
         return api;
     })();
@@ -97,7 +98,7 @@
         estado.usuario = login.dados.user;
         const sync = await pedir('/api/user/sync-guest', dadosDoConvidado());
         estado.dados = sync.ok ? sync.dados : null;
-        fecharBalao();
+        fecharConvite();
         renderizar();
         avisar();
         carregarCatalogo().then(verificarColecoes).catch(() => {});
@@ -130,46 +131,66 @@
     };
     const icone = (nome, emoji, classe) => window.siteIcon(nome, emoji, classe);
 
-    let balao = null;
-    function fecharBalao() {
-        balao?.remove();
-        balao = null;
-        document.removeEventListener('pointerdown', cliqueFora, true);
-        document.removeEventListener('keydown', escFecha, true);
-    }
-    function cliqueFora(evento) {
-        if (balao && !balao.contains(evento.target) && !evento.target.closest('[data-conta] > button')) fecharBalao();
-    }
-    function escFecha(evento) {
-        if (evento.key === 'Escape' && balao) { const dono = balao.parentElement?.querySelector('button'); fecharBalao(); dono?.focus(); }
+    // Deslogado: convite no meio da tela com tudo o que o login libera e o botão do Google.
+    // Abre sozinho na 1ª página da visita e de novo pelo botão Entrar (ou por pedirLogin).
+    // Outras partes do site somam itens em window.EnzoVantagensExtras ([emoji, título, texto]).
+    const VANTAGENS = [
+        ['🎮', 'Caçada ao Inominável', 'o jogo do Degustador só abre para quem entrou'],
+        ['🏆', 'Ranking', 'seus recordes do Flappy Enzo no placar de todo mundo'],
+        ['🥇', 'Conquistas', 'e o álbum dos Enzos secretos escondidos nas páginas'],
+        ['📖', 'Continuar de onde parou', 'o gibi lembra a sua página em qualquer aparelho'],
+        ['✉️', 'Cartas dos leitores', 'comente os capítulos'],
+        ['🪪', 'Ficha do Leitor', 'seu perfil no site, com foto e a sua fala'],
+    ];
+    const CONVITE_VISTO = 'enzo-convite-visto';
+    let convite = null;
+    function fecharConvite() {
+        if (convite?.open) convite.close();
     }
     function mostrarErroLogin(texto) {
-        const erro = balao?.querySelector('.conta-erro');
+        const erro = convite?.querySelector('.conta-erro');
         if (erro) { erro.textContent = texto; erro.hidden = !texto; }
     }
 
-    /** Deslogado: balão de fala saindo do botão, com o botão oficial do Google. */
-    function balaoDeEntrada(slot) {
-        fecharBalao();
-        balao = el('div', 'conta-balao');
-        balao.setAttribute('role', 'dialog');
-        balao.setAttribute('aria-label', 'Entrar com Google');
-        const alvo = el('div', 'conta-google');
-        const erro = el('p', 'conta-erro');
-        erro.hidden = true;
-        erro.setAttribute('role', 'alert');
-        balao.append(
-            el('span', 'conta-balao-estouro', 'PSST!'),
-            el('p', 'conta-balao-titulo', 'Quer salvar seus recordes?'),
-            el('p', 'conta-balao-texto', 'Entre com o Google para aparecer no ranking, colecionar conquistas e continuar o gibi de onde parou.'),
-            alvo, erro,
-        );
-        slot.appendChild(balao);
-        document.addEventListener('pointerdown', cliqueFora, true);
-        document.addEventListener('keydown', escFecha, true);
-        carregarGoogle().then((google) => {
-            google.accounts.id.renderButton(alvo, { theme: 'filled_black', size: 'large', shape: 'rectangular', text: 'signin_with', locale: 'pt-BR', width: 250 });
-        }).catch((falha) => mostrarErroLogin(falha.message));
+    function abrirConvite() {
+        if (estado.usuario || !estado.loginAtivo) return;
+        if (!convite) {
+            convite = el('dialog', 'pagina-gibi conta-convite');
+            convite.setAttribute('aria-labelledby', 'conta-convite-titulo');
+            const titulo = el('h2', 'conta-convite-titulo', 'Entre e libere o site todo!');
+            titulo.id = 'conta-convite-titulo';
+            const lista = el('ul', 'conta-convite-lista');
+            for (const [emoji, nome, texto] of [...VANTAGENS, ...(window.EnzoVantagensExtras || [])]) {
+                const item = el('li');
+                const descricao = el('span');
+                descricao.append(el('strong', '', nome), ` ${texto}`);
+                item.append(el('span', 'conta-convite-emoji', emoji), descricao);
+                lista.appendChild(item);
+            }
+            const alvo = el('div', 'conta-google');
+            const erro = el('p', 'conta-erro');
+            erro.hidden = true;
+            erro.setAttribute('role', 'alert');
+            const depois = botaoEl('conta-convite-depois', 'Agora não');
+            depois.addEventListener('click', fecharConvite);
+            convite.append(el('span', 'conta-balao-estouro', 'PSST!'), titulo, lista, alvo, erro, depois);
+            convite.addEventListener('click', (e) => { if (e.target === convite) fecharConvite(); });
+            document.body.appendChild(convite);
+            carregarGoogle().then((google) => {
+                google.accounts.id.renderButton(alvo, { theme: 'filled_black', size: 'large', shape: 'rectangular', text: 'signin_with', locale: 'pt-BR', width: 250 });
+            }).catch((falha) => mostrarErroLogin(falha.message));
+        }
+        mostrarErroLogin('');
+        try { sessionStorage.setItem(CONVITE_VISTO, '1'); } catch { /* sem sessionStorage */ }
+        if (!convite.open) convite.showModal();
+    }
+
+    /** Na chegada: quem não entrou vê o convite uma vez por visita (não abre por cima de outra janela). */
+    function convidarNaChegada() {
+        let visto = false;
+        try { visto = sessionStorage.getItem(CONVITE_VISTO) === '1'; } catch { /* sem sessionStorage */ }
+        if (visto || !document.querySelector('[data-conta]') || document.querySelector('dialog[open]')) return;
+        abrirConvite();
     }
 
     function avatar(usuario, classe = 'conta-avatar') {
@@ -481,7 +502,7 @@
     }
 
     function abrirFicha(vista = 'minha') {
-        fecharBalao();
+        fecharConvite();
         if (!ficha) {
             ficha = el('dialog', 'ficha pagina-gibi');
             ficha.setAttribute('aria-label', 'Ficha do leitor');
@@ -509,7 +530,7 @@
             } else {
                 botao.append(icone('chave', '🔑', 'conta-chave'), el('span', 'conta-nome', 'Entrar'));
                 botao.setAttribute('aria-label', 'Entrar com Google');
-                botao.addEventListener('click', () => (balao ? fecharBalao() : balaoDeEntrada(slot)));
+                botao.addEventListener('click', abrirConvite);
             }
             slot.appendChild(botao);
         }
@@ -715,8 +736,8 @@
         get usuario() { return estado.usuario; },
         get dados() { return estado.dados; },
         get admin() { return estado.admin; },
-        /** Abre o balão "Entrar com Google" no espaço da conta da página. */
-        pedirLogin() { const slot = document.querySelector('[data-conta]:not([hidden])'); if (slot) balaoDeEntrada(slot); },
+        /** Abre o convite "Entrar com Google" no meio da tela. */
+        pedirLogin() { abrirConvite(); },
         abrirFicha,
         avatar,
         aoMudar(fn) { ouvintes.add(fn); return () => ouvintes.delete(fn); },
