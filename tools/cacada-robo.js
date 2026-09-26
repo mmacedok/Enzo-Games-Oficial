@@ -265,6 +265,44 @@ function resolver(def, de, ate, opcoes = {}) {
 }
 
 /**
+ * Prova por túnel: existe alguma sequência de tiles vazios (de lado, para cima ou para
+ * baixo) ligando `de` até `ate`, só dentro das `salas`? Ignora física, espinhos e o
+ * tamanho do Degustador (que tem 2 tiles de altura), então é mais generosa que o jogo:
+ * se nem ela passa, nenhum jeito de se mexer passa. Serve para travas que são parede
+ * (tampa do bueiro, grade, vidro), em salas grandes demais para a busca do robô esgotar.
+ */
+function temTunel(def, de, ate, opcoes = {}) {
+    const nivel = opcoes.nivel || C.carregarMundo(def);
+    const habilidades = new Set(opcoes.habilidades || []);
+    const quebrados = new Set();
+    for (const g of nivel.gruposB.values()) {
+        if ((g.letra === 'G' && habilidades.has('bigorna')) || (g.letra === 'Y' && habilidades.has('buzz'))) quebrados.add(g.id);
+    }
+    const mundo = { nivel, habilidades, abertos: new Set(opcoes.abertos || []), quebrados, arena: null, loja: new Set(opcoes.loja || []) };
+    const permitidas = new Set(opcoes.salas.map((id) => nivel.salaPorId.get(id).idx));
+    const W = nivel.largura;
+    const livre = (x, y) => x >= 0 && y >= 0 && x < W && y < nivel.altura
+        && permitidas.has(nivel.salaIdx[y * W + x]) && !C.solido(mundo, x, y);
+    const p = typeof de === 'string' ? ponto(nivel, de) : de;
+    const destino = typeof ate === 'string' ? alvo(nivel, ate) : ate;
+    const x0 = Math.floor((p.x + CONFIG.jogadorL / 2) / T);
+    const y0 = Math.floor((p.y + CONFIG.jogadorA - 1) / T);
+    const visto = new Uint8Array(W * nivel.altura);
+    const fila = [[x0, y0]];
+    visto[y0 * W + x0] = 1;
+    for (let i = 0; i < fila.length; i++) {
+        const [x, y] = fila[i];
+        if (C.colide({ x: x * T, y: y * T, w: T, h: T }, destino)) return true;
+        for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+            if (!livre(nx, ny) || visto[ny * W + nx]) continue;
+            visto[ny * W + nx] = 1;
+            fila.push([nx, ny]);
+        }
+    }
+    return false;
+}
+
+/**
  * Etapas da progressão: cada uma diz de onde a onde o jogador precisa
  * conseguir ir com as habilidades que já tem naquele momento.
  */
@@ -285,18 +323,36 @@ const ETAPAS = [
     { nome: 'Buzz! → Servidor Esquecido (chefe secreto)', de: 'alto:banco1', ate: 'servidor:chefe', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna', 'pipa', 'buzz'] },
 ];
 
-/** Portões de habilidade: sem ela, não passa (a busca esgota sem achar). */
+/**
+ * Portões de habilidade: sem ela, não passa. As de física pedem que a busca esgote sem
+ * achar; as de parede (`tunel`) pedem que nem um túnel de tiles ligue os dois lados, e
+ * que com o que está em `com` o túnel apareça (prova que a parede é a trava).
+ */
 const BLOQUEIOS = [
     { nome: 'sem dash não atravessa o vão do Beco', de: 'beco:banco1', ate: 'sala:esteira', habilidades: ['rajada'], salas: ['beco', 'esteira'] },
     { nome: 'sem Luvas não sobe a chaminé da Fábrica', de: 'fabrica:banco1', ate: 'sala:chamine2', habilidades: ['rajada', 'dash'], salas: ['fabrica', 'chamine2'] },
     { nome: 'sem Parênteses não atravessa o Telhado Alto', de: 'alto:banco1', ate: 'sala:covil', habilidades: ['rajada', 'dash', 'parede'], salas: ['alto', 'covil'] },
-    { nome: 'sem a Chave do Bueiro não entra no Esgoto', de: 'beco:banco1', ate: 'sala:boca', habilidades: ['rajada', 'dash'], salas: ['beco', 'boca'] },
-    { nome: 'sem Queda de Bigorna não entra na Feira', de: 'esconderijo:banco1', ate: 'sala:feira', habilidades: ['rajada', 'dash', 'parede', 'pulo2'], salas: ['esconderijo', 'telhados', 'feira'] },
-    { nome: 'sem Pipa não atravessa o Portal de Recados', de: 'parenteses:habilidade1', ate: 'sala:comunidades', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna'], salas: ['parenteses', 'portal', 'comunidades'] },
-    { nome: 'sem Buzz! não entra no Servidor Esquecido', de: 'alto:banco1', ate: 'sala:servidor', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna', 'pipa'], salas: ['alto', 'covil', 'servidor'] },
+    { nome: 'sem a Chave do Bueiro não entra no Esgoto', de: 'beco:banco1', ate: 'sala:boca', habilidades: ['rajada', 'dash'], salas: ['beco', 'boca'], tunel: true, com: { loja: ['chave'] } },
+    { nome: 'sem Queda de Bigorna não entra na Feira', de: 'esconderijo:banco1', ate: 'sala:feira', habilidades: ['rajada', 'dash', 'parede', 'pulo2'], salas: ['esconderijo', 'telhados', 'feira'], tunel: true, com: { habilidades: ['bigorna'] } },
+    // Só o Portal: nos Parênteses (paredes, plataformas) a busca não esgota. Parte da beirada
+    // e do alto da passagem que vem dos Parênteses, com pulo duplo e dash ainda guardados.
+    // Cada partida esgota com uns 2,8 milhões de nós (uns 6 minutos).
+    { nome: 'sem Pipa não atravessa o Portal de Recados', de: [{ x: 5120 + 7 * T, y: 14 * T + 360 - CONFIG.jogadorA + T }, { x: 5120 + 2, y: 360 + 10 * T }], ate: 'sala:comunidades', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna'], salas: ['portal', 'comunidades'], limite: 4000000 },
+    { nome: 'sem Buzz! não entra no Servidor Esquecido', de: 'alto:banco1', ate: 'sala:servidor', habilidades: ['rajada', 'dash', 'parede', 'pulo2', 'bigorna', 'pipa'], salas: ['alto', 'covil', 'servidor'], tunel: true, com: { habilidades: ['buzz'] } },
 ];
 
-module.exports = { resolver, ponto, alvo, ACOES, QUADROS_POR_ACAO, entradaDe, ETAPAS, BLOQUEIOS };
+/** Roda a busca de cada ponto de partida de `b.de` (um id, um ponto ou uma lista). */
+function resolverDeVarios(def, b, nivel) {
+    let nos = 0;
+    for (const de of Array.isArray(b.de) ? b.de : [b.de]) {
+        const r = resolver(def, de, b.ate, { ...b, nivel });
+        nos += r.nos;
+        if (r.ok || !r.esgotou) return { ...r, nos };
+    }
+    return { ok: false, esgotou: true, nos };
+}
+
+module.exports = { resolver, resolverDeVarios, temTunel, ponto, alvo, ACOES, QUADROS_POR_ACAO, entradaDe, ETAPAS, BLOQUEIOS };
 
 if (require.main === module) {
     const M = require('../js/cacada-mundo.js');
@@ -308,7 +364,7 @@ if (require.main === module) {
     }
     for (const b of BLOQUEIOS) {
         const inicio = Date.now();
-        const r = resolver(M, b.de, b.ate, { ...b, nivel });
+        const r = b.tunel ? { ok: temTunel(M, b.de, b.ate, { ...b, nivel }), esgotou: true, nos: 0 } : resolverDeVarios(M, b, nivel);
         const certo = !r.ok && r.esgotou;
         console.log(`${certo ? 'OK ' : 'FALHOU'} bloqueio: ${b.nome} (${r.ok ? 'PASSOU!' : r.esgotou ? 'esgotou' : 'limite'}; ${r.nos} nós, ${((Date.now() - inicio) / 1000).toFixed(1)} s)`);
     }
