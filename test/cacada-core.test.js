@@ -59,9 +59,9 @@ const SALA_LIVRE = [
 
 // ------------------------------------------------------------------ mundo
 
-test('o mundo carrega: 15 salas, sem sobreposição e com aberturas que batem', () => {
+test('o mundo carrega: 28 salas (15 + 13 da expansão), sem sobreposição e com aberturas que batem', () => {
     const nivel = C.carregarMundo(MUNDO);
-    assert.equal(nivel.salas.length, 15);
+    assert.equal(nivel.salas.length, 28);
     assert.deepEqual(C.aberturasSemPar(nivel), []);
     for (const s of nivel.salas) {
         assert.ok(MUNDO.areas[s.area], `${s.id}: área sem nome`);
@@ -71,12 +71,12 @@ test('o mundo carrega: 15 salas, sem sobreposição e com aberturas que batem', 
     assert.ok(nivel.lojas.length >= 1);
 });
 
-test('cada habilidade aparece uma vez no mundo e os dois chefes existem', () => {
+test('cada habilidade aparece uma vez no mundo e os seis chefes existem', () => {
     const nivel = C.carregarMundo(MUNDO);
     const habs = nivel.itens.filter((i) => i.tipo === 'habilidade').map((i) => i.habilidade).sort();
-    assert.deepEqual(habs, ['dash', 'parede', 'pulo2', 'rajada']);
+    assert.deepEqual(habs, ['bigorna', 'buzz', 'dash', 'parede', 'pipa', 'pulo2', 'rajada']);
     const chefes = nivel.salas.filter((s) => s.chefeDef).map((s) => s.chefeDef.tipo).sort();
-    assert.deepEqual(chefes, ['capangaMor', 'opressor']);
+    assert.deepEqual(chefes, ['capangaMor', 'coach', 'glitch', 'opressor', 'ratao', 'scrapeira']);
     // Os fragmentos espalhados pelo mundo completam pelo menos um cogumelo.
     assert.ok(nivel.itens.filter((i) => i.tipo === 'fragmento').length >= 4);
 });
@@ -351,6 +351,25 @@ test('Degustar: segurar cura 1 cogumelo e gasta 33 de Pontuação', () => {
     assert.equal(j.pontuacao, 40 - CONFIG.custoMagia);
     rodar(jogo, 1.2, { degustar: true });
     assert.equal(j.vida, 3, 'sem Pontuação não cura mais');
+});
+
+test('Degustar: o dash interrompe a cura e só volta a curar soltando a tecla', () => {
+    const jogo = jogoDe(SALA_LIVRE);
+    const j = jogo.jogador;
+    jogo.progresso.habilidades.add('dash');
+    j.vida = 2;
+    j.pontuacao = 99;
+    rodar(jogo, CONFIG.tempoDegustar * 0.8, { degustar: true });
+    assert.equal(j.estado, 'degustando');
+    rodar(jogo, DT, { degustar: true, dashPedido: true });
+    assert.equal(j.estado, 'dash', 'o dash sai da cura');
+    assert.equal(j.degustarT, 0, 'a carga da cura se perde');
+    rodar(jogo, CONFIG.tempoDegustar + 0.3, { degustar: true });
+    assert.equal(j.vida, 2, 'segurando direto não volta a curar');
+    assert.equal(j.pontuacao, 99);
+    rodar(jogo, 0.1, {});
+    rodar(jogo, CONFIG.tempoDegustar + 0.05, { degustar: true });
+    assert.equal(j.vida, 3, 'soltou e segurou de novo: cura');
 });
 
 test('Rajada: só com a habilidade, gasta 33 e atravessa inimigos', () => {

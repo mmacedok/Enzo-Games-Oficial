@@ -6,8 +6,8 @@
   "scripts": {
     "start": "concurrently \"node watch.js\" \"node server.js\"",
     "serve": "node server.js",
-    "build": "node atualizar.js",
-    "build:deploy": "node atualizar.js && node tools/dist.js && node tools/build-function.mjs",
+    "build": "node atualizar.js && node tools/cacada-artes.js",
+    "build:deploy": "node atualizar.js && node tools/cacada-artes.js && node tools/dist.js && node tools/build-function.mjs",
     "test": "node --test \"test/*.test.js\"",
     "qa": "node tools/qa.mjs",
     "qa:site": "node tools/qa-all.mjs",
