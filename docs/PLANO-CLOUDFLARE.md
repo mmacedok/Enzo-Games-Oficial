@@ -55,7 +55,7 @@ Coisas que só o Henrique pode fazer estão marcadas com **(H)**.
    `npm run build:cloudflare`, pasta `dist`. Variáveis: `DATABASE_URL` (Neon), `GOOGLE_CLIENT_ID`,
    `SESSION_SECRET` (a mesma do Netlify, para ninguém perder a sessão no banco), `ADMIN_EMAILS`.
 4. **Importante**: em *Preview deployments*, escolher **nenhum branch** (ou só `main`). Senão a
-   Cloudflare publica um link público para cada branch, **inclusive o `TCG` com o Baralho**.
+   Cloudflare publica um link público para cada branch, **inclusive o `TCG`, que não pode ficar público**.
 5. **(H)** No Google Cloud (login): adicionar `https://enzo-games.pages.dev` em *Origens JavaScript
    autorizadas*.
 6. Testar tudo no endereço `*.pages.dev` (login, recordes, leitor, admin, comentários).
