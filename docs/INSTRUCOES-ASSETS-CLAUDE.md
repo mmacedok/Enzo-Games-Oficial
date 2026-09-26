@@ -45,6 +45,17 @@ exemplo, duas mesas parecidas), pergunte antes de salvar.
 | `estado-iludido.png` | Ícone: coração com olhos de hipnose, círculo rosa | ~128, **transparente** |
 | `estado-escudo.png` | Ícone: parênteses dourados como escudo, círculo verde-água | ~128, **transparente** |
 
+**Imagens da parte 2** (plano em `docs/PLANO-BATALHA-COMPLETA.md`, seção 3; o jogo passa a usar
+quando o código dessa parte entrar, até lá elas só ficam guardadas):
+
+| Nome final em `assets/Batalha/` | O que é | Formato esperado |
+|---|---|---|
+| `fundo-menu.png` | Entrada da arena da Toradolândia | 1920×1080 |
+| `mapa-torneio.png` | Caminho com 7 plataformas subindo a caverna | 1536×1024 |
+| `rival-italolol.png`, `rival-hatsune-neves.png`, `rival-superkid.png`, `rival-degustador-da-noite.png`, `rival-o-inominavel.png` | Rosto de cada rival | quadrada, ~512 |
+| `caixa-turma.png`, `caixa-legiao.png`, `caixa-internet.png`, `caixa-herois.png`, `caixa-degustador.png`, `caixa-toradolandia.png` | Caixa de baralho de cada deck | ~768, **transparente** |
+| `vitoria.png`, `derrota.png` | Letreiros "VITÓRIA!" e "DERROTA..." | 1600×800, **transparente**; confira o texto |
+
 Qualquer outro nome o jogo **não usa** (a lista está em `js/batalha.js`, constante `ARTE`). Não
 invente nomes novos nem mude o código para aceitar outro nome.
 

@@ -221,7 +221,7 @@ animações (Web Animations API). O motor gera os eventos; uma **fila de animaç
 | 1 | Motor + testes | `tcg-regras.js`, `tcg-cartas.js`, 46 testes | **feito** |
 | 2 | Robô + simulador | `tcg-robo.js` (fácil/normal), `tools/tcg-simular.mjs`, Aura de Reforço | **feito** |
 | 3 | **Tela da batalha contra o NPC** | `batalha.html`: menu (3 decks prontos, NPC fácil/normal), preparação, mesa, painel da carta, mira com seta, fila de animações, fim de jogo; imagens com placeholder (`docs/BATALHA-ASSETS.md`) | **feito** (falta a arte e o QA de tela) |
-| 4 | **Montador de deck** (próximo) | aba "Batalha" na Ficha: montar e salvar decks (todas as cartas liberadas), deck pronto para quem não quer montar | |
+| 4 | **Montador de deck** (próximo; agora parte do plano em `docs/PLANO-BATALHA-COMPLETA.md`) | aba "Batalha" na Ficha: montar e salvar decks (todas as cartas liberadas), deck pronto para quem não quer montar | |
 | 5 | Tutorial | 1ª batalha guiada, passo a passo, contra o NPC fácil | |
 | 6 | Servidor e prêmios | rotas, semente, conferência da partida, créditos com limite diário, conquistas | |
 | 7 | Efeitos especiais | animação própria para cada ataque, fundos dos campos | |
