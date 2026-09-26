@@ -3,6 +3,12 @@
 > **Fica só no branch `TCG`** (ver `CLAUDE.md`). Escrito em 2026-09-26 a pedido do Henrique, com a
 > condição: **tudo no Netlify grátis**. Regras do jogo em `docs/PLANO-TCG.md`.
 
+> **Atualização 2026-09-26: o site saiu do Netlify e foi para a Cloudflare Pages grátis** (ver
+> `docs/PLANO-CLOUDFLARE.md`). O desenho abaixo continua valendo igual: a API roda no `_worker.js` da
+> Cloudflare (100 mil chamadas por dia, ~300 por partida) e o banco é o Neon. As seções 1 e 2 (cota do
+> Netlify) ficaram só como histórico. Durable Objects (tempo real) viram a fase opcional do fim, no
+> lugar de Ably/Pusher. O andamento e o próximo passo estão em `docs/CONTINUAR-MULTIPLAYER.md`.
+
 ## 0. Resumo em 5 linhas
 1. A batalha é **por turnos**, então não precisa de conexão em tempo real: dá para fazer com o que o
    site já tem (**Netlify Functions + banco Neon/Netlify DB + login do Google**), sem serviço novo.
