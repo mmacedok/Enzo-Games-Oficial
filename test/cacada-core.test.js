@@ -353,6 +353,25 @@ test('Degustar: segurar cura 1 cogumelo e gasta 33 de Pontuação', () => {
     assert.equal(j.vida, 3, 'sem Pontuação não cura mais');
 });
 
+test('Degustar: o dash interrompe a cura e só volta a curar soltando a tecla', () => {
+    const jogo = jogoDe(SALA_LIVRE);
+    const j = jogo.jogador;
+    jogo.progresso.habilidades.add('dash');
+    j.vida = 2;
+    j.pontuacao = 99;
+    rodar(jogo, CONFIG.tempoDegustar * 0.8, { degustar: true });
+    assert.equal(j.estado, 'degustando');
+    rodar(jogo, DT, { degustar: true, dashPedido: true });
+    assert.equal(j.estado, 'dash', 'o dash sai da cura');
+    assert.equal(j.degustarT, 0, 'a carga da cura se perde');
+    rodar(jogo, CONFIG.tempoDegustar + 0.3, { degustar: true });
+    assert.equal(j.vida, 2, 'segurando direto não volta a curar');
+    assert.equal(j.pontuacao, 99);
+    rodar(jogo, 0.1, {});
+    rodar(jogo, CONFIG.tempoDegustar + 0.05, { degustar: true });
+    assert.equal(j.vida, 3, 'soltou e segurou de novo: cura');
+});
+
 test('Rajada: só com a habilidade, gasta 33 e atravessa inimigos', () => {
     const mapa = SALA_LIVRE.map((l, i) => (i === 14 ? '#..S....c..c..................#' : l)).map((l) => l.slice(0, 30));
     const jogo = jogoDe(mapa);

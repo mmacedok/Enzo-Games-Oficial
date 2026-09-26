@@ -431,7 +431,7 @@
             estado: 'normal',    // 'normal' | 'dash' | 'degustando' | 'mergulho' | 'carregando' | 'buzz'
             lado: 0, plataforma: -1, descendo: 0,
             mergulhoT: 0, carga: 0, buzzT: 0, planando: false,
-            dashT: 0, dashLado: 1, dashRecarga: 0, dashDisponivel: true, puloDuploUsado: false,
+            soltarCura: false, dashT: 0, dashLado: 1, dashRecarga: 0, dashDisponivel: true, puloDuploUsado: false,
             recuo: 0, recuoVx: 0, atordoado: 0,
             vida: CONFIG.vidaInicial, pontuacao: 0, invencivel: 0,
             golpe: null, recargaGolpe: 0, recargaMagia: 0, degustarT: 0,
@@ -1801,7 +1801,15 @@
         const tempoDegustar = jogo.progresso.loja.has('lanche') ? CONFIG.tempoDegustarRapido : CONFIG.tempoDegustar;
         const coxinha = usa(jogo, 'coxinha');
         const custoCura = coxinha ? CONFIG.custoCoxinha : CONFIG.custoMagia;
-        const podeDegustar = e.degustar && j.noChao && j.pontuacao >= custoCura && j.vida < vidaTotal(jogo)
+        // Como no Hollow Knight, o dash interrompe a cura: perde a carga e só volta a curar
+        // depois de soltar e segurar a tecla de novo.
+        if (!e.degustar) j.soltarCura = false;
+        if (j.estado === 'degustando' && e.dashPedido && (hab.has('dash') || hab.has('buzz'))) {
+            j.estado = 'normal';
+            j.degustarT = 0;
+            j.soltarCura = true;
+        }
+        const podeDegustar = e.degustar && !j.soltarCura && j.noChao && j.pontuacao >= custoCura && j.vida < vidaTotal(jogo)
             && (j.estado === 'normal' || j.estado === 'degustando') && j.atordoado <= 0;
         if (podeDegustar) {
             if (j.estado !== 'degustando') jogo.eventos.push({ tipo: 'degustando', x: j.x + L / 2, y: j.y });
