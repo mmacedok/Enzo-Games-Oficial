@@ -20,15 +20,7 @@
     const avisar = () => { for (const fn of ouvintes) { try { fn(api); } catch (erro) { console.error(erro); } } };
 
     // ---------------------------------------------------------------- servidor
-    async function pedir(caminho, corpo, extra = {}) {
-        const opcoes = corpo === undefined
-            ? { credentials: 'same-origin', ...extra }
-            : { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo), ...extra };
-        const resposta = await fetch(caminho, opcoes);
-        let dados = null;
-        try { dados = await resposta.json(); } catch { /* resposta sem JSON */ }
-        return { ok: resposta.ok, status: resposta.status, dados };
-    }
+    const pedir = window.EnzoApi.pedir;
 
     const lerLocal = (chave) => { try { return localStorage.getItem(chave); } catch { return null; } };
     const gravarLocal = (chave, valor) => { try { localStorage.setItem(chave, valor); } catch { /* modo privado */ } };

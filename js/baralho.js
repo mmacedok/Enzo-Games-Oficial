@@ -41,15 +41,10 @@
     const semMovimento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const esperar = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
+    /** EnzoApi.pedir (js/api-cliente.js), mas sem conexão vira resposta em vez de erro. */
     async function pedir(caminho, corpo) {
-        const opcoes = corpo === undefined
-            ? { credentials: 'same-origin' }
-            : { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) };
         try {
-            const resposta = await fetch(caminho, opcoes);
-            let dados = null;
-            try { dados = await resposta.json(); } catch { /* sem JSON */ }
-            return { ok: resposta.ok, status: resposta.status, dados };
+            return await window.EnzoApi.pedir(caminho, corpo);
         } catch {
             return { ok: false, status: 0, dados: { error: 'sem conexão' } };
         }
@@ -115,7 +110,7 @@
         caixa.append(el('h3', '', '🚨 Alerta 🚨'), texto, campo, erro, acoes);
         caixa.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (campo.value.normalize('NFD').replace(/[̀-ͯ\s]/g, '').toLowerCase() !== 'copodelagrimas') {
+            if (!window.EnzoSenha.confere(campo.value)) {
                 erro.style.display = 'block';
                 campo.select();
                 return;

@@ -146,8 +146,6 @@
         plataforma: ['objetos/plataforma.png'],
         portao: ['objetos/portao.png'],
         serra: ['objetos/serra.png'],
-        telha: ['objetos/telha.png'],
-        telhaRachada: ['objetos/telha-rachada.png'],
         trilho: ['objetos/trilho.png'],
         saco: ['objetos/virgulas-saco.png'],
         // Interface.
@@ -497,17 +495,6 @@
             c.fillRect(0, 5, TL, 2);
             c.fillRect(3, 7, 2, 5); c.fillRect(15, 7, 2, 5);
         }),
-        telha: tileProntinho((c) => {
-            c.fillStyle = '#c0643b';
-            c.fillRect(0, 0, TL, TL);
-            c.fillStyle = '#e08a5a';
-            for (let x = 0; x < TL; x += 5) { c.beginPath(); c.arc(x + 2.5, 3, 2.5, Math.PI, 0); c.fill(); }
-            c.strokeStyle = '#5e2a14';
-            c.lineWidth = 1;
-            c.beginPath(); c.moveTo(4, 8); c.lineTo(9, 13); c.lineTo(7, 18); c.moveTo(13, 6); c.lineTo(15, 12); c.stroke();
-            c.strokeStyle = COR.tinta;
-            c.strokeRect(0.5, 0.5, TL - 1, TL - 1);
-        }),
         mola: tileProntinho((c) => {
             c.fillStyle = '#444';
             c.fillRect(2, 16, 16, 4);
@@ -811,7 +798,6 @@
                     else if (c === '^') ctx.drawImage(img, x, y, TL, TL);
                     else { ctx.save(); ctx.translate(x, y + TL); ctx.scale(1, -1); ctx.drawImage(img, 0, 0, TL, TL); ctx.restore(); }
                 }
-                else if (c === 'Q') desenharTelha(tx, ty, x, y);
             }
         }
     }
@@ -1011,31 +997,6 @@
         ctx.strokeStyle = COR.tinta;
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 0.5, y + amassa + 0.5, TL - 1, 9 - amassa);
-    }
-
-    function desenharTelha(tx, ty, x, y) {
-        const estado = jogo.caidas.get(`${tx},${ty}`);
-        const inteira = arte('telha');
-        const telha = (px, py, rachada) => {
-            const img = rachada ? arte('telhaRachada') || inteira : inteira;
-            if (img) ctx.drawImage(img, px, py - 4, TL, TL + 4);
-            else ctx.drawImage(TILES.telha, px, py);
-        };
-        if (!estado) { telha(x, y, false); return; }
-        if (estado.caiu) {
-            const t = estado.t - CONFIG.tempoTelha;
-            if (t < 0.4) {
-                ctx.globalAlpha = 1 - t / 0.4;
-                telha(x, y + t * 120, true);
-                ctx.globalAlpha = 1;
-            } else if (t > CONFIG.voltaTelha - 0.4) {
-                ctx.globalAlpha = 0.3;
-                telha(x, y, false);
-                ctx.globalAlpha = 1;
-            }
-            return;
-        }
-        telha(x + (calmo ? 0 : Math.sin(visual.tempo * 60) * 1.5), y, true);
     }
 
     const naTela = (x, y, margem = 60) => x > visual.cam.x - margem && x < visual.cam.x + W + margem && y > visual.cam.y - margem && y < visual.cam.y + H + margem;

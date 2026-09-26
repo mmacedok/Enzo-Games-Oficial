@@ -91,8 +91,6 @@
         amplitude: 60,
         raioSerra: 15,
         plataformaA: 8,
-        tempoTelha: 0.45,
-        voltaTelha: 3,
         vidaParede: 3,           // golpes para quebrar parede rachada
         virgulasBau: 15,
         // Queda de Bigorna (mergulho para baixo; quebra grades de bueiro)
@@ -180,7 +178,6 @@
         '#': 'parede / telhado (sólido)',
         'X': 'caixa de metal (sólido)',
         '=': 'marquise: atravessa por baixo, ↓ desce',
-        'Q': 'telha que desaba',
         'T': 'mola',
         '^': 'espinhos no chão',
         'v': 'espinhos no teto',
@@ -235,7 +232,7 @@
         'F': 'Fake (saco de vírgulas falso)',
         'n': 'Recado Cintilante (torre de brilho)',
     });
-    const FIXOS = new Set(['#', 'X', '=', 'Q', 'T', '^', 'v', 'B', 'P', '|', 'G', 'Y', 'Z', '~', 'w']);
+    const FIXOS = new Set(['#', 'X', '=', 'T', '^', 'v', 'B', 'P', '|', 'G', 'Y', 'Z', '~', 'w']);
     /** Blocos que quebram em grupo (vizinhos iguais quebram juntos). */
     const QUEBRAVEIS = new Set(['B', 'G', 'Y']);
     const INIMIGO_POR_LETRA = {
@@ -392,8 +389,8 @@
     }
 
     /**
-     * Sólido? `mundo` = { nivel, caidas?, quebrados?, abertos?, arena?, loja? } — o
-     * estado que muda (telhas caídas, paredes quebradas, portões abertos, luta,
+     * Sólido? `mundo` = { nivel, quebrados?, abertos?, arena?, loja? } — o
+     * estado que muda (paredes quebradas, portões abertos, luta,
      * Chave do Bueiro comprada).
      */
     function solido(mundo, tx, ty) {
@@ -401,7 +398,6 @@
         const c = tileEm(nivel, tx, ty);
         switch (c) {
             case '#': case 'X': case 'T': case 'r': return true;
-            case 'Q': return !(mundo.caidas && mundo.caidas.get(`${tx},${ty}`)?.caiu);
             case 'B': case 'G': case 'Y': return !(mundo.quebrados && mundo.quebrados.has(nivel.grupoB.get(ty * nivel.largura + tx)));
             case 'Z': return !(mundo.loja && mundo.loja.has('chave'));
             case 'P': return !(mundo.abertos && mundo.abertos.has(nivel.salas[nivel.salaIdx[ty * nivel.largura + tx]].id));
@@ -585,7 +581,7 @@
             j.semCorte = true;
             j.atordoado = 0;
             ev.push('mola');
-        } else if (pouso.c === 'Q' && mundo.pisarTelha) mundo.pisarTelha(pouso.tx, pouso.ty);
+        }
         return ev;
     }
 
@@ -799,7 +795,6 @@
             renovarAr(j);
             ev.push('mola');
         }
-        if (pouso && pouso.c === 'Q' && mundo.pisarTelha) mundo.pisarTelha(pouso.tx, pouso.ty);
         if (j.noChao) renovarAr(j);
 
         if (!travado && j.atordoado <= 0) detectarParede(mundo, j, hab, dir, e, ev);
@@ -948,7 +943,6 @@
             inimigos: [],
             tiros: [],
             projeteis: [],
-            caidas: new Map(),
             mortos: new Set(),
             vidaParedes: new Map(),
             cameos: [],
@@ -966,7 +960,6 @@
     function iniciar(jogo, save = null) {
         jogo.progresso = save ? importarSave(save) : progressoNovo();
         jogo.mortos = new Set();
-        jogo.caidas = new Map();
         jogo.vidaParedes = new Map();
         jogo.eventos = [];
         jogo.fimEm = 0;
@@ -999,7 +992,6 @@
     function mundoDo(jogo) {
         return {
             nivel: jogo.nivel,
-            caidas: jogo.caidas,
             quebrados: jogo.progresso.quebrados,
             abertos: jogo.progresso.abertos,
             arena: jogo.arena,
@@ -1010,10 +1002,6 @@
                 jogo.progresso.quebrados.add(id);
                 const letra = jogo.nivel.gruposB.get(id)?.letra;
                 jogo.eventos.push({ tipo: letra === 'Y' ? 'vidroQuebrou' : 'gradeQuebrou', x: tx * T + T / 2, y: ty * T + T / 2 });
-            },
-            pisarTelha(tx, ty) {
-                const k = `${tx},${ty}`;
-                if (!jogo.caidas.has(k)) jogo.caidas.set(k, { t: 0, caiu: false });
             },
         };
     }
@@ -1082,6 +1070,8 @@
         return {
             T,
             tempo: jogo.tempo,
+            gravidade: CONFIG.gravidade,
+            quedaMax: CONFIG.quedaMax,
             alvo: { x: j.x + L / 2, y: j.y + A / 2 },
             sala,
             rng: jogo.rng,
@@ -1246,7 +1236,6 @@
 
     function renascerNoBanco(jogo) {
         jogo.mortos.clear();
-        jogo.caidas.clear();
         jogo.arena = null;
         const banco = bancoSalvo(jogo);
         if (banco) {
@@ -1673,17 +1662,6 @@
         j.seguro = { x: j.x, y: j.y };
     }
 
-    function atualizarTelhas(jogo, dt) {
-        for (const [k, s] of jogo.caidas) {
-            s.t += dt;
-            if (!s.caiu && s.t >= CONFIG.tempoTelha) s.caiu = true;
-            if (s.caiu && s.t >= CONFIG.tempoTelha + CONFIG.voltaTelha) {
-                const [tx, ty] = k.split(',').map(Number);
-                if (!colide(caixa(jogo.jogador), { x: tx * T, y: ty * T, w: T, h: T })) jogo.caidas.delete(k);
-            }
-        }
-    }
-
     function atualizarInimigos(jogo, mundo, dt) {
         const novos = [];
         const c = contexto(jogo, mundo, novos);
@@ -1774,7 +1752,6 @@
                     j.estado = 'normal';
                     j.golpe = null;
                     j.noChao = true;
-                    jogo.caidas.clear();
                 }
                 if (jogo.faseT >= CONFIG.tempoPerigo) {
                     jogo.fase = 'jogando';
@@ -1809,7 +1786,6 @@
         j.invencivel = Math.max(0, j.invencivel - dt);
         j.recargaGolpe = Math.max(0, j.recargaGolpe - dt);
         j.recargaMagia = Math.max(0, j.recargaMagia - dt);
-        atualizarTelhas(jogo, dt);
 
         // Degustar: segurar para comer um lanche e curar 1 cogumelo.
         const tempoDegustar = jogo.progresso.loja.has('lanche') ? CONFIG.tempoDegustarRapido : CONFIG.tempoDegustar;

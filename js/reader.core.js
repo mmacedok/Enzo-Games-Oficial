@@ -396,62 +396,12 @@
     }
 
     // ---------------------------------------------------------------- password
-    let passwordReturnFocus = null;
+    /** Pede a senha do Cabo Côco; com a certa, tira as tarjas e dá a conquista. */
     function openPasswordModal() {
-        const overlay = qs('password-modal-overlay');
-        const input = qs('password-input');
-        const error = qs('password-error');
-        if (!overlay || !input) return;
-        input.value = '';
-        if (error) error.style.display = 'none';
-        passwordReturnFocus = document.activeElement;
-        overlay.style.display = 'flex';
-        input.focus();
-    }
-
-    function closePasswordModal() {
-        const overlay = qs('password-modal-overlay');
-        if (overlay) overlay.style.display = 'none';
-        passwordReturnFocus?.focus();
-    }
-
-    function setupPasswordModal() {
-        const overlay = qs('password-modal-overlay');
-        const input = qs('password-input');
-        const error = qs('password-error');
-        if (!overlay || !input || !error) return;
-        overlay.setAttribute('role', 'dialog');
-        overlay.setAttribute('aria-modal', 'true');
-        overlay.setAttribute('aria-label', 'Desbloquear conteúdo');
-        input.setAttribute('aria-label', 'Senha de acesso');
-        overlay.addEventListener('keydown', event => {
-            if (event.key === 'Escape') { event.preventDefault(); closePasswordModal(); }
-            if (event.key !== 'Tab') return;
-            const controls = [...overlay.querySelectorAll('input, button')];
-            const index = controls.indexOf(document.activeElement);
-            event.preventDefault(); controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus();
-        });
-
-        const check = () => {
-            const normalized = input.value.toLowerCase().replace(/\s/g, '');
-            if (normalized !== 'copodelagrimas') {
-                error.style.display = 'block';
-                input.value = '';
-                setTimeout(() => { error.style.display = 'none'; }, 2000);
-                return;
-            }
+        window.EnzoSenha?.pedir().then((confirmou) => {
+            if (!confirmou) return;
             unlockCensorship();
             conta()?.conquista('cabo-coco');
-            closePasswordModal();
-        };
-
-        qs('password-submit')?.addEventListener('click', check);
-        qs('password-cancel')?.addEventListener('click', closePasswordModal);
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') check();
-        });
-        overlay.addEventListener('click', (event) => {
-            if (event.target === overlay) closePasswordModal();
         });
     }
 
@@ -583,7 +533,7 @@
                     resetZoom();
                     break;
                 case 'Escape':
-                    closePasswordModal();
+                    window.EnzoSenha?.fechar();
                     break;
                 default:
                     break;
@@ -706,7 +656,6 @@
         } catch { /* sem sessionStorage */ }
         if (enteringFromComic) document.body.classList.add('enter-from-comic');
 
-        setupPasswordModal();
         setupEventListeners();
         updateZoomUI();
         conta()?.aoMudar(applyAccount);

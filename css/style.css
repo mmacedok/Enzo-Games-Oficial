@@ -716,9 +716,10 @@ a { color: var(--orange-light); text-decoration: none; }
 }
 @keyframes foil-drift { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
 
-/* Edição especial com efeito glitch (Capítulo 2) */
-.glitch-card .book-front { animation: signal-loss 2s infinite; }
-.glitch-card .book-cover { animation: glitch-skew 1.5s infinite linear alternate-reverse; }
+/* Edição especial com efeito glitch (Capítulo 2): capa normal; o glitch só roda com o mouse em cima
+   (ou com o foco do teclado). No celular, sem hover, fica a capa normal. */
+.glitch-card:is(:hover, :focus-visible) .book-front { animation: signal-loss 2s infinite; }
+.glitch-card:is(:hover, :focus-visible) .book-cover { animation: glitch-skew 1.5s infinite linear alternate-reverse; }
 .glitch-card .comic-cover-wrapper::after {
     content: '';
     position: absolute;
@@ -727,9 +728,10 @@ a { color: var(--orange-light); text-decoration: none; }
     background-position: center;
     z-index: 10;
     pointer-events: none;
-    animation: eye-swap 15s infinite;
+    opacity: 0;
 }
-.glitch-card .book-caption h3, .glitch-card .book-caption small { animation: text-glitch 2s infinite; }
+.glitch-card:is(:hover, :focus-visible) .comic-cover-wrapper::after { animation: eye-swap 15s infinite; }
+.glitch-card:is(:hover, :focus-visible) :is(.book-caption h3, .book-caption small) { animation: text-glitch 2s infinite; }
 
 .glitch-layer {
     position: absolute;
@@ -740,7 +742,9 @@ a { color: var(--orange-light); text-decoration: none; }
     mix-blend-mode: screen;
     pointer-events: none;
     z-index: 5;
+    display: none;
 }
+.glitch-card:is(:hover, :focus-visible) :is(.glitch-layer, .glitch-noise) { display: block; }
 .glitch-layer.cyan { background-color: cyan; animation: cyber-glitch-1 0.4s infinite steps(1); }
 .glitch-layer.red { background-color: red; animation: cyber-glitch-2 0.5s infinite steps(1); }
 
@@ -753,6 +757,7 @@ a { color: var(--orange-light); text-decoration: none; }
     mix-blend-mode: overlay;
     animation: noise-move 0.1s infinite;
     pointer-events: none;
+    display: none;
 }
 
 @keyframes signal-loss {
@@ -1420,29 +1425,28 @@ body.theme-degustador .section-title { color: var(--purple); }
 .batman-title[data-ronda-trigger]:focus-visible { outline: 3px solid var(--focus); outline-offset: 6px; }
 
 /* ================================================================ cursores */
-body { cursor: url('../assets/cursors/ponteiro-talheres.png') 5 2, default; }
+/* Uma lista só de itens clicáveis; cada tema troca as duas imagens pelas variáveis. */
+body {
+    --cursor-seta: url('../assets/cursors/ponteiro-talheres.png') 5 2, default;
+    --cursor-mao: url('../assets/cursors/mao-macarronada.png') 16 16, pointer;
+    cursor: var(--cursor-seta);
+}
+/* Tema Degustador: MP5K laranja; nos itens clicáveis, a cabeça do Degustador. */
+body.theme-degustador {
+    --cursor-seta: url('../assets/cursors/ponteiro-mp5k.png') 1 6, auto;
+    --cursor-mao: url('../assets/cursors/mao-degustador.png') 16 16, pointer;
+}
 body :is(a[href], button, select, [role="button"], [role="link"],
     .shelf-book, .hero-banner, .garfield-classic-logo, .character-card,
     .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask, .webtoon-image),
 body :is(a[href], button, select, [role="button"], [role="link"],
     .shelf-book, .hero-banner, .garfield-classic-logo, .character-card,
-    .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask) * {
-    cursor: url('../assets/cursors/mao-macarronada.png') 16 16, pointer;
+    .easter-egg-trigger, .macarronada-hotspot, .cabo-coco-mask) *,
+body.theme-degustador .game-canvas {
+    cursor: var(--cursor-mao);
 }
 body :is(input, textarea, [contenteditable="true"]) { cursor: text; }
 body :is(button, select, input):disabled { cursor: not-allowed; }
-
-/* Tema Degustador: MP5K laranja; nos itens clicáveis, a cabeça do Degustador. */
-body.theme-degustador {
-    cursor: url('../assets/cursors/ponteiro-mp5k.png') 1 6, auto;
-}
-body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
-    .shelf-book, .hero-banner, .easter-egg-trigger, .cabo-coco-mask, .webtoon-image, .game-canvas),
-body.theme-degustador :is(a[href], button, select, [role="button"], [role="link"],
-    .shelf-book, .hero-banner, .easter-egg-trigger, .cabo-coco-mask) * {
-    cursor: url('../assets/cursors/mao-degustador.png') 16 16, pointer;
-}
-body.theme-degustador :is(input, textarea, [contenteditable="true"]) { cursor: text; }
 
 /* ============================================================ responsivo */
 @media (max-width: 768px) {

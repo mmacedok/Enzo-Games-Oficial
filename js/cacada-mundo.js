@@ -3,7 +3,7 @@
 // Metroidvania: salas ligadas pelas bordas, agrupadas em áreas. x e y de cada
 // sala contam em "telas" de 32×18 tiles; o mapa é uma letra por tile de 20×20.
 // Legenda completa em CacadaCore.LEGENDA. Resumo:
-//   . vazio  # parede  X caixa  = marquise  Q telha  T mola  ^ v espinhos
+//   . vazio  # parede  X caixa  = marquise  T mola  ^ v espinhos
 //   B parede rachada  P portão  | grade da arena  O H U serras  M plataforma
 //   S início  b banco  i placa  N loja  I Inominável  , vírgulas  * fragmento
 //   1 Rajada  2 Capa (dash)  3 Luvas (parede)  4 Parênteses (pulo duplo)

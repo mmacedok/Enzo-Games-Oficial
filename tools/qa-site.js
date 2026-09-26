@@ -50,6 +50,7 @@
         input.value = 'errada'; document.querySelector('#password-submit').click();
         check(getComputedStyle(document.querySelector('#password-error')).display !== 'none', 'senha incorreta dá feedback');
         input.value = 'copodelagrimas'; document.querySelector('#password-submit').click();
+        await wait(0);   // o desbloqueio vem depois da promessa de js/senha.js
         check(locked.dataset.locked === 'false' && viewer.open, 'senha correta revela e abre ficha');
         viewer.close();
     }
