@@ -1818,34 +1818,10 @@ img.conta-chave { padding: 6px; object-fit: contain; }
 }
 .conta-botao:not(.conta-botao--logado) .conta-nome { color: var(--text); background: var(--danger); }
 
-/* Deslogado: balão de fala com o botão do Google */
-.conta-balao {
-    position: absolute;
-    top: calc(100% + 20px);
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    width: min(300px, calc(100vw - 32px));
-    padding: 24px 18px 16px;
-    text-align: center;
-    color: var(--ink);
-    background: var(--text);
-    border: var(--stroke);
-    border-radius: 30px;
-    box-shadow: var(--pop);
-    animation: balao-pop 0.3s var(--ease-pop) both;
-}
-/* Rabinho do balão apontando para o medalhão (nanquim por fora, papel por dentro) */
-.conta-balao::before,
-.conta-balao::after { content: ''; position: absolute; right: 30px; border-style: solid; border-color: transparent; }
-.conta-balao::before { top: -20px; border-width: 0 6px 20px 14px; border-bottom-color: var(--ink); }
-.conta-balao::after { top: -14px; right: 33px; border-width: 0 4px 15px 10px; border-bottom-color: var(--text); }
 .conta-balao-estouro {
     position: absolute;
-    top: -26px;
-    left: -18px;
+    top: 10px;
+    left: 10px;
     padding: 16px 20px;
     font-family: var(--font-heading);
     font-size: 1.2rem;
@@ -1854,8 +1830,14 @@ img.conta-chave { padding: 6px; object-fit: contain; }
     background: var(--danger);
     transform: rotate(-10deg);
 }
-.conta-balao-titulo { font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 1px; line-height: 1.05; }
-.conta-balao-texto { font-size: 0.85rem; font-weight: 700; line-height: 1.3; text-transform: uppercase; }
+/* Deslogado: convite no meio da tela (dialog .pagina-gibi) com o que o login libera */
+.conta-convite { width: min(460px, calc(100vw - 24px)); }
+.conta-convite[open] { align-items: center; gap: 12px; padding: 60px 22px 18px; text-align: center; }
+.conta-convite-titulo { margin: 0; font-family: var(--font-heading); font-size: clamp(1.5rem, 6vw, 2rem); letter-spacing: 1px; line-height: 1.05; }
+.conta-convite-lista { display: grid; gap: 6px; width: 100%; margin: 0; padding: 0; list-style: none; text-align: left; font-size: 0.95rem; line-height: 1.3; }
+.conta-convite-lista li { display: grid; grid-template-columns: 1.8em 1fr; column-gap: 6px; padding: 6px 10px; background: var(--paper); border: 2px solid var(--ink); border-radius: 4px; }
+.conta-convite-emoji { font-size: 1.3rem; line-height: 1.1; }
+.conta-convite-depois { padding: 6px 14px; font-weight: 700; color: var(--paper-ink); background: none; border: 0; text-decoration: underline; cursor: pointer; }
 .conta-google { display: flex; justify-content: center; min-height: 44px; }
 .conta-erro { font-size: 0.85rem; font-weight: 700; color: var(--danger); }
 @keyframes balao-pop { from { opacity: 0; transform: scale(0.6) rotate(-4deg); } }
@@ -1865,7 +1847,6 @@ img.conta-chave { padding: 6px; object-fit: contain; }
 .conta--ilha .conta-nome { display: none; }
 .conta--ilha .conta-chave,
 .conta--ilha .conta-avatar { width: 42px; height: 42px; font-size: 1.25rem; }
-.conta--ilha .conta-balao { top: calc(100% + 22px); right: -10px; }
 
 /* --------------------------------------------- Página de gibi (Ficha e Placar)
    <dialog class="pagina-gibi">: papel com retícula, contorno grosso, sombra

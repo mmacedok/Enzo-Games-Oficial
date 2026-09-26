@@ -13,6 +13,12 @@
     const B = window.EnzoBaralho;
     if (!B) return;
 
+    // Itens do Baralho no convite de login (js/auth-widget.js).
+    window.EnzoVantagensExtras = [
+        ['🃏', 'Baralho Enzo', 'pacotes de cartas com os créditos dos jogos, inventário e coleção'],
+        ['⚔️', 'Batalha dos Torados', 'jogue as suas cartas contra outros leitores'],
+    ];
+
     const ESTRELAS = { comum: '★', raro: '★★', epico: '★★★', lendario: '★★★★' };
     /** Rótulo do tipo na faixa (personagem não leva rótulo). */
     const TIPOS = { campo: 'Campo', goon: 'Capanga' };
