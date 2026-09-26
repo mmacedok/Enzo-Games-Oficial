@@ -225,7 +225,7 @@ animações (Web Animations API). O motor gera os eventos; uma **fila de animaç
 | 5 | Tutorial | 1ª batalha guiada, passo a passo, contra o NPC fácil | |
 | 6 | Servidor e prêmios | rotas, semente, conferência da partida, créditos com limite diário, conquistas | |
 | 7 | Efeitos especiais | animação própria para cada ataque; **arte primeiro** (`docs/BATALHA-EFEITOS.md`), código depois | arte em andamento |
-| 8 | Contra outro jogador | desafiar pela ficha pública, batalha pelo servidor | depois |
+| 8 | Contra outro jogador | plano completo em `docs/PLANO-MULTIPLAYER.md` (sala com código, servidor juiz, polling no Netlify grátis) | planejado |
 | 9 | Conteúdo novo | cartas de **Truque** (itens: Macarronada cura 30, Bala "Blasfêmia"...), cores de Aura e fraquezas | depois |
 
 ## 7. O que a carta precisa mostrar
