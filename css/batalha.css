@@ -1,0 +1,674 @@
+/* ==========================================================================
+   Batalha dos Torados (batalha.html). Carregado depois do style.css.
+   Tamanhos das cartas em variáveis na .bt-mesa; fundos de campo são placeholders
+   em CSS até existir a arte (js/batalha.js, ARTE; docs/BATALHA-ASSETS.md).
+   ========================================================================== */
+
+.pagina-batalha {
+    min-height: 100dvh;
+    background: #121212;
+    overflow-x: hidden;
+}
+.bt-topo { padding-block: 6px; }
+.batalha {
+    position: relative;
+    min-height: calc(100dvh - 56px);
+    color: var(--text);
+    font-family: var(--font-sans);
+}
+.batalha .carta-tcg-tarja { cursor: inherit; }
+:where(.batalha) button { font: inherit; color: inherit; }
+
+/* ------------------------------------------------------------------ menu */
+.bt-menu {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 12px 16px 40px;
+    text-align: center;
+}
+@media (max-width: 700px) { .bt-menu { padding-top: 60px; } }
+.bt-logo { margin: 4px 0 6px; line-height: 0.9; font-family: var(--font-logo); font-weight: 400; }
+.bt-logo img { width: min(560px, 90vw); height: auto; }
+.bt-logo span { display: block; color: var(--caution); -webkit-text-stroke: 2px var(--ink); text-shadow: 4px 4px 0 var(--ink); }
+.bt-logo-cima { font-size: clamp(1.4rem, 5vw, 2.4rem); transform: rotate(-3deg); }
+.bt-logo-baixo { font-size: clamp(3rem, 14vw, 6.5rem); color: var(--orange-light) !important; transform: rotate(-3deg); }
+.bt-menu-sub { margin: 10px 0 0; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 400; letter-spacing: 1px; color: var(--caption); }
+.bt-decks, .bt-rivais {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+@media (max-width: 560px) {
+    .bt-decks { grid-template-columns: 1fr; }
+    .bt-rivais { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+}
+.bt-deck, .bt-rival {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 12px 10px;
+    color: var(--paper-ink);
+    background: var(--halftone), var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 10px;
+    box-shadow: 4px 4px 0 var(--ink);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.bt-deck:hover, .bt-rival:hover:not(:disabled) { transform: translateY(-3px) rotate(-1deg); box-shadow: 6px 7px 0 var(--ink); }
+.bt-deck--ativo { background: var(--halftone), var(--caption); transform: rotate(-1deg); outline: 4px solid var(--orange); outline-offset: 2px; }
+.bt-deck-leque { display: flex; justify-content: center; width: 100%; height: 108px; margin-bottom: 4px; }
+.bt-deck-leque .carta-tcg { width: 64px; flex: none; box-shadow: 2px 2px 0 var(--ink); }
+.bt-deck-leque .carta-tcg:nth-child(1) { transform: rotate(-12deg) translate(14px, 8px); }
+.bt-deck-leque .carta-tcg:nth-child(2) { z-index: 1; }
+.bt-deck-leque .carta-tcg:nth-child(3) { transform: rotate(12deg) translate(-14px, 8px); }
+.bt-deck-nome { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 400; letter-spacing: 0.5px; }
+.bt-deck-texto { font-size: 0.9rem; font-weight: 700; }
+.bt-rival strong { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; }
+.bt-rival span:last-child { font-size: 0.85rem; font-weight: 700; }
+.bt-rival-rosto { font-size: 2.2rem; line-height: 1; }
+.bt-rival--forte { background: var(--halftone), var(--orange-light); }
+.bt-rival:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+.bt-link {
+    margin-top: 8px;
+    padding: 8px 16px;
+    font-weight: 700;
+    color: var(--caption);
+    background: none;
+    border: 2px dashed var(--caption);
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ mesa */
+.bt-mesa {
+    --w-ativo: min(clamp(84px, 26vw, 150px), 12.5vh);
+    --w-banco: min(clamp(60px, 18vw, 104px), 9.5vh);
+    --w-mao: min(clamp(62px, 17vw, 108px), 10vh);
+    --w-campo: min(clamp(48px, 12vw, 80px), 7.5vh);
+    --gap: clamp(5px, 1.3vw, 12px);
+    position: relative;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto auto;
+    gap: var(--gap);
+    max-width: 980px;
+    min-height: calc(100dvh - 12px);
+    margin: 0 auto;
+    padding: 8px 10px 12px;
+    overflow: hidden;
+    isolation: isolate;
+    border-inline: 3px solid var(--ink);
+}
+.bt-fundo {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle, rgba(0, 0, 0, 0.18) 1px, transparent 1.6px) 0 0 / 8px 8px,
+        radial-gradient(ellipse at 50% 50%, #2f7d50 0%, #1b4d31 55%, #0e2a1b 100%);
+    background-size: 8px 8px, cover;
+    background-position: center;
+}
+.bt-fundo--novo { z-index: -1; }
+.bt-fundo--arte { background-size: cover !important; background-repeat: no-repeat; }
+.bt-fundo--arte::after { content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.35); }
+/* Placeholders dos campos (até a arte existir). */
+.bt-fundo[data-campo="piscina-de-macarronada"]:not(.bt-fundo--arte) {
+    background:
+        radial-gradient(circle at 20% 30%, #8b1a0a 0 18px, transparent 19px),
+        radial-gradient(circle at 70% 65%, #8b1a0a 0 24px, transparent 25px),
+        radial-gradient(circle at 45% 80%, #8b1a0a 0 14px, transparent 15px),
+        repeating-radial-gradient(circle at 50% 50%, #ffb347 0 6px, #e0301e 6px 12px),
+        #e0301e;
+}
+.bt-fundo[data-campo="toradolandia"]:not(.bt-fundo--arte) {
+    background:
+        radial-gradient(ellipse at 50% 110%, #6a2bd9 0%, transparent 60%),
+        radial-gradient(circle at 80% 20%, rgba(31, 158, 144, 0.5), transparent 40%),
+        linear-gradient(180deg, #120a24, #2c1257);
+}
+.bt-fundo[data-campo="mansao-do-inominavel"]:not(.bt-fundo--arte) {
+    background:
+        radial-gradient(circle at 80% 15%, #f0e6c8 0 28px, transparent 30px),
+        linear-gradient(160deg, transparent 45%, rgba(255, 255, 255, 0.25) 46%, transparent 47%),
+        linear-gradient(180deg, #2a1f3d, #0d0a14);
+}
+.bt-fundo[data-campo="estacionamento-noturno"]:not(.bt-fundo--arte) {
+    background:
+        repeating-linear-gradient(90deg, transparent 0 124px, rgba(255, 204, 0, 0.35) 124px 127px),
+        radial-gradient(ellipse at 50% 0%, rgba(255, 255, 200, 0.25), transparent 50%),
+        linear-gradient(180deg, #2b3238, #15191c);
+}
+.bt-fundo[data-campo="casa-do-enzo-games"]:not(.bt-fundo--arte) {
+    background:
+        radial-gradient(circle at 85% 18%, rgba(255, 225, 77, 0.8) 0 30px, transparent 32px),
+        linear-gradient(180deg, #ff9900 0%, #e65100 60%, #b3471d 100%);
+}
+.bt-fundo[data-campo="sao-joao-do-butico"]:not(.bt-fundo--arte) {
+    background:
+        repeating-linear-gradient(90deg, #ff6f91 0 30px, #ffd54a 30px 60px, #1f9e90 60px 90px, #8cc8ff 90px 120px) bottom / 100% 30% no-repeat,
+        linear-gradient(180deg, #1f9e90, #ff6f91);
+}
+
+/* ------------------------------------------------------------------ lados */
+.bt-lado {
+    display: grid;
+    grid-template-columns: var(--w-ativo) repeat(3, var(--w-banco));
+    grid-template-areas: "info info info info" "ativo b1 b2 b3";
+    align-items: end;
+    justify-content: center;
+    column-gap: var(--gap);
+    row-gap: 6px;
+}
+.bt-lado--eu { grid-template-areas: "ativo b1 b2 b3" "info info info info"; align-items: start; }
+.bt-lado .bt-info { grid-area: info; justify-self: center; width: min(520px, calc(100vw - 28px)); }
+.bt-lado .bt-vaga--ativo { grid-area: ativo; }
+.bt-lado .bt-banco { display: contents; }
+.bt-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+}
+.bt-lado--vez .bt-info { box-shadow: 0 0 0 3px var(--caution), 0 0 18px rgba(255, 204, 0, 0.6); }
+.bt-rosto {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    font-size: 1.3rem;
+    background: var(--surface-2) center / cover no-repeat;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+}
+.bt-nome { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 400; letter-spacing: 0.5px; }
+.bt-pontos { display: flex; gap: 4px; }
+.bt-ponto {
+    width: 16px;
+    height: 16px;
+    background: #333;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 2px #555;
+}
+.bt-ponto--feito { background: var(--caution); box-shadow: 0 0 10px var(--caution); }
+.bt-contador { font-size: 0.85rem; font-weight: 700; opacity: 0.9; }
+
+/* Vagas */
+.bt-vaga {
+    position: relative;
+    aspect-ratio: 63 / 88;
+    border: 2px dashed rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+}
+.bt-vaga:has(.bt-carta) { border-color: transparent; }
+.bt-vaga--ativo { width: var(--w-ativo); }
+.bt-vaga--banco { width: var(--w-banco); }
+.bt-vaga--ativo::before {
+    content: 'ATIVO';
+    position: absolute;
+    inset: auto 0 -1.1em;
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-align: center;
+    opacity: 0.55;
+}
+.bt-lado--npc .bt-vaga--ativo::before { inset: -1.2em 0 auto; }
+
+/* ------------------------------------------------------------------ centro */
+.bt-centro {
+    display: grid;
+    grid-template-columns: var(--w-campo) 1fr;
+    align-items: center;
+    gap: 10px;
+    padding-inline: 4px;
+}
+.bt-vaga--campo { width: var(--w-campo); }
+.bt-vaga-rotulo {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    opacity: 0.5;
+}
+.bt-dica {
+    margin: 0;
+    padding: 6px 12px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--caption);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 3px 3px 0 var(--ink);
+    transform: rotate(-1deg);
+    justify-self: start;
+}
+.bt-dica:empty { display: none; }
+
+/* ------------------------------------------------------------------ cartas */
+.bt-carta {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, filter 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.bt-carta:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.bt-carta .carta-tcg { pointer-events: none; }
+.bt-carta .carta-tcg-tarja { pointer-events: auto; }
+.bt-carta--pode { animation: bt-pode 1.4s ease-in-out infinite; }
+@keyframes bt-pode {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.9), 0 0 10px rgba(255, 204, 0, 0.5); }
+    50% { box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.9), 0 0 22px rgba(255, 204, 0, 0.9); }
+}
+.bt-carta--alvo { cursor: crosshair; animation: bt-alvo 0.9s ease-in-out infinite; }
+@keyframes bt-alvo {
+    0%, 100% { box-shadow: 0 0 0 3px #ff3b30, 0 0 12px #ff3b30; }
+    50% { box-shadow: 0 0 0 5px #ff3b30, 0 0 26px #ff3b30; }
+}
+.bt-carta--apagada { filter: grayscale(0.8) brightness(0.6); cursor: not-allowed; }
+.bt-carta--ativo-escolhido, .bt-carta--banco-escolhido { transform: translateY(-14px); }
+.bt-carta--ativo-escolhido { box-shadow: 0 0 0 4px var(--orange), 0 0 20px var(--orange); }
+.bt-carta--banco-escolhido { box-shadow: 0 0 0 4px #4fc3f7, 0 0 16px #4fc3f7; }
+.bt-carta--ativo-escolhido::after, .bt-carta--banco-escolhido::after {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    z-index: 3;
+    padding: 1px 6px;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    transform: translateX(-50%);
+}
+.bt-carta--ativo-escolhido::after { content: 'ATIVO'; background: var(--orange); }
+.bt-carta--banco-escolhido::after { content: 'BANCO'; background: #4fc3f7; }
+.bt-carta--ferida .carta-tcg { filter: brightness(1.6) sepia(1) hue-rotate(-40deg) saturate(4); }
+.bt-carta--atacando { z-index: 20; }
+
+/* HUD: HP, Aura e estados por cima da carta */
+.bt-hud { position: absolute; inset: 0; pointer-events: none; }
+.bt-hud[hidden] { display: none; }
+.bt-hp {
+    position: absolute;
+    right: -6px;
+    bottom: -6px;
+    z-index: 2;
+    min-width: 2.2em;
+    padding: 1px 6px;
+    font-family: var(--font-heading);
+    font-size: clamp(0.8rem, 2.6vw, 1.15rem);
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(90deg, #2e9d4f var(--vida, 100%), #5a1010 var(--vida, 100%));
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    box-shadow: 2px 2px 0 var(--ink);
+    text-shadow: 1px 1px 0 var(--ink);
+}
+.bt-hp--baixo { background: linear-gradient(90deg, #d32f2f var(--vida, 100%), #3a0a0a var(--vida, 100%)); }
+.bt-auras { position: absolute; left: -4px; bottom: -4px; z-index: 2; display: flex; flex-wrap: wrap; gap: 2px; max-width: 70%; }
+.bt-aura-pip {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle at 35% 35%, #fff9c4, #ffcc00 50%, #e65100);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    box-shadow: 0 0 6px #ffcc00;
+}
+.bt-aura-pip--nova { animation: bt-pip 0.5s ease-out; }
+@keyframes bt-pip { from { transform: scale(2.5); } to { transform: scale(1); } }
+.bt-estados { position: absolute; top: -8px; right: -6px; z-index: 2; display: flex; gap: 2px; }
+.bt-estado {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    font-size: 0.8rem;
+    font-style: normal;
+    background: #fff center / cover no-repeat;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    box-shadow: 1px 1px 0 var(--ink);
+}
+
+/* ------------------------------------------------------------------ mãos */
+.bt-mao { display: flex; justify-content: center; align-items: flex-end; }
+.bt-mao--eu { min-height: calc(var(--w-mao) * 88 / 63 + 8px); padding: 0 12px; }
+.bt-mao--eu .bt-carta { width: var(--w-mao); flex: none; transition: transform 0.15s ease, box-shadow 0.2s ease; }
+.bt-mao--eu .bt-carta + .bt-carta { margin-left: calc(var(--w-mao) * -0.18); }
+@media (hover: hover) {
+    .bt-mao--eu .bt-carta:hover { z-index: 5; transform: translateY(-16px) scale(1.12); }
+}
+.bt-mao--npc { gap: 0; margin-left: auto; }
+.bt-mao--npc .carta-tcg { width: 22px; flex: none; border-width: 2px; box-shadow: none; }
+.bt-mao--npc .carta-tcg + .carta-tcg { margin-left: -12px; }
+.bt-mao--npc .carta-tcg-verso-marca, .bt-mao--npc .carta-tcg-verso-selo { display: none; }
+
+/* ------------------------------------------------------------------ ações */
+.bt-aura {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    margin-left: auto;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+.bt-aura:disabled { cursor: default; filter: grayscale(1) brightness(0.6); }
+.bt-orbe {
+    display: block;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle at 35% 30%, #fffde7, #ffcc00 40%, #ff6f00 75%, #8a2be2) center / cover no-repeat;
+    border: 3px solid var(--ink);
+    border-radius: 50%;
+    box-shadow: 0 0 12px #ffcc00;
+}
+.bt-aura--pronta .bt-orbe { animation: bt-orbe 1.3s ease-in-out infinite; }
+.bt-aura--mirando .bt-orbe { box-shadow: 0 0 0 4px #fff, 0 0 26px #ffcc00; }
+@keyframes bt-orbe { 50% { transform: scale(1.12) rotate(20deg); box-shadow: 0 0 24px #ffcc00; } }
+.bt-aura-qtd {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    min-width: 18px;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+}
+.bt-aura-qtd:empty { display: none; }
+.bt-passar, .bt-cancelar, .bt-botao {
+    padding: 8px 16px;
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    color: var(--ink);
+    background: var(--orange-light);
+    border: 3px solid var(--ink);
+    border-radius: 8px;
+    box-shadow: 3px 3px 0 var(--ink);
+    cursor: pointer;
+}
+.bt-passar:disabled, .bt-botao:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.bt-passar:not(:disabled):hover, .bt-botao:not(:disabled):hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.bt-cancelar { background: #e0e0e0; }
+.bt-pronto { margin-left: auto; background: var(--caution); }
+.bt-botao { font-size: 1rem; background: var(--paper); }
+.bt-botao--forte { background: var(--caution); }
+
+.bt-menu-jogo { position: absolute; top: 8px; right: 10px; z-index: 6; display: flex; gap: 4px; }
+.bt-icone {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    cursor: pointer;
+}
+@media (max-width: 1000px) { .bt-lado--npc .bt-info { padding-right: 162px; } }
+.bt-log {
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    z-index: 7;
+    display: none;
+    width: min(320px, calc(100% - 20px));
+    max-height: 50%;
+    margin: 0;
+    padding: 8px 10px 8px 26px;
+    overflow: auto;
+    font-size: 0.85rem;
+    color: var(--paper-ink);
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 8px;
+    box-shadow: 4px 4px 0 var(--ink);
+}
+.bt-log--aberto { display: block; }
+.bt-log li + li { margin-top: 3px; }
+
+/* ------------------------------------------------------------------ painel da carta */
+.bt-painel {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: minmax(110px, 34%) 1fr;
+    gap: 14px;
+    max-height: 86%;
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+    overflow: auto;
+    color: var(--paper-ink);
+    background: var(--halftone), var(--paper);
+    border-top: 4px solid var(--ink);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.6);
+}
+.bt-painel[hidden] { display: none; }
+.bt-painel-carta { align-self: start; max-width: 240px; }
+.bt-painel-info h3 { margin: 0 32px 6px 0; font-family: var(--font-heading); font-size: 1.6rem; font-weight: 400; letter-spacing: 0.5px; }
+.bt-painel-fechar {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    font-size: 1.4rem;
+    line-height: 1;
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    cursor: pointer;
+}
+.bt-painel-stats { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.bt-tag { padding: 2px 8px; font-size: 0.85rem; font-weight: 700; background: #fff; border: 2px solid var(--ink); border-radius: 999px; }
+.bt-tag--hp { color: #fff; background: #2e9d4f; }
+.bt-tag--aura { background: var(--caution); }
+.bt-painel-poder, .bt-painel-campo { margin: 0 0 8px; padding: 6px 10px; background: #efe3ff; border: 2px solid var(--ink); border-radius: 6px; }
+.bt-painel-campo { background: #fff0c2; }
+.bt-painel-frase { margin: 10px 0 0; font-style: italic; opacity: 0.8; }
+.bt-ataques { display: grid; gap: 8px; }
+.bt-ataque {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "custo nome dano" "texto texto texto" "motivo motivo motivo";
+    align-items: center;
+    column-gap: 8px;
+    padding: 8px 10px;
+    text-align: left;
+    color: var(--paper-ink) !important;
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 8px;
+    box-shadow: 3px 3px 0 var(--ink);
+    cursor: pointer;
+}
+.bt-ataque:not(:disabled):hover { background: var(--caption); transform: translate(-1px, -1px); }
+.bt-ataque:disabled { cursor: default; box-shadow: none; opacity: 0.8; }
+.bt-custo { grid-area: custo; display: flex; gap: 2px; }
+.bt-ataque-nome { grid-area: nome; font-family: var(--font-heading); font-size: 1.15rem; font-weight: 400; letter-spacing: 0.5px; }
+.bt-ataque-dano { grid-area: dano; font-family: var(--font-heading); font-size: 1.4rem; color: #c62828; }
+.bt-ataque-texto { grid-area: texto; font-size: 0.85rem; }
+.bt-ataque-texto:empty { display: none; }
+.bt-motivo { grid-area: motivo; margin-top: 2px; font-size: 0.8rem; font-weight: 700; color: #b71c1c; }
+.bt-painel-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+@media (max-width: 520px) {
+    .bt-painel { grid-template-columns: 1fr; }
+    .bt-painel-carta { justify-self: center; width: 42%; }
+}
+
+/* ------------------------------------------------------------------ efeitos */
+.bt-efeitos { position: absolute; inset: 0; z-index: 25; pointer-events: none; }
+.bt-seta {
+    position: absolute;
+    inset: 0;
+    z-index: 24;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
+}
+.bt-seta--viva { opacity: 1; }
+.bt-seta path { fill: none; stroke: #ff3b30; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 14 10; filter: drop-shadow(2px 2px 0 #111); }
+.bt-seta marker path { fill: #ff3b30; stroke: none; }
+.bt-balao {
+    position: absolute;
+    padding: 6px 12px;
+    font-family: var(--font-heading);
+    font-size: clamp(0.95rem, 3vw, 1.4rem);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    color: var(--ink);
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    box-shadow: 3px 3px 0 var(--ink);
+    transform: translate(-50%, -110%) rotate(-3deg);
+}
+.bt-balao--ataque { background: var(--caution); }
+.bt-balao--nocaute { color: #fff; background: #d32f2f; font-size: clamp(1.2rem, 4vw, 2rem); }
+.bt-balao--estado { background: #efe3ff; }
+.bt-balao--poder { background: #b2ebf2; }
+.bt-balao--erro { font-family: var(--font-sans); font-weight: 700; background: #ffcdd2; }
+.bt-numero {
+    position: absolute;
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 7vw, 3.4rem);
+    -webkit-text-stroke: 2px var(--ink);
+    text-shadow: 3px 3px 0 var(--ink);
+    transform: translate(-50%, -50%);
+}
+.bt-numero--dano { color: #ff3b30; }
+.bt-numero--cura { color: #69f0ae; }
+.bt-voo { position: absolute; transform: translate(-50%, -50%); }
+.bt-banner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    padding: 8px 26px;
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 9vw, 4rem);
+    letter-spacing: 2px;
+    white-space: nowrap;
+    color: var(--ink);
+    background: var(--caption);
+    border: 4px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
+    transform: translate(-50%, -50%) rotate(-4deg);
+}
+.bt-banner--eu { background: var(--orange-light); }
+.bt-banner--campo { font-size: clamp(1.4rem, 6vw, 2.6rem); background: #fff; }
+.bt-moeda {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    transform: translate(-50%, -50%);
+    perspective: 600px;
+}
+.bt-moeda-disco { position: relative; width: 96px; height: 96px; transform-style: preserve-3d; }
+.bt-moeda-face {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    color: var(--ink);
+    background: radial-gradient(circle at 35% 30%, #fff8dc, var(--gold) 55%, #b8860b) center / cover;
+    border: 4px solid var(--ink);
+    border-radius: 50%;
+    backface-visibility: hidden;
+}
+.bt-moeda-face--coroa { transform: rotateY(180deg); background-color: #cfd8dc; }
+.bt-moeda-rotulo { font-family: var(--font-heading); font-size: 1.6rem; color: var(--caution); text-shadow: 2px 2px 0 var(--ink); }
+
+/* ------------------------------------------------------------------ fim */
+.bt-fim {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.72);
+}
+.bt-fim-miolo {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 22px 28px;
+    color: var(--paper-ink);
+    text-align: center;
+    background: var(--halftone), var(--paper);
+    border: 4px solid var(--ink);
+    border-radius: 12px;
+    box-shadow: 8px 8px 0 var(--ink);
+}
+.bt-fim-titulo { margin: 0; font-family: var(--font-logo); font-size: clamp(2.6rem, 11vw, 4.6rem); font-weight: 400; -webkit-text-stroke: 2px var(--ink); }
+.bt-fim--vitoria .bt-fim-titulo { color: var(--caution); }
+.bt-fim--derrota .bt-fim-titulo { color: #9e9e9e; }
+.bt-fim--empate .bt-fim-titulo { color: var(--orange-light); }
+.bt-fim p { margin: 0; font-weight: 700; }
+.bt-fim-placar { font-family: var(--font-heading); font-size: 1.4rem; }
+.bt-fim-acoes { display: flex; gap: 10px; margin-top: 10px; }
+.bt-confete {
+    position: absolute;
+    top: -20px;
+    width: 10px;
+    height: 16px;
+    background: var(--cor);
+    border: 1px solid var(--ink);
+    animation: bt-confete 2.6s linear infinite;
+}
+@keyframes bt-confete { to { transform: translateY(110vh) rotate(720deg); } }
+
+/* ------------------------------------------------------------------ regras */
+dialog.bt-regras {
+    width: min(560px, calc(100% - 32px));
+    max-height: 86vh;
+    padding: 18px 20px;
+    color: var(--paper-ink);
+    background: var(--halftone), var(--paper);
+    border: 4px solid var(--ink);
+    border-radius: 12px;
+    box-shadow: 8px 8px 0 var(--ink);
+}
+dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
+.bt-regras h2 { margin: 0 0 8px; font-family: var(--font-heading); font-size: 2rem; font-weight: 400; }
+.bt-regras-texto p { margin: 0 0 8px; line-height: 1.35; }
+
+@media (prefers-reduced-motion: reduce) {
+    .bt-carta--pode, .bt-carta--alvo, .bt-aura--pronta .bt-orbe, .bt-confete { animation: none; }
+}

@@ -3213,3 +3213,21 @@ dialog.baralho-senha::backdrop { background: transparent; }
 
 /* Carta grande: o dedo inclina a carta em vez de rolar a tela. */
 .carta-zoom .juice-balanca { touch-action: none; }
+
+/* Atalho da aba Baralho para a Batalha dos Torados (batalha.html) */
+.baralho-batalha {
+    grid-column: 1 / -1;
+    display: block;
+    padding: 10px 14px;
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    letter-spacing: 0.5px;
+    text-align: center;
+    color: var(--ink);
+    text-decoration: none;
+    background: var(--halftone), var(--caution);
+    border: 3px solid var(--ink);
+    border-radius: 8px;
+    box-shadow: 3px 3px 0 var(--ink);
+}
+.baralho-batalha:hover { transform: translate(-1px, -1px) rotate(-0.5deg); box-shadow: 5px 5px 0 var(--ink); }

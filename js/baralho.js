@@ -77,8 +77,8 @@
         aviso.appendChild(el('small', '', 'em 456 países'));
         faixa.appendChild(aviso);
         faixa.addEventListener('click', (e) => {
-            // Na abertura o clique é da pilha de cartas (arrastar / virar), não da senha.
-            if (card.closest('.abertura')) return;
+            // Na abertura e na batalha o clique é da carta (arrastar, virar, jogar), não da senha.
+            if (card.closest('.abertura, .batalha')) return;
             e.stopPropagation();
             pedirSenha(def);
         });
@@ -567,7 +567,9 @@
             faixa.setAttribute('role', aviso.tipo === 'erro' ? 'alert' : 'status');
             grade.appendChild(faixa);
         }
-        grade.append(quadroCarteira(), quadroInventario(), quadroLoja(), quadroFichario());
+        const batalha = el('a', 'baralho-batalha', '⚔️ Batalha dos Torados: jogar com as cartas');
+        batalha.href = 'batalha.html';
+        grade.append(batalha, quadroCarteira(), quadroInventario(), quadroLoja(), quadroFichario());
         area.replaceChildren(grade);
     }
 
@@ -943,5 +945,5 @@
         mostrarPacote();
     }
 
-    window.EnzoBaralhoUI = { aba, carta, verso, pacoteArte, abertura };
+    window.EnzoBaralhoUI = { aba, carta, verso, pacoteArte, abertura, nomeVisivel };
 })();

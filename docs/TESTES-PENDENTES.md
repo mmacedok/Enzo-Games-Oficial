@@ -132,3 +132,34 @@ admin dá créditos/pó/pacotes pela rota `/api/admin/users/:id/baralho` (ou `cr
 - [ ] Partida verificada mostra "+N créditos" no aviso do fim do jogo; a carteira sobe o mesmo valor.
 - [ ] Ficha de outro leitor mostra "Baralho Enzo · N/7" com as cartas dele (sem quantidades).
 - [ ] Calibrar: quantos créditos por minuto em cada jogo (alvo: ~5 min por Pacote do Estacionamento).
+
+## Batalha dos Torados (`batalha.html`) — criada em 2026-09-26
+Regras: `test/tcg-regras.test.js` (46 testes). Tela: 16 partidas automáticas (`batalha.html?auto=1&rapido=1`)
+terminaram sem erro no Chromium; o resto abaixo é olho humano.
+
+### Menu
+- [ ] 3 decks com 3 cartas em leque; escolher um marca só ele. "Outro jogador" apagado ("Em breve").
+- [ ] "Como jogar" abre as regras; Esc/botão fecha.
+- [ ] Celular (375–390 px): sem rolagem lateral; o "Voltar" não cobre o logo.
+
+### Preparação
+- [ ] Toque no 1º lutador = ATIVO (etiqueta laranja); os próximos = BANCO (até 3, etiqueta azul); tocar de novo desfaz.
+- [ ] Campos ficam apagados; "Começar!" só acende com ativo escolhido.
+- [ ] As cartas do NPC só aparecem depois de você começar; banner "VOCÊ COMEÇA!" ou "O NPC COMEÇA!".
+
+### Mesa
+- [ ] Tudo cabe na tela no computador (1280×720 e 1440×900) e no celular em pé, sem rolar.
+- [ ] Toque numa carta abre o painel: HP, recuo, pontos, poder, ataques com custo, previsão de dano (→) e o motivo quando não dá.
+- [ ] Orbe de Aura: acende quando dá; toque nele e depois na carta; a bolinha voa até a carta.
+- [ ] 1º turno de quem começa: ataques apagados com "quem começa não ataca no 1º turno".
+- [ ] Quem joga em segundo: 2 Auras no 1º turno, a segunda só no banco.
+- [ ] Ataque com alvo (Vírgula-rangue, Bala Dourada, Vem Cá): alvos piscam em vermelho e a seta segue o mouse; Cancelar/Esc desiste.
+- [ ] Animações: bote do atacante, número de dano, tremida (tela treme em dano ≥ 90), nocaute, ponto acendendo no placar, moeda girando, balões de estado/poder.
+- [ ] Campo novo: carta gira e o fundo da mesa muda (placeholder colorido por campo).
+- [ ] Seu ativo caiu: aviso "Escolha quem sai do banco" e as cartas do banco piscam.
+- [ ] Cabo Côco na batalha: tarja "Conteúdo banido em 456 países", nome "???" também no painel e no histórico; tocar na tarja não abre a senha.
+- [ ] 📜 histórico, 📖 regras, 🏳️ desistir (pede certeza), 🏠 volta ao menu (pede certeza).
+- [ ] Fim: VITÓRIA com confete / DERROTA / EMPATE; "Jogar de novo" e "Menu".
+- [ ] `prefers-reduced-motion`: sem bote, sem tremida, sem confete; o jogo segue normal.
+- [ ] Imagens: depois de gerar alguma de `docs/BATALHA-ASSETS.md` e rodar `npm run build`, ela aparece sem mudar código.
+- [ ] Aba Baralho da Ficha: botão amarelo "⚔️ Batalha dos Torados" leva para `batalha.html`.
