@@ -70,8 +70,6 @@
 
 ## 🔵 Melhorias de código (sem pressa) 🤖/🐋
 
-- [ ] **Caçada:** física roda a 120 passos por segundo (o dobro do comum). Não mexido de propósito:
-  muda a sensação do jogo. Os eventos sem ouvinte ficam (servem para o som, que ainda não existe).
 - [ ] `moverY` da Caçada ainda devolve `tx`/`ty` que ninguém lê (sobra da telha). Detalhe.
 ## 📦 Guardado (não é pendência, é para lembrar)
 - **Degustação Noturna (Ronda):** em `arquivo/ronda/` desde 2026-09-26, com README de como voltar.
@@ -79,6 +77,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-26 (noite): física da Caçada fica como está (120 passos/s), decisão do Henrique: gosta da sensação.
 - 2026-09-26 (tarde):
   - **Otimizações de código:**
     - `js/senha.js` (uma janela de senha só, aceita acento e espaço);
