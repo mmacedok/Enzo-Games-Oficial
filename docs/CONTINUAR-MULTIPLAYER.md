@@ -115,8 +115,8 @@ Tudo em `js/batalha.js` (seção "online (outro jogador)") e `css/batalha.css` (
   Em cada janela (uma normal e uma anônima), entre pelo console do navegador:
   `fetch('/api/auth/google',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({credential:'teste:ana:Ana da Silva Teste'})})`
   (a credencial precisa ter 20 letras ou mais) e recarregue. Uma cria a sala, a outra entra com o código.
-- Teste automático das duas janelas: o script usado está descrito no commit do M2 (Playwright com dois
-  contextos; os robôs jogam chamando `EnzoBatalha.jogar`).
+- Teste automático das duas janelas: `/mnt/project-files/tcg/online-e2e.mjs` (Playwright com dois
+  contextos; os robôs jogam chamando `EnzoBatalha.jogar`). Rode com o servidor acima ligado.
 
 ## 7. Arquivos
 `js/tcg-regras.js` (motor), `js/tcg-cartas.js` (números das cartas), `js/tcg-robo.js` (NPC),
