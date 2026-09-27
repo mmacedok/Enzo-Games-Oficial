@@ -1,8 +1,8 @@
 # Pesquisa: trocar o Flappy Enzo por um "Vampire Survivors" do Enzo Games
 
 > Escrito em 2026-09-27. Nada do jogo foi feito ainda: isto é o estudo e a proposta.
-> **Decidido em 2026-09-27:** nome Enzo Survivors, ranking por abates (os pontos viram moeda do
-> site), só com login, Flappy guardado em `arquivo/flappy/`. O plano está em
+> **Decidido em 2026-09-27:** nome Enzo Survivors, ranking por abates (os pontos viram EnzoCoins,
+> sem limite), só com login, sem o Cabo Côco, mapa num torneio de TCG, Flappy guardado em `arquivo/flappy/`. O plano está em
 > `docs/PLANO-ENZO-SURVIVORS.md` e as artes em `docs/ASSETS-ENZO-SURVIVORS.md`; onde este
 > estudo diz outra coisa (ranking por tempo, sem login, tela 640×360), vale o plano.
 

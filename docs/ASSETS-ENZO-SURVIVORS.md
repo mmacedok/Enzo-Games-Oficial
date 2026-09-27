@@ -54,14 +54,13 @@ pequeno com ~20 px. Por isso:
 | Hatsune | turquesa |
 | Italolol | amarelo |
 | Superkid | azul com capa vermelho-escura |
-| Cabo Côco | preto-couro com o coco marrom |
 
 ### 1.3 Código de cores (não pode ser usado para outra coisa)
 | Cor | Significa | Exemplos |
 |---|---|---|
 | Vermelho/laranja quente (`#ff3b3b`, `#ff6a2a`) com anel escuro | **ataque de inimigo**, machuca | tiros de popup, drone, feiticeira |
-| Dourado (`#ffd23f`) | **dá para pegar** | vírgula dourada, tampinhas, marmita, ímã |
-| Rosa (`#ff8ca0`) | **cura** | brilho da coxinha, Água de Coco curando, Uivo Dourado |
+| Dourado (`#ffd23f`) | **dá para pegar** | vírgula dourada, marmita, ímã, ícone da EnzoCoin |
+| Rosa (`#ff8ca0`) | **cura** | brilho da coxinha, Uivo Dourado |
 | Verde tóxico (`#5aff78`) | **O Inominável** | só ele e o rastro dele |
 | Branco/lilás + a cor do personagem | **ataques do jogador** | espaguete, vírgulas, cartas |
 
@@ -69,10 +68,13 @@ O fogo do Espaguete Super Saiyajin é **amarelo-laranja com o miolo branco e sem
 para nunca ser confundido com tiro de inimigo.
 
 ### 1.4 Chão
-O chão é **escuro, de baixo contraste e pouco saturado**, azul-noite com manchas de luz de poste
-amarelada. Ele nunca pode competir com a horda e com as vírgulas. Sem contorno preto no chão.
-Os objetos de cenário (lixeira, poste) têm contorno de 6 px como os personagens, mas são mais
-apagados.
+O mapa é o **salão de um torneio de TCG à noite** (ver `PLANO-ENZO-SURVIVORS.md`, seção 5.5):
+carpete de evento, fileiras de mesas de torneio, estandes e luz de palco. O chão é **escuro, de
+baixo contraste e pouco saturado** (carpete azul-escuro com manchas de luz de refletor), e nunca
+pode competir com a horda e com as vírgulas. Sem contorno preto no chão. Os objetos de cenário
+(mesas, lixeiras, estandes) têm contorno de 6 px como os personagens, mas são mais apagados.
+**Nada de logo ou carta de jogo que exista de verdade**: as cartas, caixas e banners são
+inventados.
 
 ## 2. Regras técnicas
 - **Formato:** PNG com fundo transparente. Os fundos de tela cheia são **JPG** com qualidade 85.
@@ -162,12 +164,6 @@ esvoaça atrás ao andar.
 - **`gritar.png`** (1 quadro): punhos fechados, boca aberta gritando. Aparece quando a arma
   Besteiras dispara.
 
-### 4.6 Cabo Côco — `assets/survivors/personagens/cabo-coco/`
-Ficha: `assets/Personagens/Cabo Côco.png`. Careca de barba, com roupa de couro preto tática e
-cinto com fivela "A". A cabeça é um coco com canudinhos e guarda-chuvinha. Leva o walkie-talkie
-na mão.
-- Conjunto padrão.
-
 ## 5. Armas e projéteis
 Pasta: **`assets/survivors/armas/`**. Tudo olha para a **direita**, porque o jogo gira e espelha.
 
@@ -186,9 +182,9 @@ Pasta: **`assets/survivors/armas/`**. Tudo olha para a **direita**, porque o jog
 | `almondega-gorda-01.png`, `almondega-gorda-02.png` | 96×96 | 8 quadros/s | almôndega enorme com brilho dourado nas bordas (evolução Barreira) |
 | `latido-aura.png` | 256×256 | 1 (o jogo pulsa) | anel de ondas sonoras amarelas em volta do centro, **translúcido** (alfa 40–60%), estilo "AU AU" de gibi sem letras |
 | `uivo-dourado.png` | 512×512 | 1 (o jogo pulsa) | o mesmo anel, maior, dourado e com brilho rosa suave (evolução Uivo Dourado) |
-| `coco-queda.png` | 48×48 | 1 | coco verde inteiro com canudinho, caindo |
-| `poca-coco-01.png` … `poca-coco-03.png` | 192×96 | 6 quadros/s, em laço | poça de água de coco **vista de cima** (elipse achatada), branca-transparente com bolhas, ondulando |
-| `poca-coco-grande-01.png` … `poca-coco-grande-03.png` | 256×128 | 6 quadros/s | poça maior com borda rosa de cura (evolução Derramamento) |
+| `copo-refri.png` | 48×48 | 1 | copão de refri de lanchonete com tampa e canudo, caindo inclinado |
+| `poca-refri-01.png` … `poca-refri-03.png` | 192×96 | 6 quadros/s, em laço | poça de refri cor de caramelo escuro **vista de cima** (elipse achatada), com bolhinhas de gás e cubos de gelo, borbulhando. Não pode ser vermelha |
+| `poca-refri-grande-01.png` … `poca-refri-grande-03.png` | 256×128 | 6 quadros/s | poça maior e grudenta, com fios de melado e copos caídos (evolução Enchente de Refri) |
 | `carta-01.png` … `carta-04.png` | 48×48 | 16 quadros/s, girando | carta de jogo estilo "Magic" com verso roxo e dourado, girando no próprio eixo: 01 de frente, 02 de lado fina, 03 de costas, 04 de lado |
 | `criatura-01.png` … `criatura-04.png` | 128×128 | 10 quadros/s, correndo | pequena criatura saída da carta: um lobinho de energia turquesa com contorno escuro, correndo para a direita (evolução Invocação) |
 | `palavra-poggers.png`, `palavra-lixoso.png`, `palavra-meme.png`, `palavra-nojento.png`, `palavra-bizarro.png` | 192×64 | 1 | a palavra em letras de gibi (estilo Bangers), branca com contorno `#120d1a` de 6 px e sombra azul, levemente inclinada. **Não espelha** |
@@ -219,13 +215,12 @@ contorno de 4 px e tamanho **48×48**, exceto quando indicado.
 | `ima.png` | 1 | ímã de geladeira em forma de ferradura, com um adesivo de pizza |
 | `garrafa-molho.png` | 1 | garrafa de molho de tomate com rótulo sem texto |
 | `controle-pausado.png` | 1 | controle de videogame com o símbolo ⏸ no meio |
-| `tampinha.png` | 1 | tampinha de refrigerante dourada, vista de cima (32×32) |
-| `tampinhas-saco.png` | 1 | saquinho cheio de tampinhas (mesmo estilo do `assets/objetos/virgulas-saco.png`) |
 | `marmita-01.png`, `marmita-02.png` | 4 quadros/s | marmita de alumínio fechada com um laço dourado, pulsando de brilho (96×96) |
 
-A cura usa a `assets/efeitos/coxinha.png`, que já existe.
+A cura usa a `assets/efeitos/coxinha.png`, que já existe. **Não há moeda para pegar no chão**:
+os EnzoCoins vêm só da conversão dos pontos no fim da partida.
 
-## 8. Chão e cenário
+## 8. Chão e cenário: o torneio de TCG
 Pasta: **`assets/survivors/cenario/`**
 
 **Chão (vista de cima).** Tem que **emendar sem costura** nos 4 lados. Teste pondo 2×2 cópias
@@ -233,29 +228,37 @@ lado a lado: não pode aparecer linha nem padrão repetido óbvio.
 
 | Arquivo | Tamanho | O que desenhar |
 |---|---|---|
-| `chao-asfalto.png` | 512×512 | asfalto azul-noite escuro com rachaduras finas e remendos. **Baixo contraste** |
-| `chao-calcada.png` | 512×512 | calçada de pedra portuguesa em ondas (preto e branco bem apagados) |
-| `chao-praca.png` | 512×512 | grama escura com terra batida |
+| `chao-carpete.png` | 512×512 | carpete de centro de convenções azul-escuro, com padrão geométrico discreto (losangos e linhas finas) e algumas manchas. **Baixo contraste**. É o chão principal |
+| `chao-corredor.png` | 512×512 | piso liso cinza-azulado de salão, com uma fita adesiva amarela apagada marcando o corredor |
+| `chao-palco.png` | 512×512 | piso de madeira escura do palco do torneio |
 
 **Enfeites sobre o chão** (vista de cima, sem contorno, apagados):
 
 | Arquivo | Tamanho | O que desenhar |
 |---|---|---|
-| `mancha-01.png` … `mancha-03.png` | 128×128 | manchas: óleo, molho seco, chiclete |
-| `bueiro.png` | 96×96 | tampa de bueiro redonda |
-| `faixa.png` | 256×64 | faixa de pedestre, um pedaço |
-| `luz-poste.png` | 512×512 | círculo de luz amarelada suave, que se apaga até ficar transparente nas bordas (o jogo põe por cima do chão, em modo "clarear") |
+| `mancha-01.png` … `mancha-03.png` | 128×128 | manchas: refri derramado, molho, chiclete |
+| `carta-caida-01.png`, `carta-caida-02.png` | 48×48 | carta de jogo caída no chão, vista de cima (01 de frente, 02 de costas), com arte inventada |
+| `fita-chao.png` | 256×64 | pedaço de fita adesiva marcando fila ("fila da inscrição") |
+| `luz-palco.png` | 512×512 | círculo de luz de refletor branco-azulado suave, que se apaga até ficar transparente nas bordas (o jogo põe por cima do chão, em modo "clarear") |
 
-**Objetos em pé** (vistos de lado, contorno de 6 px, **pés/base na última linha da imagem**):
+**Objetos em pé** (vistos de lado em 3/4, contorno de 6 px, **base na última linha da imagem**):
 
 | Arquivo | Tamanho | O que desenhar |
 |---|---|---|
-| `lixeira.png` | 96×96 | lixeira laranja de rua (quebrável, solta coletável) |
-| `lixeira-quebrada.png` | 96×96 | a mesma, amassada e tombada, com lixo em volta |
-| `caixa-pizza.png` | 96×96 | pilha de 3 caixas de pizza (quebrável) |
+| `mesa-torneio.png` | 384×160 | fileira de mesa comprida de torneio com toalha escura, 4 tapetes de jogo com cartas, dados e fichas de vida em cima, e cadeiras dobráveis vazias. **Bloqueia a passagem**: a colisão é a faixa de baixo, com 48 px de altura |
+| `lixeira.png` | 96×96 | lixeira de salão, cinza, transbordando de copos (quebrável, solta coletável) |
+| `lixeira-quebrada.png` | 96×96 | a mesma, tombada, com lixo espalhado |
+| `caixa-pizza.png` | 96×96 | pilha de 3 caixas de pizza do lanche do torneio (quebrável) |
 | `caixa-pizza-quebrada.png` | 96×96 | caixas espalhadas e abertas |
-| `poste.png` | 96×256 | poste de luz de rua visto de lado (decoração, não bloqueia) |
-| `banco-praca.png` | 192×96 | banco de praça (decoração) |
+| `caixas-booster.png` | 96×96 | pilha de caixas de booster lacradas, com arte inventada (quebrável) |
+| `caixas-booster-quebrada.png` | 96×96 | caixas rasgadas, com pacotinhos espalhados |
+| `cadeira.png` | 64×96 | cadeira dobrável solta (decoração, não bloqueia) |
+| `banner-torneio.png` | 128×320 | banner em pé "GRANDE TORNEIO" em letras de gibi (texto pode, porque banner não espelha) |
+| `placar-rodadas.png` | 256×256 | quadro de cortiça com as chaves do torneio (linhas de chaveamento e papeizinhos, sem texto legível) |
+| `estande.png` | 320×256 | estande de loja de cartas com prateleiras de caixas e uma lâmpada |
+
+A barraca do Tio Pastel também aparece como decoração, usando `assets/objetos/barraca-pastel.png`,
+que já existe.
 
 ## 9. Ícones de armas e passivos
 Pasta: **`assets/survivors/icones/`**. Todos **128×128** (o jogo mostra em 64 px no cartão de
@@ -272,7 +275,7 @@ próprio ícone:
 | `arma-talheres.png` (faca e garfo cruzados) | `arma-faqueiro.png` (faca, garfo e colher em leque) |
 | `arma-almondegas.png` (duas almôndegas) | `arma-almondega-gorda.png` (uma almôndega gigante brilhando) |
 | `arma-latido.png` (focinho do Italolol latindo) | `arma-uivo-dourado.png` (o mesmo, dourado) |
-| `arma-agua-de-coco.png` (coco com canudinho) | `arma-derramamento.png` (coco derramando) |
+| `arma-refri.png` (copão de refri com canudo) | `arma-enchente-refri.png` (copão virado com uma onda de refri) |
 | `arma-cartas.png` (leque de cartas) | `arma-invocacao.png` (carta com o lobinho saindo) |
 | `arma-besteiras.png` (balão de fala com "!?") | `arma-pontuacao-maxima.png` (balão gigante explodindo) |
 
@@ -297,7 +300,7 @@ próprio ícone:
 |---|---|
 | `abates.png` | caveirinha de gibi (contador de abates no HUD) |
 | `relogio.png` | relógio de bolso |
-| `tampinha.png` | tampinha dourada |
+| `enzocoin.png` | a moeda **EnzoCoin** (HUD da loja e tela de fim). Se o site já tem um desenho da EnzoCoin, use o mesmo; se não tem, faça uma moeda dourada grossa com a cabeça do Enzo em relevo |
 | `cadeado.png` | cadeado (personagem ou item bloqueado) |
 | `reroll.png` | duas setas em círculo (trocar os cartões) |
 | `melhoria-vida.png`, `melhoria-dano.png`, `melhoria-velocidade.png`, `melhoria-ima.png`, `melhoria-sorte.png` | ícones da loja do Tio Pastel: coração, punho, tênis, ímã, trevo |
@@ -308,7 +311,7 @@ Pasta: **`assets/survivors/ui/`**
 | Arquivo | Tamanho | Onde aparece | O que desenhar |
 |---|---|---|---|
 | `logo.png` | 1024×256 | tela de título | "ENZO SURVIVORS" em letras de gibi. "ENZO" laranja com a cara do Enzo no "O"; "SURVIVORS" branco com vírgulas no lugar dos pingos. Mesmo estilo do `assets/ui/logo.png` da Caçada |
-| `titulo-fundo.jpg` | 1920×1080 | tela de título | a Toradolândia à noite vista de cima, com os 6 personagens em pé no meio e uma horda de inimigos da Caçada chegando pelas bordas; lua cheia e névoa. Deixe o terço de cima livre para o logo |
+| `titulo-fundo.jpg` | 1920×1080 | tela de título | o salão do torneio de TCG à noite, com mesas viradas, cartas voando, luz de palco, os 5 personagens em pé no meio e uma horda de inimigos da Caçada chegando entre as mesas. Deixe o terço de cima livre para o logo |
 | `cartao.png` | 720×200 | menu de level up | moldura de cartão de gibi (papel creme escuro, contorno grosso, cantos arredondados). Espaço à esquerda para o ícone (160×160) e o resto livre para texto |
 | `cartao-sel.png` | 720×200 | cartão escolhido | o mesmo cartão com borda dourada brilhante |
 | `cartao-evolucao.png` | 720×200 | cartão de evolução | cartão com fundo dourado e raios |
@@ -319,8 +322,8 @@ Pasta: **`assets/survivors/ui/`**
 | `barra-xp-fundo.png` | 64×24 | topo da tela | o fundo vazio da barra |
 | `sobreviveu.png` | 1024×256 | fim, quando chega aos 15:00 | "SOBREVIVEU!" em letras de gibi douradas |
 | `derrotado.png` | 1024×256 | fim, quando morre | "DERROTADO…" em letras de gibi cinza-azuladas |
-| `loja-fundo.jpg` | 1920×1080 | loja do Tio Pastel | interior da barraca de pastel à noite com lâmpada acesa; espaço à direita para a lista de melhorias. O Tio Pastel é desenhado por cima com `assets/npcs/tio-pastel-01..02` |
-| `personagens-fundo.jpg` | 1920×1080 | escolha de personagem | parede de tijolos com fichas de personagem pregadas (sem texto legível), luz de poste |
+| `loja-fundo.jpg` | 1920×1080 | loja do Tio Pastel | a barraca de pastel dentro do salão do torneio, com lâmpada acesa e mesas ao fundo desfocadas; espaço à direita para a lista de melhorias. O Tio Pastel é desenhado por cima com `assets/npcs/tio-pastel-01..02` |
+| `personagens-fundo.jpg` | 1920×1080 | escolha de personagem | quadro de inscrições do torneio, com as fichas dos personagens pregadas como se fossem jogadores inscritos (sem texto legível) |
 
 ## 11. Checklist (com prioridade)
 **P1 = precisa para lançar. P2 = deixa melhor, e o jogo funciona sem (desenha por código).**
@@ -332,19 +335,18 @@ Pasta: **`assets/survivors/ui/`**
 | P1 | `survivors/personagens/hatsune/` | conjunto padrão | 10 |
 | P1 | `survivors/personagens/italolol/` | conjunto padrão + `latir` | 11 |
 | P1 | `survivors/personagens/superkid/` | conjunto padrão + `gritar` | 11 |
-| P1 | `survivors/armas/` | as 8 armas base: espaguete ×3, virgula, faca, garfo, almondega ×2, latido-aura, coco-queda, poca-coco ×3, carta ×4, palavra ×5 + palavra-explosao ×3 | 25 |
-| P1 | `survivors/coletaveis/` | todos | 10 |
-| P1 | `survivors/cenario/` | `chao-asfalto`, `lixeira` (as 2), `caixa-pizza` (as 2) | 5 |
-| P1 | `survivors/icones/` | 8 armas base + 10 passivos + `abates`, `relogio`, `tampinha`, `cadeado` | 22 |
+| P1 | `survivors/armas/` | as 8 armas base: espaguete ×3, virgula, faca, garfo, almondega ×2, latido-aura, copo-refri, poca-refri ×3, carta ×4, palavra ×5 + palavra-explosao ×3 | 25 |
+| P1 | `survivors/coletaveis/` | todos | 8 |
+| P1 | `survivors/cenario/` | `chao-carpete`, `mesa-torneio`, `lixeira` (as 2), `caixa-pizza` (as 2), `caixas-booster` (as 2) | 8 |
+| P1 | `survivors/icones/` | 8 armas base + 10 passivos + `abates`, `relogio`, `enzocoin`, `cadeado` | 22 |
 | P1 | `survivors/ui/` | `logo`, `titulo-fundo`, `cartao`, `cartao-sel`, `moldura-retrato`, `sobreviveu`, `derrotado` | 7 |
-| P2 | `survivors/personagens/cabo-coco/` | conjunto padrão | 10 |
 | P2 | `survivors/personagens/enzo/` | `ss-andar-01..04` | 4 |
-| P2 | `survivors/armas/` | evoluções: espaguete-ss ×3, fogo-chao ×3, rajada-mp5k, mp5k-clarao ×2, colher, almondega-gorda ×2, uivo-dourado, poca-coco-grande ×3, criatura ×4 | 20 |
+| P2 | `survivors/armas/` | evoluções: espaguete-ss ×3, fogo-chao ×3, rajada-mp5k, mp5k-clarao ×2, colher, almondega-gorda ×2, uivo-dourado, poca-refri-grande ×3, criatura ×4 | 20 |
 | P2 | `survivors/icones/` | 8 evoluções, `reroll`, 5 melhorias | 14 |
 | P2 | `survivors/efeitos/` | todos | 20 |
-| P2 | `survivors/cenario/` | os outros 2 chãos, enfeites, poste, banco | 10 |
+| P2 | `survivors/cenario/` | os outros 2 chãos, 7 enfeites, cadeira, banner, placar, estande | 13 |
 | P2 | `survivors/ui/` | os outros 7 | 7 |
-| | | **Total** | **198** (P1: 113, P2: 85) |
+| | | **Total** | **192** (P1: 114, P2: 78) |
 
 Quando mandar uma leva, é só dizer "subi as artes do Survivors". Eu confiro nome, tamanho e
 alinhamento, limpo o que precisar e aviso o que falta, como fizemos na Caçada.
