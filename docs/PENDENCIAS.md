@@ -22,15 +22,6 @@
 
 - [ ] **Saldo do DeepSeek no fim (US$ 0,17).** Dá para ~3 tarefas médias. Recarregar uns US$ 5 ou
   usar a reserva grátis da NVIDIA (`--provedor nvidia`, lenta). 🧑
-- [ ] **Push do `main` e do `TCG`.** Os dois estão à frente do GitHub com as otimizações de código de
-  2026-09-26 (testadas no navegador). 🤖 quando o Henrique pedir.
-
-## 🟠 Próximos
-
-### Arte
-- [ ] **37 ícones para trocar os emojis**: já é a **tarefa 01 da ponte do Codex**
-  (`E:\AI Workshop\Codex\Bridge`). Abrir o Codex lá e dizer "faça a próxima tarefa"; depois o Claude
-  confere e troca no código. 🧑 rodar o Codex → 🤖 encaixar.
 - [ ] **8 sprites da Caçada com o desenho cortado** (falta pedaço do desenho, não dá para limpar).
   Decidido em 2026-09-26: **não re-fatiar por enquanto.**
   - **Dá para re-fatiar das folhas nomeadas** (`Codex\Cacada - Expansao de Sprites\entrada`,
@@ -77,6 +68,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-27: **37 ícones do Codex no lugar dos emojis** (tarefa 01 da ponte, 37/37 na conferência). 22 do site no `main` (convite de login, ranking, conquistas, senha, moderação) e 15 no `TCG` (Baralho e Batalha). Push dos dois feito (`main` 4a043a9, `TCG` c601734), com as otimizações de 2026-09-26. Falta olhar na tela (computador e celular). Observações do Codex: o `enzo-secreto` mostra também nariz e bochecha; o selo do `carta-leitor` não tem forma clara de macarrão.
 - 2026-09-26 (noite): física da Caçada fica como está (120 passos/s), decisão do Henrique: gosta da sensação.
 - 2026-09-26 (tarde):
   - **Otimizações de código:**
