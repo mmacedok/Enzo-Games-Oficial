@@ -41,13 +41,13 @@
 
     /** Botão perigoso: o 1º clique pergunta "Certeza?", o 2º (em até 4 s) faz. */
     function comConfirmacao(botao, pergunta, acao) {
-        const rotulo = botao.textContent;
+        const rotulo = [...botao.childNodes];
         let timer = 0;
         botao.addEventListener('click', async () => {
             if (!botao.classList.contains('carta-acao--certeza')) {
                 botao.classList.add('carta-acao--certeza');
                 botao.textContent = pergunta;
-                timer = setTimeout(() => { botao.classList.remove('carta-acao--certeza'); botao.textContent = rotulo; }, 4000);
+                timer = setTimeout(() => { botao.classList.remove('carta-acao--certeza'); botao.replaceChildren(...rotulo); }, 4000);
                 return;
             }
             clearTimeout(timer);
@@ -55,7 +55,7 @@
             try { await acao(); } finally {
                 botao.disabled = false;
                 botao.classList.remove('carta-acao--certeza');
-                botao.textContent = rotulo;
+                botao.replaceChildren(...rotulo);
             }
         });
     }
@@ -178,13 +178,15 @@
                 // Faixa do admin, em cima da carta.
                 const faixa = el('div', 'carta-admin');
                 faixa.setAttribute('aria-label', 'Moderação');
-                const bApagar = botaoEl('carta-acao', '✂ Apagar');
+                const bApagar = botaoEl('carta-acao', ' Apagar');
+                bApagar.prepend(window.siteIcon?.('apagar', '✂') ?? '✂');
                 comConfirmacao(bApagar, 'Apagar mesmo?', apagar);
                 const bCensurar = botaoEl('carta-acao', '▇ Censurar');
                 bCensurar.addEventListener('click', () => censurar(c, li, () => texto, (novo) => { texto = novo; }));
                 faixa.append(bApagar, bCensurar);
                 if (!c.isMe && !c.autorAdmin) {
-                    const bBanir = botaoEl('carta-acao carta-acao--banir', '⛔ Banir');
+                    const bBanir = botaoEl('carta-acao carta-acao--banir', ' Banir');
+                    bBanir.prepend(window.siteIcon?.('banir', '⛔') ?? '⛔');
                     comConfirmacao(bBanir, `Banir ${c.autor.name}?`, async () => {
                         await pedir(`/api/admin/users/${c.autor.id}/role`, { role: 'banned' });
                         // Cartas de banido somem para todo mundo.

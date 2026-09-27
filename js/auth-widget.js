@@ -125,14 +125,14 @@
 
     // Deslogado: convite no meio da tela com tudo o que o login libera e o botão do Google.
     // Abre sozinho na 1ª página da visita e de novo pelo botão Entrar (ou por pedirLogin).
-    // Outras partes do site somam itens em window.EnzoVantagensExtras ([emoji, título, texto]).
+    // Outras partes do site somam itens em window.EnzoVantagensExtras ([[ícone, emoji], título, texto]).
     const VANTAGENS = [
-        ['🎮', 'Caçada ao Inominável', 'o jogo do Degustador só abre para quem entrou'],
-        ['🏆', 'Ranking', 'seus recordes do Flappy Enzo no placar de todo mundo'],
-        ['🥇', 'Conquistas', 'e o álbum dos Enzos secretos escondidos nas páginas'],
-        ['📖', 'Continuar de onde parou', 'o gibi lembra a sua página em qualquer aparelho'],
-        ['✉️', 'Cartas dos leitores', 'comente os capítulos'],
-        ['🪪', 'Ficha do Leitor', 'seu perfil no site, com foto e a sua fala'],
+        [['convite-cacada', '🎮'], 'Caçada ao Inominável', 'o jogo do Degustador só abre para quem entrou'],
+        [['trofeu', '🏆'], 'Ranking', 'seus recordes do Flappy Enzo no placar de todo mundo'],
+        [['medalha-1', '🥇'], 'Conquistas', 'e o álbum dos Enzos secretos escondidos nas páginas'],
+        [['marcador', '📖'], 'Continuar de onde parou', 'o gibi lembra a sua página em qualquer aparelho'],
+        [['carta-leitor', '✉️'], 'Cartas dos leitores', 'comente os capítulos'],
+        [['ficha-leitor', '🪪'], 'Ficha do Leitor', 'seu perfil no site, com foto e a sua fala'],
     ];
     const CONVITE_VISTO = 'enzo-convite-visto';
     let convite = null;
@@ -152,11 +152,12 @@
             const titulo = el('h2', 'conta-convite-titulo', 'Entre e libere o site todo!');
             titulo.id = 'conta-convite-titulo';
             const lista = el('ul', 'conta-convite-lista');
-            for (const [emoji, nome, texto] of [...VANTAGENS, ...(window.EnzoVantagensExtras || [])]) {
+            for (const [simbolo, nome, texto] of [...VANTAGENS, ...(window.EnzoVantagensExtras || [])]) {
                 const item = el('li');
                 const descricao = el('span');
                 descricao.append(el('strong', '', nome), ` ${texto}`);
-                item.append(el('span', 'conta-convite-emoji', emoji), descricao);
+                const marca = Array.isArray(simbolo) ? icone(simbolo[0], simbolo[1], 'ui-icone conta-convite-emoji') : el('span', 'conta-convite-emoji', simbolo);
+                item.append(marca, descricao);
                 lista.appendChild(item);
             }
             const alvo = el('div', 'conta-google');
@@ -592,7 +593,11 @@
             minha.appendChild(linhaRanking(dados.me));
             partes.push(minha);
         }
-        if (!estado.usuario && estado.loginAtivo) partes.push(el('p', 'ranking-convite', 'Entre com Google (botão 🔑 Entrar no topo da página) para aparecer aqui.'));
+        if (!estado.usuario && estado.loginAtivo) {
+            const aviso = el('p', 'ranking-convite', ' Entre com Google (botão Entrar no topo da página) para aparecer aqui.');
+            aviso.prepend(icone('chave', '🔑'));
+            partes.push(aviso);
+        }
         corpo.replaceChildren(...partes);
     }
 

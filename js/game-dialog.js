@@ -105,8 +105,13 @@
         }
 
         /** Mensagem curta no topo da janela (ex.: posição no ranking). Vazio apaga. */
-        function avisar(texto = '') {
-            if (aviso.textContent !== texto) aviso.textContent = texto;
+        // icone: [nome, emoji] de siteIcon, antes do texto.
+        function avisar(texto = '', icone = null) {
+            const chave = `${icone?.[0] ?? ''}|${texto}`;
+            if (aviso.dataset.chave === chave) return;
+            aviso.dataset.chave = chave;
+            aviso.textContent = texto;
+            if (icone) aviso.prepend(window.siteIcon?.(...icone) ?? icone[1], ' ');
         }
 
         // Partida monitorada para o ranking (só com login; convidado joga igual, sem enviar).
@@ -126,14 +131,15 @@
             partida = null;
             if (!enviada || pontos <= 0) {
                 const convidado = conta?.loginAtivo && !conta.usuario;
-                avisar(convidado && pontos > 0 ? 'Entre com Google (🔑 Entrar, no topo do site) para ir ao ranking.' : '');
+                if (convidado && pontos > 0) avisar('Entre com Google (botão Entrar, no topo do site) para ir ao ranking.', ['chave', '🔑']);
+                else avisar('');
                 return;
             }
             avisar('Salvando no ranking...');
             conta.enviarPartida(enviada, pontos, metadata).then((r) => {
                 if (minha !== rodada) return;   // já começou outra partida
                 if (!r) avisar('');
-                else if (r.accepted) avisar(r.position ? `🏆 ${r.position}º lugar no ranking${r.newRecord ? ' · novo recorde!' : ''}` : 'Placar salvo!');
+                else if (r.accepted) avisar(r.position ? `${r.position}º lugar no ranking${r.newRecord ? ' · novo recorde!' : ''}` : 'Placar salvo!', r.position ? ['trofeu', '🏆'] : null);
                 else avisar(`Não entrou no ranking: ${r.error}`);
             });
         }

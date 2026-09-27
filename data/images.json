@@ -670,18 +670,18 @@
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/15841341af8f999e-640.webp",
-        "bytes": 341896
+        "src": "assets/web/6dd932e4d11148f1-640.webp",
+        "bytes": 173872
       },
       {
         "width": 1280,
-        "src": "assets/web/15841341af8f999e-1280.webp",
-        "bytes": 868734
+        "src": "assets/web/6dd932e4d11148f1-1280.webp",
+        "bytes": 441834
       },
       {
         "width": 1750,
-        "src": "assets/web/15841341af8f999e-1750.webp",
-        "bytes": 581492
+        "src": "assets/web/6dd932e4d11148f1-1750.webp",
+        "bytes": 490790
       }
     ]
   },
@@ -1393,25 +1393,47 @@
       }
     ]
   },
-  "assets/cursors/mp5k-fogo.png": {
+  "assets/cursors/mao-degustador.png": {
     "width": 32,
     "height": 32,
     "variants": [
       {
         "width": 32,
-        "src": "assets/web/d1c03bbf64c12953-32.webp",
-        "bytes": 878
+        "src": "assets/web/f814084547fdf5f6-32.webp",
+        "bytes": 1116
       }
     ]
   },
-  "assets/cursors/mp5k.png": {
+  "assets/cursors/mao-macarronada.png": {
     "width": 32,
     "height": 32,
     "variants": [
       {
         "width": 32,
-        "src": "assets/web/cc6afd7969032fe7-32.webp",
-        "bytes": 870
+        "src": "assets/web/494ec44d0677bae7-32.webp",
+        "bytes": 1166
+      }
+    ]
+  },
+  "assets/cursors/ponteiro-mp5k.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/0b510150ec526309-32.webp",
+        "bytes": 1224
+      }
+    ]
+  },
+  "assets/cursors/ponteiro-talheres.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/c649cad31379ec65-32.webp",
+        "bytes": 1030
       }
     ]
   },
@@ -1626,6 +1648,911 @@
         "width": 280,
         "src": "assets/web/96739b00bd79b687-280.webp",
         "bytes": 12678
+      }
+    ]
+  },
+  "assets/ui/acesso-negado.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/6303400efeb3ed58-256.webp",
+        "bytes": 15568
+      }
+    ]
+  },
+  "assets/ui/album-encaixe-cheio.png": {
+    "width": 96,
+    "height": 128,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/3403a3bb511b7645-96.webp",
+        "bytes": 4248
+      }
+    ]
+  },
+  "assets/ui/album-encaixe.png": {
+    "width": 96,
+    "height": 128,
+    "variants": [
+      {
+        "width": 96,
+        "src": "assets/web/13f6da05c4d2f67e-96.webp",
+        "bytes": 2164
+      }
+    ]
+  },
+  "assets/ui/album-fundo.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c7d31838a26e6fe9-640.webp",
+        "bytes": 39504
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/c7d31838a26e6fe9-1280.webp",
+        "bytes": 142976
+      }
+    ]
+  },
+  "assets/ui/apagar.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/e5fb680848813234-256.webp",
+        "bytes": 14518
+      }
+    ]
+  },
+  "assets/ui/aviso.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/350cff6d583e3065-256.webp",
+        "bytes": 8992
+      }
+    ]
+  },
+  "assets/ui/banir.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/fc55f0c42ce4bd33-256.webp",
+        "bytes": 11868
+      }
+    ]
+  },
+  "assets/ui/botao-escuro-sel.png": {
+    "width": 600,
+    "height": 76,
+    "variants": [
+      {
+        "width": 600,
+        "src": "assets/web/a5101695f696ab9f-600.webp",
+        "bytes": 8718
+      }
+    ]
+  },
+  "assets/ui/botao-escuro.png": {
+    "width": 600,
+    "height": 76,
+    "variants": [
+      {
+        "width": 600,
+        "src": "assets/web/e54ea8b4b0f113cd-600.webp",
+        "bytes": 8658
+      }
+    ]
+  },
+  "assets/ui/botao-laranja-sel.png": {
+    "width": 600,
+    "height": 76,
+    "variants": [
+      {
+        "width": 600,
+        "src": "assets/web/432e9212565e120b-600.webp",
+        "bytes": 11338
+      }
+    ]
+  },
+  "assets/ui/botao-laranja.png": {
+    "width": 600,
+    "height": 76,
+    "variants": [
+      {
+        "width": 600,
+        "src": "assets/web/5b3b9806c7cabe2c-600.webp",
+        "bytes": 7038
+      }
+    ]
+  },
+  "assets/ui/cadeado.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/4993341626c4fb67-256.webp",
+        "bytes": 13650
+      }
+    ]
+  },
+  "assets/ui/carta-leitor.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/798d220a19c49a2e-256.webp",
+        "bytes": 9390
+      }
+    ]
+  },
+  "assets/ui/chave.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/6df63d96bb5a6212-256.webp",
+        "bytes": 10076
+      }
+    ]
+  },
+  "assets/ui/cogumelo-cheio.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/7e28c23ed551c930-48.webp",
+        "bytes": 1518
+      }
+    ]
+  },
+  "assets/ui/cogumelo-ganhar-01.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/da3e82cfbd911b33-48.webp",
+        "bytes": 1078
+      }
+    ]
+  },
+  "assets/ui/cogumelo-ganhar-02.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/f2b71a0f801d14d3-48.webp",
+        "bytes": 1516
+      }
+    ]
+  },
+  "assets/ui/cogumelo-ganhar-03.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/134b96dea758e6d0-48.webp",
+        "bytes": 1508
+      }
+    ]
+  },
+  "assets/ui/cogumelo-vazio.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/27239490974b6cdd-48.webp",
+        "bytes": 1420
+      }
+    ]
+  },
+  "assets/ui/conquista-acesso-confidencial.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/c06a3439048f61e1-512.webp",
+        "bytes": 57678
+      }
+    ]
+  },
+  "assets/ui/conquista-heroi-de-operator-village.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/dc067ea0a0a117d4-512.webp",
+        "bytes": 51764
+      }
+    ]
+  },
+  "assets/ui/conquista-leitor-da-saga.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/49d24ba256ebf316-512.webp",
+        "bytes": 68444
+      }
+    ]
+  },
+  "assets/ui/conquista-macarronada.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/fd2a2f2afa030f6d-512.webp",
+        "bytes": 58912
+      }
+    ]
+  },
+  "assets/ui/conquista-olho-do-torado.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/9beaa175d9528b59-512.webp",
+        "bytes": 77664
+      }
+    ]
+  },
+  "assets/ui/conquista-vigilia-completa.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/05e3693a52fd06cd-512.webp",
+        "bytes": 59192
+      }
+    ]
+  },
+  "assets/ui/convite-cacada.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/2dd70be51ec52929-256.webp",
+        "bytes": 14324
+      }
+    ]
+  },
+  "assets/ui/copos-0.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/86ad92cb11e8ae0d-48.webp",
+        "bytes": 1746
+      }
+    ]
+  },
+  "assets/ui/copos-1.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/f51d21769ae321c0-48.webp",
+        "bytes": 1734
+      }
+    ]
+  },
+  "assets/ui/copos-2.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/1ad273788eb8152a-48.webp",
+        "bytes": 1618
+      }
+    ]
+  },
+  "assets/ui/copos-3.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/65e60a1800988e10-48.webp",
+        "bytes": 1578
+      }
+    ]
+  },
+  "assets/ui/enzo-secreto.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/81e22ea5c04aff7c-256.webp",
+        "bytes": 15020
+      }
+    ]
+  },
+  "assets/ui/ficha-leitor.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/b05fab90f9966fe1-256.webp",
+        "bytes": 9898
+      }
+    ]
+  },
+  "assets/ui/figurinha-capa.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/4158ee5212368e0e-128.webp",
+        "bytes": 5068
+      }
+    ]
+  },
+  "assets/ui/figurinha-coronha.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/e93cb752a06cc589-128.webp",
+        "bytes": 4496
+      }
+    ]
+  },
+  "assets/ui/figurinha-coxinha.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/93097dcf9c821804-128.webp",
+        "bytes": 6014
+      }
+    ]
+  },
+  "assets/ui/figurinha-ima.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/03be237fb29c1807-128.webp",
+        "bytes": 6360
+      }
+    ]
+  },
+  "assets/ui/figurinha-pimenta.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/2f578692fabe97b8-128.webp",
+        "bytes": 5398
+      }
+    ]
+  },
+  "assets/ui/figurinha-radio.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/0176944c3cd2d5b1-128.webp",
+        "bytes": 6212
+      }
+    ]
+  },
+  "assets/ui/figurinha-tenis.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/1a5489d633c2138f-128.webp",
+        "bytes": 5906
+      }
+    ]
+  },
+  "assets/ui/figurinha-vidro.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/b57f873b8cff55e4-128.webp",
+        "bytes": 6684
+      }
+    ]
+  },
+  "assets/ui/habilidade-buzz.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/9b6ac978466fcb23-256.webp",
+        "bytes": 28348
+      }
+    ]
+  },
+  "assets/ui/habilidade-dash.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/38bc23fcc9c63b8b-256.webp",
+        "bytes": 17598
+      }
+    ]
+  },
+  "assets/ui/habilidade-mergulho.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/cf9088e2830036ba-256.webp",
+        "bytes": 29036
+      }
+    ]
+  },
+  "assets/ui/habilidade-parede.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/e9335f1119d1f859-256.webp",
+        "bytes": 26088
+      }
+    ]
+  },
+  "assets/ui/habilidade-pipa.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/d7211ddd02b9487f-256.webp",
+        "bytes": 30810
+      }
+    ]
+  },
+  "assets/ui/habilidade-pulo2.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/f91baff27b883cf7-256.webp",
+        "bytes": 29982
+      }
+    ]
+  },
+  "assets/ui/habilidade-rajada.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/211ac1f0a156bf5d-256.webp",
+        "bytes": 28674
+      }
+    ]
+  },
+  "assets/ui/icone-continuar.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/2d5104b9f847f0f4-48.webp",
+        "bytes": 954
+      }
+    ]
+  },
+  "assets/ui/icone-controles.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/6858358f8d168d97-48.webp",
+        "bytes": 866
+      }
+    ]
+  },
+  "assets/ui/icone-inicio.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/acd35000eba27305-48.webp",
+        "bytes": 1306
+      }
+    ]
+  },
+  "assets/ui/icone-mapa.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/adce2b6bef99246e-48.webp",
+        "bytes": 1686
+      }
+    ]
+  },
+  "assets/ui/logo.png": {
+    "width": 1024,
+    "height": 256,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/43fb723234e119ba-640.webp",
+        "bytes": 25144
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/43fb723234e119ba-1024.webp",
+        "bytes": 47128
+      }
+    ]
+  },
+  "assets/ui/loja-chave.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/607a4dcda5a8cbd4-256.webp",
+        "bytes": 16250
+      }
+    ]
+  },
+  "assets/ui/loja-cogumelo.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/2f151de1f75d80b4-256.webp",
+        "bytes": 17784
+      }
+    ]
+  },
+  "assets/ui/loja-copo.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/401a92856227727a-256.webp",
+        "bytes": 16776
+      }
+    ]
+  },
+  "assets/ui/loja-encaixe.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/417e623a88dcde79-256.webp",
+        "bytes": 13020
+      }
+    ]
+  },
+  "assets/ui/loja-figurinha.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/cd03167c1459d73a-256.webp",
+        "bytes": 18532
+      }
+    ]
+  },
+  "assets/ui/loja-fita.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/f68b124f1b753a15-256.webp",
+        "bytes": 22238
+      }
+    ]
+  },
+  "assets/ui/loja-lanche.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/fb27416fa8d44432-256.webp",
+        "bytes": 18260
+      }
+    ]
+  },
+  "assets/ui/mapa-banco.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/ac4c5cd3935f6d0a-32.webp",
+        "bytes": 786
+      }
+    ]
+  },
+  "assets/ui/mapa-chefe.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/aca78462d761fee4-32.webp",
+        "bytes": 944
+      }
+    ]
+  },
+  "assets/ui/mapa-figurinha.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/1289df9cb1185248-32.webp",
+        "bytes": 980
+      }
+    ]
+  },
+  "assets/ui/mapa-loja.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/ba1b32bb9b9a02ca-32.webp",
+        "bytes": 940
+      }
+    ]
+  },
+  "assets/ui/mapa-sombra.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/92964e323036e79b-32.webp",
+        "bytes": 878
+      }
+    ]
+  },
+  "assets/ui/mapa-voce.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/88c827257f9c3477-32.webp",
+        "bytes": 776
+      }
+    ]
+  },
+  "assets/ui/marcador.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/ed263dd0b9c59a06-256.webp",
+        "bytes": 15784
+      }
+    ]
+  },
+  "assets/ui/medalha-1.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/d45f3cf6bd624ac4-256.webp",
+        "bytes": 16074
+      }
+    ]
+  },
+  "assets/ui/medalha-2.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/99e173f488394e7c-256.webp",
+        "bytes": 13540
+      }
+    ]
+  },
+  "assets/ui/medalha-3.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/9ae6b36311dc3380-256.webp",
+        "bytes": 13416
+      }
+    ]
+  },
+  "assets/ui/pausa-enfeite.png": {
+    "width": 512,
+    "height": 32,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/972ea804a99bb905-512.webp",
+        "bytes": 3750
+      }
+    ]
+  },
+  "assets/ui/pausa-fundo.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/2b4d5af6ebe02ed8-640.webp",
+        "bytes": 3250
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/2b4d5af6ebe02ed8-1280.webp",
+        "bytes": 10890
+      }
+    ]
+  },
+  "assets/ui/pausa-titulo.png": {
+    "width": 640,
+    "height": 160,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/454c0bc2f00e5353-640.webp",
+        "bytes": 25870
+      }
+    ]
+  },
+  "assets/ui/salvo.png": {
+    "width": 256,
+    "height": 80,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/5ea528d85fa8d4e3-256.webp",
+        "bytes": 11964
+      }
+    ]
+  },
+  "assets/ui/seta-interagir-01.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/7698ffa381bb8e3d-32.webp",
+        "bytes": 814
+      }
+    ]
+  },
+  "assets/ui/seta-interagir-02.png": {
+    "width": 32,
+    "height": 32,
+    "variants": [
+      {
+        "width": 32,
+        "src": "assets/web/8067cb2c978c6fda-32.webp",
+        "bytes": 816
+      }
+    ]
+  },
+  "assets/ui/sirene.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/cf0aec8630240296-256.webp",
+        "bytes": 15044
+      }
+    ]
+  },
+  "assets/ui/titulo-fundo.jpg": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/dbfe4a5f5fbbb09e-640.webp",
+        "bytes": 51158
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/dbfe4a5f5fbbb09e-1280.webp",
+        "bytes": 144492
+      }
+    ]
+  },
+  "assets/ui/titulo-fundo.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f82bdf94e3735659-640.webp",
+        "bytes": 51838
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/f82bdf94e3735659-1280.webp",
+        "bytes": 144622
+      }
+    ]
+  },
+  "assets/ui/trofeu.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/94ff6212d0d757ef-256.webp",
+        "bytes": 16540
+      }
+    ]
+  },
+  "assets/ui/vaso-pontuacao.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/09c41a43c1bc304b-128.webp",
+        "bytes": 6068
       }
     ]
   },

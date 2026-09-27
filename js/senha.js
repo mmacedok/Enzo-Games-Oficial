@@ -34,15 +34,16 @@
         overlay.setAttribute('aria-label', 'Desbloquear conteúdo');
         overlay.innerHTML = `
             <div id="password-modal" class="password-modal">
-                <h3>🚨 Alerta 🚨</h3>
+                <h3><span data-icone="sirene">🚨</span> Alerta <span data-icone="sirene">🚨</span></h3>
                 <p><strong>Conteúdo banido em 456 países</strong><br>Insira a senha de acesso confidencial:</p>
                 <input type="password" id="password-input" placeholder="Sua senha..." autocomplete="off">
-                <div id="password-error" class="password-error">❌ Senha incorreta! Acesso negado.</div>
+                <div id="password-error" class="password-error"><span data-icone="acesso-negado">❌</span> Senha incorreta! Acesso negado.</div>
                 <div class="password-actions">
                     <button type="button" id="password-submit" class="btn btn--danger">Decodificar</button>
                     <button type="button" id="password-cancel" class="btn btn--muted">Cancelar</button>
                 </div>
             </div>`;
+        for (const s of overlay.querySelectorAll('[data-icone]')) s.replaceWith(window.siteIcon?.(s.dataset.icone, s.textContent) ?? s);
         input = overlay.querySelector('#password-input');
         erro = overlay.querySelector('#password-error');
         input.setAttribute('aria-label', 'Senha de acesso');
