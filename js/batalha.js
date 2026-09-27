@@ -67,6 +67,14 @@
         if (!v?.length) return null;
         return (v.filter((x) => x.width <= 1280).at(-1) || v[0]).src;
     };
+    /** Ícone pequeno de texto (<img>), ou o emoji enquanto a arte não existe. */
+    const icone = (caminho, emoji) => {
+        const src = arte(caminho);
+        if (!src) return emoji;
+        const img = document.createElement('img');
+        Object.assign(img, { className: 'bt-ic', src, alt: '', decoding: 'async' });
+        return img;
+    };
 
     const DECKS = window.EnzoTcgCartas.DECKS_PRONTOS;
 
@@ -336,6 +344,7 @@
             const info = el('div', 'bt-info');
             const rosto = el('div', 'bt-rosto');
             if (quem === 'npc' && !online && arte(ARTE.npc)) rosto.style.backgroundImage = `url('${arte(ARTE.npc)}')`;
+            else if (arte(A(quem === 'npc' ? 'rosto-rival' : 'rosto-voce'))) rosto.style.backgroundImage = `url('${arte(A(quem === 'npc' ? 'rosto-rival' : 'rosto-voce'))}')`;
             else rosto.textContent = quem === 'npc' ? (online ? '🧑' : '😈') : '🙂';
             const nome = el('strong', 'bt-nome');
             const pontos = el('div', 'bt-pontos');
@@ -391,11 +400,13 @@
 
         m.menu = el('div', 'bt-menu-jogo');
         m.menu.append(
-            botao('bt-icone', '🏠', sair),
-            botao('bt-icone', '📜', () => m.log.classList.toggle('bt-log--aberto')),
-            botao('bt-icone', '📖', mostrarRegras),
-            botao('bt-icone', '🏳️', desistir),
+            botao('bt-icone', null, sair),
+            botao('bt-icone', null, () => m.log.classList.toggle('bt-log--aberto')),
+            botao('bt-icone', null, mostrarRegras),
+            botao('bt-icone', null, desistir),
         );
+        [[A('botao-sair'), '🏠'], [A('botao-historico'), '📜'], [ARTE.menu.comoJogar, '📖'], [A('botao-desistir'), '🏳️']]
+            .forEach(([caminho, emoji], i) => m.menu.children[i].append(icone(caminho, emoji)));
         ['Voltar ao menu', 'Histórico', 'Como jogar', 'Desistir'].forEach((rotulo, i) => {
             m.menu.children[i].setAttribute('aria-label', rotulo);
             m.menu.children[i].title = rotulo;
@@ -531,7 +542,8 @@
             lado.pontos.setAttribute('aria-label', `${x.pontos} de ${R.PONTOS_VITORIA} pontos`);
             lado.deck.textContent = `🂠 ${x.deck}`;
             lado.deck.title = `${x.deck} cartas no deck`;
-            lado.mao.textContent = j === NPC ? `✋ ${x.mao}` : '';
+            if (j === NPC) lado.mao.replaceChildren(icone(A('mao-cartas'), '✋'), ` ${x.mao}`);
+            else lado.mao.textContent = '';
             lado.mao.hidden = j !== NPC;
             lado.mao.title = `${x.mao} cartas na mão`;
             lado.ativo.replaceChildren();
@@ -828,7 +840,11 @@
         } else {
             const vida = naMesa ? `${R.hpMax(estado, inst) - inst.dano}/${R.hpMax(estado, inst)}` : `${c.hp}`;
             const linha = el('p', 'bt-painel-stats');
-            linha.append(el('span', 'bt-tag bt-tag--hp', `❤ ${vida} HP`), el('span', 'bt-tag', `↩ Recuo ${c.recuo}`),
+            const hp = el('span', 'bt-tag bt-tag--hp', ` ${vida} HP`);
+            hp.prepend(icone(A('tag-vida'), '❤'));
+            const recuo = el('span', 'bt-tag', ` Recuo ${c.recuo}`);
+            recuo.prepend(icone(A('tag-recuo'), '↩'));
+            linha.append(hp, recuo,
                 el('span', 'bt-tag', `${d.raridade === 'lendario' ? '2 pontos' : '1 ponto'} se cair`));
             if (naMesa) linha.appendChild(el('span', 'bt-tag bt-tag--aura', `✦ ${inst.aura} Aura`));
             info.appendChild(linha);
@@ -937,7 +953,9 @@
         const miolo = el('div', 'bt-fim-miolo');
         const cartas = el('div', 'bt-espiada-cartas');
         ids.forEach((id) => cartas.appendChild(UI.carta(id)));
-        miolo.append(el('h2', 'bt-espiada-titulo', `📷 Câmera: a mão de ${dele()}`),
+        const espiada = el('h2', 'bt-espiada-titulo', ` Câmera: a mão de ${dele()}`);
+        espiada.prepend(icone(A('camera'), '📷'));
+        miolo.append(espiada,
             ids.length ? cartas : el('p', '', 'A mão dele está vazia.'),
             el('p', 'bt-espiada-nota', 'Fica virada para cima até o fim do seu turno.'),
             botao('bt-botao bt-botao--forte', 'Fechar', () => fundo.remove()));
@@ -1400,7 +1418,7 @@
         const resta = Math.max(0, Math.ceil((online.prazo - agoraServidor()) / 1000));
         const meu = R.quemDeve(estado).includes(EU);
         mesa.relogio.hidden = false;
-        mesa.relogio.textContent = `⏱ ${resta}s`;
+        mesa.relogio.replaceChildren(icone(A('relogio'), '⏱'), ` ${resta}s`);
         mesa.relogio.title = meu ? 'Seu tempo para jogar' : `Tempo de ${dele()}`;
         mesa.relogio.classList.toggle('bt-relogio--fim', meu && resta <= 10);
     }
@@ -1503,7 +1521,8 @@
     // ---------------------------------------------------------------- histórico
     function registrar(texto) {
         if (!mesa) return;
-        const li = el('li', '', texto);
+        const li = el('li');
+        li.append(...[].concat(texto));
         mesa.log.prepend(li);
         while (mesa.log.children.length > 60) mesa.log.lastChild.remove();
     }
@@ -1513,7 +1532,7 @@
         switch (ev.tipo) {
             case 'inicio': registrar(`${quem(ev.primeiro)} começa.`); break;
             case 'turno': registrar(`— Turno ${ev.turno}: ${ev.jogador === EU ? 'sua vez' : `vez de ${dele()}`} —`); break;
-            case 'tempo': registrar(`⏱ ${quem(ev.jogador)} ficou sem tempo (${ev.estouros} de 3).`); break;
+            case 'tempo': registrar([icone(A('relogio'), '⏱'), ` ${quem(ev.jogador)} ficou sem tempo (${ev.estouros} de 3).`]); break;
             case 'compra': if (ev.jogador === EU) registrar(`Você comprou ${nomeVisivel(ev.id)}.`); break;
             case 'baixar': registrar(`${quem(ev.jogador)} pôs ${nomeVisivel(ev.id)} no banco.`); break;
             case 'aura': registrar(`${n(ev.uid)} ganhou Aura (${ev.aura}).`); break;
@@ -1522,7 +1541,7 @@
             case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${n(ev.alvo)}.`); break;
             case 'dano': registrar(`${n(ev.uid)} levou ${ev.valor}${ev.fonte === 'notificado' ? ' (Notificado)' : ''}.`); break;
             case 'cura': registrar(`${n(ev.uid)} curou ${ev.valor}.`); break;
-            case 'nocaute': registrar(`💥 ${nomeVisivel(ev.id)} caiu! +${ev.pontos} ${ev.pontos === 1 ? 'ponto' : 'pontos'} para ${quem(ev.para).toLowerCase()}.`); break;
+            case 'nocaute': registrar([icone(A('nocaute'), '💥'), ` ${nomeVisivel(ev.id)} caiu! +${ev.pontos} ${ev.pontos === 1 ? 'ponto' : 'pontos'} para ${quem(ev.para).toLowerCase()}.`]); break;
             case 'estado': registrar(`${n(ev.uid)} ficou ${ESTADOS[ev.estado].nome}.`); break;
             case 'imune': registrar(`${n(ev.uid)} acabou de ser ${ESTADOS[ev.estado].nome.toLowerCase()} e não pode ser de novo agora.`); break;
             case 'troca': registrar(`${n(ev.entra)} entrou no lugar de ${n(ev.sai)}.`); break;
@@ -1547,7 +1566,8 @@
 
     function balao(perto, texto, tipo = '') {
         if (!mesa) return Promise.resolve();
-        const b = el('div', `bt-balao ${tipo ? `bt-balao--${tipo}` : ''}`, texto);
+        const b = el('div', `bt-balao ${tipo ? `bt-balao--${tipo}` : ''}`);
+        b.append(...[].concat(texto));
         const c = centro(perto);
         b.style.left = `${c.x}px`;
         b.style.top = `${c.y - c.h / 2}px`;
@@ -1605,7 +1625,8 @@
     }
 
     function banner(texto, tipo = '') {
-        const b = el('div', `bt-banner ${tipo ? `bt-banner--${tipo}` : ''}`, texto);
+        const b = el('div', `bt-banner ${tipo ? `bt-banner--${tipo}` : ''}`);
+        b.append(...[].concat(texto));
         mesa.efeitos.appendChild(b);
         const fim = animar(b, [
             { transform: 'translate(-50%, -50%) scale(2) rotate(-6deg)', opacity: 0 },
@@ -2168,7 +2189,7 @@
                 break;
             case 'estado': {
                 const alvo = elDe(ev.uid);
-                if (alvo) await balao(alvo, `${ESTADOS[ev.estado].icone} ${ESTADOS[ev.estado].nome}!`, 'estado');
+                if (alvo) await balao(alvo, [icone(ARTE.estados[ev.estado], ESTADOS[ev.estado].icone), ` ${ESTADOS[ev.estado].nome}!`], 'estado');
                 break;
             }
             case 'escudo': {
@@ -2207,7 +2228,7 @@
             case 'poder': {
                 const alvo = elDe(ev.uid);
                 if (!alvo) break;
-                await balao(alvo, `✨ ${ev.nome}`, 'poder');
+                await balao(alvo, [icone(A('poder'), '✨'), ` ${ev.nome}`], 'poder');
                 const proprio = EFEITOS_PODER[idDe(ev.uid)]?.[ev.nome];
                 if (proprio) await Promise.race([proprio(alvo, ativoDoOutro(ev.uid), ev), esperar(LIMITE_EFEITO)]);
                 break;
@@ -2259,7 +2280,7 @@
                 break;
             case 'espiar':
                 if (ev.jogador === EU) {
-                    await banner('📷 Câmera!', 'campo');
+                    await banner([icone(A('camera'), '📷'), ' Câmera!'], 'campo');
                     if (!AUTO) mostrarEspiada(ev.ids);
                 }
                 break;

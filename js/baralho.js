@@ -15,9 +15,11 @@
 
     // Itens do Baralho no convite de login (js/auth-widget.js).
     window.EnzoVantagensExtras = [
-        ['🃏', 'Baralho Enzo', 'pacotes de cartas com os créditos dos jogos, inventário e coleção'],
-        ['⚔️', 'Batalha dos Torados', 'jogue as suas cartas contra outros leitores'],
+        [['convite-baralho', '🃏'], 'Baralho Enzo', 'pacotes de cartas com os créditos dos jogos, inventário e coleção'],
+        [['convite-batalha', '⚔️'], 'Batalha dos Torados', 'jogue as suas cartas contra outros leitores'],
     ];
+
+    const icone = (nome, emoji) => window.siteIcon?.(nome, emoji) ?? emoji;
 
     const ESTRELAS = { comum: '★', raro: '★★', epico: '★★★', lendario: '★★★★' };
     /** Rótulo do tipo na faixa (personagem não leva rótulo). */
@@ -100,14 +102,18 @@
         const campo = el('input');
         Object.assign(campo, { type: 'password', placeholder: 'Sua senha...', autocomplete: 'off' });
         campo.setAttribute('aria-label', 'Senha');
-        const erro = el('div', 'password-error', '❌ Senha incorreta! Acesso negado.');
+        const erro = el('div', 'password-error', ' Senha incorreta! Acesso negado.');
+        erro.prepend(icone('acesso-negado', '❌'));
         const acoes = el('div', 'password-actions');
         const ok = el('button', 'btn btn--danger', 'Decodificar');
         const cancelar = el('button', 'btn btn--muted', 'Cancelar');
         cancelar.type = 'button';
         cancelar.addEventListener('click', () => janela.close());
         acoes.append(ok, cancelar);
-        caixa.append(el('h3', '', '🚨 Alerta 🚨'), texto, campo, erro, acoes);
+        const alerta = el('h3', '', ' Alerta ');
+        alerta.prepend(icone('sirene', '🚨'));
+        alerta.append(icone('sirene', '🚨'));
+        caixa.append(alerta, texto, campo, erro, acoes);
         caixa.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!window.EnzoSenha.confere(campo.value)) {
@@ -395,13 +401,13 @@
 
     /** Botão perigoso: o 1º clique pede "certeza?", o 2º (em até 4 s) confirma. */
     function comConfirmacao(b, pergunta, acao) {
-        const rotulo = b.textContent;
+        const rotulo = [...b.childNodes];
         let timer = null;
         b.addEventListener('click', () => {
             if (!timer) {
                 b.textContent = pergunta;
                 b.classList.add('baralho-botao--certeza');
-                timer = setTimeout(() => { timer = null; b.textContent = rotulo; b.classList.remove('baralho-botao--certeza'); }, CONFIRMAR_MS);
+                timer = setTimeout(() => { timer = null; b.replaceChildren(...rotulo); b.classList.remove('baralho-botao--certeza'); }, CONFIRMAR_MS);
                 return;
             }
             clearTimeout(timer);
@@ -585,7 +591,8 @@
             if (qtd > 1) {
                 celula.appendChild(el('span', 'fichario-qtd', `×${qtd}`));
                 poTotal += (qtd - 1) * B.valorPo(def.id);
-                const acao = botao('fichario-acao', `✨ Repetidas: ${qtd - 1}`);
+                const acao = botao('fichario-acao', ` Repetidas: ${qtd - 1}`);
+                acao.prepend(icone('po-de-estrela', '✨'));
                 acao.setAttribute('aria-label', `Transformar repetidas de ${nomeVisivel(def)} em pó de estrela`);
                 acao.addEventListener('click', () => escolherPo(celula, def, qtd));
                 celula.appendChild(acao);
@@ -594,7 +601,8 @@
         }
         const conteudo = [];
         if (poTotal > 0) {
-            const todas = botao('baralho-botao baralho-botao--po fichario-todas', `✨ Transformar todas as repetidas (+${numero(poTotal)} pó)`);
+            const todas = botao('baralho-botao baralho-botao--po fichario-todas', ` Transformar todas as repetidas (+${numero(poTotal)} pó)`);
+            todas.prepend(icone('po-de-estrela', '✨'));
             comConfirmacao(todas, `Certeza? Fica 1 de cada · +${numero(poTotal)} pó`, () => transformar({ todas: true }, todas));
             conteudo.push(todas);
         }
@@ -606,7 +614,8 @@
     function desenhar() {
         if (!area || !dados) return;
         const grade = el('div', 'baralho-grade');
-        const batalha = el('a', 'baralho-batalha', '⚔️ Batalha dos Torados: jogar com as cartas');
+        const batalha = el('a', 'baralho-batalha', ' Batalha dos Torados: jogar com as cartas');
+        batalha.prepend(icone('convite-batalha', '⚔️'));
         batalha.href = 'batalha.html';
         grade.append(batalha, quadroCarteira(), quadroInventario(), quadroLoja(), quadroFichario());
         area.replaceChildren(grade);

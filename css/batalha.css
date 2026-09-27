@@ -840,3 +840,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 }
 .bt-relogio--fim { color: #fff; background: #d33; animation: bt-piscar 0.8s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .bt-online-espera, .bt-relogio--fim { animation: none; } }
+
+/* Ícones pequenos dentro de textos (histórico, balões, selos, relógio). */
+.bt-ic { display: inline-block; width: 1.25em; height: 1.25em; object-fit: contain; vertical-align: -0.25em; }
+.bt-icone .bt-ic { width: 1.6em; height: 1.6em; vertical-align: middle; }
