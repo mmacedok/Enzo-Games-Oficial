@@ -28,9 +28,9 @@
 ## 🟠 Próximos
 
 ### Arte
-- [ ] **46 ícones para trocar os emojis** do site, com prompts e nomes prontos em
-  [`ICONES-SITE.md`](ICONES-SITE.md). Depois de gerados, o Claude troca no código (pedido pronto no fim
-  do doc). 🧑 gerar → 🤖 encaixar.
+- [ ] **37 ícones para trocar os emojis**: já é a **tarefa 01 da ponte do Codex**
+  (`E:\AI Workshop\Codex\Bridge`). Abrir o Codex lá e dizer "faça a próxima tarefa"; depois o Claude
+  confere e troca no código. 🧑 rodar o Codex → 🤖 encaixar.
 - [ ] **8 sprites da Caçada com o desenho cortado** (falta pedaço do desenho, não dá para limpar).
   Decidido em 2026-09-26: **não re-fatiar por enquanto.**
   - **Dá para re-fatiar das folhas nomeadas** (`Codex\Cacada - Expansao de Sprites\entrada`,
