@@ -428,6 +428,16 @@
         m.raiz.append(m.fundo, m.fundoNovo, m.npc.l, m.centro, m.eu.l, m.mao, m.menu, m.log, m.seta, m.efeitos, m.painel);
         raiz.appendChild(m.raiz);
         mesa = m;
+        // Tocar numa dica recolhida abre de novo (e ela recolhe sozinha depois).
+        for (const d of [m.dica, m.campoTexto]) {
+            d.addEventListener('click', () => {
+                if (d.classList.contains('bt-recolhida')) mostrarRecolhivel(d, d.textContent, true);
+                else { clearTimeout(recolher.get(d)); d.classList.add('bt-recolhida'); }
+            });
+        }
+        caberNaTela();
+        // As cartas chegam depois (e a mão muda de tamanho): refaz o encaixe quando a mesa muda.
+        new ResizeObserver(() => { if (mesa === m) requestAnimationFrame(caberNaTela); }).observe(m.raiz);
 
         m.raiz.addEventListener('pointermove', moverSeta);
     }
@@ -603,7 +613,7 @@
         if (primeira && minhaMao.length > 1) {
             const w = primeira.offsetWidth;
             const livre = Math.min(mesa.raiz.clientWidth, window.innerWidth) - 44;
-            mesa.mao.style.setProperty('--sobrepor', `${Math.min(-0.15 * w, (livre - minhaMao.length * w) / (minhaMao.length - 1))}px`);
+            mesa.mao.style.setProperty('--sobrepor', `${Math.min(6, (livre - minhaMao.length * w) / (minhaMao.length - 1))}px`);
         }
 
         // Tira da tela as cartas que saíram (descarte).
@@ -659,7 +669,7 @@
         animar(mesa.fundoNovo, [{ opacity: 0 }, { opacity: 1 }], { duration: 700 }).then(() => aplicar(mesa.fundo));
         mesa.raiz.dataset.campo = campoId || 'nenhum';
         const efeito = campoId ? R.combate(campoId).campo : null;
-        mesa.campoTexto.textContent = efeito ? efeito.texto : '';
+        mostrarRecolhivel(mesa.campoTexto, efeito ? efeito.texto : '');
     }
 
     function marcarPossiveis(preparando) {
@@ -721,8 +731,46 @@
         else if (estado.fase === 'preparacao' && online) dica = `Esperando ${dele()} escolher o ativo...`;
         else if (estado.pendentes.length && online) dica = `Esperando ${dele()} escolher o novo ativo...`;
         else if (estado.fase === 'jogo') dica = `Vez de ${dele()}...`;
-        mesa.dica.textContent = dica;
+        mostrarDica(dica);
     }
+
+    // A dica aparece inteira quando muda e, depois de DICA_MS, vira uma linha pequena
+    // (no celular ela ocupava meia mesa o tempo todo). Tocar nela abre de novo.
+    const DICA_MS = 3500;
+    const recolher = new WeakMap();   // elemento -> timer
+    /** Mostra o texto inteiro e, depois de DICA_MS, recolhe numa linha (vale para a dica e o campo). */
+    function mostrarRecolhivel(d, texto, forcar = false) {
+        if (d.textContent === texto && !forcar) return;
+        d.textContent = texto;
+        d.title = texto;
+        d.classList.remove('bt-recolhida');
+        clearTimeout(recolher.get(d));
+        if (texto) recolher.set(d, setTimeout(() => d.classList.add('bt-recolhida'), DICA_MS));
+    }
+    const mostrarDica = (texto) => mostrarRecolhivel(mesa.dica, texto);
+
+    /**
+     * Encolhe as cartas (--k no CSS) até a mesa inteira caber na altura da tela: sem isso a
+     * mesa passava da tela (a mão ficava cortada embaixo e a página rolava).
+     */
+    function caberNaTela() {
+        if (!mesa) return;
+        const r = mesa.raiz;
+        const livre = window.innerHeight - (r.getBoundingClientRect().top + window.scrollY);
+        const antes = r.style.getPropertyValue('--k');
+        let k = 1;
+        r.style.setProperty('--k', '1');
+        r.style.minHeight = '0';
+        for (let i = 0; i < 10 && r.offsetHeight > livre - 2 && k > 0.45; i++) {
+            k = Math.max(0.45, k * Math.max(0.85, (livre - 2) / r.offsetHeight));
+            r.style.setProperty('--k', k.toFixed(3));
+        }
+        r.style.minHeight = '';
+        window.EnzoBatalha.escala = k;
+        if (antes !== r.style.getPropertyValue('--k') && estado) desenhar();
+    }
+    let caberTimer = null;
+    window.addEventListener('resize', () => { clearTimeout(caberTimer); caberTimer = setTimeout(caberNaTela, 120); });
 
     // ---------------------------------------------------------------- cliques
     function clicarCarta(uid) {
@@ -1583,14 +1631,35 @@
         return { x: r.left + r.width / 2 - c.left, y: r.top + r.height / 2 - c.top, w: r.width, h: r.height };
     }
 
+    /**
+     * Um efeito (em coordenadas da mesa) que ocupa de x-esq a x+dir e de y-cima a y+baixo:
+     * empurra o ponto para ele não sair da parte da mesa que aparece na tela (a borda de
+     * cima das cartas do adversário e a de baixo da mão cortavam os efeitos).
+     */
+    function dentroDaTela(x, y, { esq, dir = esq, cima, baixo = cima }) {
+        const c = mesa.raiz.getBoundingClientRect();
+        const M = 4;
+        const topo = Math.max(0, -c.top) + M;
+        const fundo = Math.min(c.height, window.innerHeight - c.top) - M;
+        const inicio = Math.max(0, -c.left) + M;
+        const fim = Math.min(c.width, window.innerWidth - c.left) - M;
+        // Maior que a área visível: centraliza; senão, só encosta na borda.
+        const ajusta = (v, menos, mais, lo, hi) => (menos + mais > hi - lo
+            ? (lo + hi) / 2 + (menos - mais) / 2
+            : Math.min(Math.max(v, lo + menos), hi - mais));
+        return { x: ajusta(x, esq, dir, inicio, fim), y: ajusta(y, cima, baixo, topo, fundo) };
+    }
+
     function balao(perto, texto, tipo = '') {
         if (!mesa) return Promise.resolve();
         const b = el('div', `bt-balao ${tipo ? `bt-balao--${tipo}` : ''}`);
         b.append(...[].concat(texto));
         const c = centro(perto);
-        b.style.left = `${c.x}px`;
-        b.style.top = `${c.y - c.h / 2}px`;
         mesa.efeitos.appendChild(b);
+        // O balão sobe até 1,4× a própria altura acima do ponto (ver a animação).
+        const p = dentroDaTela(c.x, c.y - c.h / 2, { esq: b.offsetWidth * 0.55, cima: b.offsetHeight * 1.5, baixo: 0 });
+        b.style.left = `${p.x}px`;
+        b.style.top = `${p.y}px`;
         const fim = animar(b, [
             { transform: 'translate(-50%, -40%) scale(.4) rotate(-8deg)', opacity: 0 },
             { transform: 'translate(-50%, -100%) scale(1.1) rotate(-3deg)', opacity: 1, offset: 0.25 },
@@ -1606,9 +1675,11 @@
     function numero(perto, texto, tipo) {
         const n = el('div', `bt-numero bt-numero--${tipo}`, texto);
         const c = centro(perto);
-        n.style.left = `${c.x}px`;
-        n.style.top = `${c.y}px`;
         mesa.efeitos.appendChild(n);
+        // O número cresce até 1,4× e sobe até 1,7× a própria altura.
+        const p = dentroDaTela(c.x, c.y, { esq: n.offsetWidth * 0.7, cima: n.offsetHeight * 2.2, baixo: n.offsetHeight * 0.7 });
+        n.style.left = `${p.x}px`;
+        n.style.top = `${p.y}px`;
         const fim = animar(n, [
             { transform: 'translate(-50%, -50%) scale(.3)', opacity: 0 },
             { transform: 'translate(-50%, -80%) scale(1.4)', opacity: 1, offset: 0.2 },
@@ -1647,6 +1718,9 @@
         const b = el('div', `bt-banner ${tipo ? `bt-banner--${tipo}` : ''}`);
         b.append(...[].concat(texto));
         mesa.efeitos.appendChild(b);
+        // No meio da parte da mesa que aparece na tela.
+        const r = mesa.raiz.getBoundingClientRect();
+        b.style.top = `${(Math.max(0, -r.top) + Math.min(r.height, window.innerHeight - r.top)) / 2}px`;
         const fim = animar(b, [
             { transform: 'translate(-50%, -50%) scale(2) rotate(-6deg)', opacity: 0 },
             { transform: 'translate(-50%, -50%) scale(1) rotate(-4deg)', opacity: 1, offset: 0.2 },
@@ -1711,11 +1785,18 @@
         const c = caixaDe(alvo);
         if (!url || !c || !mesa) return null;
         const lado = opcoes.lado || Math.max(24, (c.w || 100) * (opcoes.tam ?? 1));
+        const alto = lado * (opcoes.alto ?? 1);
         const d = el('div', 'bt-fx');
         d.style.width = `${lado}px`;
-        d.style.height = `${lado * (opcoes.alto ?? 1)}px`;
-        d.style.left = `${c.x + (opcoes.dx || 0)}px`;
-        d.style.top = `${c.y + (opcoes.dy || 0)}px`;
+        d.style.height = `${alto}px`;
+        // O dx/dy entra no left/top e de novo no transform (tf): o centro que aparece fica em
+        // c + 2·dx. Esse centro vai para dentro da tela; o left/top desconta o que o transform soma.
+        const dx = opcoes.dx || 0;
+        const dy = opcoes.dy || 0;
+        const escala = Math.max(1.05, opcoes.escala ?? 1);
+        const p = dentroDaTela(c.x + 2 * dx, c.y + 2 * dy, { esq: (lado / 2) * escala, cima: (alto / 2) * escala });
+        d.style.left = `${p.x - dx}px`;
+        d.style.top = `${p.y - dy}px`;
         d.style.backgroundImage = `url('${url}')`;
         if (opcoes.filtro) d.style.filter = opcoes.filtro;
         mesa.efeitos.appendChild(d);

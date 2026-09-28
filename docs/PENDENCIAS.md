@@ -77,6 +77,10 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-28: **Layout da Batalha no celular e no computador:** a mesa encolhe as cartas até caber na
+  tela (antes passava da tela e cortava a mão embaixo); efeitos, balões e números ficam dentro da parte
+  visível; a dica e o efeito do campo recolhem numa linha depois de 3,5 s (tocar abre); HP das cartas
+  proporcional à carta; celular deitado com barras compactas; letreiros quebram linha no celular.
 - 2026-09-28: **Multiplayer do TCG consertado** (relato do Henrique):
   - aura e Passar apagados na própria vez: a mesa era desenhada com "ocupado" ligado depois da busca;
   - lentidão: busca a cada 1 s (antes 2,5 s), "teve jogada?" lê só a versão, jogada com uma ida a

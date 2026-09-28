@@ -106,10 +106,11 @@
 
 /* ------------------------------------------------------------------ mesa */
 .bt-mesa {
-    --w-ativo: min(clamp(96px, 30vw, 190px), 14.5vh);
-    --w-banco: min(clamp(66px, 20vw, 140px), 11.5vh);
-    --w-mao: min(clamp(74px, 22vw, 150px), 13vh);
-    --w-campo: min(clamp(52px, 14vw, 104px), 9vh);
+    /* --k: o JS (caberNaTela) diminui até a mesa inteira caber na altura da tela. */
+    --w-ativo: calc(min(clamp(96px, 30vw, 190px), 14.5vh) * var(--k, 1));
+    --w-banco: calc(min(clamp(66px, 20vw, 140px), 11.5vh) * var(--k, 1));
+    --w-mao: calc(min(clamp(74px, 22vw, 150px), 13vh) * var(--k, 1));
+    --w-campo: calc(min(clamp(52px, 14vw, 104px), 9vh) * var(--k, 1));
     --gap: clamp(5px, 1.3vw, 12px);
     position: relative;
     display: grid;
@@ -242,6 +243,7 @@
 /* Vagas */
 .bt-vaga {
     position: relative;
+    container-type: inline-size;   /* o HP e as bolinhas da carta medem pela largura da vaga */
     aspect-ratio: 63 / 88;
     border: 2px dashed rgba(255, 255, 255, 0.28);
     border-radius: 8px;
@@ -292,6 +294,18 @@
     justify-self: start;
 }
 .bt-dica:empty { display: none; }
+.bt-dica, .bt-campo-texto { cursor: pointer; transition: font-size 0.2s ease, padding 0.2s ease, opacity 0.2s ease; }
+/* Recolhida (dica e efeito do campo): uma linha pequena que não cobre a mesa; tocar abre de novo. */
+.bt-recolhida {
+    max-width: min(60vw, 420px);
+    padding: 2px 8px;
+    overflow: hidden;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0.85;
+    box-shadow: 2px 2px 0 var(--ink);
+}
 /* Efeito do campo em jogo, ao lado da vaga do campo. */
 .bt-campo-texto {
     grid-column: 2;
@@ -306,6 +320,11 @@
     border-radius: 4px;
 }
 .bt-campo-texto:empty { display: none; }
+@media (max-width: 560px), (max-height: 500px) {
+    .bt-dica { font-size: 0.85rem; }
+    .bt-campo-texto { font-size: 0.75rem; }
+    .bt-recolhida { font-size: 0.72rem; }
+}
 
 /* ------------------------------------------------------------------ cartas */
 .bt-carta {
@@ -355,7 +374,8 @@
     min-width: 2.2em;
     padding: 1px 6px;
     font-family: var(--font-heading);
-    font-size: clamp(0.8rem, 2.6vw, 1.15rem);
+    /* Proporcional à carta (cqi = % da largura da vaga): carta pequena, número pequeno. */
+    font-size: clamp(0.6rem, 17cqi, 1.15rem);
     text-align: center;
     color: #fff;
     background: linear-gradient(90deg, #2e9d4f var(--vida, 100%), #5a1010 var(--vida, 100%));
@@ -368,8 +388,8 @@
 .bt-auras { position: absolute; left: -4px; bottom: -4px; z-index: 2; display: flex; flex-wrap: wrap; gap: 2px; max-width: 70%; }
 .bt-aura-pip {
     display: inline-block;
-    width: 15px;
-    height: 15px;
+    width: clamp(8px, 11cqi, 15px);
+    height: clamp(8px, 11cqi, 15px);
     background: radial-gradient(circle at 35% 35%, #fff9c4, #ffcc00 50%, #e65100);
     border: 2px solid var(--ink);
     border-radius: 50%;
@@ -381,9 +401,9 @@
 .bt-estado {
     display: grid;
     place-items: center;
-    width: 22px;
-    height: 22px;
-    font-size: 0.8rem;
+    width: clamp(14px, 16cqi, 22px);
+    height: clamp(14px, 16cqi, 22px);
+    font-size: clamp(0.55rem, 11cqi, 0.8rem);
     font-style: normal;
     background: #fff center / cover no-repeat;
     border: 2px solid var(--ink);
@@ -642,9 +662,13 @@
     left: 50%;
     padding: 8px 26px;
     font-family: var(--font-heading);
-    font-size: clamp(2rem, 9vw, 4rem);
+    font-size: clamp(1.6rem, 8vw, 4rem);
     letter-spacing: 2px;
-    white-space: nowrap;
+    /* Cabe na largura da tela (quebra a linha em vez de sair pelos lados, no celular). */
+    width: max-content;
+    max-width: calc(100vw - 40px);
+    line-height: 1.05;
+    text-align: center;
     color: var(--ink);
     background: var(--caption);
     border: 4px solid var(--ink);
@@ -780,21 +804,21 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 
 /* ------------------------------------------------------------------ tela larga e baixa
    (computador): a barra de cada jogador vai para o lado das cartas, sobrando altura para cartas maiores. */
-@media (min-width: 900px) and (min-aspect-ratio: 5 / 4) {
+@media (min-width: 640px) and (min-aspect-ratio: 5 / 4) {
     .bt-mesa {
-        --w-ativo: min(210px, 21vh);
-        --w-banco: min(150px, 16vh);
-        --w-mao: min(160px, 16vh);
-        --w-campo: min(104px, 10.5vh);
+        --w-ativo: calc(min(210px, 21vh) * var(--k, 1));
+        --w-banco: calc(min(150px, 16vh) * var(--k, 1));
+        --w-mao: calc(min(160px, 16vh) * var(--k, 1));
+        --w-campo: calc(min(104px, 10.5vh) * var(--k, 1));
+        --w-lateral: clamp(150px, 20vw, 230px);
         max-width: 1180px;
     }
-    .bt-lado { grid-template-columns: 230px var(--w-ativo) repeat(3, var(--w-banco)) 230px; }
+    .bt-lado { grid-template-columns: var(--w-lateral) var(--w-ativo) repeat(3, var(--w-banco)) var(--w-lateral); }
     .bt-lado--npc { grid-template-areas: "info ativo b1 b2 b3 ."; align-items: end; }
     .bt-lado--eu { grid-template-areas: ". ativo b1 b2 b3 info"; align-items: start; }
-    .bt-lado .bt-info { width: 230px; align-self: center; }
+    .bt-lado .bt-info { width: var(--w-lateral); align-self: center; }
     .bt-lado--npc .bt-info { padding-right: 8px; }
     .bt-lado--eu .bt-info .bt-aura { margin-left: 0; }
-    .bt-mao--eu { margin-bottom: calc(var(--w-mao) * -0.35); }
 }
 
 /* ---- Online (outro jogador) ------------------------------------------------ */
@@ -856,3 +880,28 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 /* Ícones pequenos dentro de textos (histórico, balões, selos, relógio). */
 .bt-ic { display: inline-block; width: 1.25em; height: 1.25em; object-fit: contain; vertical-align: -0.25em; }
 .bt-icone .bt-ic { width: 1.6em; height: 1.6em; vertical-align: middle; }
+
+/* ------------------------------------------------------------------ tela baixa
+   (celular deitado): barras dos jogadores e botões compactos; sobra altura para as cartas. */
+@media (max-height: 500px), (max-width: 380px) {
+    .bt-mesa { --gap: 4px; padding-block: 4px 6px; }
+    .bt-info { gap: 4px 6px; min-height: 0; padding: 2px 6px; }
+    .bt-rosto { width: 22px; height: 22px; font-size: 0.9rem; }
+    .bt-nome { max-width: 100%; overflow: hidden; font-size: 0.8rem; white-space: nowrap; text-overflow: ellipsis; }
+    .bt-ponto { width: 11px; height: 11px; }
+    .bt-contador { font-size: 0.72rem; }
+    .bt-aura { width: 32px; height: 32px; }
+    .bt-orbe { width: 28px; height: 28px; border-width: 2px; }
+    .bt-passar, .bt-cancelar, .bt-pronto { padding: 3px 10px; font-size: 0.9rem; }
+    .bt-icone { width: 28px; height: 28px; }
+    .bt-menu-jogo { top: 4px; }
+    .bt-vaga--ativo::before { display: none; }
+}
+/* Deitado e baixo: barra lateral mais larga (nome numa linha) e dica ao lado do efeito do campo. */
+@media (max-height: 500px) and (min-width: 640px) and (min-aspect-ratio: 5 / 4) {
+    .bt-mesa { --w-lateral: clamp(150px, 27vw, 260px); }
+    .bt-centro { grid-template-columns: var(--w-campo) auto minmax(0, 1fr); }
+    .bt-centro .bt-dica { grid-column: 2; grid-row: 1; }
+    .bt-centro .bt-relogio { grid-column: 2; grid-row: 2; }
+    .bt-centro .bt-campo-texto { grid-column: 3; grid-row: 1; }
+}
