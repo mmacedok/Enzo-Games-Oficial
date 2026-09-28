@@ -1,32 +1,22 @@
 # Regras do repositório (Enzo Games)
 
-## Baralho Enzo (cartas) NUNCA vai para o `main`
-**Regra do Henrique, extremamente importante:** o `main` (o site no ar) não pode conter o
-sistema de cartas (Baralho Enzo) até ele dizer que está pronto.
-
-- O Baralho vive no branch **`TCG`** do GitHub (no computador, o branch local `baralho`, aberto
-  na pasta `comic-reader`, acompanha o `origin/TCG`). Trabalho de cartas, inclusive na nuvem,
-  é feito e enviado no `TCG`. **Nunca faça merge do `TCG`/`baralho` no `main`.**
-- Push do `main` só quando o Henrique pedir.
-- Antes de qualquer push do `main`, confira que nada do Baralho vai junto:
-  `git diff --stat origin/main main` e `git grep -il baralho main` (tem que dar só este arquivo).
-  Arquivos do Baralho: `js/baralho-dados.js`, `js/baralho.js`, `api/baralho.js`,
-  `test/baralho.test.js`, `docs/PLANO-BARALHO.md`, `docs/CARTAS-IDEIAS.md`,
-  a Batalha dos Torados (`batalha.html`, `js/batalha.js`, `css/batalha.css`, `js/tcg-*.js`,
-  `test/tcg-regras.test.js`, `tools/tcg-simular.mjs`, `tools/batalha-artifact.mjs`, `docs/PLANO-TCG.md`, `docs/BATALHA-ASSETS.md`, `docs/INSTRUCOES-ASSETS-CLAUDE.md`, `docs/PLANO-BATALHA-COMPLETA.md`, `docs/BATALHA-EFEITOS.md`, `docs/PLANO-MULTIPLAYER.md`, `docs/CONTINUAR-MULTIPLAYER.md`, `docs/EFEITOS-ONDE-VAO.md`, `docs/ICONES-SITE.md`, `docs/PENDENCIAS.md`, `api/tcg.js`, `test/tcg-online.test.js`, `assets/Batalha/`),
-  `assets/Cartas/` (e as variantes em `assets/web/`, `data/images.json`, `js/images.generated.js`), e trechos em `api/schema.js`, `api/handler.js`,
-  `api/games.js`, `api/admin.js`, `api/leitores.js`, `js/auth-widget.js`, `js/game-dialog.js`,
-  `js/admin.js`, `admin.html`, `css/style.css`, páginas `*.html`, `README.md` e
-  `docs/TESTES-PENDENTES.md`.
-- Mudança que NÃO é do Baralho e precisa ir para o site: faça o commit no `main` (numa worktree
-  separada, ex. `git worktree add ../push-main main`), faça o push de lá e depois traga para o
-  `baralho` com `git cherry-pick` (ou `git merge main` no `baralho`).
-- Quando o Henrique liberar o Baralho: aí sim `git merge baralho` no `main` e push.
+## Baralho Enzo e Batalha dos Torados (cartas)
+**Liberados no `main` em 2026-09-28, a pedido do Henrique** (merge do `TCG`).
+- O **Baralho Enzo** aparece normalmente no site (aba Baralho, convite de login, cartas nas fichas).
+- A **Batalha dos Torados** fica **escondida até quarta-feira, 2026-09-30** (liberação ao público):
+  fora dos menus e do convite, `batalha.html` com `noindex`, e a **única entrada é a porta secreta**:
+  clicar no quadradinho **nº 99 dos Enzos secretos** (Minha ficha / fichas dos leitores), em
+  `js/auth-widget.js`. O Henrique conta o segredo a quem ele quiser. **Não crie link para
+  `batalha.html` nem cite a Batalha em textos do site até ele liberar.**
+- Para liberar (só quando o Henrique pedir): voltar o item do convite e o atalho `.baralho-batalha`
+  (comentados em `js/baralho.js`), tirar o `noindex` de `batalha.html` e perguntar se a porta do 99 fica.
+- O branch `TCG` pode continuar como branch de trabalho das cartas; ele vai para o `main` com
+  `git merge` quando o Henrique pedir. Push do `main` só quando o Henrique pedir.
 
 ## Pendências (docs/PENDENCIAS.md)
 - No fim de cada tarefa, atualize `docs/PENDENCIAS.md`: tire o que ficou pronto (para "Feito recentemente",
   com a data), acrescente o que ficou pendente e siga o que o Henrique marcou ou comentou lá.
-  Mantenha curto: o que já está em `docs/TESTES-PENDENTES.md` só é citado. O arquivo fica no `TCG`.
+  Mantenha curto: o que já está em `docs/TESTES-PENDENTES.md` só é citado.
 
 ## Outras regras
 - Commit com `git commit -- <arquivos>`: a pasta `animacao/` é de outra conversa, não mexa.

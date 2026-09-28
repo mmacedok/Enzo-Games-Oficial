@@ -357,6 +357,9 @@
             if (achado) vaga.appendChild(icone('enzo-secreto', '🐱', 'album-icone'));
             vaga.appendChild(el('span', 'album-numero', String(n)));
             vaga.title = achado ? `Enzo secreto nº ${n}` : `Nº ${n}: ainda escondido`;
+            // Porta secreta: o último quadradinho leva à Batalha dos Torados, que fica fora dos
+            // menus até a liberação. Sem cursor nem destaque, para quem não sabe não perceber.
+            if (n === C.SECRETOS) vaga.addEventListener('click', () => { location.href = 'batalha.html'; });
             grade.appendChild(vaga);
         }
         const texto = perfil.proprio ? 'Enzos escondidos nas páginas das HQs. Clique neles para colar no álbum!' : 'Enzos secretos que este leitor já achou nas HQs.';

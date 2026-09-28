@@ -6,7 +6,7 @@
 > item (ex.: `> Henrique: deixa para depois`); o Claude segue isso na próxima atualização.
 > Testes que faltam rodar ficam em [`TESTES-PENDENTES.md`](TESTES-PENDENTES.md) (não repetidos aqui).
 >
-> **Fica no branch `TCG`** (cita o Baralho). Última atualização: **2026-09-26**.
+> Última atualização: **2026-09-28**.
 
 **Legenda:**
 - **Quem:**
@@ -19,6 +19,11 @@
 ---
 
 ## 🔴 Agora (prioridade alta)
+
+- [ ] **Quarta, 2026-09-30: liberar a Batalha dos Torados ao público.** Hoje ela está no site
+  escondida (só pela porta secreta do nº 99 dos Enzos secretos). No dia: voltar o item do convite e o
+  atalho na aba Baralho (`js/baralho.js`), tirar o `noindex` de `batalha.html` e decidir se a porta
+  do 99 fica. 🧑 avisar → 🤖
 
 - [ ] **Saldo do DeepSeek no fim (US$ 0,17).** Dá para ~3 tarefas médias. Recarregar uns US$ 5 ou
   usar a reserva grátis da NVIDIA (`--provedor nvidia`, lenta). 🧑
@@ -68,6 +73,8 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-28: Baralho e Batalha no `main` (merge do `TCG`). O Baralho aparece normal; a Batalha
+  fica escondida até quarta, com entrada só pelo nº 99 dos Enzos secretos. O Netlify redireciona para a Cloudflare.
 - 2026-09-27: **37 ícones do Codex no lugar dos emojis** (tarefa 01 da ponte, 37/37 na conferência). 22 do site no `main` (convite de login, ranking, conquistas, senha, moderação) e 15 no `TCG` (Baralho e Batalha). Push dos dois feito (`main` 4a043a9, `TCG` c601734), com as otimizações de 2026-09-26. Falta olhar na tela (computador e celular). Observações do Codex: o `enzo-secreto` mostra também nariz e bochecha; o selo do `carta-leitor` não tem forma clara de macarrão.
 - 2026-09-26 (noite): física da Caçada fica como está (120 passos/s), decisão do Henrique: gosta da sensação.
 - 2026-09-26 (tarde):

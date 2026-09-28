@@ -16,7 +16,9 @@
     // Itens do Baralho no convite de login (js/auth-widget.js).
     window.EnzoVantagensExtras = [
         [['convite-baralho', '🃏'], 'Baralho Enzo', 'pacotes de cartas com os créditos dos jogos, inventário e coleção'],
-        [['convite-batalha', '⚔️'], 'Batalha dos Torados', 'jogue as suas cartas contra outros leitores'],
+        // A Batalha dos Torados fica escondida até a liberação (porta secreta no nº 99 dos Enzos
+        // secretos, js/auth-widget.js). Na liberação, volte com:
+        // [['convite-batalha', '⚔️'], 'Batalha dos Torados', 'jogue as suas cartas contra outros leitores'],
     ];
 
     const icone = (nome, emoji) => window.siteIcon?.(nome, emoji) ?? emoji;
@@ -614,10 +616,9 @@
     function desenhar() {
         if (!area || !dados) return;
         const grade = el('div', 'baralho-grade');
-        const batalha = el('a', 'baralho-batalha', ' Batalha dos Torados: jogar com as cartas');
-        batalha.prepend(icone('convite-batalha', '⚔️'));
-        batalha.href = 'batalha.html';
-        grade.append(batalha, quadroCarteira(), quadroInventario(), quadroLoja(), quadroFichario());
+        // Atalho para a Batalha (.baralho-batalha) escondido até a liberação: a entrada por
+        // enquanto é só a porta secreta do nº 99 dos Enzos secretos (js/auth-widget.js).
+        grade.append(quadroCarteira(), quadroInventario(), quadroLoja(), quadroFichario());
         area.replaceChildren(grade);
         mostrarAviso();
     }
