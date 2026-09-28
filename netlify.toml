@@ -1,28 +1,12 @@
-# Deploy no Netlify: atualiza o catálogo e monta dist/ só com o que é público.
+# O site mudou para a Cloudflare (docs/PLANO-CLOUDFLARE.md). O Netlify agora só
+# redireciona: qualquer endereço de enzo-games.netlify.app vai para o mesmo caminho
+# em enzo-games-oficial.pages.dev (a query string vai junto). Sem build nem Function,
+# então cada deploy aqui é rápido e não gasta cota com o site de verdade.
 [build]
-  command = "npm run build:deploy"
-  publish = "dist"
+  publish = "netlify/redirecionar"
 
-[build.environment]
-  NODE_VERSION = "22"
-
-# Mesmo cache do server.js: páginas e catálogo sempre revalidados; imagens por 7 dias.
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/data/*"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=604800"
-
-# API (login Google, recordes, progresso): netlify/functions/api.mjs responde em /api/*.
-# O código vive em api/ (o mesmo que o server.js usa localmente).
-[functions]
-  node_bundler = "esbuild"
+[[redirects]]
+  from = "/*"
+  to = "https://enzo-games-oficial.pages.dev/:splat"
+  status = 301
+  force = true
