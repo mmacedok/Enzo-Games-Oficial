@@ -207,7 +207,7 @@ test('T5. Jogada fora da vez, de lado trocado ou com versão velha é recusada',
     assert.match(recusada.dados.error, /não é a sua vez/);
 });
 
-test('T6. Relógio: estourou o turno passa a vez; 3 estouros seguidos = derrota', async (t) => {
+test('T6. Relógio: estourou o turno passa a vez; 3 estouros seguidos = derrota por inatividade', async (t) => {
     const m = montar();
     t.after(() => m.db.close());
     const a = await jogador(m, 'a', 'Ana');
@@ -234,7 +234,8 @@ test('T6. Relógio: estourou o turno passa a vez; 3 estouros seguidos = derrota'
     assert.equal(d.status, 'fim');
     const [linha] = await m.db.query('SELECT motivo, vencedor FROM tcg_partidas WHERE id = $1', [id]);
     assert.equal(linha.vencedor, ativo, 'quem sumiu primeiro (e mais vezes) perde');
-    assert.ok(linha.motivo);
+    assert.equal(linha.motivo, 'inatividade');
+    assert.deepEqual(d.visao.jogadores.map((x) => x.pontos), [0, 0], 'inatividade não vira ponto de carta');
 });
 
 test('T7. Limite de partidas por jogador por dia', async (t) => {
@@ -252,4 +253,26 @@ test('T7. Limite de partidas por jogador por dia', async (t) => {
     assert.equal(r.status, 429);
     m.relogio.agora += 25 * 3600 * 1000;
     assert.equal((await a('POST', '/api/tcg/salas', { deck: 'turma' })).status, 200);
+});
+
+test('T8. "Teve jogada?" sem novidade só lê a versão (1 consulta, sem a mesa); quem não joga não vê', async (t) => {
+    const m = montar();
+    t.after(() => m.db.close());
+    const a = await jogador(m, 'a', 'Ana');
+    const b = await jogador(m, 'b', 'Beto');
+    const c = await jogador(m, 'c', 'Caio');
+    const { id, primeira } = await comecar(m, a, b);
+    const consultas = [];
+    const original = m.db.query.bind(m.db);
+    m.db.query = (sql, params) => { consultas.push(sql); return original(sql, params); };
+    const d = (await a('GET', `/api/tcg/partidas/${id}?desde=${primeira.versao}`)).dados;
+    assert.equal(d.versao, primeira.versao);
+    assert.equal(d.visao, undefined, 'sem novidade não manda a mesa');
+    assert.deepEqual(d.estouros, [0, 0]);
+    assert.equal(consultas.filter((s) => /tcg_/.test(s)).length, 1, `consultas: ${consultas.join(' | ')}`);
+    m.db.query = original;
+    assert.equal((await c('GET', `/api/tcg/partidas/${id}?desde=0`)).status, 404);
+    // Com novidade (ou pedindo do zero) vem a mesa inteira.
+    const tudo = (await a('GET', `/api/tcg/partidas/${id}?desde=-1`)).dados;
+    assert.ok(tudo.visao);
 });

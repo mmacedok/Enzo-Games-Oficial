@@ -25,7 +25,7 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 1;
+    const REGRAS_VERSAO = 2;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
@@ -45,8 +45,8 @@
     const ehLutador = (id) => tipoDe(id) === 'personagem' || tipoDe(id) === 'goon';
     const ehCampo = (id) => tipoDe(id) === 'campo';
     const combate = (id) => COMBATE[id] || null;
-    /** Pontos que o adversário ganha ao nocautear esta carta. */
-    const pontosDe = (id) => (Baralho.carta(id)?.raridade === 'lendario' ? 2 : 1);
+    /** Pontos que o adversário ganha ao nocautear esta carta: toda carta vale 1 (lendário também). */
+    const pontosDe = () => 1;
 
     // ---- Sorte determinística (mulberry32; o número fica no estado) ----------
     function sementeNumerica(semente) {
@@ -526,7 +526,9 @@
 
         switch (jogada.tipo) {
             case 'desistir':
-                encerrar(estado, outro(j), 'desistencia', eventos);
+                // Online, o servidor desiste por quem ficou 3 vezes seguidas sem jogar: aí o
+                // motivo é inatividade (não é ponto de carta nem desistência de verdade).
+                encerrar(estado, outro(j), jogada.motivo === 'inatividade' ? 'inatividade' : 'desistencia', eventos);
                 return;
 
             case 'preparar': {

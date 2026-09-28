@@ -20,6 +20,10 @@
 
 ## 🔴 Agora (prioridade alta)
 
+- [ ] **Multiplayer mais rápido no ar:** no painel da Cloudflare (Pages → Settings → Functions →
+  Placement), testar "Smart" para a API rodar perto do banco Neon. Não deu para conferir a opção
+  daqui. 🧑
+
 - [ ] **Quarta, 2026-09-30: liberar a Batalha dos Torados ao público.** Hoje ela está no site
   escondida (só pela porta secreta do nº 99 dos Enzos secretos). No dia: voltar o item do convite e o
   atalho na aba Baralho (`js/baralho.js`), tirar o `noindex` de `batalha.html` e decidir se a porta
@@ -73,6 +77,12 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-28: **Multiplayer do TCG consertado** (relato do Henrique):
+  - aura e Passar apagados na própria vez: a mesa era desenhada com "ocupado" ligado depois da busca;
+  - lentidão: busca a cada 1 s (antes 2,5 s), "teve jogada?" lê só a versão, jogada com uma ida a
+    menos ao banco. No teste local, o pior atraso caiu de 30 s para 1,7 s;
+  - toda carta vale 1 ponto (lendário também);
+  - inatividade com medidor próprio (losangos ⏱) e derrota por "inatividade", sem virar ponto de carta.
 - 2026-09-28: Baralho e Batalha no `main` (merge do `TCG`). O Baralho aparece normal; a Batalha
   fica escondida até quarta, com entrada só pelo nº 99 dos Enzos secretos. O Netlify redireciona para a Cloudflare.
 - 2026-09-27: **37 ícones do Codex no lugar dos emojis** (tarefa 01 da ponte, 37/37 na conferência). 22 do site no `main` (convite de login, ranking, conquistas, senha, moderação) e 15 no `TCG` (Baralho e Batalha). Push dos dois feito (`main` 4a043a9, `TCG` c601734), com as otimizações de 2026-09-26. Falta olhar na tela (computador e celular). Observações do Codex: o `enzo-secreto` mostra também nariz e bochecha; o selo do `carta-leitor` não tem forma clara de macarrão.

@@ -270,7 +270,7 @@
         const janela = el('dialog', 'bt-regras');
         const texto = el('div', 'bt-regras-texto');
         const itens = [
-            ['Objetivo', 'Faça 3 pontos. Derrubar uma carta vale 1 ponto; um lendário vale 2.'],
+            ['Objetivo', 'Faça 3 pontos. Derrubar uma carta vale 1 ponto (qualquer carta, lendário também).'],
             ['Deck', '15 cartas. Você começa com 5 na mão e compra 1 por turno.'],
             ['Mesa', 'Um ATIVO (quem luta) e até 3 no BANCO (quem espera). O CAMPO é da mesa inteira e vale para os dois.'],
             ['Aura', 'Todo turno você ganha 1 Aura e arrasta para uma carta sua. A Aura fica presa naquela carta e vai acumulando de um turno para o outro (as bolinhas amarelas na carta). Para atacar, o ativo precisa ter a Aura do ataque presa nele (atacar não gasta).'],
@@ -350,9 +350,14 @@
             const pontos = el('div', 'bt-pontos');
             pontos.setAttribute('role', 'img');
             for (let i = 0; i < R.PONTOS_VITORIA; i++) pontos.appendChild(el('span', 'bt-ponto'));
+            // Inatividade (só online): vezes seguidas sem jogar. Não é ponto de carta; na 3ª perde.
+            const inativo = el('div', 'bt-inativo');
+            inativo.setAttribute('role', 'img');
+            for (let i = 0; i < ESTOUROS_PARA_PERDER; i++) inativo.appendChild(el('span', 'bt-inativo-marca'));
+            inativo.hidden = !online;
             const deck = el('div', 'bt-contador bt-contador--deck');
             const mao = el('div', 'bt-contador bt-contador--mao');
-            info.append(rosto, nome, pontos, deck, mao);
+            info.append(rosto, nome, pontos, inativo, deck, mao);
             const banco = el('div', 'bt-banco');
             const vagas = [];
             for (let i = 0; i < R.VAGAS_BANCO; i++) {
@@ -363,7 +368,7 @@
             const ativo = el('div', 'bt-vaga bt-vaga--ativo');
             if (quem === 'npc') l.append(info, banco, ativo);
             else l.append(ativo, banco, info);
-            return { l, info, nome, pontos, deck, mao, vagas, ativo };
+            return { l, info, nome, pontos, inativo, deck, mao, vagas, ativo };
         };
         m.npc = lado('npc');
         m.eu = lado('eu');
@@ -540,6 +545,11 @@
             lado.nome.textContent = x.nome;
             [...lado.pontos.children].forEach((p, i) => p.classList.toggle('bt-ponto--feito', i < x.pontos));
             lado.pontos.setAttribute('aria-label', `${x.pontos} de ${R.PONTOS_VITORIA} pontos`);
+            const inativo = online?.estouros?.[j] ?? 0;
+            lado.inativo.hidden = !online;
+            [...lado.inativo.children].forEach((m, i) => m.classList.toggle('bt-inativo-marca--feita', i < inativo));
+            lado.inativo.title = `Inatividade: ${inativo} de ${ESTOUROS_PARA_PERDER} (vezes seguidas sem jogar; na ${ESTOUROS_PARA_PERDER}ª perde)`;
+            lado.inativo.setAttribute('aria-label', lado.inativo.title);
             lado.deck.textContent = `🂠 ${x.deck}`;
             lado.deck.title = `${x.deck} cartas no deck`;
             if (j === NPC) lado.mao.replaceChildren(icone(A('mao-cartas'), '✋'), ` ${x.mao}`);
@@ -845,7 +855,7 @@
             const recuo = el('span', 'bt-tag', ` Recuo ${c.recuo}`);
             recuo.prepend(icone(A('tag-recuo'), '↩'));
             linha.append(hp, recuo,
-                el('span', 'bt-tag', `${d.raridade === 'lendario' ? '2 pontos' : '1 ponto'} se cair`));
+                el('span', 'bt-tag', '1 ponto se cair'));
             if (naMesa) linha.appendChild(el('span', 'bt-tag bt-tag--aura', `✦ ${inst.aura} Aura`));
             info.appendChild(linha);
             if (c.poder) {
@@ -1198,7 +1208,9 @@
     }
 
     // ---------------------------------------------------------------- online (outro jogador)
-    const BUSCA_MS = 2500;
+    const BUSCA_MS = 1000;
+    /** Vezes seguidas sem jogar que dão derrota por inatividade (o mesmo número do api/tcg.js). */
+    const ESTOUROS_PARA_PERDER = 3;
     const Conta = () => window.EnzoConta || null;
 
     async function api(metodo, caminho, corpo) {
@@ -1400,7 +1412,7 @@
         NPC = 1 - d.eu;
         partida++;
         depoisDaMoeda = null;
-        online = { id: d.id, versao: d.versao, prazo: d.prazo, dif: d.agora - Date.now(), timer: null, relogioTimer: null };
+        online = { id: d.id, versao: d.versao, prazo: d.prazo, estouros: d.estouros || [0, 0], dif: d.agora - Date.now(), timer: null, relogioTimer: null };
         estado = d.visao;
         montarMesa();
         registrar(`Partida online: você contra ${dele()}.`);
@@ -1428,6 +1440,7 @@
         if (!online || d.id !== online.id) return;
         online.versao = d.versao;
         online.prazo = d.prazo;
+        if (d.estouros) online.estouros = d.estouros;
         online.dif = d.agora - Date.now();
         if (d.visao) {
             const antes = estado;
@@ -1495,11 +1508,14 @@
             const eraOcupado = ocupado;
             ocupado = true;
             try { await receber(d); } finally { ocupado = eraOcupado; }
+            // receber() desenhou com "ocupado" ligado: a mesa saía como se não fosse a minha vez
+            // (Aura apagada, Passar desligado). Desenha de novo já livre.
+            if (!ocupado && online?.id === id) { desenhar(); atualizarRelogio(); }
         }
         if (!forcar) agendarBusca(d ? undefined : BUSCA_MS * 2);
     }
 
-    /** Na vez do outro pergunta a cada 2,5 s; na minha, só quando o meu tempo acabar. Parado com a aba escondida. */
+    /** Na vez do outro pergunta a cada 1 s; na minha, só quando o meu tempo acabar. Parado com a aba escondida. */
     function agendarBusca(ms) {
         if (!online || !estado || estado.fase === 'fim') return;
         if (online.timer) clearTimeout(online.timer);
@@ -1507,7 +1523,10 @@
         if (document.hidden) return;
         let espera = ms;
         if (espera === undefined) {
-            espera = R.quemDeve(estado).includes(EU)
+            // Só eu preciso agir: nada muda até eu jogar ou o meu tempo acabar. Se o outro também
+            // precisa (preparo, escolha de ativo), continua perguntando.
+            const quem = R.quemDeve(estado);
+            espera = quem.length === 1 && quem[0] === EU
                 ? Math.max(1000, online.prazo - agoraServidor() + 1500)
                 : BUSCA_MS;
         }
@@ -1532,7 +1551,7 @@
         switch (ev.tipo) {
             case 'inicio': registrar(`${quem(ev.primeiro)} começa.`); break;
             case 'turno': registrar(`— Turno ${ev.turno}: ${ev.jogador === EU ? 'sua vez' : `vez de ${dele()}`} —`); break;
-            case 'tempo': registrar([icone(A('relogio'), '⏱'), ` ${quem(ev.jogador)} ficou sem tempo (${ev.estouros} de 3).`]); break;
+            case 'tempo': registrar([icone(A('relogio'), '⏱'), ` ${quem(ev.jogador)} ficou sem jogar: inatividade ${ev.estouros} de ${ESTOUROS_PARA_PERDER}.`]); break;
             case 'compra': if (ev.jogador === EU) registrar(`Você comprou ${nomeVisivel(ev.id)}.`); break;
             case 'baixar': registrar(`${quem(ev.jogador)} pôs ${nomeVisivel(ev.id)} no banco.`); break;
             case 'aura': registrar(`${n(ev.uid)} ganhou Aura (${ev.aura}).`); break;
@@ -2288,7 +2307,7 @@
                 if (ev.jogador === EU) desenhar();
                 break;
             case 'tempo':
-                await banner(ev.jogador === EU ? `SEU TEMPO ACABOU! (${ev.estouros}/3)` : `${Dele().toUpperCase()} DEMOROU!`, ev.jogador === EU ? '' : 'eu');
+                await banner(ev.jogador === EU ? `SEU TEMPO ACABOU! INATIVIDADE ${ev.estouros}/${ESTOUROS_PARA_PERDER}` : `${Dele().toUpperCase()} DEMOROU!`, ev.jogador === EU ? '' : 'eu');
                 break;
             case 'escolherAtivo':
                 if (ev.jogador === EU) desenhar();
@@ -2308,6 +2327,7 @@
         const motivos = {
             pontos: 'Fez 3 pontos.', mesaVazia: 'Ficou sem ninguém na mesa.', limiteTurnos: 'Acabaram os 30 turnos.',
             desistencia: 'Alguém desistiu.', empate: 'Os dois chegaram lá juntos.',
+            inatividade: 'Ficou 3 vezes seguidas sem jogar (inatividade).',
         };
         const caixa = el('div', `bt-fim bt-fim--${tipo}`);
         const miolo = el('div', 'bt-fim-miolo');

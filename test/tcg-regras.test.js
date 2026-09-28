@@ -233,8 +233,10 @@ test('nocaute: carta vai para o descarte, 1 ponto (2 se lendário), dono escolhe
     assert.equal(s.jogadores[1].ativo.id, 'italolol');
     assert.equal(s.vez, 1);
 
+    // Toda carta vale 1 ponto, lendário também.
     const lend = mesa({ eu: { ativo: { id: 'enzo-games', aura: 3 } }, ele: { ativo: { id: 'superkid', dano: 20 }, banco: ['bug-do-discord'] } });
-    assert.equal(atacar(lend, 1).estado.jogadores[0].pontos, 2);
+    assert.equal(atacar(lend, 1).estado.jogadores[0].pontos, 1);
+    assert.equal(R.pontosDe('superkid'), 1);
 });
 
 test('vitória: 3 pontos ou adversário sem ninguém na mesa', () => {
@@ -257,6 +259,11 @@ test('desistir encerra na hora a favor do outro', () => {
     const r = R.aplicar(e, { tipo: 'desistir', jogador: 1 });
     assert.equal(r.estado.vencedor, 0);
     assert.equal(r.estado.motivo, 'desistencia');
+    // O servidor desiste por quem ficou 3 vezes sem jogar: motivo próprio, sem ponto de carta.
+    const i = R.aplicar(e, { tipo: 'desistir', jogador: 1, motivo: 'inatividade' });
+    assert.equal(i.estado.vencedor, 0);
+    assert.equal(i.estado.motivo, 'inatividade');
+    assert.deepEqual(i.estado.jogadores.map((x) => x.pontos), e.jogadores.map((x) => x.pontos));
 });
 
 test('recuo: paga Aura, 1 vez por turno, limpa estados; Silenciado não recua', () => {

@@ -21,7 +21,7 @@
     };
 
     const COMBATE = {
-        // ---- Lendários (nocaute vale 2 pontos) --------------------------------
+        // ---- Lendários (nocaute vale 1 ponto, como toda carta) --------------------------------
         'enzo-games': { hp: 140, recuo: 2, ataques: [
             { nome: 'Almôndega', custo: 1, dano: 30 },
             { nome: 'Macarronada a 300%', custo: 3, dano: 120 },

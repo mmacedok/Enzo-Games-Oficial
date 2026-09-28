@@ -12,7 +12,7 @@
 //   POST /api/tcg/partidas/:id/jogada        { jogada, versao, regras }
 //
 // Sem nada rodando sozinho no servidor: o relógio do turno é conferido a cada
-// chamada (quem estourou o prazo passa a vez; 3 estouros seguidos = derrota).
+// chamada (quem estourou o prazo passa a vez; 3 estouros seguidos = derrota por inatividade).
 // Sem transações (driver HTTP do Neon): cada gravação é UM comando com a
 // condição no próprio UPDATE, então duas jogadas ao mesmo tempo nunca valem as duas.
 // ============================================================================
@@ -139,7 +139,7 @@ async function conferirRelogio(ctx, p) {
             if (novo.fase === 'fim') break;
             estouros[j] += 1;
             const jogada = estouros[j] >= ESTOUROS_PARA_PERDER
-                ? { tipo: 'desistir', jogador: j }
+                ? { tipo: 'desistir', jogador: j, motivo: 'inatividade' }
                 : jogadaAutomatica(novo, j);
             const r = R.aplicar(novo, jogada);
             novo = r.estado;
@@ -163,15 +163,22 @@ async function recarregarSeMudou(ctx, p) {
     return conferirRelogio(ctx, novo);
 }
 
-/** Resposta para o jogador: só a visão dele e os eventos novos desde `desde`. */
-async function resposta(ctx, p, desde) {
-    const base = {
-        id: p.id, versao: p.versao, prazo: p.prazo, agora: ctx.agora(), eu: p.eu,
-        estouros: p.estouros, status: p.status, regras: R.REGRAS_VERSAO,
-    };
+const respostaBase = (ctx, p) => ({
+    id: p.id, versao: p.versao, prazo: p.prazo, agora: ctx.agora(), eu: p.eu,
+    estouros: p.estouros, status: p.status, regras: R.REGRAS_VERSAO,
+});
+
+/**
+ * Resposta para o jogador: só a visão dele e os eventos novos desde `desde`.
+ * `eventosProntos`: quem acabou de gravar a jogada já tem os eventos (poupa uma ida ao banco).
+ */
+async function resposta(ctx, p, desde, eventosProntos = null) {
+    const base = respostaBase(ctx, p);
     if (desde === p.versao) return base;
     let eventos = [];
-    if (Number.isInteger(desde) && desde >= 0 && desde < p.versao) {
+    if (eventosProntos) {
+        eventos = R.eventosPara(eventosProntos, p.eu);
+    } else if (Number.isInteger(desde) && desde >= 0 && desde < p.versao) {
         const linhas = await ctx.db.query(
             'SELECT eventos FROM tcg_jogadas WHERE partida_id = $1 AND n > $2 ORDER BY n', [p.id, desde]);
         eventos = linhas.flatMap((l) => R.eventosPara(JSON.parse(l.eventos), p.eu));
@@ -302,9 +309,23 @@ const rotas = [
     {
         metodo: 'GET', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})$/, login: true,
         async executar(ctx) {
+            const desde = ctx.url.searchParams.has('desde') ? Number(ctx.url.searchParams.get('desde')) : -1;
+            // "Teve jogada?" rápido: lê só a versão e o prazo (sem a mesa inteira). É a chamada
+            // que o navegador de quem espera faz a cada segundo.
+            if (!ID.test(ctx.params[0])) throw new HttpError(404, 'partida não encontrada');
+            const [l] = await ctx.db.query(
+                `SELECT jogador_a, jogador_b, versao, prazo, estouros_a, estouros_b, status
+                   FROM tcg_partidas WHERE id = $1`, [ctx.params[0]]);
+            const eu = l ? [l.jogador_a, l.jogador_b].indexOf(ctx.usuario.id) : -1;
+            if (eu < 0) throw new HttpError(404, 'partida não encontrada');
+            const leve = {
+                id: ctx.params[0], versao: Number(l.versao), prazo: Number(l.prazo), eu,
+                estouros: [Number(l.estouros_a), Number(l.estouros_b)], status: l.status,
+            };
+            const relogioVenceu = leve.status === 'jogando' && ctx.agora() > leve.prazo;
+            if (desde === leve.versao && !relogioVenceu) return respostaBase(ctx, leve);
             let p = await carregar(ctx, ctx.params[0]);
             p = await conferirRelogio(ctx, p);
-            const desde = ctx.url.searchParams.has('desde') ? Number(ctx.url.searchParams.get('desde')) : -1;
             return resposta(ctx, p, desde);
         },
     },
@@ -338,7 +359,7 @@ const rotas = [
                 jogador: p.eu, jogada: minha, eventos: r.eventos, automatica: false, prazo, estouros,
             });
             if (!gravou) throw new HttpError(409, 'a mesa mudou: atualize', { versao: p.versao + 1 });
-            return resposta(ctx, p, desde);
+            return resposta(ctx, p, desde, r.eventos);
         },
     },
 ];
