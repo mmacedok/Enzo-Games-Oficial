@@ -70,14 +70,14 @@ reconstrução. O build é idempotente — rodar duas vezes não muda o arquivo.
 
 Senha da censura: `copodelagrimas`.
 
-## Publicar (GitHub + Netlify)
+## Publicar (GitHub + Cloudflare)
 
 - `npm run build:deploy` atualiza o catálogo e monta `dist/` só com o que é público
   (páginas `.html`, `css/`, `js/`, `assets/`, `data/database.json` e `data/images.json`).
-- `netlify.toml` manda o Netlify rodar esse comando e publicar `dist/`.
-- Sem GitHub: rode `npm run build:deploy` e arraste a pasta `dist/` no painel do Netlify (Deploys).
+- O site está na **Cloudflare** (`enzo-games-oficial.pages.dev`, build `npm run build:cloudflare`).
+  O `netlify.toml` agora só redireciona o endereço antigo (`enzo-games.netlify.app`) para lá.
 - Com GitHub: cada push na `main` dispara o CI (`.github/workflows/ci.yml`: build + testes)
-  e, com o site ligado ao repositório no Netlify, um deploy novo.
+  e um deploy novo na Cloudflare.
 - Ficam fora do git: `node_modules/`, `dist/`, `output/`, `shots/` e o catálogo gerado.
 
 ## Conta Google, recordes e ranking
