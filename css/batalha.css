@@ -216,16 +216,32 @@
     border-radius: 50%;
 }
 .bt-nome { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 400; letter-spacing: 0.5px; }
-.bt-pontos { display: flex; gap: 4px; }
-.bt-ponto {
-    width: 16px;
-    height: 16px;
-    background: #333;
+/* Vida do jogador (vitória por dano): barra + número no formato pt-BR. */
+.bt-vida { display: flex; align-items: center; gap: 6px; }
+.bt-vida-barra {
+    display: block;
+    width: 84px;
+    height: 13px;
+    overflow: hidden;
+    background: #5a1010;
     border: 2px solid var(--ink);
-    border-radius: 50%;
-    box-shadow: inset 0 0 0 2px #555;
+    border-radius: 999px;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.6);
 }
-.bt-ponto--feito { background: var(--caution); box-shadow: 0 0 10px var(--caution); }
+.bt-vida-fill {
+    display: block;
+    width: var(--vida, 100%);
+    height: 100%;
+    background: linear-gradient(180deg, #58c777, #2e9d4f);
+    transition: width 0.45s ease;
+}
+.bt-vida--baixo .bt-vida-fill { background: linear-gradient(180deg, #e5484d, #b71c1c); }
+.bt-vida-numero {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+}
 /* Inatividade (online): losangos com relógio, bem diferentes das bolinhas de ponto de carta. */
 .bt-inativo { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; }
 .bt-inativo::before { content: '⏱'; opacity: 0.85; }
@@ -363,6 +379,27 @@
 .bt-carta--ferida .carta-tcg { filter: brightness(1.6) sepia(1) hue-rotate(-40deg) saturate(4); }
 .bt-carta--atacando { z-index: 20; }
 
+/* Verso da Batalha: carta virada pela recarga (e a mão escondida do rival).
+   Fundo escuro com a retícula de gibi do site e o logo da capa no meio. O HP fica por cima. */
+.carta-tcg--verso-batalha .carta-tcg-verso {
+    background:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 3cqw, transparent 3cqw 6cqw),
+        #141414;
+    border-color: var(--ink);
+}
+.carta-tcg--verso-batalha .carta-tcg-verso-marca,
+.carta-tcg--verso-batalha .carta-tcg-verso-selo { display: none; }
+.carta-tcg--verso-batalha .carta-tcg-verso::after {
+    content: '';
+    width: 86%;
+    aspect-ratio: 2 / 1;
+    background: var(--bt-verso-logo, none) center / contain no-repeat;
+}
+/* Na mesa o verso fica por baixo, escondido até a carta virar. */
+.bt-carta > .carta-tcg--verso-batalha { position: absolute; inset: 0; visibility: hidden; }
+.bt-carta--virada > .carta-tcg--verso-batalha { visibility: visible; }
+.bt-carta--virada > .carta-tcg:not(.carta-tcg--verso-batalha) { visibility: hidden; }
+
 /* HUD: HP, Aura e estados por cima da carta */
 .bt-hud { position: absolute; inset: 0; pointer-events: none; }
 .bt-hud[hidden] { display: none; }
@@ -385,6 +422,8 @@
     text-shadow: 1px 1px 0 var(--ink);
 }
 .bt-hp--baixo { background: linear-gradient(90deg, #d32f2f var(--vida, 100%), #3a0a0a var(--vida, 100%)); }
+/* Número grande (4+ dígitos, ex.: 2.800): diminui a fonte para continuar cabendo no selo. */
+.bt-hp--grande { min-width: 0; padding: 1px 5px; font-size: clamp(0.5rem, 12cqi, 0.95rem); letter-spacing: -0.4px; }
 .bt-auras { position: absolute; left: -4px; bottom: -4px; z-index: 2; display: flex; flex-wrap: wrap; gap: 2px; max-width: 70%; }
 .bt-aura-pip {
     display: inline-block;
@@ -609,6 +648,11 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 .bt-ataque-texto { grid-area: texto; font-size: 0.85rem; }
 .bt-ataque-texto:empty { display: none; }
 .bt-motivo { grid-area: motivo; margin-top: 2px; font-size: 0.8rem; font-weight: 700; color: #b71c1c; }
+/* Ataque com botões de alvo ("No ativo"/"No jogador"): mesma caixa, sem o hover de botão. */
+.bt-ataque--box { cursor: default; }
+.bt-ataque--box:not(:disabled):hover { transform: none; background: #fff; }
+.bt-ataque-botoes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.bt-ataque-botoes .bt-botao { padding: 5px 12px; font-size: 0.92rem; }
 .bt-painel-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 @media (max-width: 520px) {
     .bt-painel { grid-template-columns: 1fr; }
@@ -799,6 +843,15 @@ dialog.bt-regras {
 dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-regras h2 { margin: 0 0 8px; font-family: var(--font-heading); font-size: 2rem; font-weight: 400; }
 .bt-regras-texto p { margin: 0 0 8px; line-height: 1.35; }
+/* Placar permanente (mesmo dialog das regras). */
+.bt-placar-corpo { overflow: auto; }
+.bt-placar-nota { margin: 10px 0 4px; font-size: 0.85rem; opacity: 0.8; }
+.bt-placar-tabela { width: 100%; border-collapse: collapse; }
+.bt-placar-tabela th, .bt-placar-tabela td { padding: 4px 8px; text-align: left; border-bottom: 2px solid rgba(0, 0, 0, 0.12); }
+.bt-placar-tabela th { font-family: var(--font-heading); font-weight: 400; }
+.bt-placar-tabela td:not(.bt-placar-nome), .bt-placar-tabela th:not(:nth-child(2)) { text-align: center; }
+.bt-placar-pos { width: 3em; }
+.bt-placar-eu { background: var(--caution); font-weight: 700; }
 
 @media (prefers-reduced-motion: reduce) {
     .bt-carta--pode::after, .bt-carta--alvo, .bt-aura--pronta .bt-orbe, .bt-confete { animation: none; }
@@ -865,6 +918,24 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-online-espera { margin: 0; font-weight: 700; animation: bt-piscar 1.4s ease-in-out infinite; }
 @keyframes bt-piscar { 50% { opacity: 0.45; } }
 .bt-rival--convite { outline: 4px solid var(--caution); outline-offset: 2px; }
+/* Salas abertas na tela online (lista com 1 clique para entrar). */
+.bt-online-salas { width: 100%; }
+.bt-online-salas-titulo { margin: 0 0 6px; font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; }
+.bt-online-salas-lista { display: grid; gap: 6px; }
+.bt-online-vazio { margin: 0; font-size: 0.9rem; opacity: 0.85; }
+.bt-sala-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+}
+.bt-sala-nome { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.bt-sala-deck, .bt-sala-placar, .bt-sala-espera { font-size: 0.85rem; }
+.bt-sala-espera { white-space: nowrap; opacity: 0.8; }
+.bt-sala-linha .bt-botao { padding: 4px 10px; font-size: 0.9rem; box-shadow: 2px 2px 0 var(--ink); }
 .bt-relogio {
     margin: 0;
     white-space: nowrap;
@@ -878,7 +949,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     border-radius: 999px;
 }
 .bt-relogio--fim { color: #fff; background: #d33; animation: bt-piscar 0.8s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .bt-online-espera, .bt-relogio--fim { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bt-online-espera, .bt-relogio--fim { animation: none; } .bt-vida-fill { transition: none; } }
 
 /* Ícones pequenos dentro de textos (histórico, balões, selos, relógio). */
 .bt-ic { display: inline-block; width: 1.25em; height: 1.25em; object-fit: contain; vertical-align: -0.25em; }
@@ -891,7 +962,8 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     .bt-info { gap: 4px 6px; min-height: 0; padding: 2px 6px; }
     .bt-rosto { width: 22px; height: 22px; font-size: 0.9rem; }
     .bt-nome { max-width: 100%; overflow: hidden; font-size: 0.8rem; white-space: nowrap; text-overflow: ellipsis; }
-    .bt-ponto { width: 11px; height: 11px; }
+    .bt-vida-barra { width: 60px; height: 10px; }
+    .bt-vida-numero { font-size: 0.85rem; }
     .bt-contador { font-size: 0.72rem; }
     .bt-aura { width: 32px; height: 32px; }
     .bt-orbe { width: 28px; height: 28px; border-width: 2px; }

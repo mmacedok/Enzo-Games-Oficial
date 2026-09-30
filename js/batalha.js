@@ -79,9 +79,9 @@
     const DECKS = window.EnzoTcgCartas.DECKS_PRONTOS;
 
     const ESTADOS = {
-        notificado: { icone: '🔔', nome: 'Notificado', texto: 'Leva 10 entre um turno e outro. Sai ao voltar para o banco.' },
+        notificado: { icone: '🔔', nome: 'Notificado', texto: 'Leva 200 entre um turno e outro. Sai ao voltar para o banco.' },
         silenciado: { icone: '🔇', nome: 'Silenciado', texto: 'Não ataca nem recua no próximo turno. Depois não pode ser silenciado de novo logo em seguida.' },
-        iludido: { icone: '💘', nome: 'Iludido', texto: 'Ao atacar, moeda: coroa = erra e leva 20.' },
+        iludido: { icone: '💘', nome: 'Iludido', texto: 'Ao atacar, moeda: coroa = erra e leva 400.' },
         escudo: { icone: '🛡️', nome: 'Escudo', texto: 'Leva menos dano no próximo ataque.' },
     };
 
@@ -105,6 +105,11 @@
     };
     const def = (id) => B.carta(id);
     const nomeVisivel = (id) => (UI.nomeVisivel ? UI.nomeVisivel(def(id)) : def(id).nome);
+    /** Número grande no formato do site: 6.000. */
+    const num = (v) => Number(v).toLocaleString('pt-BR');
+    /** Número da escala pequena das cartas (tcg-cartas.js) no valor real da partida (×20). */
+    const esc = (v) => num(v * R.ESCALA);
+    const plu = (n) => (n === 1 ? '' : 's');
 
     // ---------------------------------------------------------------- estado da tela
     let estado = null;
@@ -127,14 +132,14 @@
     function textoEfeito(ef) {
         switch (ef.tipo) {
             case 'estado': return `Deixa ${ESTADOS[ef.estado].nome}.`;
-            case 'curarSi': return `Cura ${ef.valor} dele.`;
-            case 'danoSi': return `Ele leva ${ef.valor}.`;
-            case 'escudo': return `Leva −${ef.valor} no próximo ataque.`;
+            case 'curarSi': return `Cura ${esc(ef.valor)} dele.`;
+            case 'danoSi': return `Ele leva ${esc(ef.valor)}.`;
+            case 'escudo': return `Leva −${esc(ef.valor)} no próximo ataque.`;
             case 'auraSi': return `Prende +${ef.valor} Aura nele.`;
-            case 'bonusPorAura': return `+${ef.valor} por Aura nele.`;
-            case 'bonusSeAliado': return `+${ef.valor} com ${nomeVisivel(ef.carta)} na sua mesa.`;
-            case 'bonusPorGoon': return `+${ef.valor} por goon na sua mesa.`;
-            case 'moeda': return `Moeda: cara ${ef.cara}, coroa ${ef.coroa}.`;
+            case 'bonusPorAura': return `+${esc(ef.valor)} por Aura nele.`;
+            case 'bonusSeAliado': return `+${esc(ef.valor)} com ${nomeVisivel(ef.carta)} na sua mesa.`;
+            case 'bonusPorGoon': return `+${esc(ef.valor)} por goon na sua mesa.`;
+            case 'moeda': return `Moeda: cara ${esc(ef.cara)}, coroa ${esc(ef.coroa)}.`;
             case 'puxar': return 'Troca o ativo dele por quem você escolher do banco dele.';
             case 'descartarCampo': return 'Descarta o campo da mesa.';
             default: return '';
@@ -245,6 +250,10 @@
         verificarOnline().then((situacao) => {
             if (!pvp.isConnected) return;
             pvp.disabled = situacao === 'fora';
+            if (situacao === 'ok' && salasEsperando) {
+                pvpTexto.textContent = `${salasEsperando} sala${plu(salasEsperando)} esperando`;
+                return;
+            }
             pvpTexto.textContent = {
                 fora: 'Só no site', login: 'Entre com o Google', partida: 'Voltar para a partida',
                 ok: convite ? 'Escolha o deck e toque aqui' : 'Com um amigo',
@@ -263,6 +272,7 @@
             comoJogar.textContent = '📖 Como jogar';
         }
         caixa.appendChild(comoJogar);
+        caixa.appendChild(botao('bt-link', '🏆 Placar', mostrarPlacar));
         raiz.appendChild(caixa);
     }
 
@@ -270,15 +280,18 @@
         const janela = el('dialog', 'bt-regras');
         const texto = el('div', 'bt-regras-texto');
         const itens = [
-            ['Objetivo', 'Faça 3 pontos. Derrubar uma carta vale 1 ponto (qualquer carta, lendário também).'],
+            ['Objetivo', 'Zere a vida do adversário (6.000). Ataque o ativo dele ou o jogador direto (arraste até o rosto dele).'],
             ['Deck', '15 cartas. Você começa com 5 na mão e compra 1 por turno.'],
             ['Mesa', 'Um ATIVO (quem luta) e até 3 no BANCO (quem espera). O CAMPO é da mesa inteira e vale para os dois.'],
             ['Aura', 'Todo turno você ganha 1 Aura e arrasta para uma carta sua. A Aura fica presa naquela carta e vai acumulando de um turno para o outro (as bolinhas amarelas na carta). Para atacar, o ativo precisa ter a Aura do ataque presa nele (atacar não gasta).'],
             ['Seu turno', 'Ponha cartas no banco, jogue 1 campo, prenda a Aura, use poderes, recue se precisar e ATAQUE. Atacar acaba o turno.'],
             ['Recuar', 'Arraste uma carta do banco para o ativo. Custa a Aura de recuo, que sai da Aura presa no ativo. Voltar para o banco tira os estados.'],
             ['Começo', 'Quem começa não ataca no 1º turno. Quem joga em segundo ganha +1 Aura de Reforço (só para o banco).'],
-            ['Estados', '🔔 Notificado: leva 10 por turno. 🔇 Silenciado: não ataca nem recua no próximo turno (e não dá para silenciar a mesma carta dois turnos seguidos). 💘 Iludido: pode errar o ataque.'],
-            ['Jogar', 'Arraste as cartas: da mão para o banco, o campo para o meio da mesa, a Aura para uma carta, e o seu ativo até o ativo do NPC para atacar.'],
+            ['Estados', '🔔 Notificado: leva 200 por turno. 🔇 Silenciado: não ataca nem recua no próximo turno (e não dá para silenciar a mesma carta dois turnos seguidos). 💘 Iludido: pode errar o ataque.'],
+            ['Carta derrubada', 'O dono perde vida: comum 500, raro 750, épico 1.000, lendário 1.500.'],
+            ['Recarga', 'Macarronada a 300%, Vírgula-rangue, Bala Dourada e Ban de 7 Dias viram a carta para baixo até o próximo turno do dono: ela não ataca, não usa poder e não recua, mas pode levar golpe.'],
+            ['Mesa vazia', 'Sem ninguém na mesa você não perde: todo ataque vai em você até baixar alguém, que entra direto como ativo.'],
+            ['Jogar', 'Arraste as cartas: da mão para o banco, o campo para o meio da mesa, a Aura para uma carta, e o seu ativo até o ativo ou o rosto do adversário para atacar.'],
             ['Dica', 'Toque em qualquer carta (até as do NPC) para ver os ataques e o que ela faz.'],
         ];
         for (const [t, d] of itens) {
@@ -290,6 +303,44 @@
         janela.addEventListener('close', () => janela.remove());
         document.body.appendChild(janela);
         janela.showModal();
+    }
+
+    /** Placar permanente (GET /api/tcg/placar): top 50 + a sua linha, se estiver fora do top. */
+    async function mostrarPlacar() {
+        const janela = el('dialog', 'bt-regras bt-placar');
+        const corpo = el('div', 'bt-placar-corpo', 'Carregando...');
+        const linha = (l, classe = '') => {
+            const tr = el('tr', `${l.eu ? 'bt-placar-eu ' : ''}${classe}`.trim());
+            tr.append(el('td', 'bt-placar-pos', `${l.posicao}º`), el('td', 'bt-placar-nome', l.nome),
+                el('td', '', String(l.vitorias)), el('td', '', String(l.derrotas)), el('td', '', String(l.empates)));
+            return tr;
+        };
+        const tabela = (linhas) => {
+            const t = el('table', 'bt-placar-tabela');
+            const thead = el('thead');
+            const hr = el('tr');
+            ['', 'Nome', 'V', 'D', 'E'].forEach((h) => hr.appendChild(el('th', '', h)));
+            thead.appendChild(hr);
+            const tbody = el('tbody');
+            linhas.forEach((l) => tbody.appendChild(linha(l)));
+            t.append(thead, tbody);
+            return t;
+        };
+        janela.append(el('h2', '', 'Placar'), corpo, el('p', 'bt-placar-nota', 'Só partidas online contam.'),
+            botao('bt-botao', 'Fechar', () => janela.close()));
+        janela.addEventListener('close', () => janela.remove());
+        document.body.appendChild(janela);
+        janela.showModal();
+        try {
+            const d = await api('GET', '/api/tcg/placar');
+            if (!corpo.isConnected) return;
+            const top = d.top || [];
+            if (!top.length) { corpo.textContent = 'Ainda ninguém pontuou online. Jogue uma partida para aparecer aqui.'; return; }
+            corpo.replaceChildren(tabela(top));
+            if (d.meu && !top.some((l) => l.eu)) corpo.appendChild(tabela([d.meu]));
+        } catch (erro) {
+            corpo.textContent = erro.status === 401 ? 'Entre com a sua conta para ver o placar.' : 'Não deu para carregar o placar agora.';
+        }
     }
 
     // ---------------------------------------------------------------- começo da partida
@@ -347,9 +398,12 @@
             else if (arte(A(quem === 'npc' ? 'rosto-rival' : 'rosto-voce'))) rosto.style.backgroundImage = `url('${arte(A(quem === 'npc' ? 'rosto-rival' : 'rosto-voce'))}')`;
             else rosto.textContent = quem === 'npc' ? (online ? '🧑' : '😈') : '🙂';
             const nome = el('strong', 'bt-nome');
-            const pontos = el('div', 'bt-pontos');
-            pontos.setAttribute('role', 'img');
-            for (let i = 0; i < R.PONTOS_VITORIA; i++) pontos.appendChild(el('span', 'bt-ponto'));
+            // Vida do jogador (vitória por dano): barra + número no formato pt-BR, ao lado do rosto.
+            const vida = el('div', 'bt-vida');
+            vida.setAttribute('role', 'img');
+            const barra = el('span', 'bt-vida-barra');
+            barra.appendChild(el('span', 'bt-vida-fill'));
+            vida.append(barra, el('span', 'bt-vida-numero'));
             // Inatividade (só online): vezes seguidas sem jogar. Não é ponto de carta; na 3ª perde.
             const inativo = el('div', 'bt-inativo');
             inativo.setAttribute('role', 'img');
@@ -357,7 +411,7 @@
             inativo.hidden = !online;
             const deck = el('div', 'bt-contador bt-contador--deck');
             const mao = el('div', 'bt-contador bt-contador--mao');
-            info.append(rosto, nome, pontos, inativo, deck, mao);
+            info.append(rosto, nome, vida, inativo, deck, mao);
             const banco = el('div', 'bt-banco');
             const vagas = [];
             for (let i = 0; i < R.VAGAS_BANCO; i++) {
@@ -368,7 +422,7 @@
             const ativo = el('div', 'bt-vaga bt-vaga--ativo');
             if (quem === 'npc') l.append(info, banco, ativo);
             else l.append(ativo, banco, info);
-            return { l, info, nome, pontos, inativo, deck, mao, vagas, ativo };
+            return { l, info, rosto, nome, vida, barra, inativo, deck, mao, vagas, ativo };
         };
         m.npc = lado('npc');
         m.eu = lado('eu');
@@ -443,6 +497,23 @@
     }
 
     // ---------------------------------------------------------------- cartas na mesa
+    /** Costas da Batalha (recarga e mão escondida do rival): fundo escuro com o logo no meio. */
+    function versoBatalha() {
+        const costas = UI.verso('');
+        costas.classList.add('carta-tcg--verso-batalha');
+        const logo = arte(ARTE.logo);
+        if (logo) costas.style.setProperty('--bt-verso-logo', `url('${logo}')`);
+        return costas;
+    }
+
+    /** Gira a carta no eixo Y (vira para baixo / volta de frente). Sem animação se o sistema pede. */
+    function girarCarta(v) {
+        animar(v, [
+            { transform: 'perspective(600px) rotateY(0deg)' },
+            { transform: 'perspective(600px) rotateY(180deg)' },
+        ], { duration: 420 });
+    }
+
     function cartaViva(inst) {
         let v = cartasVivas.get(inst.uid);
         if (!v || v.dataset.id !== inst.id) {
@@ -456,6 +527,7 @@
             v.dataset.uid = inst.uid;
             v.dataset.id = inst.id;
             v.appendChild(UI.carta(inst.id));
+            v.appendChild(versoBatalha());
             const hud = el('div', 'bt-hud');
             hud.append(el('span', 'bt-hp'), el('span', 'bt-auras'), el('span', 'bt-estados'));
             v.appendChild(hud);
@@ -473,10 +545,11 @@
         const max = R.hpMax(estado, inst);
         const vida = Math.max(0, max - inst.dano);
         const hp = hud.querySelector('.bt-hp');
-        hp.textContent = vida;
+        hp.textContent = num(vida);
         hp.style.setProperty('--vida', `${(100 * vida) / max}%`);
         hp.classList.toggle('bt-hp--baixo', vida <= max * 0.3);
-        hp.title = `${vida} de ${max} HP`;
+        hp.classList.toggle('bt-hp--grande', vida >= 1000);
+        hp.title = `${num(vida)} de ${num(max)} HP`;
         const auras = hud.querySelector('.bt-auras');
         if (auras.dataset.qtd !== String(inst.aura)) {
             auras.dataset.qtd = String(inst.aura);
@@ -499,7 +572,7 @@
                 return i;
             }));
         }
-        v.setAttribute('aria-label', `${nomeVisivel(inst.id)}: ${vida} de ${max} HP, ${inst.aura} Aura${icones.length ? `, ${icones.map((k) => ESTADOS[k].nome).join(', ')}` : ''}`);
+        v.setAttribute('aria-label', `${nomeVisivel(inst.id)}: ${num(vida)} de ${num(max)} HP, ${inst.aura} Aura${icones.length ? `, ${icones.map((k) => ESTADOS[k].nome).join(', ')}` : ''}${R.virada(estado, inst) ? ', virada pela recarga' : ''}`);
     }
 
     // ---------------------------------------------------------------- desenhar
@@ -544,6 +617,11 @@
             usados.add(inst.uid);
             atualizarHud(v, inst, lutando);
             v.className = 'bt-carta';
+            // Carta na mesa virada pela recarga: fica de costas (o HP continua visível por cima).
+            const virada = !!(lutando && inst && R.virada(estado, inst));
+            v.classList.toggle('bt-carta--virada', virada);
+            if (v.dataset.virada !== undefined && v.dataset.virada !== String(virada)) girarCarta(v);
+            v.dataset.virada = String(virada);
             onde.appendChild(v);
             if (era?.pai === onde && era.i === i) paradas.add(inst.uid);
             return v;
@@ -553,8 +631,11 @@
         for (const [j, lado] of [[EU, mesa.eu], [NPC, mesa.npc]]) {
             const x = visao.jogadores[j];
             lado.nome.textContent = x.nome;
-            [...lado.pontos.children].forEach((p, i) => p.classList.toggle('bt-ponto--feito', i < x.pontos));
-            lado.pontos.setAttribute('aria-label', `${x.pontos} de ${R.PONTOS_VITORIA} pontos`);
+            const vida = Math.max(0, x.vida);
+            lado.barra.querySelector('.bt-vida-fill').style.setProperty('--vida', `${(100 * vida) / R.VIDA_INICIAL}%`);
+            lado.vida.classList.toggle('bt-vida--baixo', vida <= R.VIDA_INICIAL * 0.3);
+            lado.vida.querySelector('.bt-vida-numero').textContent = num(vida);
+            lado.vida.setAttribute('aria-label', `Vida: ${num(vida)} de ${num(R.VIDA_INICIAL)}`);
             const inativo = online?.estouros?.[j] ?? 0;
             lado.inativo.hidden = !online;
             [...lado.inativo.children].forEach((m, i) => m.classList.toggle('bt-inativo-marca--feita', i < inativo));
@@ -594,7 +675,7 @@
             mesa.maoNpc.dataset.mao = maoVirada;
             mesa.maoNpc.replaceChildren(...(espiada
                 ? espiada.map((id) => UI.carta(id))
-                : Array.from({ length: visao.jogadores[NPC].mao }, () => UI.verso(''))));
+                : Array.from({ length: visao.jogadores[NPC].mao }, () => versoBatalha())));
         }
         mesa.maoNpc.classList.toggle('bt-mao--espiada', !!espiada);
         mesa.maoNpc.title = espiada ? `Mão de ${dele()} (Câmera): toque para ver` : '';
@@ -896,14 +977,15 @@
         if (c.campo) {
             info.appendChild(el('p', 'bt-painel-campo', `Campo: ${c.campo.texto}`));
         } else {
-            const vida = naMesa ? `${R.hpMax(estado, inst) - inst.dano}/${R.hpMax(estado, inst)}` : `${c.hp}`;
+            const max = R.hpMax(estado, inst);
+            const vida = naMesa ? `${num(max - inst.dano)}/${num(max)}` : num(max);
             const linha = el('p', 'bt-painel-stats');
             const hp = el('span', 'bt-tag bt-tag--hp', ` ${vida} HP`);
             hp.prepend(icone(A('tag-vida'), '❤'));
             const recuo = el('span', 'bt-tag', ` Recuo ${c.recuo}`);
             recuo.prepend(icone(A('tag-recuo'), '↩'));
             linha.append(hp, recuo,
-                el('span', 'bt-tag', '1 ponto se cair'));
+                el('span', 'bt-tag', `${num(R.danoNocaute(inst.id))} de vida se cair`));
             if (naMesa) linha.appendChild(el('span', 'bt-tag bt-tag--aura', `✦ ${inst.aura} Aura`));
             info.appendChild(linha);
             if (c.poder) {
@@ -917,18 +999,33 @@
         const ataquesDasAcoes = new Map(acoes.filter((a) => a.ataque).map((a) => [a.ataque, a]));
         if (c.ataques) {
             const lista = el('div', 'bt-ataques');
-            c.ataques.forEach((a) => {
+            const rival = estado.jogadores[NPC];
+            c.ataques.forEach((a, i) => {
                 const acao = ataquesDasAcoes.get(a);
-                const b = botao('bt-ataque', null, acao ? () => escolherAtaque(acao) : null);
+                const puxa = (a.efeitos || []).some((e) => e.tipo === 'puxar');
+                const base = a.dano ? a.dano * R.ESCALA : 0;
+                const previsto = acao && acao.previsto !== base && acao.previsto > 0 ? ` → ${num(acao.previsto)}` : '';
+                const box = el('div', 'bt-ataque bt-ataque--box');
                 const custo = el('span', 'bt-custo');
-                for (let i = 0; i < a.custo; i++) custo.appendChild(el('i', 'bt-aura-pip'));
-                const previsto = acao && acao.previsto !== a.dano && acao.previsto > 0 ? ` → ${acao.previsto}` : '';
-                const dano = `${a.dano || '—'}${previsto}`;
-                b.append(custo, el('strong', 'bt-ataque-nome', a.nome), el('span', 'bt-ataque-dano', dano),
+                for (let n = 0; n < a.custo; n++) custo.appendChild(el('i', 'bt-aura-pip'));
+                box.append(custo, el('strong', 'bt-ataque-nome', a.nome), el('span', 'bt-ataque-dano', `${base ? num(base) : '—'}${previsto}`),
                     el('span', 'bt-ataque-texto', descricaoAtaque(a)));
-                b.disabled = !acao || !acao.valida;
-                if (acao && !acao.valida) b.appendChild(el('span', 'bt-motivo', acao.motivo));
-                lista.appendChild(b);
+                // Alvos: o ativo do rival, o jogador, e as outras cartas dele (Puxar ou alvo 'qualquer').
+                const jogAtivo = (!puxa && rival.ativo)
+                    ? (a.alvo === 'qualquer' ? { tipo: 'atacar', ataque: i, alvo: rival.ativo.uid } : { tipo: 'atacar', ataque: i })
+                    : null;
+                const jogJogador = { tipo: 'atacar', ataque: i, alvo: R.JOGADOR };
+                const podeAtivo = !!acao && !!jogAtivo && valida(jogAtivo);
+                const podeJogador = !!acao && !puxa && valida(jogJogador);
+                const cartas = (acao?.alvos || []).filter((u) => u !== rival.ativo?.uid);
+                const podeCartas = !!acao && cartas.some((u) => valida({ tipo: 'atacar', ataque: i, alvo: u }));
+                const botoes = el('div', 'bt-ataque-botoes');
+                if (podeAtivo) botoes.appendChild(botao('bt-botao bt-botao--forte', 'No ativo', () => { fecharPainel(); executar(jogAtivo); }));
+                if (podeCartas) botoes.appendChild(botao('bt-botao bt-botao--forte', puxa ? 'Escolher quem vem' : 'Nas outras cartas', () => escolherAtaque(acao)));
+                if (podeJogador) botoes.appendChild(botao('bt-botao bt-botao--forte', 'No jogador', () => { fecharPainel(); executar(jogJogador); }));
+                if (botoes.children.length) box.appendChild(botoes);
+                else box.appendChild(el('span', 'bt-motivo', acao ? (acao.motivo || 'nenhum alvo agora') : 'não é a sua vez'));
+                lista.appendChild(box);
             });
             info.appendChild(lista);
         }
@@ -1096,6 +1193,10 @@
             for (const c of R.naMesa(ele)) {
                 if (c === ele.ativo || podeBanco) zonas.push({ el: elDe(c.uid), atacar: c.uid });
             }
+            // Rosto/placar do rival: ataque direto na vida dele (só se algum ataque válido vai no jogador).
+            const podeJogador = acoesDaCarta(eu.ativo.uid).some((a) => a.ataque
+                && valida({ tipo: 'atacar', ataque: a.jogada.ataque, alvo: R.JOGADOR }));
+            if (podeJogador) zonas.push({ el: mesa.npc.info, atacar: R.JOGADOR });
         }
         return zonas;
     }
@@ -1180,21 +1281,29 @@
         arrasto = null;
     }
 
-    /** Soltou o ativo em cima de uma carta do NPC: um ataque só ataca direto; mais de um abre o painel. */
+    /** Soltou o ativo em cima de uma carta do NPC (ou do rosto dele): um ataque só ataca direto; vários abrem o painel. */
     function soltarAtaque(alvoUid, alvoEl) {
         const eu = estado.jogadores[EU];
         const ele = estado.jogadores[NPC];
         const ataques = acoesDaCarta(eu.ativo.uid).filter((a) => a.ataque);
+        const noJogador = alvoUid === R.JOGADOR;
         const noAtivo = alvoUid === ele.ativo?.uid;
-        const servem = ataques.filter((a) => a.valida && (a.ataque.alvo === 'qualquer' ? a.alvos.includes(alvoUid) : noAtivo));
+        const acerta = (a) => {
+            if (!a.valida) return false;
+            if (noJogador) return valida({ tipo: 'atacar', ataque: a.jogada.ataque, alvo: R.JOGADOR });
+            if (a.ataque.alvo === 'qualquer') return a.alvos.includes(alvoUid);
+            return noAtivo;
+        };
+        const servem = ataques.filter(acerta);
         if (!servem.length) {
-            const m = ataques.find((a) => !a.valida)?.motivo || 'nenhum ataque acerta essa carta';
+            const m = ataques.find((a) => !a.valida)?.motivo || (noJogador ? 'nenhum ataque vai no jogador' : 'nenhum ataque acerta essa carta');
             balao(alvoEl, `Não dá: ${m}`, 'erro');
             return;
         }
         if (servem.length > 1) { abrirPainel(eu.ativo.uid); return; }
         const [acao] = servem;
-        if (acao.ataque.alvo === 'qualquer') executar({ ...acao.jogada, alvo: alvoUid });
+        if (noJogador) executar({ tipo: 'atacar', ataque: acao.jogada.ataque, alvo: R.JOGADOR });
+        else if (acao.ataque.alvo === 'qualquer') executar({ ...acao.jogada, alvo: alvoUid });
         else escolherAtaque(acao);
     }
 
@@ -1265,8 +1374,10 @@
 
     // ---------------------------------------------------------------- online (outro jogador)
     const BUSCA_MS = 1000;
+    const SALAS_MS = 3000;   // de quanto em quanto a lista de salas abertas se renova
     /** Vezes seguidas sem jogar que dão derrota por inatividade (o mesmo número do api/tcg.js). */
     const ESTOUROS_PARA_PERDER = 3;
+    let salasEsperando = 0;   // quantas salas abertas o menu mostrou (verificarOnline)
     const Conta = () => window.EnzoConta || null;
 
     async function api(metodo, caminho, corpo) {
@@ -1291,8 +1402,11 @@
     async function verificarOnline() {
         try {
             const d = await api('GET', '/api/tcg/atual');
+            // De passagem, quantas salas esperando (para o card "Outro jogador").
+            try { const s = await api('GET', '/api/tcg/salas'); salasEsperando = (s.salas || []).length; } catch { salasEsperando = 0; }
             return d.partida ? 'partida' : 'ok';
         } catch (erro) {
+            salasEsperando = 0;
             return erro.status === 401 ? 'login' : 'fora';
         }
     }
@@ -1306,11 +1420,24 @@
         online = null;
         esperaSala?.parar();
         esperaSala = null;
+        salasAbertas?.parar();
+        salasAbertas = null;
         pararAoMudar?.();
         pararAoMudar = null;
     }
 
     let esperaSala = null;   // { parar } enquanto espera alguém entrar na sala
+    let salasAbertas = null; // { parar, atualizar } enquanto a lista de salas abertas está na tela
+
+    /** "há 2 min" a partir do carimbo `desde` do servidor. */
+    const haQuanto = (desde) => {
+        const min = Math.max(0, Math.floor((Date.now() - desde) / 60000));
+        if (min < 1) return 'agora mesmo';
+        if (min < 60) return `há ${min} min`;
+        const h = Math.floor(min / 60);
+        if (h < 24) return `há ${h} h`;
+        return `há ${Math.floor(h / 24)} dia${plu(Math.floor(h / 24))}`;
+    };
 
     /** Tela "Outro jogador": criar sala, entrar com código, voltar para a partida. */
     async function telaOnline(aviso) {
@@ -1356,6 +1483,71 @@
         const trocar = botao('bt-link', 'trocar deck', telaMenu);
         corpo.lastChild.append(' ', trocar);
 
+        // O mesmo fluxo de "entrar na sala" para o código digitado e para o botão da lista.
+        const entrarPorCodigo = async (codigo, alvo, b) => {
+            b.disabled = true;
+            try {
+                const d = await api('POST', `/api/tcg/salas/${encodeURIComponent(codigo)}/entrar`, { deck: deckEscolhido.id });
+                limparConvite();
+                salasAbertas?.parar();
+                comecarOnline(d);
+            } catch (erro) {
+                b.disabled = false;
+                if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
+                if (erro.status === 409 && !erro.dados?.recarregar) { msg(erro.message, 'bt-online-msg--erro'); salasAbertas?.atualizar(); return; }
+                balao(alvo, erro.message, 'erro');
+            }
+        };
+
+        // Salas esperando: lista com 1 clique para entrar (renova a cada 3 s, só com a aba visível).
+        const listaSalas = el('div', 'bt-online-salas');
+        const corpoSalas = el('div', 'bt-online-salas-lista');
+        listaSalas.append(el('h3', 'bt-online-salas-titulo', 'Salas esperando'), corpoSalas);
+        corpo.appendChild(listaSalas);
+        const renderSalas = (salas) => {
+            if (!corpoSalas.isConnected) return;
+            if (!salas.length) {
+                corpoSalas.replaceChildren(el('p', 'bt-online-vazio', 'Ninguém esperando agora. Crie uma sala e ela aparece aqui para os outros.'));
+                return;
+            }
+            corpoSalas.replaceChildren(...salas.map((s) => {
+                const d = DECKS.find((x) => x.id === s.deck);
+                const linha = el('div', 'bt-sala-linha');
+                linha.append(el('span', 'bt-sala-nome', s.criador),
+                    el('span', 'bt-sala-deck', d ? d.nome : s.deck),
+                    el('span', 'bt-sala-placar', `V ${s.vitorias} · D ${s.derrotas}`),
+                    el('span', 'bt-sala-espera', haQuanto(s.desde)));
+                const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarPorCodigo(s.codigo, b, b));
+                linha.appendChild(b);
+                return linha;
+            }));
+        };
+        const atualizarSalas = async () => {
+            if (!corpoSalas.isConnected || salasAbertas !== controleSalas) return;
+            try { const d = await api('GET', '/api/tcg/salas'); renderSalas(d.salas || []); }
+            catch { /* sem servidor agora: tenta de novo no próximo ciclo */ }
+        };
+        let timerSalas = null;
+        const checarSalas = async () => {
+            timerSalas = null;
+            if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
+            await atualizarSalas();
+            if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
+            timerSalas = setTimeout(checarSalas, SALAS_MS);
+        };
+        const visivelSalas = () => { if (!document.hidden && !timerSalas && corpoSalas.isConnected && salasAbertas === controleSalas) checarSalas(); };
+        const controleSalas = {
+            parar() {
+                if (timerSalas) clearTimeout(timerSalas);
+                document.removeEventListener('visibilitychange', visivelSalas);
+                if (salasAbertas === controleSalas) salasAbertas = null;
+            },
+            atualizar: () => atualizarSalas(),
+        };
+        salasAbertas = controleSalas;
+        document.addEventListener('visibilitychange', visivelSalas);
+        timerSalas = setTimeout(checarSalas, 0);
+
         // Entrar numa sala (código do amigo).
         const entrar = el('form', 'bt-online-entrar');
         const campo = el('input', 'bt-online-codigo');
@@ -1371,16 +1563,7 @@
             e.preventDefault();
             let codigo = campo.value.trim().toUpperCase().replace(/\s+/g, '');
             if (/^[A-Z0-9]{3}$/.test(codigo)) codigo = `TORA-${codigo}`;
-            bEntrar.disabled = true;
-            try {
-                const d = await api('POST', `/api/tcg/salas/${encodeURIComponent(codigo)}/entrar`, { deck: deckEscolhido.id });
-                limparConvite();
-                comecarOnline(d);
-            } catch (erro) {
-                bEntrar.disabled = false;
-                if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
-                balao(entrar, erro.message, 'erro');
-            }
+            await entrarPorCodigo(codigo, entrar, bEntrar);
         });
 
         const criar = botao('bt-botao', 'Criar sala e chamar um amigo', async () => {
@@ -1403,6 +1586,7 @@
         if (atual.sala) mostrarSala(atual.sala.codigo);
 
         function mostrarSala(codigo) {
+            salasAbertas?.parar();
             corpo.replaceChildren();
             const link = `${location.origin}${location.pathname}?sala=${codigo}`;
             corpo.append(el('p', 'bt-online-msg', 'Mande este código (ou o link) para o seu amigo:'),
@@ -1452,10 +1636,23 @@
         history.replaceState(null, '', `${location.pathname}${q ? `?${q}` : ''}`);
     }
 
+    /** Recado do servidor + botão "Recarregar" (partida de regra velha, jogo atualizado). */
+    function avisarRecarregar(mensagem) {
+        const fundo = el('div', 'bt-fim bt-pergunta');
+        const miolo = el('div', 'bt-fim-miolo');
+        const acoes = el('div', 'bt-fim-acoes');
+        acoes.appendChild(botao('bt-botao bt-botao--forte', 'Recarregar', () => location.reload()));
+        miolo.append(el('p', 'bt-pergunta-texto', mensagem), acoes);
+        fundo.appendChild(miolo);
+        (mesa?.raiz || raiz).appendChild(fundo);
+        acoes.firstChild.focus({ preventScroll: true });
+    }
+
     async function abrirPartida(id) {
         try {
             comecarOnline(await api('GET', `/api/tcg/partidas/${encodeURIComponent(id)}?desde=-1`));
         } catch (erro) {
+            if (erro.dados?.recarregar) { avisarRecarregar(erro.message); return; }
             telaOnline(erro.message);
         }
     }
@@ -1536,7 +1733,8 @@
         } catch (erro) {
             if (erro.dados?.recarregar) {
                 ocupado = false;
-                if (await perguntar('O jogo foi atualizado. Recarregar a página? A partida continua.', 'Recarregar')) location.reload();
+                if (mesa) { if (await perguntar(`${erro.message}. Recarregar a página?`, 'Recarregar')) location.reload(); }
+                else avisarRecarregar(erro.message);
                 return;
             }
             balao(mesa?.raiz || raiz, erro.status ? erro.message : 'Sem conexão. Tente de novo.', 'erro');
@@ -1557,6 +1755,7 @@
             d = await api('GET', `/api/tcg/partidas/${id}?desde=${online.versao}`);
         } catch (erro) {
             if (erro.status === 404) { pararOnline(); telaOnline('Essa partida não existe mais.'); return; }
+            if (erro.dados?.recarregar) { pararOnline(); avisarRecarregar(erro.message); return; }
             // Sem internet: tenta de novo mais devagar.
         }
         if (!online || online.id !== id) return;
@@ -1609,14 +1808,18 @@
             case 'turno': registrar(`— Turno ${ev.turno}: ${ev.jogador === EU ? 'sua vez' : `vez de ${dele()}`} —`); break;
             case 'tempo': registrar([icone(A('relogio'), '⏱'), ` ${quem(ev.jogador)} ficou sem jogar: inatividade ${ev.estouros} de ${ESTOUROS_PARA_PERDER}.`]); break;
             case 'compra': if (ev.jogador === EU) registrar(`Você comprou ${nomeVisivel(ev.id)}.`); break;
-            case 'baixar': registrar(`${quem(ev.jogador)} pôs ${nomeVisivel(ev.id)} no banco.`); break;
+            case 'baixar': registrar(`${quem(ev.jogador)} pôs ${nomeVisivel(ev.id)} ${ev.ativo ? 'no ativo (mesa vazia)' : 'no banco'}.`); break;
             case 'aura': registrar(`${n(ev.uid)} ganhou Aura (${ev.aura}).`); break;
             case 'campo': registrar(`${quem(ev.jogador)} jogou o campo ${nomeVisivel(ev.id)}.`); break;
             case 'campoSai': registrar(`O campo ${nomeVisivel(ev.id)} saiu da mesa.`); break;
-            case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${n(ev.alvo)}.`); break;
-            case 'dano': registrar(`${n(ev.uid)} levou ${ev.valor}${ev.fonte === 'notificado' ? ' (Notificado)' : ''}.`); break;
-            case 'cura': registrar(`${n(ev.uid)} curou ${ev.valor}.`); break;
-            case 'nocaute': registrar([icone(A('nocaute'), '💥'), ` ${nomeVisivel(ev.id)} caiu! +${ev.pontos} ${ev.pontos === 1 ? 'ponto' : 'pontos'} para ${quem(ev.para).toLowerCase()}.`]); break;
+            case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${ev.alvo === R.JOGADOR ? quem(1 - ev.jogador) : n(ev.alvo)}.`); break;
+            case 'dano': registrar(`${n(ev.uid)} levou ${num(ev.valor)}${ev.fonte === 'notificado' ? ' (Notificado)' : ''}.`); break;
+            case 'danoJogador': registrar(ev.fonte === 'nocaute'
+                ? `${quem(ev.jogador)} perdeu ${num(ev.valor)} de vida pela carta derrubada.`
+                : `${quem(ev.jogador)} levou ${num(ev.valor)}.`); break;
+            case 'cura': registrar(`${n(ev.uid)} curou ${num(ev.valor)}.`); break;
+            case 'nocaute': registrar([icone(A('nocaute'), '💥'), ` ${nomeVisivel(ev.id)} caiu!`]); break;
+            case 'virada': registrar(`${n(ev.uid)} virou: recarga até o próximo turno.`); break;
             case 'estado': registrar(`${n(ev.uid)} ficou ${ESTADOS[ev.estado].nome}.`); break;
             case 'imune': registrar(`${n(ev.uid)} acabou de ser ${ESTADOS[ev.estado].nome.toLowerCase()} e não pode ser de novo agora.`); break;
             case 'troca': registrar(`${n(ev.entra)} entrou no lugar de ${n(ev.sai)}.`); break;
@@ -2217,7 +2420,7 @@
                 break;
             case 'ataque': {
                 const a = elDe(ev.uid);
-                const alvo = elDe(ev.alvo);
+                const alvo = ev.alvo === R.JOGADOR ? mesa.npc.info : elDe(ev.alvo);
                 if (!a || !alvo) break;
                 balao(a, ev.nome, 'ataque');
                 await esperar(350);
@@ -2242,10 +2445,11 @@
                 const hp = alvo.querySelector('.bt-hp');
                 if (hp) {
                     const vida = Math.max(0, ev.hp - ev.dano);
-                    hp.textContent = vida;
+                    hp.textContent = num(vida);
                     hp.style.setProperty('--vida', `${(100 * vida) / ev.hp}%`);
+                    hp.classList.toggle('bt-hp--grande', vida >= 1000);
                 }
-                numero(alvo, `-${ev.valor}`, 'dano');
+                numero(alvo, `-${num(ev.valor)}`, 'dano');
                 // O impacto e as faíscas de todo golpe (leva 1); o letreiro é dos golpes de 50+.
                 folha('fx-impacto', alvo, { tam: 1.15 });
                 faiscas(alvo, 3 + Math.floor(Math.random() * 3));
@@ -2258,10 +2462,23 @@
                 if (ev.valor >= 90) tremer(mesa.raiz, 10);
                 break;
             }
+            case 'danoJogador': {
+                // Golpe direto na vida: a barra desce e um "-1.200" sobe perto do rosto.
+                const lado = ev.jogador === EU ? mesa.eu : mesa.npc;
+                const vida = Math.max(0, ev.vida);
+                numero(lado.rosto, `-${num(ev.valor)}`, 'dano');
+                lado.barra.querySelector('.bt-vida-fill').style.setProperty('--vida', `${(100 * vida) / R.VIDA_INICIAL}%`);
+                lado.vida.classList.toggle('bt-vida--baixo', vida <= R.VIDA_INICIAL * 0.3);
+                lado.vida.querySelector('.bt-vida-numero').textContent = num(vida);
+                lado.vida.setAttribute('aria-label', `Vida: ${num(vida)} de ${num(R.VIDA_INICIAL)}`);
+                tremer(lado.info, 6);
+                await esperar(240);
+                break;
+            }
             case 'cura': {
                 const alvo = elDe(ev.uid);
                 if (alvo) {
-                    numero(alvo, `+${ev.valor}`, 'cura');
+                    numero(alvo, `+${num(ev.valor)}`, 'cura');
                     peca('fx-cura', alvo, { tam: .85, dy: -(caixaDe(alvo).h || 60) * .2, dur: 900 });
                     await esperar(350);
                 }
@@ -2270,7 +2487,6 @@
             case 'nocaute': {
                 const alvo = elDe(ev.uid);
                 if (!alvo) break;
-                const lado = ev.para === EU ? mesa.eu : mesa.npc;
                 balao(alvo, 'NOCAUTE!', 'nocaute');
                 poeira(alvo, 1.2);
                 peca('fx-ko', alvo, { tam: .85, dur: 900 });
@@ -2279,11 +2495,17 @@
                     { transform: 'scale(1.1) rotate(-6deg)', filter: 'brightness(2) saturate(0)', opacity: 1, offset: 0.25 },
                     { transform: 'translateY(40px) scale(.6) rotate(18deg)', filter: 'brightness(.4) blur(2px)', opacity: 0 },
                 ], { duration: 650, easing: 'ease-in', fill: 'forwards' });
-                const pontos = lado.pontos;
-                const antesPontos = antes.jogadores[ev.para].pontos;
-                const feitos = [...pontos.children].slice(0, Math.min(R.PONTOS_VITORIA, antesPontos + ev.pontos));
-                feitos.forEach((p) => p.classList.add('bt-ponto--feito'));
-                animar(pontos, [{ transform: 'scale(1)' }, { transform: 'scale(1.5)' }, { transform: 'scale(1)' }], { duration: 400 });
+                break;
+            }
+            case 'virada': {
+                // Recarga: a carta vira para baixo com o verso da Batalha até o próximo turno do dono.
+                const alvo = elDe(ev.uid);
+                if (alvo) {
+                    alvo.classList.add('bt-carta--virada');
+                    alvo.dataset.virada = 'true';
+                    girarCarta(alvo);
+                    await balao(alvo, 'Recarga!', 'estado');
+                }
                 break;
             }
             case 'moeda':
@@ -2414,14 +2636,14 @@
         const tipo = v === 'empate' ? 'empate' : (v === EU ? 'vitoria' : 'derrota');
         const titulos = { vitoria: 'VITÓRIA!', derrota: 'DERROTA...', empate: 'EMPATE!' };
         const motivos = {
-            pontos: 'Fez 3 pontos.', mesaVazia: 'Ficou sem ninguém na mesa.', limiteTurnos: 'Acabaram os 30 turnos.',
-            desistencia: 'Alguém desistiu.', empate: 'Os dois chegaram lá juntos.',
+            vida: 'Zerou a vida do adversário.', limiteTurnos: 'Acabaram os 30 turnos: venceu quem tinha mais vida.',
+            empate: 'Os dois chegaram lá juntos.', desistencia: 'Alguém desistiu.',
             inatividade: 'Ficou 3 vezes seguidas sem jogar (inatividade).',
         };
         const caixa = el('div', `bt-fim bt-fim--${tipo}`);
         const miolo = el('div', 'bt-fim-miolo');
         miolo.append(el('h2', 'bt-fim-titulo', titulos[tipo]), el('p', '', motivos[estado.motivo] || ''),
-            el('p', 'bt-fim-placar', `Placar: ${estado.jogadores[EU].pontos} × ${estado.jogadores[NPC].pontos}`));
+            el('p', 'bt-fim-placar', `Vida: ${num(estado.jogadores[EU].vida)} × ${num(estado.jogadores[NPC].vida)}`));
         const acoes = el('div', 'bt-fim-acoes');
         if (online) {
             pararOnline();
