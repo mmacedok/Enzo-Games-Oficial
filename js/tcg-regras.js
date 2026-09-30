@@ -572,17 +572,14 @@
         const resultadoMoeda = temMoeda ? moeda(estado, eventos, 'ataque') : undefined;
         const dano = calcularDano(estado, j, ataque, noJogador ? JOGADOR : alvo, { resultadoMoeda });
         let derrubou = false;
-        let deUmGolpe = false;
         if (noJogador) {
             ferirJogador(estado, outro(j), dano, eventos, 'ataque');
         } else {
             if (alvo.escudo && alvo.escudo.ate >= estado.turno && dano === 0 && ataque.dano > 0) {
                 eventos.push({ tipo: 'bloqueado', uid: alvo.uid });
             }
-            const estavaCheia = alvo.dano === 0;
             darDano(estado, alvo, dano, eventos, 'ataque');
             derrubou = dano > 0 && alvo.dano >= hpMax(estado, alvo);
-            deUmGolpe = derrubou && estavaCheia;
             const contra = combate(alvo.id).poder;
             if (dano > 0 && contra?.tipo === 'contraAtaque') {
                 eventos.push({ tipo: 'poder', uid: alvo.uid, nome: contra.nome });
@@ -650,13 +647,14 @@
             }
         }
         // (Sem golpe extra: derrubar a carta só tira do dono a vida da raridade, em verificarNocautes.)
-        // Derrubou de um golpe só (a carta estava com a vida cheia): o atacante vira (recarga).
-        // Ataque com recargaSeDerrubar (Aura de 67 Segundos do Superkid): derrubou qualquer carta, o atacante vira.
-        if ((deUmGolpe || (ataque.recargaSeDerrubar && derrubou)) && !virada(estado, atacante)) {
-            atacante.estados.virada = estado.turno + 2;
-            eventos.push({ tipo: 'virada', uid: atacante.uid, ate: atacante.estados.virada, motivo: deUmGolpe ? 'umGolpe' : 'derrubou' });
-        }
+        // A vida do dono da carta derrubada cai primeiro (nocaute)...
         verificarNocautes(estado, eventos);
+        // ...e depois a carta que derrubou fica virada (recarga) até o próximo turno do dono. Vale para todo ataque
+        // que derruba uma carta (não vale se a partida acabou ou se o atacante caiu no contra-ataque).
+        if (derrubou && estado.fase !== 'fim' && acharNaMesa(eu, atacante.uid) && !virada(estado, atacante)) {
+            atacante.estados.virada = estado.turno + 2;
+            eventos.push({ tipo: 'virada', uid: atacante.uid, ate: atacante.estados.virada, motivo: 'derrubou' });
+        }
         seguir(estado, 'fimTurno', eventos);
     }
 
@@ -751,6 +749,13 @@
                 estado.campo = { carta: inst, dono: j };
                 eu.flags.campo = true;
                 eventos.push({ tipo: 'campo', jogador: j, uid: inst.uid, id: inst.id });
+                // Piscina de Macarronada: quem joga o campo já é curado neste mesmo turno (depois vem a cura de começo de turno).
+                const efeito = combate(inst.id).campo;
+                if (efeito?.tipo === 'curaInicio' && eu.ativo && eu.ativo.dano > 0) {
+                    const valor = Math.min(efeito.valor * ESCALA, eu.ativo.dano);
+                    eu.ativo.dano -= valor;
+                    eventos.push({ tipo: 'cura', uid: eu.ativo.uid, valor, fonte: 'campo' });
+                }
                 // Sair da Mansão pode derrubar goons que estavam vivos pelos +20 de HP.
                 verificarNocautes(estado, eventos);
                 return;

@@ -341,6 +341,17 @@ test('campo: 1 por turno, troca o anterior (vai para o descarte do dono), não r
     invalida(() => jogar(e, { tipo: 'campo', uid: EU(mesa({ eu: { mao: ['bug-do-discord'] } })).mao[0].uid }), 'não é um campo');
 });
 
+test('Piscina de Macarronada: quem a joga é curado no mesmo turno (400 no ativo dele); o adversário não', () => {
+    const e = mesa({ eu: { ativo: { id: 'drone-vigia', dano: 30 * R.ESCALA }, mao: ['piscina-de-macarronada'] }, ele: { ativo: { id: 'drone-vigia', dano: 30 * R.ESCALA } } });
+    const r = jogar(e, { tipo: 'campo', uid: EU(e).mao[0].uid });
+    assert.equal(r.estado.jogadores[0].ativo.dano, 30 * R.ESCALA - 20 * R.ESCALA, 'quem jogou curou 400 agora');
+    assert.equal(r.estado.jogadores[1].ativo.dano, 30 * R.ESCALA, 'o adversário só é curado no começo do turno dele');
+    assert.ok(r.eventos.some((ev) => ev.tipo === 'cura' && ev.fonte === 'campo' && ev.uid === EU(e).ativo.uid));
+    // sem dano não há o que curar (nada de evento)
+    const inteiro = mesa({ eu: { ativo: 'drone-vigia', mao: ['piscina-de-macarronada'] } });
+    assert.ok(!jogar(inteiro, { tipo: 'campo', uid: EU(inteiro).mao[0].uid }).eventos.some((ev) => ev.tipo === 'cura'));
+});
+
 test('Piscina de Macarronada: cura 400 do ativo de quem começa o turno', () => {
     const e = mesa({ ele: { ativo: { id: 'drone-vigia', dano: 30 * R.ESCALA } }, campo: 'piscina-de-macarronada' });
     const s = jogar(e, { tipo: 'passar' }).estado;
@@ -903,21 +914,22 @@ test('nocaute por veneno ou por contra-ataque do Chorão não dá golpe extra', 
     assert.ok(!rc.eventos.some((ev) => ev.tipo === 'golpeExtra'), 'contra-ataque não dá golpe extra');
 });
 
-test('derrubar carta machucada não vira; derrubar de vida cheia vira (umGolpe) e prende o próximo turno', () => {
-    // Já machucada: cai, mas não conta como "de um golpe só".
-    const machucada = mesa({ eu: { ativo: { id: 'marreteiro-do-coracao', aura: 3 } },
+test('toda carta que derruba outra fica virada (machucada ou não), depois de a vida do dono cair', () => {
+    // Carta já machucada: cai e quem derrubou também vira.
+    const machucada = mesa({ turno: 5, vez: 0, eu: { ativo: { id: 'marreteiro-do-coracao', aura: 3 }, banco: ['bug-do-discord'] },
         ele: { ativo: { id: 'chorao', dano: 40 * R.ESCALA }, banco: ['bug-do-discord'] } });
     const rm = atacar(machucada, 1);
     assert.equal(rm.estado.jogadores[1].ativo, null);
-    assert.ok(!rm.eventos.some((ev) => ev.tipo === 'virada' && ev.motivo === 'umGolpe'));
-    assert.equal(rm.estado.jogadores[0].ativo.estados.virada || 0, 0);
-
-    // Vida cheia: cai de um golpe, vira até o segundo turno do dono.
+    assert.ok(rm.eventos.some((ev) => ev.tipo === 'virada' && ev.motivo === 'derrubou' && ev.uid === rm.estado.jogadores[0].ativo.uid));
+    assert.equal(rm.estado.jogadores[0].ativo.estados.virada, 7);
+    // a virada vem DEPOIS do dano na vida do dono da carta
+    const tipos = rm.eventos.map((ev) => ev.tipo + (ev.fonte ? ':' + ev.fonte : ''));
+    assert.ok(tipos.indexOf('virada') > tipos.indexOf('danoJogador:nocaute'), tipos.join(' '));
+    // vida cheia: idem, e prende o próximo turno dele
     const cheia = mesa({ turno: 5, vez: 0,
         eu: { ativo: { id: 'marreteiro-do-coracao', aura: 3 }, banco: ['bug-do-discord'] },
         ele: { ativo: 'drone-vigia', banco: ['bug-do-discord'] } });
     const rch = atacar(cheia, 1);
-    assert.ok(rch.eventos.some((ev) => ev.tipo === 'virada' && ev.motivo === 'umGolpe' && ev.uid === rch.estado.jogadores[0].ativo.uid));
     assert.equal(rch.estado.jogadores[0].ativo.estados.virada, 7);
     let s = rch.estado;
     s = R.aplicar(s, { tipo: 'novoAtivo', jogador: 1, uid: s.jogadores[1].banco[0].uid }).estado;
@@ -926,15 +938,26 @@ test('derrubar carta machucada não vira; derrubar de vida cheia vira (umGolpe) 
     assert.equal(s.turno, 7);
     assert.equal(s.vez, 0);
     invalida(() => R.aplicar(s, { tipo: 'atacar', jogador: 0, ataque: 1 }), 'virada');
+    // sem derrubar ninguém, não vira
+    const sem = mesa({ eu: { ativo: { id: 'marreteiro-do-coracao', aura: 3 } }, ele: { ativo: 'enzo-games' } });
+    assert.ok(!atacar(sem, 1).eventos.some((ev) => ev.tipo === 'virada'));
 });
 
-test('derrubar de um golpe com Macarronada (que já tem recarga) gera só um evento virada', () => {
+test('derrubar com Macarronada (que já tem recarga) gera só um evento virada', () => {
     const e = mesa({ turno: 5, vez: 0, eu: { ativo: { id: 'enzo-games', aura: 3 } }, ele: { ativo: 'drone-vigia', banco: ['bug-do-discord'] } });
     const r = atacar(e, 1);
     const viradas = r.eventos.filter((ev) => ev.tipo === 'virada');
     assert.equal(viradas.length, 1, 'a recarga já virou: não duplica o evento');
-    assert.ok(!viradas.some((ev) => ev.motivo === 'umGolpe'));
     assert.equal(r.estado.jogadores[0].ativo.estados.virada, 7);
+});
+
+test('Superkid: a Aura de 67 Segundos que derruba uma carta deixa ele virado', () => {
+    const derruba = mesa({ eu: { ativo: { id: 'superkid', aura: 5 } }, ele: { ativo: { id: 'chorao', dano: 100 } } });
+    const s = atacar(derruba, 1).estado;
+    assert.equal(R.virada(s, s.jogadores[0].ativo), true);
+    const naoDerruba = mesa({ eu: { ativo: { id: 'superkid', aura: 2 } }, ele: { ativo: 'chorao' } });
+    const n = atacar(naoDerruba, 1).estado;
+    assert.equal(R.virada(n, n.jogadores[0].ativo), false);
 });
 
 test('nocaute que zera a vida encerra a partida com motivo vida', () => {

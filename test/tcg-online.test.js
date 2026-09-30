@@ -11,6 +11,12 @@ const R = require('../js/tcg-regras.js');
 const Robo = require('../js/tcg-robo.js');
 const Tcg = require('../api/tcg.js');
 
+const Baralho = require('../js/baralho-dados.js');
+// Online só vale o deck customizado: 2 lendárias + outras (até 2 cópias de cada).
+const LENDARIAS = Baralho.CARTAS.filter((c) => c.raridade === 'lendario' && c.tipo !== 'campo').map((c) => c.id);
+const COMUNS = Baralho.CARTAS.filter((c) => c.raridade !== 'lendario').map((c) => c.id);
+const DECK_ONLINE = [LENDARIAS[0], LENDARIAS[1], ...COMUNS.slice(0, 7).flatMap((id) => [id, id])].slice(0, 15);
+
 const ENV = { GOOGLE_CLIENT_ID: 'teste.apps.googleusercontent.com', SESSION_SECRET: 'x'.repeat(40) };
 
 function montar() {
@@ -49,11 +55,14 @@ async function jogador(m, sub, nome) {
     const chamar = m.navegador();
     const r = await chamar('POST', '/api/auth/google', { credential: `google:${sub}:${nome}:${"x".repeat(20)}` });
     assert.equal(r.status, 200, r.texto);
+    // todo jogador dos testes já tem o deck customizado salvo (é o único que vale online)
+    const d = await chamar('POST', '/api/tcg/deck', { cartas: DECK_ONLINE });
+    assert.equal(d.status, 200, d.texto);
     return chamar;
 }
 
 /** Cria a sala com A e faz B entrar; devolve o id da partida e a primeira resposta de B. */
-async function comecar(m, a, b, decks = ['turma', 'legiao'], { banir = true } = {}) {
+async function comecar(m, a, b, decks = ['custom', 'custom'], { banir = true } = {}) {
     const sala = await a('POST', '/api/tcg/salas', { deck: decks[0] });
     assert.equal(sala.status, 200, sala.texto);
     const entrou = await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: decks[1] });
@@ -77,10 +86,16 @@ test('T1. Sem login as rotas dão 401; deck desconhecido dá 400', async (t) => 
     const m = montar();
     t.after(() => m.db.close());
     const visitante = m.navegador();
-    assert.equal((await visitante('POST', '/api/tcg/salas', { deck: 'turma' })).status, 401);
+    assert.equal((await visitante('POST', '/api/tcg/salas', { deck: 'custom' })).status, 401);
     assert.equal((await visitante('GET', '/api/tcg/atual')).status, 401);
     const a = await jogador(m, 'a', 'Ana');
     assert.equal((await a('POST', '/api/tcg/salas', { deck: 'trapaca' })).status, 400);
+    // os decks prontos (turma, legião, internet) só valem contra o NPC: online é só o customizado
+    for (const pronto of ['turma', 'legiao', 'internet']) {
+        const r = await a('POST', '/api/tcg/salas', { deck: pronto });
+        assert.equal(r.status, 400);
+        assert.match(r.dados.erro || r.texto, /customizado/);
+    }
 });
 
 test('T2. Sala: criar, ver, não entrar na própria, entrar, e só um consegue entrar', async (t) => {
@@ -89,21 +104,21 @@ test('T2. Sala: criar, ver, não entrar na própria, entrar, e só um consegue e
     const a = await jogador(m, 'a', 'Ana');
     const b = await jogador(m, 'b', 'Beto');
     const c = await jogador(m, 'c', 'Caio');
-    const sala = await a('POST', '/api/tcg/salas', { deck: 'turma' });
+    const sala = await a('POST', '/api/tcg/salas', { deck: 'custom' });
     assert.match(sala.dados.codigo, /^TORA-[A-Z0-9]{3}$/);
     const vista = await b('GET', `/api/tcg/salas/${sala.dados.codigo.toLowerCase()}`);
     assert.equal(vista.dados.criador, 'Ana');
     assert.equal(vista.dados.partida, null);
-    assert.equal((await a('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'turma' })).status, 400);
-    const entrou = await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'internet' });
+    assert.equal((await a('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'custom' })).status, 400);
+    const entrou = await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'custom' });
     assert.equal(entrou.status, 200, entrou.texto);
     assert.equal(entrou.dados.eu, 1);
-    assert.equal((await c('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'turma' })).status, 404);
+    assert.equal((await c('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'custom' })).status, 404);
     // Quem criou descobre pela sala (ou pelo /atual) que a partida começou.
     assert.equal((await a('GET', `/api/tcg/salas/${sala.dados.codigo}`)).dados.partida, entrou.dados.id);
     assert.equal((await a('GET', '/api/tcg/atual')).dados.partida, entrou.dados.id);
     // Quem está jogando não cria outra sala.
-    assert.equal((await a('POST', '/api/tcg/salas', { deck: 'turma' })).status, 409);
+    assert.equal((await a('POST', '/api/tcg/salas', { deck: 'custom' })).status, 409);
 });
 
 test('T3. Sala expira em 5 minutos sem o dono na tela de espera', async (t) => {
@@ -111,11 +126,11 @@ test('T3. Sala expira em 5 minutos sem o dono na tela de espera', async (t) => {
     t.after(() => m.db.close());
     const a = await jogador(m, 'a', 'Ana');
     const b = await jogador(m, 'b', 'Beto');
-    const sala = await a('POST', '/api/tcg/salas', { deck: 'turma' });
+    const sala = await a('POST', '/api/tcg/salas', { deck: 'custom' });
     m.relogio.agora += 4 * 60 * 1000;
     assert.equal((await b('GET', `/api/tcg/salas/${sala.dados.codigo}`)).status, 200);
     m.relogio.agora += 90 * 1000;   // 5min30 sem o dono perguntar
-    assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'turma' })).status, 404);
+    assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'custom' })).status, 404);
 });
 
 test('T4. Partida inteira pela API com dois robôs: ninguém vê a mão do outro e o final confere com o motor', async (t) => {
@@ -178,7 +193,7 @@ test('T4. Partida inteira pela API com dois robôs: ninguém vê a mão do outro
     const estado = JSON.parse(linha.estado);
     const lista = (await m.db.query('SELECT jogada FROM tcg_jogadas WHERE partida_id = $1 ORDER BY n', [id])).map((l) => JSON.parse(l.jogada));
     assert.deepEqual(R.repetir({ semente: estado.semente, decks: [
-        require('../js/tcg-cartas.js').DECKS_PRONTOS[0].cartas, require('../js/tcg-cartas.js').DECKS_PRONTOS[1].cartas,
+        DECK_ONLINE, DECK_ONLINE,
     ], nomes: ['Ana', 'Beto'], banimento: true }, lista), estado);
     const [res] = await m.db.query('SELECT * FROM tcg_resultados WHERE partida_id = $1', [id]);
     assert.ok(res, 'resultado guardado');
@@ -283,8 +298,8 @@ test('T9. Salas abertas: aparece para os outros enquanto o dono espera; some ao 
     const c = await jogador(m, 'c', 'Caio');
     const lista = async (quem) => (await quem('GET', '/api/tcg/salas')).dados.salas;
     assert.equal((await m.navegador()('GET', '/api/tcg/salas')).status, 401);
-    const sala = await a('POST', '/api/tcg/salas', { deck: 'turma' });
-    assert.deepEqual((await lista(b)).map((s) => [s.codigo, s.criador, s.deck]), [[sala.dados.codigo, 'Ana', 'turma']]);
+    const sala = await a('POST', '/api/tcg/salas', { deck: 'custom' });
+    assert.deepEqual((await lista(b)).map((s) => [s.codigo, s.criador, s.deck]), [[sala.dados.codigo, 'Ana', 'custom']]);
     assert.deepEqual(await lista(a), [], 'a própria sala não aparece para o dono');
     // Sala pública: 5 minutos na lista (SALA_DURA)...
     assert.equal(Tcg.SALA_DURA, 5 * 60 * 1000);
@@ -297,15 +312,15 @@ test('T9. Salas abertas: aparece para os outros enquanto o dono espera; some ao 
     // ...e quando o dono para de perguntar (fechou a aba), some sozinha e não dá mais para entrar.
     m.relogio.agora += 2000;
     assert.deepEqual(await lista(b), []);
-    assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'legiao' })).status, 404);
-    const nova = await a('POST', '/api/tcg/salas', { deck: 'turma' });   // criar outra é permitido
+    assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'custom' })).status, 404);
+    const nova = await a('POST', '/api/tcg/salas', { deck: 'custom' });   // criar outra é permitido
     assert.equal((await lista(b)).length, 1);
     sala.dados.codigo = nova.dados.codigo;
     // Entrou alguém: sai da lista de todo mundo.
-    assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'legiao' })).status, 200);
+    assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'custom' })).status, 200);
     assert.deepEqual(await lista(c), []);
     // Cancelada também some.
-    const outra = await c('POST', '/api/tcg/salas', { deck: 'turma' });
+    const outra = await c('POST', '/api/tcg/salas', { deck: 'custom' });
     const d = await jogador(m, 'd', 'Duda');
     assert.equal((await lista(d)).length, 1);
     await c('POST', `/api/tcg/salas/${outra.dados.codigo}/cancelar`, {});
@@ -343,7 +358,7 @@ test('T10. Placar permanente: vitória, derrota e empate por conta; visitante v�
     const perfilBeto = (await m.navegador()('GET', `/api/readers/${ub.id}`)).dados;
     assert.deepEqual(perfilBeto.batalha, { vitorias: 0, derrotas: 2, empates: 1, posicao: 2 });
     // A sala de quem tem placar mostra as vitórias dele na lista.
-    await a('POST', '/api/tcg/salas', { deck: 'turma' });
+    await a('POST', '/api/tcg/salas', { deck: 'custom' });
     const [s] = (await b('GET', '/api/tcg/salas')).dados.salas;
     assert.deepEqual([s.vitorias, s.derrotas], [2, 0]);
 });
@@ -362,7 +377,7 @@ test('T11. Partida da regra antiga é encerrada sem resultado e não trava o jog
     const [linha] = await m.db.query('SELECT status, motivo FROM tcg_partidas WHERE id = $1', [id]);
     assert.deepEqual([linha.status, linha.motivo], ['fim', 'atualizacao']);
     assert.equal((await m.db.query('SELECT * FROM tcg_resultados WHERE partida_id = $1', [id])).length, 0);
-    assert.equal((await a('POST', '/api/tcg/salas', { deck: 'turma' })).status, 200, 'pode criar sala nova');
+    assert.equal((await a('POST', '/api/tcg/salas', { deck: 'custom' })).status, 200, 'pode criar sala nova');
 });
 
 test('T12. Revanche: os dois pedem, nasce outra partida com os mesmos decks e os lados trocados', async (t) => {
@@ -371,7 +386,7 @@ test('T12. Revanche: os dois pedem, nasce outra partida com os mesmos decks e os
     const a = await jogador(m, 'a', 'Ana');
     const b = await jogador(m, 'b', 'Beto');
     const c = await jogador(m, 'c', 'Caio');
-    const { id } = await comecar(m, a, b, ['turma', 'legiao']);
+    const { id } = await comecar(m, a, b, ['custom', 'custom']);
     // Partida em andamento não aceita revanche.
     assert.equal((await a('POST', `/api/tcg/partidas/${id}/revanche`, {})).status, 409);
     const d = (await b('GET', `/api/tcg/partidas/${id}`)).dados;
@@ -395,7 +410,7 @@ test('T12. Revanche: os dois pedem, nasce outra partida com os mesmos decks e os
     const nova = (await a('GET', `/api/tcg/partidas/${aceite.partida}?desde=-1`)).dados;
     assert.equal(nova.eu, 1);
     assert.equal((await b('GET', `/api/tcg/partidas/${aceite.partida}?desde=-1`)).dados.eu, 0);
-    assert.deepEqual(nova.decks, ['legiao', 'turma']);
+    assert.deepEqual(nova.decks, ['custom', 'custom']);
     assert.equal(nova.status, 'jogando');
 
     // Depois do tempo da revanche, ninguém mais consegue pedir.

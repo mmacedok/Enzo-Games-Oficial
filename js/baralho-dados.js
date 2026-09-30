@@ -102,7 +102,7 @@
         { id: 'piscina-de-macarronada', numero: 19, nome: 'Piscina de Macarronada', tipo: 'campo', raridade: 'lendario', peso: 1,
             arte: 'assets/Cartas/piscina-de-macarronada.png', foco: '50% 30%',
             frase: 'O que alguém poderia querer além de uma piscina de macarronada?',
-            tcg: 'Campo (vale para os dois lados)\nNo começo de cada turno, cura 400 do ativo de quem vai jogar.' },
+            tcg: 'Campo (vale para os dois lados)\nAo ser jogada, cura 400 do ativo de quem a jogou, no mesmo turno.\nDepois, no começo de cada turno, cura 400 do ativo de quem vai jogar.' },
         { id: 'toradolandia', numero: 20, nome: 'Toradolândia', tipo: 'campo', raridade: 'epico', peso: 1,
             arte: 'assets/Cartas/toradolandia.png', foco: '50% 30%',
             frase: 'BEM-VINDO À TORADOLÂNDIA!',

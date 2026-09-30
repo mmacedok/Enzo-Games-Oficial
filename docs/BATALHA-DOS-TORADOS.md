@@ -48,7 +48,7 @@ Compra 1 carta. Depois, em qualquer ordem:
 | Lendário | 2.250 |
 
 - **Sem golpe extra:** derrubar a carta só tira do dono a vida da raridade (tabela acima).
-- **Nocaute de um golpe só** (o alvo estava com o dano em 0): o atacante fica virado (recarga).
+- **Quem derruba uma carta fica virado** (recarga até o próximo turno dele), depois de a vida do dono da carta cair. Vale para todo ataque que derruba.
 - **Recarga (carta virada):** Macarronada a 300%, Vírgula-rangue, Bala Dourada e Ban de 7 Dias deixam a carta virada até o próximo turno do dono. Virada, ela não ataca, não usa poder e não recua, mas leva golpe.
 
 ## 5. Estados
@@ -66,7 +66,7 @@ Um campo por vez na mesa; vale para os dois lados. Cabo Côco no ativo impede o 
 
 | Campo | Efeito |
 |---|---|
-| Piscina de Macarronada | cura 400 do ativo de quem vai jogar, no começo do turno |
+| Piscina de Macarronada | cura 400 do ativo de quem a joga, no mesmo turno; depois, 400 do ativo de quem vai jogar, no começo de cada turno |
 | Toradolândia | quem começa o turno com 3 cartas ou menos na mão compra 1 a mais |
 | Mansão do Inominável | Notificado tira 400 por turno; goons ganham +400 de vida |
 | Estacionamento Noturno | goons recuam de graça |
@@ -74,6 +74,8 @@ Um campo por vez na mesa; vale para os dois lados. Cabo Côco no ativo impede o 
 | São João do Butico | os ataques não acertam o banco |
 
 ## 7. Online
+
+- **Só com o deck customizado:** salas e partidas online não aceitam os decks prontos (Turma, Legião, Internet), que valem contra o NPC. Sem deck customizado válido, a tela online leva a montar o seu.
 
 - **Salas públicas:** "Outro jogador" tem **Lista de salas** e **Criar sala**. A sala fica 5 minutos na lista e o tempo recomeça enquanto a tela de espera do dono está aberta.
 - **Relógio:** 60 segundos por turno; 3 estouros seguidos = derrota.
@@ -264,7 +266,8 @@ _(Nenhum estacionamento fica sem câmera por muito tempo.)_
 _(O que alguém poderia querer além de uma piscina de macarronada?)_
 
 - Campo (vale para os dois lados)
-- No começo de cada turno, cura 400 do ativo de quem vai jogar.
+- Ao ser jogada, cura 400 do ativo de quem a jogou, no mesmo turno.
+- Depois, no começo de cada turno, cura 400 do ativo de quem vai jogar.
 
 #### Toradolândia — Épico · campo
 _(BEM-VINDO À TORADOLÂNDIA!)_

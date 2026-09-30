@@ -104,6 +104,12 @@ async function lerDeck(ctx, id) {
     return d;
 }
 
+/** Sala e partida online: só vale o deck customizado. */
+async function lerDeckOnline(ctx, id) {
+    if (id !== 'custom') throw new HttpError(400, 'o modo online só aceita o deck customizado: monte o seu em "Seu deck"');
+    return lerDeck(ctx, id);
+}
+
 /** Deck guardado numa sala/partida: pronto pelo id, ou a lista da foto quando é o customizado. */
 function deckGuardado(id, lista) {
     if (id === 'custom') return { ...CUSTOM, cartas: JSON.parse(lista) };
@@ -559,7 +565,7 @@ const rotas = [
         metodo: 'POST', caminho: '/api/tcg/salas', login: true,
         async executar(ctx) {
             const { deck } = await ctx.corpo();
-            const d = await lerDeck(ctx, deck);
+            const d = await lerDeckOnline(ctx, deck);
             await semPartidaAberta(ctx);
             await limpar(ctx);
             // Uma sala aberta por jogador: a nova substitui a antiga.
@@ -605,7 +611,7 @@ const rotas = [
         async executar(ctx) {
             const codigo = lerCodigo(ctx.params[0]);
             const { deck } = await ctx.corpo();
-            const d = await lerDeck(ctx, deck);
+            const d = await lerDeckOnline(ctx, deck);
             const eu = ctx.usuario.id;
             await semPartidaAberta(ctx);
             const [s] = await ctx.db.query('SELECT * FROM tcg_salas WHERE codigo = $1', [codigo]);

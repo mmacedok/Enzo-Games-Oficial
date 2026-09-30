@@ -79,10 +79,12 @@ test('D3: sala e partida com o deck customizado; revanche mantém os decks', asy
     const sala = (await a.c('POST', '/api/tcg/salas', { deck: 'custom' })).dados;
     assert.equal(sala.deck, 'custom');
     assert.equal((await b.c('POST', '/api/tcg/salas/' + sala.codigo + '/entrar', { deck: 'custom' })).status, 400); // beto não tem deck
-    const p = (await b.c('POST', `/api/tcg/salas/${sala.codigo}/entrar`, { deck: 'turma' })).dados;
+    assert.equal((await b.c('POST', '/api/tcg/salas/' + sala.codigo + '/entrar', { deck: 'turma' })).status, 400); // deck pronto não vale online
+    await b.c('POST', '/api/tcg/deck', { cartas: DECK });
+    const p = (await b.c('POST', `/api/tcg/salas/${sala.codigo}/entrar`, { deck: 'custom' })).dados;
     assert.ok(p.id);
     const minha = (await a.c('GET', `/api/tcg/partidas/${p.id}`)).dados;
-    assert.deepEqual(minha.decks, ['custom', 'turma']);
+    assert.deepEqual(minha.decks, ['custom', 'custom']);
     const cartasDaAna = [...minha.visao.jogadores[0].mao, ...(minha.visao.jogadores[0].ativo ? [minha.visao.jogadores[0].ativo] : [])].map((x) => x.id);
     assert.ok(cartasDaAna.every((id) => DECK.includes(id)));
 
@@ -95,7 +97,7 @@ test('D3: sala e partida com o deck customizado; revanche mantém os decks', asy
     const nova = (await a.c('GET', '/api/tcg/atual')).dados.partida;
     assert.ok(nova && nova !== p.id);
     const r2 = (await a.c('GET', `/api/tcg/partidas/${nova}`)).dados;
-    assert.deepEqual(r2.decks, ['turma', 'custom']); // trocou de lado
+    assert.deepEqual(r2.decks, ['custom', 'custom']); // trocou de lado
 
     // lista salva que deixou de ser válida (ex.: limite mudou) não entra em sala
     await a.c('POST', `/api/tcg/partidas/${nova}/jogada`, { jogada: { tipo: 'desistir' }, versao: r2.versao, regras: R.REGRAS_VERSAO });

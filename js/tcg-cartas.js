@@ -46,7 +46,7 @@
             ] },
         'superkid': { hp: 130, recuo: 2, ataques: [
             { nome: 'Farmar Aura', custo: 1, dano: 0, efeitos: [{ tipo: 'auraSi', valor: 1 }] },
-            { nome: 'Aura de 67 Segundos', custo: 2, dano: 20, efeitos: [{ tipo: 'bonusPorAura', valor: 20 }], recargaSeDerrubar: true },
+            { nome: 'Aura de 67 Segundos', custo: 2, dano: 20, efeitos: [{ tipo: 'bonusPorAura', valor: 20 }] },
         ] },
 
         // ---- Épicos ----------------------------------------------------------
@@ -108,7 +108,7 @@
 
         // ---- Campos (ficam na mesa e valem para os dois) --------------------
         'piscina-de-macarronada': { campo: { tipo: 'curaInicio', valor: 20,
-            texto: 'No começo de cada turno, cura 20 do ativo de quem vai jogar.' } },
+            texto: 'Quando quem a joga a põe na mesa, cura 20 do ativo dele no mesmo turno; depois, no começo de cada turno, cura 20 do ativo de quem vai jogar.' } },
         'toradolandia': { campo: { tipo: 'compraExtra', limiteMao: 3,
             texto: 'Quem começa o turno com 3 cartas ou menos na mão compra 1 a mais.' } },
         'mansao-do-inominavel': { campo: { tipo: 'mansao', veneno: 20, hpGoon: 20,

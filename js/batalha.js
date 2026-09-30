@@ -168,6 +168,7 @@
     const custom = { estado: 'nada', cartas: null, nome: '', descricao: '', publico: false, erros: [], limites: null, obj: null };
     const aplicarDeckDoServidor = (d) => Object.assign(custom, { estado: 'ok', cartas: d.cartas, nome: d.nome || '', descricao: d.descricao || '', publico: d.publico === true, erros: d.erros || [], limites: d.limites || custom.limites });
     let ocupado = false;
+    let editorVoltaOnline = false;   // o editor de deck foi aberto pela tela online: ao salvar, volta para ela
     let banirSel = new Set();   // uids (do deck do adversário) marcados para banir agora
     let modo = null;            // { tipo: 'alvo', jogada, alvos, texto } | { tipo: 'aura' } | { tipo: 'preparar', ativo, banco }
     let partida = 0;            // muda a cada batalha: a vez do NPC antiga para sozinha
@@ -495,8 +496,10 @@
                 aplicarDeckDoServidor(d);
                 custom.obj = objetoDoDeckCustom();
                 if (custom.obj) deckEscolhido = custom.obj;
+                const voltar = editorVoltaOnline;
                 janela.close();
-                if (raiz.classList.contains('batalha--menu')) telaMenu();
+                if (voltar) telaOnline();
+                else if (raiz.classList.contains('batalha--menu')) telaMenu();
             } catch (e) {
                 erro.textContent = e.message;
                 atualizar();
@@ -537,7 +540,7 @@
             el('h2', '', 'Seu deck customizado'),
             el('p', 'bt-placar-nota', `Escolha qualquer carta. ${lim.tamanho} cartas, no máximo ${lim.lendarias} lendárias (1 cópia de cada) e até ${lim.copias} cópias das outras.`),
             corpo);
-        janela.addEventListener('close', () => janela.remove());
+        janela.addEventListener('close', () => { janela.remove(); setTimeout(() => { editorVoltaOnline = false; }, 0); });
         document.body.appendChild(janela);
         janela.showModal();
         atualizar();
@@ -2043,8 +2046,20 @@
             return;
         }
 
-        corpo.appendChild(el('p', 'bt-online-deck', `Seu deck: ${deckEscolhido.nome}`));
-        const trocar = botao('bt-link', 'trocar deck', telaMenu);
+        // No online só vale o deck customizado: sem ele (ou com ele inválido) o jogador é levado a montar o seu.
+        if (custom.estado === 'nada') await carregarDeckCustom();
+        if (!caixa.isConnected) return;
+        const meuDeck = objetoDoDeckCustom();
+        if (!meuDeck) {
+            msg(custom.cartas
+                ? 'O seu deck customizado não está válido. No modo online só vale o deck customizado: arrume o seu.'
+                : 'No modo online só vale o deck customizado. Monte o seu primeiro (15 cartas, até 2 lendárias).');
+            corpo.appendChild(botao('bt-botao bt-botao--forte', custom.cartas ? 'Editar deck' : 'Montar deck', () => { if (custom.estado === 'ok') { editorVoltaOnline = true; abrirEditorDeck(); } }));
+            return;
+        }
+        deckEscolhido = meuDeck;
+        corpo.appendChild(el('p', 'bt-online-deck', `Seu deck: ${custom.nome || meuDeck.nome}`));
+        const trocar = botao('bt-link', 'editar deck', () => { if (custom.estado === 'ok') { editorVoltaOnline = true; abrirEditorDeck(); } });
         corpo.lastChild.append(' ', trocar);
 
         const opcoes = el('div', 'bt-online-opcoes bt-online-opcoes--uma');
@@ -2552,9 +2567,8 @@
                 : `${quem(ev.jogador)} levou ${num(ev.valor)}.`); break;
             case 'cura': registrar(`${n(ev.uid)} curou ${num(ev.valor)}.`); break;
             case 'nocaute': registrar([icone(A('nocaute'), '💥'), ` ${nomeVisivel(ev.id)} caiu!`]); break;
-            case 'virada': registrar(ev.motivo === 'umGolpe'
-                ? `${n(ev.uid)} derrubou de um golpe só e virou (recarga).`
-                : ev.motivo === 'derrubou' ? `${n(ev.uid)} derrubou a carta e virou (recarga).`
+            case 'virada': registrar(ev.motivo === 'derrubou'
+                ? `${n(ev.uid)} derrubou a carta e virou (recarga).`
                 : `${n(ev.uid)} virou: recarga até o próximo turno.`); break;
             case 'estado': registrar(`${n(ev.uid)} ficou ${ESTADOS[ev.estado].nome}.`); break;
             case 'imune': registrar(`${n(ev.uid)} acabou de ser ${ESTADOS[ev.estado].nome.toLowerCase()} e não pode ser de novo agora.`); break;
