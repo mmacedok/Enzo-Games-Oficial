@@ -112,7 +112,7 @@ test('B4. Comprar sem saldo {tipo: "estacionamento"}: 402, erro contém "insufic
     assert.equal(res.dados.preco, 100);
 });
 
-test('B5. Partida verificada flappy score 30: submit dá credits 300, GET /api/baralho mostra creditos 300', async (t) => {
+test('B5. Partida verificada flappy score 30: 100 créditos por ponto, submit dá credits 3000, GET /api/baralho mostra creditos 3000', async (t) => {
     const { db, relogio, navegador } = montar();
     t.after(() => db.close());
     const leitor = navegador();
@@ -124,11 +124,11 @@ test('B5. Partida verificada flappy score 30: submit dá credits 300, GET /api/b
 
     const sub = await leitor('POST', '/api/games/session/submit', { runToken: start.dados.runToken, score: 30 });
     assert.equal(sub.status, 200);
-    assert.equal(sub.dados.credits, 300);
+    assert.equal(sub.dados.credits, 3000);
 
     const baralho = await leitor('GET', '/api/baralho');
     assert.equal(baralho.status, 200);
-    assert.equal(baralho.dados.carteira.creditos, 300);
+    assert.equal(baralho.dados.carteira.creditos, 3000);
 });
 
 test('B6. Partida com score 0 (credits 0) e partida anti-cheat (422): carteira não muda', async (t) => {
@@ -163,10 +163,10 @@ test('B7. Clique duplo: com 300 créditos, Promise.all de 2x comprar {tipo: "tor
     const leitor = navegador();
     await entrar(leitor, 'leitor6', 'Leitor Seis');
 
-    // Ganha 300 créditos via partida
+    // Ganha 300 créditos via partida (3 pontos × 100)
     const start = await leitor('POST', '/api/games/session/start', { gameId: 'flappy-enzo' });
     relogio.agora += 120_000;
-    await leitor('POST', '/api/games/session/submit', { runToken: start.dados.runToken, score: 30 });
+    await leitor('POST', '/api/games/session/submit', { runToken: start.dados.runToken, score: 3 });
 
     const [c1, c2] = await Promise.all([
         leitor('POST', '/api/baralho/comprar', { tipo: 'toradolandia' }),
@@ -189,10 +189,10 @@ test('B8. Comprar {tipo: "estacionamento", quantidade: 3}: 200, 3 comprados. Val
     const leitor = navegador();
     await entrar(leitor, 'leitor7', 'Leitor Sete');
 
-    // Ganha 300 créditos via partida
+    // Ganha 300 créditos via partida (3 pontos × 100)
     const start = await leitor('POST', '/api/games/session/start', { gameId: 'flappy-enzo' });
     relogio.agora += 120_000;
-    await leitor('POST', '/api/games/session/submit', { runToken: start.dados.runToken, score: 30 });
+    await leitor('POST', '/api/games/session/submit', { runToken: start.dados.runToken, score: 3 });
 
     // Compra 3
     const compra = await leitor('POST', '/api/baralho/comprar', { tipo: 'estacionamento', quantidade: 3 });

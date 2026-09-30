@@ -147,7 +147,7 @@
     ]);
 
     /** Créditos por ponto em cada partida verificada (sem limite diário). */
-    const CREDITOS_POR_PONTO = Object.freeze({ 'flappy-enzo': 10 });
+    const CREDITOS_POR_PONTO = Object.freeze({ 'flappy-enzo': 100 });
 
     /**
      * Créditos da Batalha dos Torados por partida. Empate paga o mesmo que a derrota.
