@@ -584,6 +584,7 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
     border-radius: 17px;
     cursor: pointer;
 }
+.bt-voltar { text-decoration: none; }
 .bt-voltar:hover { background: rgba(0, 0, 0, 0.8); }
 .bt-voltar-seta { font-size: 1.2rem; line-height: 1; }
 @media (max-width: 700px) {

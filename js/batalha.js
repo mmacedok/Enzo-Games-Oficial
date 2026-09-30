@@ -275,7 +275,13 @@
         }
         caixa.appendChild(comoJogar);
         caixa.appendChild(botao('bt-link', '🏆 Placar', mostrarPlacar));
-        raiz.appendChild(caixa);
+        // Voltar ao site, no canto superior esquerdo (o cabeçalho da página fica escondido atrás da arte do menu).
+        const voltarAoSite = el('a', 'bt-voltar');
+        voltarAoSite.href = 'index.html';
+        voltarAoSite.dataset.nav = 'index.html';
+        voltarAoSite.setAttribute('aria-label', 'Voltar ao site');
+        voltarAoSite.append(el('span', 'bt-voltar-seta', '←'), el('span', 'bt-voltar-txt', 'Voltar'));
+        raiz.append(voltarAoSite, caixa);
     }
 
     /** "Ver cartas" do deck: as cartas dele (com a quantidade) e, ao tocar numa, o que ela faz. */
