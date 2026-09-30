@@ -158,3 +158,43 @@ test('D4: listar o deck (nome, descrição, sem links), ver em "Decks de players
     const ficha = (await chefe('GET', `/api/admin/users/${a.id}`)).dados;
     assert.deepEqual([ficha.deck.nome, ficha.deck.publico, ficha.deck.cartas], ['Macarrão Forte', true, 15]);
 });
+
+test('D5: o admin posta decks oficiais (vários, sem ser o pessoal); todos veem e copiam; só o admin posta e remove', async () => {
+    const m = montar();
+    const chefe = m.navegador();
+    await chefe('POST', '/api/auth/google', { credential: 'google:chefe:chefe-nome-completo-xxxxxxxx' });
+    const b = await entrar(m, 'beto');
+
+    const corpo = { cartas: DECK, nome: 'Combo do Henrique', descricao: 'Oficial' };
+    assert.equal((await b.c('POST', '/api/tcg/decks-postados', corpo)).status, 404); // só admin
+    assert.equal((await chefe('POST', '/api/tcg/decks-postados', { ...corpo, nome: '' })).status, 400);
+    assert.equal((await chefe('POST', '/api/tcg/decks-postados', { ...corpo, nome: 'veja www.x.com' })).status, 400);
+    assert.equal((await chefe('POST', '/api/tcg/decks-postados', { ...corpo, cartas: DECK.slice(0, 14) })).status, 400); // regras do deck valem
+    assert.equal((await chefe('POST', '/api/tcg/decks-postados', { ...corpo, cartas: [LENDARIAS[0], LENDARIAS[1], LENDARIAS[2], ...DECK.slice(2, 14)] })).status, 400);
+
+    const d1 = (await chefe('POST', '/api/tcg/decks-postados', corpo)).dados.id;
+    const d2 = (await chefe('POST', '/api/tcg/decks-postados', { ...corpo, nome: 'Segundo oficial' })).dados.id; // vários, sem precisar do deck pessoal
+    assert.ok(d1 && d2 && d1 !== d2);
+    assert.equal((await chefe('GET', '/api/tcg/deck')).dados.cartas, null); // não mexeu no deck pessoal dele
+
+    // um jogador comum já tem um deck listado: os oficiais vêm primeiro
+    await b.c('POST', '/api/tcg/deck', { cartas: DECK, nome: 'Do Beto', publico: true });
+    const lista = (await chefe('GET', '/api/tcg/decks-publicos')).dados.decks;
+    assert.deepEqual(lista.map((d) => d.oficial === true), [true, true, false]);
+    assert.equal(lista[0].autor, 'Enzo Games');
+
+    // copiar um oficial
+    const ok = await b.c('POST', `/api/tcg/decks-publicos/${d1}/copiar`, {});
+    assert.equal(ok.status, 200);
+    assert.equal(ok.dados.nome, 'Combo do Henrique');
+    assert.equal(ok.dados.publico, false); // a cópia não fica listada
+    assert.equal((await chefe('GET', '/api/tcg/decks-publicos?ordem=copias')).dados.decks[0].copias, 1);
+
+    // remover
+    assert.equal((await b.c('POST', `/api/tcg/decks-postados/${d1}/remover`, {})).status, 404);
+    assert.equal((await chefe('POST', `/api/tcg/decks-postados/${d1}/remover`, {})).status, 200);
+    assert.equal((await chefe('POST', `/api/tcg/decks-postados/${d1}/remover`, {})).status, 404);
+    assert.equal((await b.c('POST', `/api/tcg/decks-publicos/${d1}/copiar`, {})).status, 404);
+    const log = (await chefe('GET', '/api/admin/log')).dados.log.map((l) => l.acao);
+    assert.ok(log.includes('deck-postar') && log.includes('deck-remover'), JSON.stringify(log));
+});

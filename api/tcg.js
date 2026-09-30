@@ -470,6 +470,16 @@ const rotas = [
                   WHERE d.publico AND u.role <> 'banned'
                   ORDER BY ${porCopias ? 'd.copias DESC, d.publicado_em DESC' : 'd.publicado_em DESC'}, d.user_id LIMIT $1`, [DECKS_NA_LISTA]);
             const decks = [];
+            // Decks oficiais (postados pelo admin) vêm antes dos dos jogadores.
+            const oficiais = await ctx.db.query(
+                `SELECT id, cartas, nome, descricao, copias, criado_em FROM tcg_decks_postados
+                  ORDER BY ${porCopias ? 'copias DESC, criado_em DESC' : 'criado_em DESC'}, id LIMIT $1`, [DECKS_NA_LISTA]);
+            for (const o of oficiais) {
+                let cartas;
+                try { cartas = JSON.parse(o.cartas); } catch { continue; }
+                if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) continue;
+                decks.push({ id: o.id, nome: o.nome, descricao: o.descricao || '', autor: 'Enzo Games', oficial: true, cartas, copias: Number(o.copias), em: Number(o.criado_em), meu: false });
+            }
             for (const l of linhas) {
                 let cartas;
                 try { cartas = JSON.parse(l.cartas); } catch { continue; }
@@ -487,6 +497,17 @@ const rotas = [
         metodo: 'POST', caminho: /^\/api\/tcg\/decks-publicos\/([^/]{1,64})\/copiar$/, login: true,
         async executar(ctx) {
             const dono = exigirUuid(ctx.params[0], 'deck não encontrado');
+            const [oficial] = await ctx.db.query('SELECT cartas, nome FROM tcg_decks_postados WHERE id = $1', [dono]);
+            if (oficial) {
+                const cartas = JSON.parse(oficial.cartas);
+                if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) throw new HttpError(409, 'esse deck não está mais válido');
+                await ctx.db.query(
+                    `INSERT INTO tcg_deck_custom (user_id, cartas, atualizado_em, nome, descricao, publico, publicado_em) VALUES ($1, $2, $3, $4, '', FALSE, NULL)
+                     ON CONFLICT (user_id) DO UPDATE SET cartas = EXCLUDED.cartas, atualizado_em = EXCLUDED.atualizado_em, nome = EXCLUDED.nome,
+                         descricao = '', publico = FALSE, publicado_em = NULL`, [ctx.usuario.id, oficial.cartas, ctx.agora(), `${oficial.nome}`.slice(0, NOME_DECK_MAX)]);
+                await ctx.db.query('UPDATE tcg_decks_postados SET copias = copias + 1 WHERE id = $1', [dono]);
+                return respostaDeck(await deckCustomDaConta(ctx, ctx.usuario.id));
+            }
             if (dono === ctx.usuario.id) throw new HttpError(400, 'esse deck já é o seu');
             const [l] = await ctx.db.query(
                 `SELECT d.cartas, d.nome FROM tcg_deck_custom d JOIN users u ON u.id = d.user_id WHERE d.user_id = $1 AND d.publico AND u.role <> 'banned'`, [dono]);
@@ -500,6 +521,34 @@ const rotas = [
                      descricao = '', publico = FALSE, publicado_em = NULL`, [ctx.usuario.id, l.cartas, ctx.agora(), nome]);
             await ctx.db.query('UPDATE tcg_deck_custom SET copias = copias + 1 WHERE user_id = $1', [dono]);
             return respostaDeck(await deckCustomDaConta(ctx, ctx.usuario.id));
+        },
+    },
+    {
+        // Admin: posta um deck oficial em "Decks de players" (quantos quiser, sem ser o deck pessoal). Mesmas regras de deck.
+        metodo: 'POST', caminho: '/api/tcg/decks-postados', admin: true,
+        async executar(ctx) {
+            const { cartas, nome, descricao } = await ctx.corpo();
+            if (!Array.isArray(cartas) || cartas.length > 40 || cartas.some((c) => typeof c !== 'string' || c.length > 64)) throw new HttpError(400, 'cartas inválidas');
+            const erros = R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM });
+            if (erros.length) throw new HttpError(400, erros[0], { erros });
+            const nomeLimpo = limparTexto(nome, NOME_DECK_MAX, 'nome');
+            if (!nomeLimpo) throw new HttpError(400, 'dê um nome ao deck');
+            const id = crypto.randomUUID();
+            await ctx.db.query(
+                'INSERT INTO tcg_decks_postados (id, autor_id, nome, descricao, cartas, criado_em) VALUES ($1, $2, $3, $4, $5, $6)',
+                [id, ctx.usuario.id, nomeLimpo, limparTexto(descricao, DESCRICAO_DECK_MAX, 'descrição'), JSON.stringify(cartas), ctx.agora()]);
+            await require('./admin.js').registrar(ctx, 'deck-postar', null, nomeLimpo);
+            return { id };
+        },
+    },
+    {
+        metodo: 'POST', caminho: /^\/api\/tcg\/decks-postados\/([^/]{1,64})\/remover$/, admin: true,
+        async executar(ctx) {
+            const id = exigirUuid(ctx.params[0], 'deck não encontrado');
+            const r = await ctx.db.query('DELETE FROM tcg_decks_postados WHERE id = $1 RETURNING nome', [id]);
+            if (!r.length) throw new HttpError(404, 'deck não encontrado');
+            await require('./admin.js').registrar(ctx, 'deck-remover', null, r[0].nome);
+            return { removido: true };
         },
     },
     {

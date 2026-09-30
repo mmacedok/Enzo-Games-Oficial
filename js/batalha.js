@@ -375,6 +375,8 @@
         descCampo.setAttribute('aria-label', 'Descrição do deck');
         const salvar = botao('bt-botao bt-botao--forte', custom.publico ? 'Salvar (continua listado)' : 'Salvar deck', null);
         const listar = custom.publico ? botao('bt-botao', 'Salvar e tirar da lista', null) : botao('bt-botao', '👥 Salvar e listar', null);
+        // Admin: posta o deck do editor em "Decks de players" como oficial (sem mexer no deck pessoal; quantos quiser).
+        const postar = window.EnzoConta?.admin ? botao('bt-botao', '📌 Postar como oficial', null) : null;
         const grade = el('ul', 'bt-editor-grade');
         const linhas = new Map();
 
@@ -389,6 +391,7 @@
             erro.textContent = t === lim.tamanho && erros.length ? erros[0] : '';
             salvar.disabled = erros.length > 0 || (custom.publico && !nomeCampo.value.trim());
             listar.disabled = erros.length > 0 || (!custom.publico && !nomeCampo.value.trim());
+            if (postar) postar.disabled = erros.length > 0 || !nomeCampo.value.trim();
             for (const c of donas) {
                 const { menos, mais, qtd, li } = linhas.get(c.id);
                 const n = sel.get(c.id) || 0;
@@ -439,10 +442,26 @@
         };
         salvar.addEventListener('click', () => enviar(custom.publico));
         listar.addEventListener('click', () => enviar(!custom.publico));
+        if (postar) {
+            postar.addEventListener('click', async () => {
+                postar.disabled = true;
+                erro.textContent = '';
+                let mensagem = '';
+                try {
+                    await api('POST', '/api/tcg/decks-postados', { cartas: lista(), nome: nomeCampo.value, descricao: descCampo.value });
+                    mensagem = '✔ Postado em "Decks de players" como deck oficial.';
+                } catch (e) {
+                    mensagem = e.message;
+                }
+                atualizar();
+                erro.textContent = mensagem;
+                erro.classList.toggle('bt-editor-ok', mensagem.startsWith('✔'));
+            });
+        }
         const limpar = botao('bt-botao', 'Limpar', () => { sel.clear(); atualizar(); });
         const fechar = botao('bt-botao', 'Cancelar', () => janela.close());
         const acoes = el('div', 'bt-editor-acoes');
-        acoes.append(salvar, listar, limpar, fechar);
+        acoes.append(salvar, listar, ...(postar ? [postar] : []), limpar, fechar);
         janela.append(
             el('h2', '', 'Seu deck customizado'),
             el('p', 'bt-placar-nota', `Escolha qualquer carta. ${lim.tamanho} cartas, no máximo ${lim.lendarias} lendárias (1 cópia de cada) e até ${lim.copias} cópias das outras.`),
@@ -495,11 +514,19 @@
                 [...new Set(d.cartas)].sort((a, b) => ORDEM_RARIDADE[def(a).raridade] - ORDEM_RARIDADE[def(b).raridade]).slice(0, 3).forEach((id) => capa.appendChild(UI.carta(id)));
                 const lendarias = d.cartas.filter((id) => def(id).raridade === 'lendario').length;
                 const info = el('div', 'bt-players-info');
-                info.append(el('strong', 'bt-deck-nome', d.nome), el('span', 'bt-players-autor', `por ${d.autor}${d.meu ? ' (você)' : ''}`));
+                info.append(el('strong', 'bt-deck-nome', d.oficial ? `⭐ ${d.nome}` : d.nome), el('span', 'bt-players-autor', d.oficial ? 'Deck oficial · Enzo Games' : `por ${d.autor}${d.meu ? ' (você)' : ''}`));
                 if (d.descricao) info.appendChild(el('span', 'bt-deck-texto', d.descricao));
                 info.appendChild(el('span', 'bt-players-meta', `${lendarias} lendária${plu(lendarias)} · copiado ${d.copias}×`));
                 const acoes = el('div', 'bt-players-acoes');
                 acoes.appendChild(botao('bt-botao', '🃏 Ver cartas', () => mostrarCartasDoDeck({ nome: d.nome, cartas: d.cartas })));
+                if (d.oficial && window.EnzoConta?.admin) {
+                    const tirar = botao('bt-botao', '🗑️ Remover da lista', async () => {
+                        if (!window.confirm(`Remover "${d.nome}" de Decks de players?`)) return;
+                        tirar.disabled = true;
+                        try { await api('POST', `/api/tcg/decks-postados/${encodeURIComponent(d.id)}/remover`, {}); carregar(ordem); } catch (e) { tirar.disabled = false; tirar.textContent = e.message; }
+                    });
+                    acoes.appendChild(tirar);
+                }
                 if (!d.meu) {
                     const usar = botao('bt-botao bt-botao--forte', 'Usar este deck', async () => {
                         if (custom.cartas && !window.confirm('Isso substitui o seu deck customizado atual. Continuar?')) return;

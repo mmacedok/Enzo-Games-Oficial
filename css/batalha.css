@@ -1133,3 +1133,5 @@ dialog.bt-regras.bt-players-janela { width: min(760px, calc(100vw - 20px)); max-
 
 /* Os diálogos da Batalha voltam ao centro: o reset de margin do site tirava o "margin: auto" do navegador. */
 dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
+
+.bt-editor-ok { color: #1d7a1d; }

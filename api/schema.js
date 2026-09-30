@@ -229,6 +229,16 @@ module.exports = [
     'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS publicado_em BIGINT',
     'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS copias INTEGER NOT NULL DEFAULT 0',
     'CREATE INDEX IF NOT EXISTS idx_tcg_deck_publico ON tcg_deck_custom(publico, publicado_em)',
+    // Decks postados pelo admin em "Decks de players" (oficiais): vários, independentes do deck pessoal de cada conta.
+    `CREATE TABLE IF NOT EXISTS tcg_decks_postados (
+        id TEXT PRIMARY KEY,
+        autor_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        nome TEXT NOT NULL,
+        descricao TEXT NOT NULL DEFAULT '',
+        cartas TEXT NOT NULL,
+        copias INTEGER NOT NULL DEFAULT 0,
+        criado_em BIGINT NOT NULL
+    )`,
     // Quando o deck da sala/partida é o customizado (deck = 'custom'), a lista de cartas vai junto (foto do momento).
     'ALTER TABLE tcg_salas ADD COLUMN IF NOT EXISTS lista TEXT',
     'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS lista_a TEXT',
