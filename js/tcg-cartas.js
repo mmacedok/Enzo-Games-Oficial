@@ -4,7 +4,9 @@
 // Fica separado para balancear o jogo sem mexer no sorteio dos pacotes.
 //
 // Lutadores (personagem e goon): `hp`, `recuo` (Aura para voltar ao banco),
-// `ataques` [{ nome, custo, dano, alvo?, efeitos? }] e `poder?`.
+// `ataques` [{ nome, custo, dano, alvo?, recarga?, efeitos? }] e `poder?`.
+// HP e números de dano ficam na escala pequena: o motor multiplica por ESCALA (js/tcg-regras.js).
+// `recarga`: depois de usar, a carta fica virada (sem atacar, poder nem recuo) por N turnos do dono.
 // Campos: `campo` { nome, texto, tipo, ... }.
 // O que cada `tipo` de efeito faz está em js/tcg-regras.js (EFEITOS_*).
 // Mudou um número? Rode `node --test test/tcg-regras.test.js`.
@@ -24,7 +26,7 @@
         // ---- Lendários (nocaute vale 1 ponto, como toda carta) --------------------------------
         'enzo-games': { hp: 140, recuo: 2, ataques: [
             { nome: 'Almôndega', custo: 1, dano: 30 },
-            { nome: 'Macarronada a 300%', custo: 3, dano: 120 },
+            { nome: 'Macarronada a 300%', custo: 3, dano: 120, recarga: 1 },
         ] },
         'cabo-coco': { hp: 130, recuo: 2,
             poder: { nome: 'Conteúdo Banido', tipo: 'banirCampos', ativavel: false,
@@ -33,14 +35,14 @@
                 { nome: 'Arquivo Confidencial', custo: 2, dano: 60, efeitos: [{ tipo: 'curarSi', valor: 20 }] },
             ] },
         'degustador-da-noite': { hp: 130, recuo: 1, ataques: [
-            { nome: 'Vírgula-rangue', custo: 1, dano: 20, alvo: 'qualquer' },
+            { nome: 'Vírgula-rangue', custo: 1, dano: 20, alvo: 'qualquer', recarga: 1 },
             { nome: 'Escudo de Parênteses', custo: 3, dano: 90, efeitos: [{ tipo: 'escudo', valor: 30 }] },
         ] },
         'o-inominavel': { hp: 120, recuo: 2,
             poder: { nome: 'Besteira no Discord', tipo: 'notificarAtivo', ativavel: true,
                 texto: '1 vez por turno: deixa o ativo do adversário Notificado.' },
             ataques: [
-                { nome: 'Bala Dourada', custo: 3, dano: 60, alvo: 'qualquer' },
+                { nome: 'Bala Dourada', custo: 3, dano: 60, alvo: 'qualquer', recarga: 1 },
             ] },
         'superkid': { hp: 130, recuo: 2, ataques: [
             { nome: 'Farmar Aura', custo: 1, dano: 0, efeitos: [{ tipo: 'auraSi', valor: 1 }] },
@@ -81,7 +83,7 @@
             { nome: 'Marretada', custo: 3, dano: 90 },
         ] },
         'moderador-do-ban': { hp: 90, recuo: 2, ataques: [
-            { nome: 'Ban de 7 Dias', custo: 2, dano: 30, efeitos: [{ tipo: 'estado', estado: 'silenciado' }] },
+            { nome: 'Ban de 7 Dias', custo: 2, dano: 30, recarga: 1, efeitos: [{ tipo: 'estado', estado: 'silenciado' }] },
         ] },
 
         // ---- Comuns ----------------------------------------------------------

@@ -20,7 +20,7 @@
         const ele = estado.jogadores[1 - j];
         if (!ele.ativo) return 0;
         const aura = ele.ativo.aura + 1;
-        return Math.max(0, ...R.combate(ele.ativo.id).ataques.filter((a) => a.custo <= aura).map((a) => a.dano + 10));
+        return Math.max(0, ...R.combate(ele.ativo.id).ataques.filter((a) => a.custo <= aura).map((a) => (a.dano + 10) * R.ESCALA));
     }
 
     function danoPrevisto(estado, j, jogada) {
@@ -28,20 +28,26 @@
         const ele = estado.jogadores[1 - j];
         const ataque = R.combate(eu.ativo.id).ataques[jogada.ataque];
         const puxa = (ataque.efeitos || []).some((e) => e.tipo === 'puxar');
-        const alvo = ataque.alvo === 'qualquer' ? acharNaMesa(ele, jogada.alvo) : ele.ativo;
+        const noJogador = jogada.alvo === R.JOGADOR;
+        const alvo = noJogador ? null : (ataque.alvo === 'qualquer' ? acharNaMesa(ele, jogada.alvo) : ele.ativo);
         const dano = R.calcularDano(estado, j, ataque, alvo, { resultadoMoeda: true })
             * ((ataque.efeitos || []).some((e) => e.tipo === 'moeda') ? 0.5 : 1);
-        return { ataque, alvo, dano, puxa, nocaute: !puxa && dano >= vida(estado, alvo) };
+        const nocaute = !noJogador && !puxa && dano >= vida(estado, alvo);
+        // letal: acaba com a vida do adversário (no golpe direto ou pela vida que o nocaute tira).
+        const letal = noJogador ? dano >= ele.vida : nocaute && R.danoNocaute(alvo.id) >= ele.vida;
+        return { ataque, alvo, dano, puxa, nocaute, noJogador, letal };
     }
 
     function notaAtaque(estado, j, jogada) {
-        const { ataque, alvo, dano, puxa, nocaute } = danoPrevisto(estado, j, jogada);
+        const { ataque, alvo, dano, puxa, nocaute, noJogador, letal } = danoPrevisto(estado, j, jogada);
         const eu = estado.jogadores[j];
-        let nota = dano;
-        if (nocaute) nota += 100 + 50 * R.pontosDe(alvo.id);
+        // Notas na escala pequena de antes (dano / ESCALA), para os bônus abaixo continuarem valendo.
+        let nota = dano / R.ESCALA;
+        if (letal) nota += 1000;
+        if (nocaute) nota += 100 + R.danoNocaute(alvo.id) / R.ESCALA;
         for (const ef of ataque.efeitos || []) {
-            if (ef.tipo === 'estado' && !alvo.estados[ef.estado]) nota += 15;
-            if (ef.tipo === 'danoSi' && vida(estado, eu.ativo) <= ef.valor) nota -= 200;
+            if (ef.tipo === 'estado' && alvo && !alvo.estados[ef.estado]) nota += 15;
+            if (ef.tipo === 'danoSi' && vida(estado, eu.ativo) <= ef.valor * R.ESCALA) nota -= 200;
             if (ef.tipo === 'auraSi') nota += 25;
             if (ef.tipo === 'escudo') nota += ef.valor / 2;
             if (ef.tipo === 'descartarCampo') nota += estado.campo && estado.campo.dono !== j ? 30 : -50;
@@ -49,8 +55,10 @@
         if (puxa) {
             const puxado = acharNaMesa(estado.jogadores[1 - j], jogada.alvo);
             // Puxa quem está fraco para derrubar no próximo turno.
-            nota += puxado ? 60 - vida(estado, puxado) / 2 : -50;
+            nota += puxado ? 60 - vida(estado, puxado) / R.ESCALA / 2 : -50;
         }
+        // Golpe no jogador é dano que não se cura; na carta, só vale se ajuda a derrubar.
+        if (noJogador) nota += 5;
         return nota;
     }
 
@@ -70,7 +78,8 @@
         }
 
         const ataques = por('atacar').map((v) => ({ v, nota: notaAtaque(estado, j, v) })).sort((a, b) => b.nota - a.nota);
-        if (ataques.length && danoPrevisto(estado, j, ataques[0].v).nocaute) return ataques[0].v;
+        const melhor = ataques.length && danoPrevisto(estado, j, ataques[0].v);
+        if (melhor && (melhor.letal || melhor.nocaute)) return ataques[0].v;
 
         // Poderes primeiro (comprar carta pode trazer mais opções).
         if (por('poder').length) return por('poder')[0];

@@ -25,16 +25,24 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 2;
+    const REGRAS_VERSAO = 3;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
     const MAO_INICIAL = 5;
     const VAGAS_BANCO = 3;
-    const PONTOS_VITORIA = 3;
     const LIMITE_TURNOS = 30;
-    const VENENO = 10;
-    const DANO_ILUDIDO = 20;
+    // Vitória por dano (docs/PLANO-VIDA-JOGADOR.md): cada jogador tem vida; zerou, perdeu.
+    // HP e dano das cartas (js/tcg-cartas.js) ficam na escala pequena e são multiplicados por
+    // ESCALA aqui, então uma carta morre com o mesmo número de golpes de antes.
+    const ESCALA = 20;
+    const VIDA_INICIAL = 6000;
+    /** Vida que o dono perde quando uma carta dele cai (senão ninguém teria por que derrubar cartas). */
+    const DANO_NOCAUTE = { comum: 500, raro: 750, epico: 1000, lendario: 1500 };
+    const VENENO = 10 * ESCALA;
+    const DANO_ILUDIDO = 20 * ESCALA;
+    /** Alvo de ataque que acerta o jogador, não uma carta. */
+    const JOGADOR = 'jogador';
 
     class JogadaInvalida extends Error {
         constructor(motivo) { super(motivo); this.name = 'JogadaInvalida'; }
@@ -45,8 +53,8 @@
     const ehLutador = (id) => tipoDe(id) === 'personagem' || tipoDe(id) === 'goon';
     const ehCampo = (id) => tipoDe(id) === 'campo';
     const combate = (id) => COMBATE[id] || null;
-    /** Pontos que o adversário ganha ao nocautear esta carta: toda carta vale 1 (lendário também). */
-    const pontosDe = () => 1;
+    /** Vida que o dono perde quando esta carta é nocauteada. */
+    const danoNocaute = (id) => DANO_NOCAUTE[Baralho.carta(id)?.raridade] || DANO_NOCAUTE.comum;
 
     // ---- Sorte determinística (mulberry32; o número fica no estado) ----------
     function sementeNumerica(semente) {
@@ -99,7 +107,8 @@
 
     // ---- Criação --------------------------------------------------------------
     function novaInstancia(id, uid) {
-        return { uid, id, dano: 0, aura: 0, estados: { notificado: false, iludido: false, silenciado: 0 }, escudo: null };
+        // virada: turno até o qual a carta fica virada para baixo pela recarga do ataque.
+        return { uid, id, dano: 0, aura: 0, estados: { notificado: false, iludido: false, silenciado: 0, virada: 0 }, escudo: null };
     }
     function flagsDoTurno() {
         return { auras: 1, reforco: 0, campo: false, recuo: false, trocarCarta: false, poderes: [] };
@@ -128,7 +137,7 @@
                 nome: String(nomes[j] || `Jogador ${j + 1}`),
                 deck: decks[j].map((id, n) => novaInstancia(id, `${j}-${n}`)),
                 mao: [], ativo: null, banco: [], descarte: [],
-                pontos: 0, preparado: false, mulligans: 0,
+                vida: VIDA_INICIAL, preparado: false, mulligans: 0,
                 flags: flagsDoTurno(), espiada: null,
             })),
         };
@@ -154,7 +163,7 @@
     function hpMax(estado, inst) {
         const base = combate(inst.id).hp;
         const campo = efeitoCampo(estado);
-        return base + (campo?.tipo === 'mansao' && tipoDe(inst.id) === 'goon' ? campo.hpGoon : 0);
+        return (base + (campo?.tipo === 'mansao' && tipoDe(inst.id) === 'goon' ? campo.hpGoon : 0)) * ESCALA;
     }
     function custoRecuo(estado, inst) {
         const campo = efeitoCampo(estado);
@@ -162,6 +171,8 @@
         return combate(inst.id).recuo;
     }
     const silenciado = (estado, inst) => inst.estados.silenciado >= estado.turno;
+    /** Virada para baixo pela recarga: não ataca, não usa poder e não recua (continua levando golpe). */
+    const virada = (estado, inst) => (inst.estados.virada || 0) >= estado.turno;
     /** Quantas cartas: na visão de um jogador, a mão do outro e os decks viram só um número. */
     const qtd = (lista) => (Array.isArray(lista) ? lista.length : Number(lista) || 0);
     const acharNaMao = (jogador, uid) => jogador.mao.find((c) => c.uid === uid) || null;
@@ -188,6 +199,8 @@
         if (dano > 0 && eu.banco.some((c) => combate(c.id).poder?.tipo === 'bonusDoBanco')) {
             dano += Math.max(...eu.banco.map((c) => (combate(c.id).poder?.tipo === 'bonusDoBanco' ? combate(c.id).poder.valor : 0)));
         }
+        dano *= ESCALA;
+        // O escudo já é guardado na escala grande (executarAtaque); o jogador não tem escudo.
         if (alvo?.escudo && alvo.escudo.ate >= estado.turno) dano -= alvo.escudo.valor;
         return Math.max(0, dano);
     }
@@ -231,7 +244,7 @@
             case 'baixar': {
                 const c = acharNaMao(eu, jogada.uid);
                 if (!c || !ehLutador(c.id)) return 'só personagens e goons vão para o banco';
-                if (eu.banco.length >= VAGAS_BANCO) return 'o banco está cheio';
+                if (eu.ativo && eu.banco.length >= VAGAS_BANCO) return 'o banco está cheio';
                 return null;
             }
             case 'aura': {
@@ -253,6 +266,7 @@
                 if (f.recuo) return 'só 1 recuo por turno';
                 if (!eu.ativo) return 'sem ativo';
                 if (silenciado(estado, eu.ativo)) return 'Silenciado não recua';
+                if (virada(estado, eu.ativo)) return 'carta virada (recarga) não recua';
                 if (!eu.banco.some((c) => c.uid === jogada.para)) return 'escolha quem sai do banco';
                 if (eu.ativo.aura < custoRecuo(estado, eu.ativo)) {
                     return `Aura insuficiente para recuar: o ativo precisa ter ${custoRecuo(estado, eu.ativo)} Aura presa nele (tem ${eu.ativo.aura})`;
@@ -264,6 +278,7 @@
                 const poder = c && combate(c.id).poder;
                 if (!poder || !poder.ativavel) return 'essa carta não tem poder para usar';
                 if (f.poderes.includes(c.uid)) return 'esse poder já foi usado neste turno';
+                if (virada(estado, c)) return 'carta virada (recarga) não usa poder';
                 if (poder.tipo === 'notificarAtivo' && !ele.ativo) return 'o adversário não tem ativo';
                 if (poder.tipo === 'comprar' && !qtd(eu.deck)) return 'seu deck acabou';
                 if (poder.tipo === 'espiarMao' && !qtd(ele.mao)) return 'a mão do adversário está vazia';
@@ -283,13 +298,18 @@
                 const ataque = combate(atacante.id).ataques[jogada.ataque];
                 if (!ataque) return 'ataque desconhecido';
                 if (silenciado(estado, atacante)) return 'Silenciado não ataca';
+                if (virada(estado, atacante)) return 'carta virada (recarga) não ataca';
                 if (atacante.aura < ataque.custo) return `precisa de ${ataque.custo} de Aura`;
-                if (!ele.ativo) return 'o adversário não tem ativo';
+                const puxa = (ataque.efeitos || []).some((e) => e.tipo === 'puxar');
+                // Qualquer ataque pode ir no jogador, mesmo com o ativo dele na mesa (o Puxar não:
+                // ele só serve para trazer alguém do banco).
+                if (jogada.alvo === JOGADOR) return puxa ? 'esse ataque não acerta o jogador' : null;
+                if (!ele.ativo) return 'o adversário não tem ativo: ataque o jogador';
                 if (ataque.alvo === 'qualquer') {
                     const alvo = acharNaMesa(ele, jogada.alvo);
                     if (!alvo) return 'escolha o alvo';
                     if (alvo !== ele.ativo && efeitoCampo(estado)?.tipo === 'protegeBanco') return 'São João do Butico protege o banco';
-                } else if ((ataque.efeitos || []).some((e) => e.tipo === 'puxar') && ele.banco.length) {
+                } else if (puxa && ele.banco.length) {
                     if (!ele.banco.some((c) => c.uid === jogada.alvo)) return 'escolha quem vem do banco dele';
                 } else if (jogada.alvo !== undefined && jogada.alvo !== ele.ativo.uid) {
                     return 'esse ataque só acerta o ativo';
@@ -321,6 +341,7 @@
         inst.aura = 0;
         inst.escudo = null;
         limparEstados(inst);
+        inst.estados.virada = 0;   // a recarga não sai no banco (é do ataque), só no descarte
         jogador.descarte.push(inst);
     }
     function tirarDaMao(jogador, uid) {
@@ -332,6 +353,13 @@
         inst.dano += valor;
         eventos.push({ tipo: 'dano', uid: inst.uid, valor, fonte, dano: inst.dano, hp: hpMax(estado, inst) });
     }
+    /** Dano direto na vida do jogador (ataque no jogador ou carta dele nocauteada). */
+    function ferirJogador(estado, j, valor, eventos, fonte) {
+        if (valor <= 0) return;
+        const eu = estado.jogadores[j];
+        eu.vida = Math.max(0, eu.vida - valor);
+        eventos.push({ tipo: 'danoJogador', jogador: j, valor, fonte, vida: eu.vida });
+    }
 
     function encerrar(estado, vencedor, motivo, eventos) {
         estado.fase = 'fim';
@@ -342,7 +370,13 @@
         eventos.push({ tipo: 'fim', vencedor, motivo });
     }
 
-    /** Tira da mesa quem ficou sem HP, dá os pontos e vê se alguém venceu. */
+    /** Quem tem mais vida (empate se igual). */
+    function quemTemMaisVida(estado) {
+        const [v0, v1] = estado.jogadores.map((x) => x.vida);
+        return v0 === v1 ? 'empate' : (v0 > v1 ? 0 : 1);
+    }
+
+    /** Tira da mesa quem ficou sem HP (o dono perde vida) e vê se alguém zerou a vida. */
     function verificarNocautes(estado, eventos) {
         for (const j of [0, 1]) {
             const eu = estado.jogadores[j];
@@ -350,29 +384,23 @@
                 if (inst.dano < hpMax(estado, inst)) continue;
                 if (eu.ativo === inst) eu.ativo = null;
                 else eu.banco.splice(eu.banco.indexOf(inst), 1);
-                const pontos = pontosDe(inst.id);
-                estado.jogadores[outro(j)].pontos += pontos;
+                const dano = danoNocaute(inst.id);
                 paraDescarte(eu, inst);
-                eventos.push({ tipo: 'nocaute', jogador: j, uid: inst.uid, id: inst.id, pontos, para: outro(j) });
+                eventos.push({ tipo: 'nocaute', jogador: j, uid: inst.uid, id: inst.id, dano });
+                ferirJogador(estado, j, dano, eventos, 'nocaute');
             }
         }
-        const ganha = [0, 1].map((j) => {
-            const ele = estado.jogadores[outro(j)];
-            return estado.jogadores[j].pontos >= PONTOS_VITORIA || naMesa(ele).length === 0;
-        });
-        if (ganha[0] || ganha[1]) {
-            const [p0, p1] = estado.jogadores.map((x) => x.pontos);
-            let vencedor;
-            if (ganha[0] && ganha[1]) vencedor = p0 === p1 ? 'empate' : (p0 > p1 ? 0 : 1);
-            else vencedor = ganha[0] ? 0 : 1;
-            const motivo = vencedor === 'empate' ? 'empate'
-                : (estado.jogadores[vencedor].pontos >= PONTOS_VITORIA ? 'pontos' : 'mesaVazia');
-            encerrar(estado, vencedor, motivo, eventos);
+        const zerados = [0, 1].filter((j) => estado.jogadores[j].vida <= 0);
+        if (zerados.length) {
+            const vencedor = zerados.length === 2 ? 'empate' : outro(zerados[0]);
+            encerrar(estado, vencedor, vencedor === 'empate' ? 'empate' : 'vida', eventos);
             return;
         }
+        // Mesa vazia não perde mais: sem ninguém no banco, o jogador fica exposto (todo ataque vai
+        // nele) até baixar alguém, que entra direto como ativo.
         for (const j of [0, 1]) {
             const eu = estado.jogadores[j];
-            if (!eu.ativo && !estado.pendentes.some((p) => p.jogador === j)) {
+            if (!eu.ativo && eu.banco.length && !estado.pendentes.some((p) => p.jogador === j)) {
                 estado.pendentes.push({ jogador: j, tipo: 'novoAtivo' });
                 eventos.push({ tipo: 'escolherAtivo', jogador: j });
             }
@@ -398,7 +426,7 @@
         eventos.push({ tipo: 'turno', jogador: j, turno: estado.turno });
         const campo = efeitoCampo(estado);
         if (campo?.tipo === 'curaInicio' && eu.ativo && eu.ativo.dano > 0) {
-            const valor = Math.min(campo.valor, eu.ativo.dano);
+            const valor = Math.min(campo.valor * ESCALA, eu.ativo.dano);
             eu.ativo.dano -= valor;
             eventos.push({ tipo: 'cura', uid: eu.ativo.uid, valor, fonte: 'campo' });
         }
@@ -411,15 +439,14 @@
     function fimDeTurno(estado, eventos) {
         eventos.push({ tipo: 'fimTurno', jogador: estado.vez, turno: estado.turno });
         const campo = efeitoCampo(estado);
-        const veneno = campo?.tipo === 'mansao' ? campo.veneno : VENENO;
+        const veneno = campo?.tipo === 'mansao' ? campo.veneno * ESCALA : VENENO;
         for (const eu of estado.jogadores) {
             if (eu.ativo?.estados.notificado) darDano(estado, eu.ativo, veneno, eventos, 'notificado');
         }
         verificarNocautes(estado, eventos);
         if (estado.fase === 'fim') return;
         if (estado.turno >= LIMITE_TURNOS && !estado.pendentes.length) {
-            const [p0, p1] = estado.jogadores.map((x) => x.pontos);
-            encerrar(estado, p0 === p1 ? 'empate' : (p0 > p1 ? 0 : 1), 'limiteTurnos', eventos);
+            encerrar(estado, quemTemMaisVida(estado), 'limiteTurnos', eventos);
             return;
         }
         seguir(estado, 'proximoTurno', eventos);
@@ -431,8 +458,11 @@
         const ele = estado.jogadores[outro(j)];
         const atacante = eu.ativo;
         const ataque = combate(atacante.id).ataques[jogada.ataque];
-        const alvo = ataque.alvo === 'qualquer' ? acharNaMesa(ele, jogada.alvo) : ele.ativo;
-        eventos.push({ tipo: 'ataque', jogador: j, uid: atacante.uid, ataque: jogada.ataque, nome: ataque.nome, alvo: alvo.uid });
+        // Alvo: o jogador (vida), uma carta qualquer (alvo 'qualquer') ou o ativo dele.
+        // Gancho futuro: cartas que "entram no meio" do golpe no jogador trocariam `alvo` aqui.
+        const noJogador = jogada.alvo === JOGADOR;
+        const alvo = noJogador ? null : (ataque.alvo === 'qualquer' ? acharNaMesa(ele, jogada.alvo) : ele.ativo);
+        eventos.push({ tipo: 'ataque', jogador: j, uid: atacante.uid, ataque: jogada.ataque, nome: ataque.nome, alvo: noJogador ? JOGADOR : alvo.uid });
 
         if (atacante.estados.iludido && !moeda(estado, eventos, 'iludido')) {
             eventos.push({ tipo: 'ataqueFalhou', uid: atacante.uid, motivo: 'iludido' });
@@ -441,25 +471,34 @@
             seguir(estado, 'fimTurno', eventos);
             return;
         }
+        // Recarga (como o cooldown do Moderador): a carta fica virada no próximo turno do dono.
+        if (ataque.recarga) {
+            atacante.estados.virada = estado.turno + 2 * ataque.recarga;
+            eventos.push({ tipo: 'virada', uid: atacante.uid, ate: atacante.estados.virada });
+        }
 
         const efeitos = ataque.efeitos || [];
         const temMoeda = efeitos.some((e) => e.tipo === 'moeda');
         const resultadoMoeda = temMoeda ? moeda(estado, eventos, 'ataque') : undefined;
         const dano = calcularDano(estado, j, ataque, alvo, { resultadoMoeda });
-        if (alvo.escudo && alvo.escudo.ate >= estado.turno && dano === 0 && ataque.dano > 0) {
-            eventos.push({ tipo: 'bloqueado', uid: alvo.uid });
-        }
-        darDano(estado, alvo, dano, eventos, 'ataque');
-        const contra = combate(alvo.id).poder;
-        if (dano > 0 && contra?.tipo === 'contraAtaque') {
-            eventos.push({ tipo: 'poder', uid: alvo.uid, nome: contra.nome });
-            darDano(estado, atacante, contra.valor, eventos, 'contraAtaque');
+        if (noJogador) {
+            ferirJogador(estado, outro(j), dano, eventos, 'ataque');
+        } else {
+            if (alvo.escudo && alvo.escudo.ate >= estado.turno && dano === 0 && ataque.dano > 0) {
+                eventos.push({ tipo: 'bloqueado', uid: alvo.uid });
+            }
+            darDano(estado, alvo, dano, eventos, 'ataque');
+            const contra = combate(alvo.id).poder;
+            if (dano > 0 && contra?.tipo === 'contraAtaque') {
+                eventos.push({ tipo: 'poder', uid: alvo.uid, nome: contra.nome });
+                darDano(estado, atacante, contra.valor * ESCALA, eventos, 'contraAtaque');
+            }
         }
 
         for (const ef of efeitos) {
             switch (ef.tipo) {
                 case 'estado':
-                    if (alvo !== ele.ativo) break;
+                    if (!alvo || alvo !== ele.ativo) break;   // estados só pegam no ativo
                     if (ef.estado === 'silenciado') {
                         // Quem acabou de ficar Silenciado não pode ser silenciado de novo no turno seguinte
                         // (senão dois Moderadores travam o ativo do outro para sempre).
@@ -474,7 +513,7 @@
                     eventos.push({ tipo: 'estado', uid: alvo.uid, estado: ef.estado });
                     break;
                 case 'curarSi': {
-                    const valor = Math.min(ef.valor, atacante.dano);
+                    const valor = Math.min(ef.valor * ESCALA, atacante.dano);
                     if (valor > 0) {
                         atacante.dano -= valor;
                         eventos.push({ tipo: 'cura', uid: atacante.uid, valor, fonte: 'ataque' });
@@ -482,11 +521,11 @@
                     break;
                 }
                 case 'danoSi':
-                    darDano(estado, atacante, ef.valor, eventos, 'proprioAtaque');
+                    darDano(estado, atacante, ef.valor * ESCALA, eventos, 'proprioAtaque');
                     break;
                 case 'escudo':
-                    atacante.escudo = { valor: ef.valor, ate: estado.turno + 1 };
-                    eventos.push({ tipo: 'escudo', uid: atacante.uid, valor: ef.valor });
+                    atacante.escudo = { valor: ef.valor * ESCALA, ate: estado.turno + 1 };
+                    eventos.push({ tipo: 'escudo', uid: atacante.uid, valor: atacante.escudo.valor });
                     break;
                 case 'auraSi':
                     atacante.aura += ef.valor;
@@ -560,6 +599,12 @@
 
             case 'baixar': {
                 const inst = tirarDaMao(eu, jogada.uid);
+                // Mesa vazia: quem baixa entra direto como ativo (antes era derrota).
+                if (!eu.ativo) {
+                    eu.ativo = inst;
+                    eventos.push({ tipo: 'baixar', jogador: j, uid: inst.uid, id: inst.id, ativo: true });
+                    return;
+                }
                 eu.banco.push(inst);
                 eventos.push({ tipo: 'baixar', jogador: j, uid: inst.uid, id: inst.id });
                 return;
@@ -685,6 +730,7 @@
             if (eu.ativo) {
                 combate(eu.ativo.id).ataques.forEach((ataque, i) => {
                     const puxa = (ataque.efeitos || []).some((e) => e.tipo === 'puxar');
+                    candidatas.push({ tipo: 'atacar', jogador: j, ataque: i, alvo: JOGADOR });
                     if (ataque.alvo === 'qualquer') {
                         for (const alvo of naMesa(ele)) candidatas.push({ tipo: 'atacar', jogador: j, ataque: i, alvo: alvo.uid });
                     } else if (puxa && ele.banco.length) {
@@ -748,9 +794,10 @@
     }
 
     return {
-        TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAO_INICIAL, VAGAS_BANCO, PONTOS_VITORIA, LIMITE_TURNOS,
+        TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAO_INICIAL, VAGAS_BANCO, LIMITE_TURNOS,
+        ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR,
         REGRAS_VERSAO, JogadaInvalida,
         validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, quemDeve, repetir,
-        hpMax, custoRecuo, calcularDano, pontosDe, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado,
+        hpMax, custoRecuo, calcularDano, danoNocaute, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado, virada,
     };
 });
