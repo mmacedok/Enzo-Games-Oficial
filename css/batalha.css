@@ -115,12 +115,20 @@ dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: 
     margin-top: 8px;
     padding: 8px 16px;
     font-weight: 700;
-    color: var(--caption);
-    background: none;
-    border: 2px dashed var(--caption);
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 400;
+    letter-spacing: 1px;
+    -webkit-text-stroke: 0;
+    color: var(--caution);
+    background: rgba(18, 18, 18, 0.82);
+    border: 2px solid var(--caution);
     border-radius: 999px;
     cursor: pointer;
 }
+/* Link dentro da caixa clara: texto escuro, nada de amarelo no creme. */
+.bt-online-corpo .bt-link, .bt-menu-claro .bt-link { color: var(--paper-ink); background: rgba(255, 255, 255, 0.7); border: 2px solid var(--ink); }
+.bt-link:hover, .bt-link:focus-visible { filter: brightness(1.15); }
 
 /* ------------------------------------------------------------------ mesa */
 .bt-mesa {
@@ -951,6 +959,8 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     border-radius: 14px;
     box-shadow: 4px 4px 0 var(--ink);
 }
+.bt-online-corpo { -webkit-text-stroke: 0.5px currentColor; font-size: 1.12rem; }
+.bt-online-corpo .bt-botao, .bt-online-corpo .bt-link { -webkit-text-stroke: 0; }
 .bt-online-msg { margin: 0; font-weight: 700; }
 .bt-online-msg--erro { color: #b3261e; }
 .bt-online-deck { margin: 0; }
@@ -1015,7 +1025,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-online-salas { width: 100%; }
 .bt-online-salas-titulo { margin: 0 0 6px; font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; }
 .bt-online-salas-lista { display: grid; gap: 6px; }
-.bt-online-vazio { margin: 0; font-size: 0.9rem; opacity: 0.85; }
+.bt-online-vazio { margin: 0; font-size: 1rem; opacity: 1; }
 .bt-sala-linha {
     display: flex;
     align-items: center;
@@ -1026,7 +1036,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     border-radius: 8px;
 }
 .bt-sala-nome { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.bt-sala-deck, .bt-sala-placar, .bt-sala-espera { font-size: 0.85rem; }
+.bt-sala-deck, .bt-sala-placar, .bt-sala-espera { font-size: 1rem; font-weight: 700; color: var(--paper-ink); -webkit-text-stroke: 0.5px currentColor; }
 .bt-sala-espera { white-space: nowrap; opacity: 0.8; }
 .bt-sala-linha .bt-botao { padding: 4px 10px; font-size: 0.9rem; box-shadow: 2px 2px 0 var(--ink); }
 @media (max-width: 480px) {
