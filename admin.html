@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/admin.css?v=1">
+    <link rel="stylesheet" href="css/admin.css?v=2">
 </head>
 <body>
     <div class="crt">
@@ -28,12 +28,18 @@
 | __| \| |_  / _ \
 | _|| .` |/ / (_) |
 |___|_|\_/___\___/ </pre>
+                <pre class="ascii-mascote" id="ascii-mascote" aria-hidden="true"></pre>
                 <p class="painel-sub">degustação noturna · sysadmin</p>
                 <div id="numeros" class="numeros"></div>
                 <nav class="atalhos" id="atalhos" aria-label="Comandos rápidos"></nav>
             </aside>
 
             <main class="terminal" id="terminal">
+                <details class="dashboard" id="dashboard" open>
+                    <summary><span>01 / CENTRAL DE COMANDO</span><span class="dashboard-hint">clique para recolher · terminal abaixo</span><span class="dashboard-mobile-pulse" id="dashboard-mobile-pulse" aria-hidden="true"></span></summary>
+                    <div class="dashboard-grid" id="dashboard-grid"></div>
+                    <pre class="dashboard-sinal" id="dashboard-sinal" aria-hidden="true"></pre>
+                </details>
                 <div class="saida" id="saida" role="log" aria-live="polite"></div>
                 <form class="prompt" id="prompt" autocomplete="off">
                     <label for="entrada" class="prompt-ps" id="ps">root@enzo:~$</label>
@@ -46,6 +52,6 @@
     <script src="js/conquistas.js?v=4"></script>
     <script src="js/baralho-dados.js?v=rev0930q"></script>
     <script src="js/api-cliente.js?v=rev0926e"></script>
-    <script src="js/admin.js?v=rev0930y"></script>
+    <script src="js/admin.js?v=rev0930z"></script>
 </body>
 </html>

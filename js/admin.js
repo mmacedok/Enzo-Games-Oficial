@@ -35,6 +35,7 @@
         historico: [],
         posHistorico: 0,
         confirmar: null,    // ação esperando "s"
+        numeros: null,
     };
 
     // ---------------------------------------------------------------- servidor
@@ -122,6 +123,7 @@
     }
 
     function mostrarNumeros(n) {
+        estado.numeros = n;
         const caixa = $('numeros');
         caixa.replaceChildren();
         const itens = [
@@ -143,9 +145,49 @@
 
     function mostrarAtalhos() {
         const nav = $('atalhos');
-        nav.replaceChildren(el('p', 'atalhos-titulo', 'atalhos'));
-        for (const comando of ['status', 'users', 'scores', 'log', 'help', 'exit']) nav.appendChild(botao(comando, comando));
+        nav.replaceChildren(el('p', 'atalhos-titulo', 'atalhos rápidos'));
+        for (const comando of ['status', 'users', 'reveal', 'scores', 'log', 'help', 'exit']) nav.appendChild(botao(comando, comando));
     }
+
+    function mostrarDashboard() {
+        const grade = $('dashboard-grid');
+        grade.replaceChildren();
+        const grupos = [
+            ['SISTEMA', 'Estado e acesso', [['status', 'status'], ['quem sou', 'whoami'], ['histórico', 'log']]],
+            ['LEITORES', 'Contas e conquistas', [['listar leitores', 'users'], ['ajuda', 'help']]],
+            ['GIBIS', 'Capítulos escondidos', [['ver escondidos', 'reveal'], ['esconder gibi', 'hide']]],
+            ['PARTIDAS', 'Ranking e placares', [['todas', 'scores'], ['Flappy', 'scores flappy'], ['Degustação', 'scores degustacao']]],
+        ];
+        for (const [titulo, descricao, acoes] of grupos) {
+            const grupo = el('section', 'dashboard-grupo');
+            grupo.append(el('h2', '', titulo), el('p', '', descricao));
+            for (const [rotulo, comando] of acoes) {
+                const acao = botao(rotulo, comando);
+                acao.classList.add('dashboard-acao');
+                acao.appendChild(el('span', 'dashboard-comando', comando));
+                grupo.appendChild(acao);
+            }
+            grade.appendChild(grupo);
+        }
+    }
+
+    const quadrosAscii = [
+        ['  .------.', ' (  o  o  )', '|    __    |', '|   (__)   |', ' (  ||  )', '  [====]'].join('\n'),
+        ['  .------.', ' (  -  -  )', '|    __    |', '|   (__)   |', ' (  ||  )', '  [====]'].join('\n'),
+        ['  .------.', ' (  o  o  )', '|    __    |', '|   (__)   |', ' (  ||  )', '  [====]'].join('\n'),
+        ['  .------.', ' (  O  O  )', '|    __    |', '|   (__)   |', ' (  ||  )', '  [====]'].join('\n'),
+    ];
+    let quadro = 0;
+    function desenharAscii() {
+        $('ascii-mascote').textContent = quadrosAscii[quadro % quadrosAscii.length];
+        $('dashboard-mobile-pulse').textContent = '[' + '#'.repeat((quadro % 5) + 1).padEnd(5, '.') + ']';
+        const progresso = '#'.repeat((quadro % 13) + 3).padEnd(15, '.');
+        const n = estado.numeros;
+        $('dashboard-sinal').textContent = `+-- ENZO / TELEMETRIA ----------------+\n| LINK     ${n ? 'ONLINE ' : 'AUTH...'}   ${String(quadro % 100).padStart(2, '0')}            |\n| CONTAS   ${String(n?.contas ?? '--').padStart(5)}                   |\n| PULSO    [${progresso}]   |\n+------------------------------------+`;
+        quadro++;
+    }
+    desenharAscii();
+    if (!calmo) setInterval(() => { if (!document.hidden) desenharAscii(); }, 650);
 
     // ---------------------------------------------------------------- conta aberta
     /** Marca [x]/[ ] e a grade de secretos em todas as vistas daquela conta. */
@@ -778,11 +820,20 @@
         linha(`acesso concedido. bem-vindo, ${eu.user.firstName}.`, 'l--ok');
         linha(['digite ', botao('help', 'help'), ' ou use os atalhos ao lado.'], 'l--apagado');
         mostrarAtalhos();
+        mostrarDashboard();
+        desenharAscii();
         entrada.disabled = false;
         entrada.focus();
         atualizarPrompt();
         await rodar('status');
     }
+
+    document.addEventListener('keydown', (evento) => {
+        if (evento.key !== '/' || evento.altKey || evento.ctrlKey || evento.metaKey) return;
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '')) return;
+        evento.preventDefault();
+        entrada.focus();
+    });
 
     boot();
 })();
