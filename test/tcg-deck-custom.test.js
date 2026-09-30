@@ -9,7 +9,7 @@ const { createLocalDb } = require('../api/db-local.js');
 const R = require('../js/tcg-regras.js');
 const Baralho = require('../js/baralho-dados.js');
 
-const ENV = { GOOGLE_CLIENT_ID: 'teste.apps.googleusercontent.com', SESSION_SECRET: 'x'.repeat(40) };
+const ENV = { GOOGLE_CLIENT_ID: 'teste.apps.googleusercontent.com', SESSION_SECRET: 'x'.repeat(40), ADMIN_EMAILS: 'chefe@exemplo.com' };
 const LENDARIAS = Baralho.CARTAS.filter((c) => c.raridade === 'lendario' && c.tipo !== 'campo').map((c) => c.id);
 const COMUNS = Baralho.CARTAS.filter((c) => c.raridade !== 'lendario').map((c) => c.id);
 
@@ -102,4 +102,59 @@ test('D3: sala e partida com o deck customizado; revanche mantém os decks', asy
     await m.db.query('UPDATE tcg_deck_custom SET cartas = $2 WHERE user_id = $1', [a.id, JSON.stringify(DECK.slice(0, 10))]);
     assert.ok((await a.c('GET', '/api/tcg/deck')).dados.erros.length > 0);
     assert.equal((await a.c('POST', '/api/tcg/salas', { deck: 'custom' })).status, 400);
+});
+
+test('D4: listar o deck (nome, descrição, sem links), ver em "Decks de players", copiar e o admin tirar da lista', async () => {
+    const m = montar();
+    const a = await entrar(m, 'ana');
+    const b = await entrar(m, 'beto');
+    const chefe = m.navegador();
+    await chefe('POST', '/api/auth/google', { credential: 'google:chefe:chefe-nome-completo-xxxxxxxx' });
+
+    // sem nome não lista; nome/descrição com link ou grande demais é recusado
+    assert.equal((await a.c('POST', '/api/tcg/deck', { cartas: DECK, publico: true })).status, 400);
+    assert.equal((await a.c('POST', '/api/tcg/deck', { cartas: DECK, nome: 'veja www.x.com', publico: true })).status, 400);
+    assert.equal((await a.c('POST', '/api/tcg/deck', { cartas: DECK, nome: 'x'.repeat(31) })).status, 400);
+    assert.equal((await a.c('POST', '/api/tcg/deck', { cartas: DECK, nome: 'Bom', descricao: 'y'.repeat(81) })).status, 400);
+
+    // salvar sem listar: ninguém vê
+    let s = (await a.c('POST', '/api/tcg/deck', { cartas: DECK, nome: '  Macarrão   Forte ', descricao: 'Barato e rápido' })).dados;
+    assert.equal(s.nome, 'Macarrão Forte');
+    assert.equal(s.publico, false);
+    assert.deepEqual((await b.c('GET', '/api/tcg/decks-publicos')).dados.decks, []);
+
+    // listar
+    s = (await a.c('POST', '/api/tcg/deck', { cartas: DECK, publico: true })).dados; // mantém nome e descrição
+    assert.equal(s.publico, true);
+    assert.equal(s.descricao, 'Barato e rápido');
+    const lista = (await b.c('GET', '/api/tcg/decks-publicos')).dados.decks;
+    assert.equal(lista.length, 1);
+    assert.deepEqual([lista[0].nome, lista[0].descricao, lista[0].meu, lista[0].cartas.length, lista[0].copias], ['Macarrão Forte', 'Barato e rápido', false, 15, 0]);
+    assert.ok(/ana/i.test(lista[0].autor));
+    assert.equal((await a.c('GET', '/api/tcg/decks-publicos')).dados.decks[0].meu, true);
+
+    // copiar: vira o deck do Beto (não listado), contador sobe; copiar o próprio é recusado
+    assert.equal((await a.c('POST', `/api/tcg/decks-publicos/${a.id}/copiar`, {})).status, 400);
+    const copia = (await b.c('POST', `/api/tcg/decks-publicos/${a.id}/copiar`, {})).dados;
+    assert.deepEqual(copia.cartas, DECK);
+    assert.equal(copia.publico, false);
+    assert.equal(copia.nome, 'Cópia: Macarrão Forte');
+    assert.equal((await b.c('GET', '/api/tcg/decks-publicos?ordem=copias')).dados.decks[0].copias, 1);
+    assert.equal((await b.c('POST', '/api/tcg/salas', { deck: 'custom' })).status, 200); // a cópia já joga
+
+    // tirar da lista (o dono) e o admin
+    await a.c('POST', '/api/tcg/deck', { cartas: DECK, publico: false });
+    assert.equal((await b.c('GET', '/api/tcg/decks-publicos')).dados.decks.length, 0);
+    assert.equal((await b.c('POST', `/api/tcg/decks-publicos/${a.id}/copiar`, {})).status, 404);
+    await a.c('POST', '/api/tcg/deck', { cartas: DECK, publico: true });
+    assert.equal((await a.c('POST', `/api/admin/users/${a.id}/deck/despublicar`, {})).status, 404); // não é admin
+    assert.equal((await chefe('POST', `/api/admin/users/${a.id}/deck/despublicar`, {})).dados.tirado, true);
+    assert.equal((await b.c('GET', '/api/tcg/decks-publicos')).dados.decks.length, 0);
+    assert.equal((await chefe('POST', `/api/admin/users/${a.id}/deck/despublicar`, {})).dados.tirado, false); // já estava fora
+    assert.equal((await a.c('GET', '/api/tcg/deck')).dados.publico, false);
+    assert.ok((await chefe('GET', '/api/admin/log')).dados.log.some((l) => l.acao === 'deck-despublicar'));
+    // a ficha da conta para o admin mostra o deck
+    await a.c('POST', '/api/tcg/deck', { cartas: DECK, publico: true });
+    const ficha = (await chefe('GET', `/api/admin/users/${a.id}`)).dados;
+    assert.deepEqual([ficha.deck.nome, ficha.deck.publico, ficha.deck.cartas], ['Macarrão Forte', true, 15]);
 });

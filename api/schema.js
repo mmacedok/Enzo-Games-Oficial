@@ -222,6 +222,13 @@ module.exports = [
         cartas TEXT NOT NULL,
         atualizado_em BIGINT NOT NULL
     )`,
+    // Deck listado ("Decks de players"): nome, descrição curta e se outros jogadores podem ver e copiar.
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS nome TEXT',
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS descricao TEXT',
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS publico BOOLEAN NOT NULL DEFAULT FALSE',
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS publicado_em BIGINT',
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS copias INTEGER NOT NULL DEFAULT 0',
+    'CREATE INDEX IF NOT EXISTS idx_tcg_deck_publico ON tcg_deck_custom(publico, publicado_em)',
     // Quando o deck da sala/partida é o customizado (deck = 'custom'), a lista de cartas vai junto (foto do momento).
     'ALTER TABLE tcg_salas ADD COLUMN IF NOT EXISTS lista TEXT',
     'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS lista_a TEXT',

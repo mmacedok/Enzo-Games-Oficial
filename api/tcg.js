@@ -23,6 +23,8 @@
 // ============================================================================
 const crypto = require('node:crypto');
 const { HttpError } = require('./http.js');
+const { CONTROLE, LINK, exigirUuid } = require('./validacao.js');
+const { nomePublico } = require('./auth.js');
 const R = require('../js/tcg-regras.js');
 const { DECKS_PRONTOS } = require('../js/tcg-cartas.js');
 const Baralho = require('../js/baralho-dados.js');
@@ -65,12 +67,28 @@ const deckPronto = (id) => DECKS_PRONTOS.find((d) => d.id === id) || null;
 
 /** Deck customizado da conta: lista salva e se ainda é válida. Cartas infinitas: não depende da coleção, só dos limites do deck. */
 async function deckCustomDaConta(ctx, userId) {
-    const [salvo] = await ctx.db.query('SELECT cartas FROM tcg_deck_custom WHERE user_id = $1', [userId]);
+    const [salvo] = await ctx.db.query('SELECT cartas, nome, descricao, publico FROM tcg_deck_custom WHERE user_id = $1', [userId]);
     let cartas = null;
     try { cartas = salvo ? JSON.parse(salvo.cartas) : null; } catch { cartas = null; }
     const erros = cartas ? R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }) : [];
-    return { cartas, erros };
+    return { cartas, erros, nome: salvo?.nome || '', descricao: salvo?.descricao || '', publico: salvo?.publico === true };
 }
+
+const NOME_DECK_MAX = 30;
+const DESCRICAO_DECK_MAX = 80;
+const DECKS_NA_LISTA = 60;
+
+/** Texto de nome/descrição do deck: uma linha, sem links, até `max` letras. */
+function limparTexto(valor, max, rotulo) {
+    if (valor === undefined || valor === null) return '';
+    if (typeof valor !== 'string') throw new HttpError(400, `${rotulo} inválido`);
+    const limpo = valor.normalize('NFC').replace(CONTROLE, ' ').replace(/\s+/g, ' ').trim();
+    if ([...limpo].length > max) throw new HttpError(400, `${rotulo}: no máximo ${max} letras`);
+    if (LINK.test(limpo)) throw new HttpError(400, `sem links no ${rotulo}`);
+    return limpo;
+}
+
+const respostaDeck = (d) => ({ cartas: d.cartas, nome: d.nome, descricao: d.descricao, publico: d.publico, erros: d.erros, limites: limitesDoDeck() });
 
 const CUSTOM = { id: 'custom', nome: 'Deck customizado' };
 const limitesDoDeck = () => ({ tamanho: R.TAMANHO_DECK, copias: R.MAX_COPIAS, copiasLendaria: R.MAX_COPIAS_LENDARIO, lendarias: R.MAX_LENDARIAS_CUSTOM });
@@ -413,23 +431,86 @@ const rotas = [
         // Deck customizado: a lista salva e os limites (qualquer carta vale, não precisa tê-la).
         metodo: 'GET', caminho: '/api/tcg/deck', login: true,
         async executar(ctx) {
-            const { cartas, erros } = await deckCustomDaConta(ctx, ctx.usuario.id);
-            return { cartas, erros, limites: limitesDoDeck() };
+            return respostaDeck(await deckCustomDaConta(ctx, ctx.usuario.id));
         },
     },
     {
         // Salva o deck customizado (15 cartas, 2 lendárias no máximo, repetição limitada; qualquer carta do jogo).
         metodo: 'POST', caminho: '/api/tcg/deck', login: true,
         async executar(ctx) {
-            const { cartas } = await ctx.corpo();
+            const corpo = await ctx.corpo();
+            const { cartas } = corpo;
             if (!Array.isArray(cartas) || cartas.length > 40 || cartas.some((c) => typeof c !== 'string' || c.length > 64)) throw new HttpError(400, 'cartas inválidas');
             const erros = R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM });
             if (erros.length) throw new HttpError(400, erros[0], { erros });
+            // nome, descrição e "listado" não enviados mantêm o que já estava
+            const antes = await deckCustomDaConta(ctx, ctx.usuario.id);
+            const nome = corpo.nome === undefined ? antes.nome : limparTexto(corpo.nome, NOME_DECK_MAX, 'nome');
+            const descricao = corpo.descricao === undefined ? antes.descricao : limparTexto(corpo.descricao, DESCRICAO_DECK_MAX, 'descrição');
+            const publico = corpo.publico === undefined ? antes.publico : corpo.publico === true;
+            if (publico && !nome) throw new HttpError(400, 'dê um nome ao deck para listá-lo');
+            const agora = ctx.agora();
             await ctx.db.query(
-                `INSERT INTO tcg_deck_custom (user_id, cartas, atualizado_em) VALUES ($1, $2, $3)
-                 ON CONFLICT (user_id) DO UPDATE SET cartas = EXCLUDED.cartas, atualizado_em = EXCLUDED.atualizado_em`,
-                [ctx.usuario.id, JSON.stringify(cartas), ctx.agora()]);
-            return { cartas, erros: [], limites: limitesDoDeck() };
+                `INSERT INTO tcg_deck_custom (user_id, cartas, atualizado_em, nome, descricao, publico, publicado_em) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                 ON CONFLICT (user_id) DO UPDATE SET cartas = EXCLUDED.cartas, atualizado_em = EXCLUDED.atualizado_em, nome = EXCLUDED.nome,
+                     descricao = EXCLUDED.descricao, publico = EXCLUDED.publico,
+                     publicado_em = CASE WHEN EXCLUDED.publico THEN COALESCE(tcg_deck_custom.publicado_em, EXCLUDED.atualizado_em) ELSE NULL END`,
+                [ctx.usuario.id, JSON.stringify(cartas), agora, nome, descricao, publico, publico ? agora : null]);
+            return respostaDeck({ cartas, erros: [], nome, descricao, publico });
+        },
+    },
+    {
+        // "Decks de players": decks que jogadores deixaram listados. ?ordem=novos (padrão) ou copias.
+        metodo: 'GET', caminho: '/api/tcg/decks-publicos', login: true,
+        async executar(ctx) {
+            const porCopias = ctx.url.searchParams.get('ordem') === 'copias';
+            const linhas = await ctx.db.query(
+                `SELECT d.user_id, d.cartas, d.nome, d.descricao, d.copias, d.publicado_em, u.display_name
+                   FROM tcg_deck_custom d JOIN users u ON u.id = d.user_id
+                  WHERE d.publico AND u.role <> 'banned'
+                  ORDER BY ${porCopias ? 'd.copias DESC, d.publicado_em DESC' : 'd.publicado_em DESC'}, d.user_id LIMIT $1`, [DECKS_NA_LISTA]);
+            const decks = [];
+            for (const l of linhas) {
+                let cartas;
+                try { cartas = JSON.parse(l.cartas); } catch { continue; }
+                if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) continue;
+                decks.push({
+                    id: l.user_id, nome: l.nome, descricao: l.descricao || '', autor: nomePublico(l.display_name), cartas,
+                    copias: Number(l.copias), em: Number(l.publicado_em), meu: l.user_id === ctx.usuario.id,
+                });
+            }
+            return { decks };
+        },
+    },
+    {
+        // Copia um deck listado para o deck customizado de quem pediu (substitui o que ele tinha; a cópia não fica listada).
+        metodo: 'POST', caminho: /^\/api\/tcg\/decks-publicos\/([^/]{1,64})\/copiar$/, login: true,
+        async executar(ctx) {
+            const dono = exigirUuid(ctx.params[0], 'deck não encontrado');
+            if (dono === ctx.usuario.id) throw new HttpError(400, 'esse deck já é o seu');
+            const [l] = await ctx.db.query(
+                `SELECT d.cartas, d.nome FROM tcg_deck_custom d JOIN users u ON u.id = d.user_id WHERE d.user_id = $1 AND d.publico AND u.role <> 'banned'`, [dono]);
+            if (!l) throw new HttpError(404, 'deck não encontrado (talvez o dono tenha tirado da lista)');
+            const cartas = JSON.parse(l.cartas);
+            if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) throw new HttpError(409, 'esse deck não está mais válido');
+            const nome = `Cópia: ${l.nome}`.slice(0, NOME_DECK_MAX);
+            await ctx.db.query(
+                `INSERT INTO tcg_deck_custom (user_id, cartas, atualizado_em, nome, descricao, publico, publicado_em) VALUES ($1, $2, $3, $4, '', FALSE, NULL)
+                 ON CONFLICT (user_id) DO UPDATE SET cartas = EXCLUDED.cartas, atualizado_em = EXCLUDED.atualizado_em, nome = EXCLUDED.nome,
+                     descricao = '', publico = FALSE, publicado_em = NULL`, [ctx.usuario.id, l.cartas, ctx.agora(), nome]);
+            await ctx.db.query('UPDATE tcg_deck_custom SET copias = copias + 1 WHERE user_id = $1', [dono]);
+            return respostaDeck(await deckCustomDaConta(ctx, ctx.usuario.id));
+        },
+    },
+    {
+        // Admin: tira da lista o deck de uma conta (nome ou descrição ruim).
+        metodo: 'POST', caminho: /^\/api\/admin\/users\/([^/]{1,64})\/deck\/despublicar$/, admin: true,
+        async executar(ctx) {
+            const admin = require('./admin.js');
+            const alvo = await admin.exigirUsuario(ctx, ctx.params[0]);
+            const r = await ctx.db.query('UPDATE tcg_deck_custom SET publico = FALSE, publicado_em = NULL WHERE user_id = $1 AND publico RETURNING nome', [alvo.id]);
+            if (r.length) await admin.registrar(ctx, 'deck-despublicar', alvo.id, r[0].nome);
+            return { tirado: r.length > 0 };
         },
     },
     {

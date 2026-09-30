@@ -13,7 +13,7 @@ Os números das cartas vêm de `js/tcg-cartas.js` (multiplicados por 20) e os te
 
 - **Deck:** 15 cartas, até 2 cópias de cada e só 1 de cada lendária, com pelo menos 1 personagem ou goon.
 - Decks prontos: **Turma do Enzo**, **Legião do Mal** e **Bichos da Internet**.
-- **Deck customizado (4º deck):** montado por cada conta com **qualquer carta do jogo** (cartas infinitas, não depende da coleção). Mesmas 15 cartas, **no máximo 2 lendárias** (1 cópia de cada) e até 2 cópias das outras; Vale contra o NPC e online.
+- **Deck customizado (4º deck):** montado por cada conta com **qualquer carta do jogo** (cartas infinitas, não depende da coleção). Mesmas 15 cartas, **no máximo 2 lendárias** (1 cópia de cada) e até 2 cópias das outras; Vale contra o NPC e online. O dono pode **listar** o deck (nome e descrição curta) em **Decks de players**, onde os outros jogadores veem as cartas e podem copiá-lo para o próprio deck.
 - **Mão inicial:** 5 cartas. Mão sem lutador volta para o baralho e compra de novo, sem castigo.
 - **Preparação:** cada um escolhe 1 lutador ativo e até 3 no banco.
 - **Primeiro turno:** quem começa não ataca no 1º turno. Quem joga em segundo ganha **+1 Aura de Reforço** no 1º turno, e ela só pode ir para o banco.

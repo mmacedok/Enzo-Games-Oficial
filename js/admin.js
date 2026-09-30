@@ -425,6 +425,10 @@
                 ];
             }));
             acaoLinha('coleção', '', [botao('dar as que faltam', 'cards all'), botaoSeguro('esvaziar coleção', 'cards clear --sim')]);
+            if (c.deck) {
+                acaoLinha('deck de batalha', `${c.deck.nome || '(sem nome)'} · ${c.deck.cartas} cartas · ${c.deck.publico ? 'LISTADO' : 'privado'}`,
+                    c.deck.publico ? [botaoSeguro('tirar da lista', 'undeck --sim')] : []);
+            }
         });
 
         const secretos = c.achievements.filter((a) => C.numeroSecreto(a.id) !== null).length;
@@ -832,6 +836,20 @@
                     if (args.includes('--sim')) await limpar();
                     else pedirConfirmacao(`esvaziar a coleção de ${alvo.name}?`, limpar);
                 } else throw new Error('uso: cards [all|clear].');
+            },
+        },
+        undeck: {
+            uso: 'undeck',
+            desc: 'tira da lista "Decks de players" o deck da conta aberta (nome ou descrição ruim)',
+            async fn(args) {
+                const alvo = exigirAlvo();
+                const tirar = async () => {
+                    const r = await pedir(`/api/admin/users/${alvo.id}/deck/despublicar`, {});
+                    if (r.tirado) ok(`deck de ${primeiroNome(alvo.name)} tirado da lista.`); else notificar('esse deck não estava listado.', 'aviso');
+                    await recarregarConta();
+                };
+                if (args.includes('--sim')) await tirar();
+                else pedirConfirmacao(`tirar da lista o deck de ${alvo.name}?`, tirar);
             },
         },
         unpack: {

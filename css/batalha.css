@@ -1113,3 +1113,23 @@ dialog.bt-regras.bt-editor { width: min(860px, calc(100vw - 20px)); max-height: 
 .bt-editor-qtd { min-width: 1.6ch; text-align: center; font: 1.6rem/1 var(--font-heading); }
 .bt-editor-tem { font-size: .8rem; opacity: .75; }
 .bt-editor-acoes { display: flex; flex-wrap: wrap; gap: 8px; position: sticky; bottom: -18px; padding: 8px 0 0; background: var(--paper); }
+
+/* ---- Decks de players ---- */
+.bt-players { display: grid; gap: 2px; justify-items: center; width: 100%; padding: 10px 14px; color: var(--paper-ink); text-align: center; background: var(--halftone), var(--paper); border: 3px dashed var(--ink); border-radius: 10px; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.bt-players:hover { transform: translateY(-2px) rotate(-.5deg); box-shadow: 5px 6px 0 var(--ink); }
+.bt-players strong { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 400; letter-spacing: 1px; }
+.bt-players span { font-size: .95rem; opacity: .85; }
+dialog.bt-regras.bt-players-janela { width: min(760px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); overflow-y: auto; }
+.bt-players-ordem { display: flex; gap: 8px; margin: 6px 0; }
+.bt-players-lista { display: grid; gap: 12px; margin: 8px 0 12px; }
+.bt-players-item { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 10px; background: var(--paper); border: 3px solid var(--ink); border-radius: 10px; box-shadow: 3px 3px 0 var(--ink); }
+.bt-players-item .bt-deck-leque { width: 150px; height: 96px; margin: 0; }
+.bt-players-item .bt-deck-leque .carta-tcg { width: 56px; }
+.bt-players-info { display: grid; gap: 2px; min-width: 0; }
+.bt-players-autor, .bt-players-meta { font-size: .85rem; opacity: .75; }
+.bt-players-acoes { display: grid; gap: 6px; }
+@media (max-width: 560px) { .bt-players-item { grid-template-columns: 1fr; justify-items: center; text-align: center; } .bt-players-acoes { width: 100%; } }
+.bt-editor-campo { display: block; width: 100%; margin: 4px 0; padding: 8px 10px; font: inherit; color: var(--paper-ink); background: #fff; border: 3px solid var(--ink); border-radius: 8px; }
+
+/* Os diálogos da Batalha voltam ao centro: o reset de margin do site tirava o "margin: auto" do navegador. */
+dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
