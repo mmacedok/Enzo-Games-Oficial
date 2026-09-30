@@ -376,13 +376,136 @@ test('Estacionamento Noturno: goons recuam de graça', () => {
     assert.doesNotThrow(() => jogar(e, { tipo: 'recuar', para: EU(e).banco[0].uid }));
 });
 
-test('Casa do Enzo Games: descarta 1 da mão para comprar 1, uma vez por turno', () => {
+test('Casa do Enzo Games: devolve 1 da mão ao baralho e compra 1, uma vez por turno', () => {
     const e = mesa({ eu: { mao: ['bug-do-discord', 'drone-vigia'], deck: ['italolol', 'italolol'] }, campo: 'casa-do-enzo-games' });
-    const s = jogar(e, { tipo: 'trocarCarta', uid: EU(e).mao[0].uid }).estado;
-    assert.deepEqual(EU(s).mao.map((c) => c.id), ['drone-vigia', 'italolol']);
-    assert.equal(EU(s).descarte[0].id, 'bug-do-discord');
+    const r = jogar(e, { tipo: 'trocarCarta', uid: EU(e).mao[0].uid });
+    const s = r.estado;
+    assert.equal(EU(s).mao.length, 2, 'devolveu 1 e comprou 1');
+    assert.equal(EU(s).descarte.length, 0, 'não vai mais para o descarte');
+    assert.equal(EU(s).deck.length, 2, 'voltou ao baralho e a compra saiu dele');
+    assert.equal(EU(s).flags.trocarCarta, true);
+    assert.deepEqual(r.eventos.map((ev) => ev.tipo), ['devolver', 'compra']);
+    assert.equal(r.eventos[0].de, 'mao');
+    assert.equal(r.eventos[0].motivo, 'casa');
     invalida(() => jogar(s, { tipo: 'trocarCarta', uid: EU(s).mao[0].uid }), 'só 1 troca');
     invalida(() => jogar(mesa({ eu: { mao: ['bug-do-discord'] } }), { tipo: 'trocarCarta', uid: 'x' }), 'Casa do Enzo');
+});
+
+test('devolverMao: carta sai da mão e entra no baralho sem comprar; 2 por turno, reseta no turno seguinte', () => {
+    const e = mesa({ eu: { mao: ['bug-do-discord', 'drone-vigia', 'emoji-pistola', 'italolol'], deck: ['cara-de-coracao'] } });
+    const u0 = EU(e).mao[0].uid;
+    const r = jogar(e, { tipo: 'devolverMao', uid: u0 });
+    const s = r.estado;
+    assert.equal(EU(s).mao.length, 3, 'saiu da mão e não comprou');
+    assert.equal(EU(s).deck.length, 2, 'a carta entrou no baralho');
+    assert.equal(EU(s).deck.some((c) => c.uid === u0), true, 'a mesma instância foi para o baralho');
+    assert.equal(EU(s).flags.devolvidasMao, 1);
+    assert.deepEqual(r.eventos, [{ tipo: 'devolver', jogador: 0, uid: u0, id: 'bug-do-discord', de: 'mao' }]);
+    let x = jogar(s, { tipo: 'devolverMao', uid: EU(s).mao[0].uid }).estado;
+    assert.equal(EU(x).flags.devolvidasMao, 2);
+    invalida(() => jogar(x, { tipo: 'devolverMao', uid: EU(x).mao[0].uid }), 'só 2 cartas da mão por turno');
+    // No turno seguinte volta a poder devolver.
+    x = jogar(x, { tipo: 'passar' }).estado;
+    x = jogar(x, { tipo: 'passar' }).estado;
+    assert.equal(x.vez, 0);
+    assert.equal(EU(x).flags.devolvidasMao, 0, 'o limite é por turno');
+    assert.doesNotThrow(() => jogar(x, { tipo: 'devolverMao', uid: EU(x).mao[0].uid }));
+});
+
+test('devolverMesa do banco: volta limpa ao baralho, sem nocaute nem golpe extra; 1 por turno', () => {
+    const e = mesa({ eu: { ativo: 'cara-de-coracao', banco: [{ id: 'drone-vigia', dano: 50, aura: 3, estados: { notificado: true } }], deck: ['italolol'] } });
+    const u = EU(e).banco[0].uid;
+    const vidaAntes = EU(e).vida;
+    const r = jogar(e, { tipo: 'devolverMesa', uid: u });
+    const s = r.estado;
+    assert.equal(EU(s).banco.length, 0, 'saiu da mesa');
+    const noDeck = EU(s).deck.find((c) => c.uid === u);
+    assert.ok(noDeck, 'foi para o baralho');
+    assert.equal(noDeck.dano, 0);
+    assert.equal(noDeck.aura, 0);
+    assert.equal(noDeck.estados.notificado, false);
+    assert.equal(noDeck.estados.virada, 0);
+    assert.equal(EU(s).vida, vidaAntes, 'devolver não é nocaute: o dono não perde vida');
+    assert.equal(r.eventos.some((ev) => ev.tipo === 'nocaute'), false);
+    assert.equal(r.eventos.some((ev) => ev.tipo === 'golpeExtra'), false);
+    assert.deepEqual(r.eventos, [{ tipo: 'devolver', jogador: 0, uid: u, id: 'drone-vigia', de: 'mesa' }]);
+    invalida(() => jogar(s, { tipo: 'devolverMesa', uid: EU(s).ativo.uid }), 'só 1 carta da mesa por turno');
+});
+
+test('devolverMesa do ativo com banco: pede novo ativo e o turno continua (ele ainda ataca)', () => {
+    const e = mesa({ eu: { ativo: { id: 'enzo-games', aura: 3 }, banco: [{ id: 'drone-vigia', aura: 1 }] }, ele: { ativo: 'chorao' } });
+    const r = jogar(e, { tipo: 'devolverMesa', uid: EU(e).ativo.uid });
+    let s = r.estado;
+    assert.equal(EU(s).ativo, null);
+    assert.deepEqual(s.pendentes, [{ jogador: 0, tipo: 'novoAtivo' }]);
+    assert.equal(s.vez, 0, 'o turno continua com o mesmo jogador');
+    invalida(() => jogar(s, { tipo: 'atacar', ataque: 0 }), 'novo ativo');
+    s = jogar(s, { tipo: 'novoAtivo', uid: EU(s).banco[0].uid }).estado;
+    assert.equal(EU(s).ativo.id, 'drone-vigia');
+    assert.equal(s.vez, 0);
+    assert.deepEqual(s.pendentes, []);
+    assert.doesNotThrow(() => jogar(s, { tipo: 'atacar', ataque: 0 }), 'ainda ataca no mesmo turno');
+});
+
+test('devolverMesa do ativo sem banco: sem pendente e a partida continua', () => {
+    const e = mesa({ eu: { ativo: 'cara-de-coracao' }, ele: { ativo: 'drone-vigia' } });
+    const r = jogar(e, { tipo: 'devolverMesa', uid: EU(e).ativo.uid });
+    const s = r.estado;
+    assert.equal(EU(s).ativo, null);
+    assert.deepEqual(s.pendentes, [], 'mesa vazia é permitida, sem pendente');
+    assert.equal(s.fase, 'jogo');
+    assert.equal(s.vez, 0);
+    assert.doesNotThrow(() => jogar(s, { tipo: 'passar' }));
+});
+
+test('devolver fora da vez é inválido', () => {
+    const e = mesa({ eu: { mao: ['bug-do-discord'], ativo: 'cara-de-coracao' }, ele: { mao: ['drone-vigia'] } });
+    invalida(() => R.aplicar(e, { tipo: 'devolverMao', jogador: 1, uid: ELE(e).mao[0].uid }), 'não é a sua vez');
+    invalida(() => R.aplicar(e, { tipo: 'devolverMesa', jogador: 1, uid: ELE(e).ativo.uid }), 'não é a sua vez');
+});
+
+test('Casa do Enzo Games: a troca não conta no limite de devolverMao e funciona com o baralho vazio', () => {
+    const e = mesa({ eu: { mao: ['bug-do-discord', 'drone-vigia', 'emoji-pistola'], deck: ['italolol', 'italolol'] }, campo: 'casa-do-enzo-games' });
+    let s = jogar(e, { tipo: 'devolverMao', uid: EU(e).mao[0].uid }).estado;
+    s = jogar(s, { tipo: 'devolverMao', uid: EU(s).mao[0].uid }).estado;
+    assert.equal(EU(s).flags.devolvidasMao, 2);
+    const r = jogar(s, { tipo: 'trocarCarta', uid: EU(s).mao[0].uid });
+    assert.equal(EU(r.estado).flags.devolvidasMao, 2, 'a troca não soma no limite de devolverMao');
+    assert.equal(EU(r.estado).flags.trocarCarta, true);
+    // Baralho vazio: a carta devolvida vira a própria compra.
+    const vazio = mesa({ eu: { mao: ['bug-do-discord'], deck: [] }, campo: 'casa-do-enzo-games' });
+    const rv = jogar(vazio, { tipo: 'trocarCarta', uid: EU(vazio).mao[0].uid });
+    assert.deepEqual(EU(rv.estado).mao.map((c) => c.id), ['bug-do-discord'], 'a devolvida virou a compra');
+    assert.equal(EU(rv.estado).deck.length, 0);
+});
+
+test('eventosPara: o devolver da mão esconde id e uid do outro; o da mesa mostra para os dois', () => {
+    const eventos = [
+        { tipo: 'devolver', jogador: 0, uid: '0-1', id: 'bug-do-discord', de: 'mao' },
+        { tipo: 'devolver', jogador: 0, uid: '0-2', id: 'drone-vigia', de: 'mesa' },
+        { tipo: 'devolver', jogador: 0, uid: '0-3', id: 'italolol', de: 'mao', motivo: 'casa' },
+    ];
+    assert.deepEqual(R.eventosPara(eventos, 0), eventos);
+    assert.deepEqual(R.eventosPara(eventos, 1), [
+        { tipo: 'devolver', jogador: 0, de: 'mao', motivo: undefined },
+        { tipo: 'devolver', jogador: 0, uid: '0-2', id: 'drone-vigia', de: 'mesa' },
+        { tipo: 'devolver', jogador: 0, de: 'mao', motivo: 'casa' },
+    ]);
+});
+
+test('jogadasValidas: devolverMao para cada carta da mão e devolverMesa para cada carta da mesa', () => {
+    const e = mesa({ eu: { ativo: 'cara-de-coracao', banco: ['drone-vigia'], mao: ['bug-do-discord', 'emoji-pistola'], deck: ['italolol'] } });
+    const validas = R.jogadasValidas(e, 0);
+    for (const c of EU(e).mao) {
+        assert.ok(validas.some((j) => j.tipo === 'devolverMao' && j.uid === c.uid), `devolverMao para ${c.id}`);
+    }
+    for (const c of R.naMesa(EU(e))) {
+        assert.ok(validas.some((j) => j.tipo === 'devolverMesa' && j.uid === c.uid), `devolverMesa para ${c.id}`);
+    }
+    // Depois de 2 devolverMao, a jogada some da lista do turno.
+    let s = jogar(e, { tipo: 'devolverMao', uid: EU(e).mao[0].uid }).estado;
+    s = jogar(s, { tipo: 'devolverMao', uid: EU(s).mao[0].uid }).estado;
+    assert.equal(R.jogadasValidas(s, 0).some((j) => j.tipo === 'devolverMao'), false);
 });
 
 test('São João do Butico: ataques não acertam o banco', () => {

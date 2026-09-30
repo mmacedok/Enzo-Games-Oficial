@@ -114,7 +114,7 @@
         'estacionamento-noturno': { campo: { tipo: 'recuoGratisGoon',
             texto: 'Goons recuam de graça.' } },
         'casa-do-enzo-games': { campo: { tipo: 'trocarCarta',
-            texto: '1 vez por turno, cada jogador pode descartar 1 carta da mão para comprar 1.' } },
+            texto: '1 vez por turno, cada jogador pode devolver 1 carta da mão ao baralho para comprar 1.' } },
         'sao-joao-do-butico': { campo: { tipo: 'protegeBanco',
             texto: 'Comporta secreta: ataques não acertam o banco.' } },
     };

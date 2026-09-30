@@ -294,6 +294,7 @@
             ['De um golpe só', 'Derrubar uma carta de vida cheia num golpe só vira a sua carta até o seu próximo turno.'],
             ['Recarga', 'Macarronada a 300%, Vírgula-rangue, Bala Dourada e Ban de 7 Dias viram a carta para baixo até o próximo turno do dono: ela não ataca, não usa poder e não recua, mas pode levar golpe.'],
             ['Mesa vazia', 'Sem ninguém na mesa você não perde: todo ataque vai em você até baixar alguém, que entra direto como ativo.'],
+            ['Devolver cartas', `Na sua vez, dá para devolver ao baralho até ${R.DEVOLVER_MAO_POR_TURNO} cartas da mão e 1 da mesa (com ou sem Aura; a Aura se perde). Elas não voltam para a mão: vão para o baralho, embaralhado. Tirar a sua carta da mesa não tira vida. Na Casa do Enzo Games, ainda dá para trocar 1 da mão: devolve e compra outra.`],
             ['Jogar', 'Arraste as cartas: da mão para o banco, o campo para o meio da mesa, a Aura para uma carta, e o seu ativo até o ativo ou o rosto do adversário para atacar.'],
             ['Dica', 'Toque em qualquer carta (até as do NPC) para ver os ataques e o que ela faz.'],
         ];
@@ -931,7 +932,9 @@
         if (naMao) {
             if (R.ehLutador(naMao.id)) add('Pôr no banco', { tipo: 'baixar', uid });
             if (R.ehCampo(naMao.id)) add('Jogar este campo', { tipo: 'campo', uid });
-            if (estado.campo && R.combate(estado.campo.carta.id).campo.tipo === 'trocarCarta') add('Descartar e comprar 1 (Casa do Enzo)', { tipo: 'trocarCarta', uid });
+            if (estado.campo && R.combate(estado.campo.carta.id).campo.tipo === 'trocarCarta') add('Devolver ao baralho e comprar 1 (Casa do Enzo)', { tipo: 'trocarCarta', uid });
+            const restam = R.DEVOLVER_MAO_POR_TURNO - (eu.flags.devolvidasMao || 0);
+            add(`Devolver ao baralho (${Math.max(0, restam)} de ${R.DEVOLVER_MAO_POR_TURNO} neste turno)`, { tipo: 'devolverMao', uid });
             return acoes;
         }
         const minha = R.naMesa(eu).find((c) => c.uid === uid);
@@ -942,6 +945,7 @@
         if (eu.banco.some((c) => c.uid === uid) && eu.ativo) {
             add(`Recuar: esta vira o ativo (gasta ${R.custoRecuo(estado, eu.ativo)} da Aura presa no ativo, que tem ${eu.ativo.aura})`, { tipo: 'recuar', para: uid });
         }
+        add(`Devolver ao baralho (volta sem a Aura; 1 da mesa por turno)`, { tipo: 'devolverMesa', uid });
         if (eu.ativo?.uid === uid) {
             R.combate(minha.id).ataques.forEach((a, i) => {
                 const puxa = (a.efeitos || []).some((e) => e.tipo === 'puxar');
@@ -1844,6 +1848,11 @@
             case 'espiar': if (ev.jogador === EU) registrar(`Câmera: a mão de ${dele()} tem ${ev.ids.map(nomeVisivel).join(', ') || 'nada'}.`); break;
             case 'novoAtivo': registrar(`${quem(ev.jogador)} pôs ${n(ev.uid)} no ativo.`); break;
             case 'descartar': registrar(`${quem(ev.jogador)} descartou ${nomeVisivel(ev.id)}.`); break;
+            case 'devolver':
+                registrar(ev.id
+                    ? `${quem(ev.jogador)} devolveu ${nomeVisivel(ev.id)} ${ev.de === 'mesa' ? 'da mesa' : 'da mão'} ao baralho${ev.motivo === 'casa' ? ' (Casa do Enzo)' : ''}.`
+                    : `${quem(ev.jogador)} devolveu uma carta da mão ao baralho${ev.motivo === 'casa' ? ' (Casa do Enzo)' : ''}.`);
+                break;
             case 'fim': registrar(ev.vencedor === 'empate' ? 'Empate!' : `${quem(ev.vencedor)} venceu!`); break;
             default: break;
         }
@@ -2619,6 +2628,7 @@
             case 'troca':
             case 'novoAtivo':
             case 'descartar':
+            case 'devolver':
                 desenhar();
                 await esperar(380);
                 break;

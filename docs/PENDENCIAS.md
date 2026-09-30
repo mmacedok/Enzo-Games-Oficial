@@ -77,6 +77,28 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Batalha, regra nova** (`docs/PLANO-VIDA-JOGADOR.md`):
+  - **Vitória por vida:**
+    - 6.000 de vida; HP e dano das cartas ×20;
+    - o dono perde vida quando uma carta dele cai;
+    - ataque no jogador (com o ativo dele na mesa, entra só 35%);
+    - derrubou uma carta, golpe extra de graça no jogador;
+    - derrubou de um golpe só, a carta vira (recarga).
+  - **Recarga** em Macarronada a 300%, Vírgula-rangue, Bala Dourada e Ban de 7 Dias. A carta virada
+    mostra o verso da Batalha.
+  - **Devolver cartas ao baralho:** até 2 da mão e 1 da mesa por turno. A Casa do Enzo também devolve
+    ao baralho antes de comprar.
+  - **Online:**
+    - lista de salas abertas (entrar com 1 clique);
+    - placar permanente (vitórias, derrotas e empates);
+    - partidas da regra antiga são encerradas sem resultado.
+  - Correção do arrasto no iPhone.
+  - 107 testes passando.
+  - **Pendente:**
+    - decisão do Henrique sobre o dano de nocaute ×1,5 (a calibragem recomendou);
+    - QA completo pelo Gemini (computador, celular e online com 2 abas);
+    - o robô fácil termina 29% das partidas no limite de turnos;
+    - `main` só quando o Henrique pedir.
 - 2026-09-28: **Layout da Batalha no celular e no computador:** a mesa encolhe as cartas até caber na
   tela (antes passava da tela e cortava a mão embaixo); efeitos, balões e números ficam dentro da parte
   visível; a dica e o efeito do campo recolhem numa linha depois de 3,5 s (tocar abre); HP das cartas

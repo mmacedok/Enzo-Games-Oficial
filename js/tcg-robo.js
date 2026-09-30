@@ -123,6 +123,12 @@
             });
             if (campoInutil) return campoInutil;
         }
+        // Sem a Casa: devolve ao baralho um campo que não dá para usar agora (repetido na mesa).
+        const devolver = por('devolverMao').find((t) => {
+            const c = eu.mao.find((x) => x.uid === t.uid);
+            return R.ehCampo(c.id) && estado.campo?.carta.id === c.id;
+        });
+        if (devolver) return devolver;
 
         if (ataques.length && ataques[0].nota > 0) return ataques[0].v;
         return por('passar')[0] || validas[0];
@@ -131,7 +137,8 @@
     /** Fácil: joga como o normal, mas às vezes faz uma jogada qualquer e ataca sem pensar. */
     function escolherFacil(estado, j, validas, aleatorio) {
         if (aleatorio() < 0.35) {
-            const qualquer = validas.filter((v) => v.tipo !== 'passar');
+            // Devolver cartas ao baralho no sorteio seria só jogar fora; o fácil não faz isso ao acaso.
+            const qualquer = validas.filter((v) => !['passar', 'devolverMao', 'devolverMesa'].includes(v.tipo));
             if (qualquer.length) return qualquer[Math.floor(aleatorio() * qualquer.length)];
         }
         return escolherNormal(estado, j, validas);

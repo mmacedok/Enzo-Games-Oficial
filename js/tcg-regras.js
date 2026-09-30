@@ -25,7 +25,7 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 4;
+    const REGRAS_VERSAO = 5;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
@@ -41,6 +41,12 @@
     const DANO_NOCAUTE = { comum: 500, raro: 750, epico: 1000, lendario: 1500 };
     const VENENO = 10 * ESCALA;
     const DANO_ILUDIDO = 20 * ESCALA;
+    /**
+     * Descarte: na sua vez, devolve cartas ao baralho (embaralhado; não voltam para a mão).
+     * Da mão: até 2 por turno. Da mesa: 1 por turno, com ou sem Aura (a Aura se perde).
+     */
+    const DEVOLVER_MAO_POR_TURNO = 2;
+    const DEVOLVER_MESA_POR_TURNO = 1;
     /** Alvo de ataque que acerta o jogador, não uma carta. */
     const JOGADOR = 'jogador';
     /** O ativo protege o dono: golpe no jogador com o ativo dele na mesa entra só com 35% (para baixo). */
@@ -113,7 +119,7 @@
         return { uid, id, dano: 0, aura: 0, estados: { notificado: false, iludido: false, silenciado: 0, virada: 0 }, escudo: null };
     }
     function flagsDoTurno() {
-        return { auras: 1, reforco: 0, campo: false, recuo: false, trocarCarta: false, poderes: [] };
+        return { auras: 1, reforco: 0, campo: false, recuo: false, trocarCarta: false, poderes: [], devolvidasMao: 0, devolvidasMesa: 0 };
     }
 
     function criarPartida({ semente = Date.now(), decks, nomes = ['Jogador 1', 'Jogador 2'] } = {}) {
@@ -297,7 +303,16 @@
                 if (efeitoCampo(estado)?.tipo !== 'trocarCarta') return 'só na Casa do Enzo Games';
                 if (f.trocarCarta) return 'só 1 troca por turno';
                 if (!acharNaMao(eu, jogada.uid)) return 'escolha uma carta da mão';
-                if (!qtd(eu.deck)) return 'seu deck acabou';
+                return null;
+            }
+            case 'devolverMao': {
+                if ((f.devolvidasMao || 0) >= DEVOLVER_MAO_POR_TURNO) return `só ${DEVOLVER_MAO_POR_TURNO} cartas da mão por turno`;
+                if (!acharNaMao(eu, jogada.uid)) return 'escolha uma carta da mão';
+                return null;
+            }
+            case 'devolverMesa': {
+                if ((f.devolvidasMesa || 0) >= DEVOLVER_MESA_POR_TURNO) return 'só 1 carta da mesa por turno';
+                if (!acharNaMesa(eu, jogada.uid)) return 'escolha uma carta sua na mesa';
                 return null;
             }
             case 'atacar': {
@@ -352,6 +367,16 @@
         limparEstados(inst);
         inst.estados.virada = 0;   // a recarga não sai no banco (é do ataque), só no descarte
         jogador.descarte.push(inst);
+    }
+    /** Devolve a carta ao baralho do dono, limpa (sem dano, Aura nem estados), e embaralha. */
+    function paraOBaralho(estado, jogador, inst) {
+        inst.dano = 0;
+        inst.aura = 0;
+        inst.escudo = null;
+        limparEstados(inst);
+        inst.estados.virada = 0;
+        jogador.deck.push(inst);
+        embaralhar(estado, jogador.deck);
     }
     function tirarDaMao(jogador, uid) {
         const i = jogador.mao.findIndex((c) => c.uid === uid);
@@ -691,11 +716,37 @@
             }
 
             case 'trocarCarta': {
+                // Casa do Enzo Games: devolve 1 da mão ao baralho e compra 1 (não conta no limite de 2).
                 const inst = tirarDaMao(eu, jogada.uid);
-                paraDescarte(eu, inst);
+                paraOBaralho(estado, eu, inst);
                 eu.flags.trocarCarta = true;
-                eventos.push({ tipo: 'descartar', jogador: j, uid: inst.uid, id: inst.id });
+                eventos.push({ tipo: 'devolver', jogador: j, uid: inst.uid, id: inst.id, de: 'mao', motivo: 'casa' });
                 comprar(estado, j, eventos, 'campo');
+                return;
+            }
+
+            case 'devolverMao': {
+                const inst = tirarDaMao(eu, jogada.uid);
+                paraOBaralho(estado, eu, inst);
+                eu.flags.devolvidasMao = (eu.flags.devolvidasMao || 0) + 1;
+                eventos.push({ tipo: 'devolver', jogador: j, uid: inst.uid, id: inst.id, de: 'mao' });
+                return;
+            }
+
+            case 'devolverMesa': {
+                // Tirar a própria carta da mesa não é nocaute: o dono não perde vida.
+                const inst = acharNaMesa(eu, jogada.uid);
+                const eraAtivo = eu.ativo === inst;
+                if (eraAtivo) eu.ativo = null;
+                else eu.banco.splice(eu.banco.indexOf(inst), 1);
+                paraOBaralho(estado, eu, inst);
+                eu.flags.devolvidasMesa = (eu.flags.devolvidasMesa || 0) + 1;
+                eventos.push({ tipo: 'devolver', jogador: j, uid: inst.uid, id: inst.id, de: 'mesa' });
+                // Sem ativo e com banco: escolhe o novo ativo e o turno continua.
+                if (eraAtivo && eu.banco.length) {
+                    estado.pendentes.push({ jogador: j, tipo: 'novoAtivo' });
+                    eventos.push({ tipo: 'escolherAtivo', jogador: j });
+                }
                 return;
             }
 
@@ -747,10 +798,12 @@
                 candidatas.push({ tipo: 'baixar', jogador: j, uid: c.uid });
                 candidatas.push({ tipo: 'campo', jogador: j, uid: c.uid });
                 candidatas.push({ tipo: 'trocarCarta', jogador: j, uid: c.uid });
+                candidatas.push({ tipo: 'devolverMao', jogador: j, uid: c.uid });
             }
             for (const c of naMesa(eu)) {
                 candidatas.push({ tipo: 'aura', jogador: j, alvo: c.uid });
                 candidatas.push({ tipo: 'poder', jogador: j, uid: c.uid });
+                candidatas.push({ tipo: 'devolverMesa', jogador: j, uid: c.uid });
             }
             for (const c of eu.banco) candidatas.push({ tipo: 'recuar', jogador: j, para: c.uid });
             if (eu.ativo) {
@@ -807,6 +860,11 @@
                 saida.push({ tipo: 'compra', jogador: ev.jogador, motivo: ev.motivo });
                 continue;
             }
+            // Carta da mão devolvida ao baralho: o outro só sabe que uma carta voltou.
+            if (ev.tipo === 'devolver' && ev.de === 'mao' && ev.jogador !== j) {
+                saida.push({ tipo: 'devolver', jogador: ev.jogador, de: 'mao', motivo: ev.motivo });
+                continue;
+            }
             saida.push(ev);
         }
         return saida;
@@ -821,7 +879,7 @@
 
     return {
         TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAO_INICIAL, VAGAS_BANCO, LIMITE_TURNOS,
-        ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR, PROTECAO_ATIVO,
+        ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR, PROTECAO_ATIVO, DEVOLVER_MAO_POR_TURNO, DEVOLVER_MESA_POR_TURNO,
         REGRAS_VERSAO, JogadaInvalida,
         validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, quemDeve, repetir,
         hpMax, custoRecuo, calcularDano, danoNocaute, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado, virada,
