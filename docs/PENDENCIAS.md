@@ -80,6 +80,9 @@
 - 2026-09-30: **Capítulo 8 ("A rotina impossível!") no site**: capa e 12 páginas (1080×1920) em
   `assets/Capitulo 8/`, PNGs recomprimidos sem perda (64 MB → 44 MB, pixels idênticos) e entrada no
   `data/comics.manifest.json`. Aparece como destaque da home e no leitor.
+- 2026-09-30: **Batalha, cara ou coroa no começo:** a moeda do Glitch (cara = Enzo, coroa = touro)
+  gira antes de "VOCÊ COMEÇA!". O jogador 0 é **Games** e o jogador 1 é **Torado** (contra o robô,
+  você é sempre Games); cai o lado de quem começa. Só tela: o motor já sorteava (`estado.primeiro`).
 - 2026-09-30: **Batalha, regra nova** (`docs/PLANO-VIDA-JOGADOR.md`):
   - **Vitória por vida:**
     - 6.000 de vida; HP e dano das cartas ×20;
