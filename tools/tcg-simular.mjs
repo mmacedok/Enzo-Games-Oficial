@@ -39,12 +39,13 @@ function deckAleatorio() {
     }
 }
 
-export function jogarPartida(decks, semente, niveis = [NIVEL, NIVEL]) {
+export function jogarPartida(decks, semente, niveis = [NIVEL, NIVEL], onJogada = null) {
     let estado = R.criarPartida({ semente, decks });
     let passos = 0;
     while (estado.fase !== 'fim') {
         const j = Robo.quemJoga(estado);
         const jogada = Robo.escolherJogada(estado, j, { nivel: niveis[j], aleatorio });
+        if (onJogada) onJogada(estado, j, jogada);
         estado = R.aplicar(estado, jogada).estado;
         if (++passos > 5000) throw new Error(`partida travada (semente ${semente})`);
     }
@@ -56,15 +57,41 @@ const motivos = {};
 let vitoriasPrimeiro = 0;
 let empates = 0;
 let turnos = 0;
+let totalAtaques = 0;
+let ataquesJogador = 0;
+let vidaVencedorTotal = 0;
+let partidasComVencedor = 0;
+const recargaUsos = {
+    'Macarronada a 300%': 0,
+    'Vírgula-rangue': 0,
+    'Bala Dourada': 0,
+    'Ban de 7 Dias': 0,
+};
 const inicio = Date.now();
 
 for (let n = 0; n < PARTIDAS; n++) {
     const decks = [deckAleatorio(), deckAleatorio()];
-    const fim = jogarPartida(decks, `sim-${n}`);
+    const fim = jogarPartida(decks, `sim-${n}`, [NIVEL, NIVEL], (estado, j, jogada) => {
+        if (jogada.tipo === 'atacar') {
+            totalAtaques++;
+            if (jogada.alvo === 'jogador' || jogada.alvo === R.JOGADOR) {
+                ataquesJogador++;
+            }
+            const ativo = estado.jogadores[j].ativo;
+            if (ativo) {
+                const atk = R.combate(ativo.id)?.ataques[jogada.ataque];
+                if (atk && recargaUsos[atk.nome] !== undefined) {
+                    recargaUsos[atk.nome]++;
+                }
+            }
+        }
+    });
     motivos[fim.motivo] = (motivos[fim.motivo] || 0) + 1;
     turnos += fim.turno;
     if (fim.vencedor === 'empate') { empates++; continue; }
     if (fim.vencedor === fim.primeiro) vitoriasPrimeiro++;
+    partidasComVencedor++;
+    vidaVencedorTotal += fim.jogadores[fim.vencedor].vida;
     decks.forEach((deck, j) => {
         for (const id of new Set(deck)) {
             porCarta[id] ||= { partidas: 0, vitorias: 0 };
@@ -87,3 +114,11 @@ Object.entries(porCarta)
         const barra = '#'.repeat(Math.round(taxa * 40));
         console.log(`${(taxa * 100).toFixed(1).padStart(5)}%  ${barra.padEnd(40)} ${carta.nome} (${carta.raridade}, ${s.partidas})`);
     });
+
+console.log(`\nAtaques no jogador: ${pct(ataquesJogador, totalAtaques)} (${ataquesJogador}/${totalAtaques})`);
+console.log(`Vida média do vencedor no fim: ${partidasComVencedor ? (vidaVencedorTotal / partidasComVencedor).toFixed(0) : '-'}`);
+console.log('Usos de ataques com recarga (por partida):');
+for (const [nome, qtd] of Object.entries(recargaUsos)) {
+    console.log(`  ${nome}: ${(qtd / PARTIDAS).toFixed(2)} por partida (${qtd} total)`);
+}
+

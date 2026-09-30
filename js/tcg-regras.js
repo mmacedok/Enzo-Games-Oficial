@@ -25,7 +25,7 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 3;
+    const REGRAS_VERSAO = 4;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
@@ -43,6 +43,8 @@
     const DANO_ILUDIDO = 20 * ESCALA;
     /** Alvo de ataque que acerta o jogador, não uma carta. */
     const JOGADOR = 'jogador';
+    /** O ativo protege o dono: golpe no jogador com o ativo dele na mesa entra só com 35% (para baixo). */
+    const PROTECAO_ATIVO = 0.35;
 
     class JogadaInvalida extends Error {
         constructor(motivo) { super(motivo); this.name = 'JogadaInvalida'; }
@@ -185,7 +187,10 @@
     /** Quem começa não ataca no 1º turno. */
     const podeAtacarNoTurno = (estado) => estado.turno > 1;
 
-    /** Dano final do ataque (sem moeda: para a tela mostrar a previsão). */
+    /**
+     * Dano final do ataque (sem moeda: para a tela mostrar a previsão).
+     * `alvo`: a carta, ou JOGADOR (aí o ativo do dono, se houver, segura 65% do golpe).
+     */
     function calcularDano(estado, j, ataque, alvo, { resultadoMoeda } = {}) {
         const eu = estado.jogadores[j];
         const atacante = eu.ativo;
@@ -200,7 +205,11 @@
             dano += Math.max(...eu.banco.map((c) => (combate(c.id).poder?.tipo === 'bonusDoBanco' ? combate(c.id).poder.valor : 0)));
         }
         dano *= ESCALA;
-        // O escudo já é guardado na escala grande (executarAtaque); o jogador não tem escudo.
+        if (alvo === JOGADOR) {
+            if (estado.jogadores[outro(j)].ativo) dano = Math.floor(dano * PROTECAO_ATIVO);
+            return Math.max(0, dano);
+        }
+        // O escudo já é guardado na escala grande (executarAtaque).
         if (alvo?.escudo && alvo.escudo.ate >= estado.turno) dano -= alvo.escudo.valor;
         return Math.max(0, dano);
     }
@@ -480,14 +489,19 @@
         const efeitos = ataque.efeitos || [];
         const temMoeda = efeitos.some((e) => e.tipo === 'moeda');
         const resultadoMoeda = temMoeda ? moeda(estado, eventos, 'ataque') : undefined;
-        const dano = calcularDano(estado, j, ataque, alvo, { resultadoMoeda });
+        const dano = calcularDano(estado, j, ataque, noJogador ? JOGADOR : alvo, { resultadoMoeda });
+        let derrubou = false;
+        let deUmGolpe = false;
         if (noJogador) {
             ferirJogador(estado, outro(j), dano, eventos, 'ataque');
         } else {
             if (alvo.escudo && alvo.escudo.ate >= estado.turno && dano === 0 && ataque.dano > 0) {
                 eventos.push({ tipo: 'bloqueado', uid: alvo.uid });
             }
+            const estavaCheia = alvo.dano === 0;
             darDano(estado, alvo, dano, eventos, 'ataque');
+            derrubou = dano > 0 && alvo.dano >= hpMax(estado, alvo);
+            deUmGolpe = derrubou && estavaCheia;
             const contra = combate(alvo.id).poder;
             if (dano > 0 && contra?.tipo === 'contraAtaque') {
                 eventos.push({ tipo: 'poder', uid: alvo.uid, nome: contra.nome });
@@ -553,6 +567,18 @@
                 default:
                     break;
             }
+        }
+        // Derrubou a carta: golpe extra de graça, com o mesmo dano, só no jogador. A carta caída
+        // já não protege ninguém, então entra inteiro (sem os 35%, sem escudo nem efeitos).
+        if (derrubou) {
+            const extra = calcularDano(estado, j, ataque, null, { resultadoMoeda });
+            eventos.push({ tipo: 'golpeExtra', jogador: j, uid: atacante.uid, valor: extra });
+            ferirJogador(estado, outro(j), extra, eventos, 'golpeExtra');
+        }
+        // Derrubou de um golpe só (a carta estava com a vida cheia): o atacante vira (recarga).
+        if (deUmGolpe && !virada(estado, atacante)) {
+            atacante.estados.virada = estado.turno + 2;
+            eventos.push({ tipo: 'virada', uid: atacante.uid, ate: atacante.estados.virada, motivo: 'umGolpe' });
         }
         verificarNocautes(estado, eventos);
         seguir(estado, 'fimTurno', eventos);
@@ -795,7 +821,7 @@
 
     return {
         TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAO_INICIAL, VAGAS_BANCO, LIMITE_TURNOS,
-        ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR,
+        ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR, PROTECAO_ATIVO,
         REGRAS_VERSAO, JogadaInvalida,
         validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, quemDeve, repetir,
         hpMax, custoRecuo, calcularDano, danoNocaute, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado, virada,

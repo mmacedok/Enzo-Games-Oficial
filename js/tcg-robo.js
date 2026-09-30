@@ -30,7 +30,7 @@
         const puxa = (ataque.efeitos || []).some((e) => e.tipo === 'puxar');
         const noJogador = jogada.alvo === R.JOGADOR;
         const alvo = noJogador ? null : (ataque.alvo === 'qualquer' ? acharNaMesa(ele, jogada.alvo) : ele.ativo);
-        const dano = R.calcularDano(estado, j, ataque, alvo, { resultadoMoeda: true })
+        const dano = R.calcularDano(estado, j, ataque, noJogador ? R.JOGADOR : alvo, { resultadoMoeda: true })
             * ((ataque.efeitos || []).some((e) => e.tipo === 'moeda') ? 0.5 : 1);
         const nocaute = !noJogador && !puxa && dano >= vida(estado, alvo);
         // letal: acaba com a vida do adversário (no golpe direto ou pela vida que o nocaute tira).
@@ -44,7 +44,11 @@
         // Notas na escala pequena de antes (dano / ESCALA), para os bônus abaixo continuarem valendo.
         let nota = dano / R.ESCALA;
         if (letal) nota += 1000;
-        if (nocaute) nota += 100 + R.danoNocaute(alvo.id) / R.ESCALA;
+        if (nocaute) {
+            // Derrubar dá o golpe extra no jogador (dano cheio); derrubar de um golpe vira a carta.
+            nota += 100 + R.danoNocaute(alvo.id) / R.ESCALA + R.calcularDano(estado, j, ataque, null, { resultadoMoeda: true }) / R.ESCALA;
+            if (alvo.dano === 0) nota -= 20;
+        }
         for (const ef of ataque.efeitos || []) {
             if (ef.tipo === 'estado' && alvo && !alvo.estados[ef.estado]) nota += 15;
             if (ef.tipo === 'danoSi' && vida(estado, eu.ativo) <= ef.valor * R.ESCALA) nota -= 200;
