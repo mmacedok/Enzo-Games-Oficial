@@ -87,9 +87,10 @@ calibragem ajusta uma constante em vez de 60 números. As exceções da calibrag
 - **Nocaute também fere o dono** (substitui os pontos): quando uma carta cai, o dono perde vida
   conforme a raridade. Sugestão: comum 500, raro 750, épico 1.000, lendário 1.500. Sem isso, ninguém
   teria motivo para derrubar cartas: todo mundo iria só no rosto.
-- **Decisão do Henrique A:** dá para acertar o jogador mesmo com o ativo dele na mesa (como o
-  Henrique descreveu), ou só quando ele está sem ativo (mais defensivo)? O plano parte do
-  "sempre pode", com o nocaute doendo no dono e a recarga da 3.3 segurando o ritmo.
+- **Decidido (Henrique, 2026-09-30):** por enquanto dá para **acertar o jogador sempre**, mesmo com
+  o ativo dele na mesa. **Depois**, algumas cartas vão poder **entrar no meio** (interceptar o golpe
+  no jogador). Fica para uma etapa futura: deixar no motor um ponto de gancho (`interceptar`) para
+  não refazer a regra.
 
 ### 3.3 Recarga: a carta vira para baixo (modelo do Moderador)
 Hoje o Silenciado grava "vale até o turno X" e dá imunidade logo depois (`tcg-regras.js:164, 470`).
@@ -102,14 +103,13 @@ A recarga usa o mesmo formato, só que no **próprio atacante**:
   - **continua na mesa e pode levar golpe**;
   - o HP fica visível num selo por cima do verso;
   - ao voltar a ficar de frente, uma animação vira a carta.
-- **Sugestão inicial** (Decisão do Henrique B):
-  - **recarga 1:** os ataques de custo 3 (Macarronada a 300%, Escudo de Parênteses, Bala Dourada,
-    Marretada) e os de efeito que travam o jogo: Ban de 7 Dias do **Moderador**, Vem Cá (puxar),
-    0/14/2;
-  - **recarga 0:** o resto.
-- **Opção a testar na calibragem:** atacar o **jogador** também vira a carta por 1 turno. Isso dá
-  uma escolha real entre ir no rosto agora (e ficar sem esse atacante na próxima) e limpar a mesa.
-  O simulador mede as duas versões.
+- **Decidido (Henrique, 2026-09-30): recarga 1** em só quatro ataques:
+  - **Ban de 7 Dias** (Moderador do Discord, o que silencia);
+  - **Macarronada a 300%** (Enzo Games);
+  - **Vírgula-rangue** (Degustador da Noite);
+  - **Bala Dourada** (O Inominável).
+
+  Todos os outros ficam com recarga 0. Atacar o jogador **não** vira a carta.
 - **Verso da Batalha:** a carta virada e a mão escondida do rival usam o verso novo: fundo escuro
   com o `assets/Batalha/logo.png` (a capa) no meio, pelo `UI.verso` com uma variante
   `carta-tcg--verso-batalha`. O `logo.png` é horizontal (1600×800), então no começo é CSS. Se o
@@ -143,7 +143,6 @@ Rodar o simulador com várias combinações e escolher a que bate as metas:
 - **Grade:**
   - `VIDA_INICIAL` 5.000 / 6.000 / 7.000;
   - `DANO_NOCAUTE` (0, a tabela sugerida, e 1,5× ela);
-  - recarga no golpe no rosto (sim/não);
   - níveis do robô normal×normal e difícil×difícil;
   - 2.000 partidas por combinação.
 - **Metas:**
@@ -161,7 +160,7 @@ simulador, testa telas e escreve docs. O **Codex** faz arte. O **Jev** confere o
 
 | # | Etapa | Quem | Como | Pronto quando |
 |---|---|---|---|---|
-| 0 | Decisões A e B (e aprovar a escala ×20) | **Henrique** | responde no chat | — |
+| 0 | Decisões A e B ✔ (2026-09-30); escala ×20 e 6.000 seguem como ponto de partida da calibragem | **Henrique** | respondeu no chat | — |
 | 1 | Motor: `ESCALA`, vida, alvo jogador, nocaute que fere, recarga/virada, fim por vida, robô | **Claude** | worktree do `TCG` | `node --test test/tcg-regras.test.js` passa com os testes novos |
 | 2 | Atualizar os testes antigos de pontos + escrever os testes novos pela lista da 3.1 a 3.3 | **DeepSeek** (`--escrever`, worktree) | tarefa com a lista exata dos casos | Claude revisa o diff; suíte passa |
 | 3 | Simulador com as métricas novas + grade da seção 5 | **Gemini** (tarefa na ponte) | `tools/tcg-simular.mjs` numa cópia fixa, relatório com tabela por combinação | `verificar.mjs` do Jev sem CONTRADIZ; Claude escolhe a combinação e o Henrique aprova |
@@ -180,5 +179,5 @@ a qualquer momento.
   precisa reconhecer a versão e encerrar ou terminar a partida na regra velha.
 - **Números grandes na tela do celular:** "2.400" ocupa mais que "120". O selo de HP já é
   proporcional à carta (`cqi`), mas precisa de conferência no iPhone.
-- **Jogo só de "rosto":** se as metas da seção 5 não fecharem, a alavanca é a Decisão A (só acertar
-  o jogador sem ativo) ou a recarga no golpe no rosto.
+- **Jogo só de "rosto":** se as metas da seção 5 não fecharem, as alavancas são o `DANO_NOCAUTE`
+  maior e, mais adiante, as cartas que entram no meio.
