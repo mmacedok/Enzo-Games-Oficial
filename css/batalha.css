@@ -953,6 +953,8 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-online-opcoes .bt-botao strong { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 400; letter-spacing: 1px; }
 .bt-online-opcoes .bt-botao span { font-size: 0.85rem; font-weight: 700; opacity: 0.85; }
 @media (max-width: 480px) { .bt-online-opcoes { grid-template-columns: 1fr; } }
+/* Revanche pedida pelo outro jogador: o botão pisca chamando. */
+.bt-botao--chamando { animation: bt-piscar 0.9s ease-in-out infinite; outline: 3px solid var(--caution); }
 .bt-online-sala {
     margin: 0;
     font-family: var(--font-heading);

@@ -23,8 +23,15 @@ const { HttpError } = require('./http.js');
 const R = require('../js/tcg-regras.js');
 const { DECKS_PRONTOS } = require('../js/tcg-cartas.js');
 
-/** Sala pública: fica na lista por 7 minutos esperando alguém entrar; depois some sozinha. */
-const SALA_DURA = 7 * 60 * 1000;
+/**
+ * Sala pública: fica na lista por 5 minutos e o tempo recomeça enquanto a tela de espera do dono
+ * estiver aberta (ela pergunta "entrou alguém?" o tempo todo). Sem a tela aberta, some sozinha.
+ */
+const SALA_DURA = 5 * 60 * 1000;
+/** Só regrava a validade da sala se faltar menos que (SALA_DURA - isto): poupa escritas. */
+const RENOVAR_SALA = 5 * 1000;
+/** Depois que a partida termina, os dois têm este tempo para pedir a revanche. */
+const REVANCHE_DURA = 2 * 60 * 1000;
 const SALAS_NA_LISTA = 20;
 const PLACAR_TOP = 50;
 const TURNO = 60 * 1000;
@@ -261,6 +268,52 @@ async function semPartidaAberta(ctx) {
     if (id) throw new HttpError(409, 'você já está numa partida', { partida: id });
 }
 
+async function lerParaRevanche(ctx, id) {
+    if (!ID.test(id)) throw new HttpError(404, 'partida não encontrada');
+    const [l] = await ctx.db.query('SELECT * FROM tcg_partidas WHERE id = $1', [id]);
+    const eu = l ? [l.jogador_a, l.jogador_b].indexOf(ctx.usuario.id) : -1;
+    if (eu < 0) throw new HttpError(404, 'partida não encontrada');
+    return { l, eu };
+}
+
+function situacaoRevanche(ctx, l, eu) {
+    const meu = eu === 0 ? l.revanche_a : l.revanche_b;
+    const dele = eu === 0 ? l.revanche_b : l.revanche_a;
+    return {
+        euQuero: meu === true, outroQuer: dele === true, partida: l.revanche_id || null,
+        expirou: !l.revanche_id && ctx.agora() > Number(l.atualizado_em) + REVANCHE_DURA,
+    };
+}
+
+/** Os dois querem: nasce a partida nova com os mesmos decks e os lados trocados (quem abriu agora joga em segundo). */
+async function criarRevanche(ctx, l) {
+    const [a, b] = [l.jogador_b, l.jogador_a];
+    for (const j of [a, b]) {
+        if (await partidaEmAndamento(ctx, j)) throw new HttpError(409, 'alguém já está em outra partida');
+        await conferirLimites(ctx, j);
+    }
+    const id = crypto.randomUUID();
+    const agora = ctx.agora();
+    // Marca num comando só: se os dois clicarem juntos, só uma partida nasce.
+    const pegou = await ctx.db.query(
+        `UPDATE tcg_partidas SET revanche_id = $2 WHERE id = $1 AND revanche_id IS NULL AND revanche_a AND revanche_b RETURNING id`,
+        [l.id, id]);
+    if (!pegou.length) return;
+    const [nomeA] = await ctx.db.query('SELECT display_name FROM users WHERE id = $1', [a]);
+    const [nomeB] = await ctx.db.query('SELECT display_name FROM users WHERE id = $1', [b]);
+    const deckA = deckPronto(l.deck_b);
+    const deckB = deckPronto(l.deck_a);
+    const estado = R.criarPartida({
+        semente: ctx.aleatorio(2 ** 31 - 1),
+        decks: [deckA.cartas, deckB.cartas],
+        nomes: [nomeA?.display_name || 'Jogador 1', nomeB?.display_name || 'Jogador 2'],
+    });
+    await ctx.db.query(
+        `INSERT INTO tcg_partidas (id, jogador_a, jogador_b, deck_a, deck_b, estado, versao, regras, prazo, criado_em, atualizado_em)
+         VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, $9, $9)`,
+        [id, a, b, deckA.id, deckB.id, JSON.stringify(estado), R.REGRAS_VERSAO, agora + TURNO, agora]);
+}
+
 const rotas = [
     {
         // Salas esperando alguém (sem as minhas), mais novas primeiro, com o placar de quem criou.
@@ -320,10 +373,17 @@ const rotas = [
             const codigo = lerCodigo(ctx.params[0]);
             const [s] = await ctx.db.query(
                 `SELECT s.*, u.display_name FROM tcg_salas s JOIN users u ON u.id = s.criador WHERE s.codigo = $1`, [codigo]);
-            if (!s || (Number(s.expira_em) < ctx.agora() && !s.partida_id)) throw new HttpError(404, 'sala não encontrada ou expirada');
+            const agora = ctx.agora();
+            if (!s || (Number(s.expira_em) < agora && !s.partida_id)) throw new HttpError(404, 'sala não encontrada ou expirada');
+            let expira = Number(s.expira_em);
+            // O dono está com a tela de espera aberta: a sala ganha mais 5 minutos.
+            if (s.criador === ctx.usuario.id && !s.partida_id && expira < agora + SALA_DURA - RENOVAR_SALA) {
+                expira = agora + SALA_DURA;
+                await ctx.db.query('UPDATE tcg_salas SET expira_em = $2 WHERE codigo = $1 AND partida_id IS NULL', [codigo, expira]);
+            }
             return {
                 codigo, deck: s.deck, criador: s.display_name, minha: s.criador === ctx.usuario.id,
-                expira: Number(s.expira_em), partida: s.partida_id || null,
+                expira, partida: s.partida_id || null,
             };
         },
     },
@@ -405,6 +465,32 @@ const rotas = [
         },
     },
     {
+        // Revanche: como está o pedido (meu, do outro) e, quando os dois querem, a partida nova.
+        metodo: 'GET', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/revanche$/, login: true,
+        async executar(ctx) {
+            const { l, eu } = await lerParaRevanche(ctx, ctx.params[0]);
+            return situacaoRevanche(ctx, l, eu);
+        },
+    },
+    {
+        metodo: 'POST', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/revanche$/, login: true,
+        async executar(ctx) {
+            const id = ctx.params[0];
+            let { l, eu } = await lerParaRevanche(ctx, id);
+            if (l.status !== 'fim' || l.motivo === 'atualizacao' || Number(l.regras) !== R.REGRAS_VERSAO) {
+                throw new HttpError(409, 'essa partida não aceita revanche');
+            }
+            if (!l.revanche_id) {
+                if (ctx.agora() > Number(l.atualizado_em) + REVANCHE_DURA) throw new HttpError(409, 'o tempo da revanche acabou');
+                await ctx.db.query(`UPDATE tcg_partidas SET ${eu === 0 ? 'revanche_a' : 'revanche_b'} = TRUE WHERE id = $1`, [id]);
+                [l] = await ctx.db.query('SELECT * FROM tcg_partidas WHERE id = $1', [id]);
+                if (l.revanche_a && l.revanche_b) await criarRevanche(ctx, l);
+                [l] = await ctx.db.query('SELECT * FROM tcg_partidas WHERE id = $1', [id]);
+            }
+            return situacaoRevanche(ctx, l, eu);
+        },
+    },
+    {
         metodo: 'POST', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/jogada$/, login: true,
         async executar(ctx) {
             const { jogada, versao, regras } = await ctx.corpo();
@@ -439,4 +525,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA };
+module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA, REVANCHE_DURA };

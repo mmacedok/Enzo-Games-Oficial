@@ -193,6 +193,10 @@ module.exports = [
         criado_em BIGINT NOT NULL,
         atualizado_em BIGINT NOT NULL
     )`,
+    // Revanche: cada jogador marca que quer; com os dois, nasce outra partida (lados trocados) em revanche_id.
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_a BOOLEAN NOT NULL DEFAULT FALSE',
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_b BOOLEAN NOT NULL DEFAULT FALSE',
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_id TEXT',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_a ON tcg_partidas(jogador_a, status)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_b ON tcg_partidas(jogador_b, status)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_criado ON tcg_partidas(criado_em)',

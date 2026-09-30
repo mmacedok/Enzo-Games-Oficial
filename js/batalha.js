@@ -15,7 +15,7 @@
 //
 // Online (outro jogador): o servidor é o juiz (api/tcg.js). A tela guarda só a VISÃO do jogador
 // (a mão do outro é um número), manda cada jogada para a API e toca os eventos que voltam.
-// Na vez do outro pergunta "teve jogada?" a cada 2,5 s. As salas são públicas: ficam na lista por 7 minutos.
+// Na vez do outro pergunta "teve jogada?" a cada 2,5 s. As salas são públicas: 5 minutos na lista, renovados enquanto o dono está com a tela aberta.
 //
 // Teste: batalha.html?auto=1 faz o robô jogar pelos dois lados; &rapido=1 sem esperas.
 // ============================================================================
@@ -1587,7 +1587,7 @@
                 balao(criar, erro.message, 'erro');
             }
         });
-        criar.append(el('strong', '', 'Criar sala'), el('span', '', 'fica na lista por 7 minutos'));
+        criar.append(el('strong', '', 'Criar sala'), el('span', '', 'fica na lista enquanto a tela estiver aberta'));
         opcoes.append(bLista, criar);
         corpo.appendChild(opcoes);
         if (atual.sala) mostrarSala(atual.sala.codigo, atual.sala.expira);
@@ -1670,7 +1670,7 @@
             const restante = () => Math.max(0, Math.ceil(((expira || Date.now()) - Date.now()) / 1000));
             const desenharRelogio = () => { const s = restante(); relogio.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
             desenharRelogio();
-            const espera = el('p', 'bt-online-espera', 'Esperando alguém entrar... sem ninguém em 7 minutos a sala sai da lista.');
+            const espera = el('p', 'bt-online-espera', 'Esperando alguém entrar... a sala continua na lista enquanto esta tela estiver aberta (5 minutos a cada renovação).');
             const cancelar = botao('bt-botao', 'Cancelar sala', async () => {
                 esperaSala?.parar();
                 try { await api('POST', `/api/tcg/salas/${codigo}/cancelar`, {}); } catch { /* sala já sumiu */ }
@@ -1686,8 +1686,9 @@
                     const s = await api('GET', `/api/tcg/salas/${codigo}`);
                     if (!caixa.isConnected || esperaSala !== controle) return;
                     if (s.partida) { controle.parar(); abrirPartida(s.partida); return; }
+                    if (s.expira) expira = s.expira;   // o servidor renovou: a contagem volta a 5:00
                 } catch (erro) {
-                    if (erro.status === 404) { controle.parar(); telaOnline('A sala expirou: 7 minutos sem ninguém entrar. Crie outra.'); return; }
+                    if (erro.status === 404) { controle.parar(); telaOnline('A sala saiu da lista (ficou 5 minutos sem a tela aberta). Crie outra.'); return; }
                 }
                 if (esperaSala === controle) timer = setTimeout(checar, BUSCA_MS);
             };
@@ -2723,6 +2724,38 @@
     }
 
     // ---------------------------------------------------------------- fim
+    /**
+     * Botão de revanche: pede ao servidor e, quando os dois querem, entra na partida nova (mesma dupla,
+     * mesmos decks, lados trocados). Pergunta a cada 2 s enquanto a tela de fim estiver aberta.
+     */
+    function botaoRevanche(idPartida, nome) {
+        let parou = false;
+        let timer = 0;
+        const rev = botao('bt-botao bt-botao--forte', 'Revanche', async () => {
+            rev.disabled = true;
+            try { aplicar(await api('POST', `/api/tcg/partidas/${encodeURIComponent(idPartida)}/revanche`, {})); } catch (erro) {
+                rev.disabled = false;
+                balao(rev, erro.message, 'erro');
+            }
+        });
+        const aplicar = (s) => {
+            if (parou) return;
+            if (s.partida) { parou = true; abrirPartida(s.partida); return; }
+            if (s.expirou) { parou = true; rev.disabled = true; rev.textContent = 'Revanche indisponível'; return; }
+            rev.disabled = s.euQuero;
+            rev.textContent = s.euQuero ? `Esperando ${nome}...` : (s.outroQuer ? `${nome} quer revanche! Aceitar` : 'Revanche');
+            rev.classList.toggle('bt-botao--chamando', s.outroQuer && !s.euQuero);
+        };
+        const checar = async () => {
+            timer = 0;
+            if (parou || !rev.isConnected) return;
+            if (!document.hidden) { try { aplicar(await api('GET', `/api/tcg/partidas/${encodeURIComponent(idPartida)}/revanche`)); } catch { /* tenta de novo */ } }
+            if (!parou && rev.isConnected) timer = setTimeout(checar, 2000);
+        };
+        timer = setTimeout(checar, 300);
+        return rev;
+    }
+
     function telaFim() {
         if (!mesa || mesa.raiz.querySelector('.bt-fim--vitoria, .bt-fim--derrota, .bt-fim--empate')) return;
         desenhar();
@@ -2740,8 +2773,11 @@
             el('p', 'bt-fim-placar', `Vida: ${num(estado.jogadores[EU].vida)} × ${num(estado.jogadores[NPC].vida)}`));
         const acoes = el('div', 'bt-fim-acoes');
         if (online) {
+            const idPartida = online.id;
+            const nomeDele = dele();   // antes do pararOnline(): depois dele o nome viraria "o NPC"
             pararOnline();
-            acoes.append(botao('bt-botao bt-botao--forte', 'Nova partida online', () => telaOnline()), botao('bt-botao', 'Menu', telaMenu));
+            const revanche = estado.motivo === 'atualizacao' ? null : botaoRevanche(idPartida, nomeDele);
+            acoes.append(...(revanche ? [revanche] : []), botao(revanche ? 'bt-botao' : 'bt-botao bt-botao--forte', 'Nova partida online', () => telaOnline()), botao('bt-botao', 'Menu', telaMenu));
         } else {
             acoes.append(botao('bt-botao bt-botao--forte', 'Jogar de novo', () => comecar(nivel)), botao('bt-botao', 'Menu', telaMenu));
         }

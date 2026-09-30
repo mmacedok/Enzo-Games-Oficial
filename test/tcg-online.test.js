@@ -94,15 +94,15 @@ test('T2. Sala: criar, ver, não entrar na própria, entrar, e só um consegue e
     assert.equal((await a('POST', '/api/tcg/salas', { deck: 'turma' })).status, 409);
 });
 
-test('T3. Sala expira em 7 minutos sem ninguém entrar', async (t) => {
+test('T3. Sala expira em 5 minutos sem o dono na tela de espera', async (t) => {
     const m = montar();
     t.after(() => m.db.close());
     const a = await jogador(m, 'a', 'Ana');
     const b = await jogador(m, 'b', 'Beto');
     const sala = await a('POST', '/api/tcg/salas', { deck: 'turma' });
-    m.relogio.agora += 6 * 60 * 1000;
+    m.relogio.agora += 4 * 60 * 1000;
     assert.equal((await b('GET', `/api/tcg/salas/${sala.dados.codigo}`)).status, 200);
-    m.relogio.agora += 90 * 1000;   // 7min30
+    m.relogio.agora += 90 * 1000;   // 5min30 sem o dono perguntar
     assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'turma' })).status, 404);
 });
 
@@ -290,12 +290,15 @@ test('T9. Salas abertas: aparece para os outros enquanto o dono espera; some ao 
     const sala = await a('POST', '/api/tcg/salas', { deck: 'turma' });
     assert.deepEqual((await lista(b)).map((s) => [s.codigo, s.criador, s.deck]), [[sala.dados.codigo, 'Ana', 'turma']]);
     assert.deepEqual(await lista(a), [], 'a própria sala não aparece para o dono');
-    // Sala pública: continua na lista por 7 minutos (SALA_DURA), mesmo que o dono feche a aba...
-    assert.equal(Tcg.SALA_DURA, 7 * 60 * 1000);
+    // Sala pública: 5 minutos na lista (SALA_DURA)...
+    assert.equal(Tcg.SALA_DURA, 5 * 60 * 1000);
     m.relogio.agora += Tcg.SALA_DURA - 1000;
     assert.equal((await lista(b)).length, 1);
-    assert.equal((await lista(b))[0].expira - m.relogio.agora, 1000);
-    // ...e depois disso some sozinha e não dá mais para entrar.
+    // ...e enquanto a tela de espera do dono pergunta, o tempo recomeça (outros 5 minutos)...
+    await a('GET', `/api/tcg/salas/${sala.dados.codigo}`);
+    m.relogio.agora += Tcg.SALA_DURA - 1000;
+    assert.equal((await lista(b)).length, 1);
+    // ...e quando o dono para de perguntar (fechou a aba), some sozinha e não dá mais para entrar.
     m.relogio.agora += 2000;
     assert.deepEqual(await lista(b), []);
     assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'legiao' })).status, 404);
@@ -364,4 +367,46 @@ test('T11. Partida da regra antiga é encerrada sem resultado e não trava o jog
     assert.deepEqual([linha.status, linha.motivo], ['fim', 'atualizacao']);
     assert.equal((await m.db.query('SELECT * FROM tcg_resultados WHERE partida_id = $1', [id])).length, 0);
     assert.equal((await a('POST', '/api/tcg/salas', { deck: 'turma' })).status, 200, 'pode criar sala nova');
+});
+
+test('T12. Revanche: os dois pedem, nasce outra partida com os mesmos decks e os lados trocados', async (t) => {
+    const m = montar();
+    t.after(() => m.db.close());
+    const a = await jogador(m, 'a', 'Ana');
+    const b = await jogador(m, 'b', 'Beto');
+    const c = await jogador(m, 'c', 'Caio');
+    const { id } = await comecar(m, a, b, ['turma', 'legiao']);
+    // Partida em andamento não aceita revanche.
+    assert.equal((await a('POST', `/api/tcg/partidas/${id}/revanche`, {})).status, 409);
+    const d = (await b('GET', `/api/tcg/partidas/${id}`)).dados;
+    await b('POST', `/api/tcg/partidas/${id}/jogada`, { jogada: { tipo: 'desistir' }, versao: d.versao, regras: R.REGRAS_VERSAO });
+
+    // De fora: 404. Sem pedido de ninguém: nada.
+    assert.equal((await c('GET', `/api/tcg/partidas/${id}/revanche`)).status, 404);
+    assert.deepEqual((await a('GET', `/api/tcg/partidas/${id}/revanche`)).dados, { euQuero: false, outroQuer: false, partida: null, expirou: false });
+    // Ana pede: Beto vê que ela quer, e ainda não há partida.
+    assert.deepEqual((await a('POST', `/api/tcg/partidas/${id}/revanche`, {})).dados, { euQuero: true, outroQuer: false, partida: null, expirou: false });
+    assert.deepEqual((await b('GET', `/api/tcg/partidas/${id}/revanche`)).dados, { euQuero: false, outroQuer: true, partida: null, expirou: false });
+    // Beto aceita: nasce a partida; pedir de novo não cria outra.
+    const aceite = (await b('POST', `/api/tcg/partidas/${id}/revanche`, {})).dados;
+    assert.equal(aceite.euQuero && aceite.outroQuer, true);
+    assert.ok(aceite.partida);
+    assert.equal((await b('POST', `/api/tcg/partidas/${id}/revanche`, {})).dados.partida, aceite.partida);
+    const daAna = (await a('GET', `/api/tcg/partidas/${id}/revanche`)).dados;
+    assert.equal(daAna.partida, aceite.partida);
+
+    // Lados trocados (Beto agora é o jogador 0), decks trocados junto, partida em andamento.
+    const nova = (await a('GET', `/api/tcg/partidas/${aceite.partida}?desde=-1`)).dados;
+    assert.equal(nova.eu, 1);
+    assert.equal((await b('GET', `/api/tcg/partidas/${aceite.partida}?desde=-1`)).dados.eu, 0);
+    assert.deepEqual(nova.decks, ['legiao', 'turma']);
+    assert.equal(nova.status, 'jogando');
+
+    // Depois do tempo da revanche, ninguém mais consegue pedir.
+    const { id: id2 } = await comecar(m, c, await jogador(m, 'd', 'Duda'));
+    const d2 = (await c('GET', `/api/tcg/partidas/${id2}`)).dados;
+    await c('POST', `/api/tcg/partidas/${id2}/jogada`, { jogada: { tipo: 'desistir' }, versao: d2.versao, regras: R.REGRAS_VERSAO });
+    m.relogio.agora += Tcg.REVANCHE_DURA + 1000;
+    assert.equal((await c('GET', `/api/tcg/partidas/${id2}/revanche`)).dados.expirou, true);
+    assert.equal((await c('POST', `/api/tcg/partidas/${id2}/revanche`, {})).status, 409);
 });
