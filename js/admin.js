@@ -391,6 +391,22 @@
         else ok(`${ligar ? '+' : '-'} ${nome} ${ligar ? 'desbloqueada para' : 'removida de'} ${primeiroNome(alvo.name)}.`);
     }
 
+    /** reveal/hide: gibis marcados com `hidden` no catálogo (data/comics.manifest.json). */
+    async function trocarGibi(revelar, id) {
+        const catalogo = await (await fetch('data/database.json', { cache: 'no-store' })).json();
+        const escondidos = catalogo.comics.filter((c) => c.hidden === true);
+        const { ids } = await (await fetch('/api/site/revelados', { cache: 'no-store' })).json();
+        if (!id) {
+            if (!escondidos.length) return apagado('nenhum gibi escondido no catálogo.');
+            tabela(['id', 'título', 'estado'], escondidos.map((c) => [botao(c.id, revelar ? `reveal ${c.id}` : `hide ${c.id}`, { link: true }), c.title, ids.includes(c.id) ? 'revelado' : 'escondido']));
+            return apagado('reveal <id> mostra no site · hide <id> esconde de novo.');
+        }
+        if (!escondidos.some((c) => c.id === id)) throw new Error(`"${id}" não tem hidden no catálogo. Escondidos: ${escondidos.map((c) => c.id).join(', ') || 'nenhum'}.`);
+        const r = await pedir('/api/admin/reveal', { id, revelar });
+        if (!r.mudou) return apagado(`${id} já estava ${revelar ? 'revelado' : 'escondido'}.`);
+        ok(`${id} ${revelar ? 'revelado: já aparece no site' : 'escondido de novo'}.`);
+    }
+
     const COMANDOS = {
         help: {
             desc: 'lista os comandos',
@@ -439,6 +455,16 @@
                 atualizarPrompt();
                 mostrarConta(estado.alvo);
             },
+        },
+        reveal: {
+            uso: 'reveal [id]',
+            desc: 'revela um gibi escondido (sem id: lista os escondidos)',
+            async fn(args) { await trocarGibi(true, args[0]); },
+        },
+        hide: {
+            uso: 'hide <id>',
+            desc: 'esconde de novo um gibi que tem hidden no catálogo',
+            async fn(args) { await trocarGibi(false, args[0]); },
         },
         close: { desc: 'fecha a conta aberta', fn() { estado.alvo = null; atualizarPrompt(); apagado('conta fechada.'); } },
         grant: { uso: 'grant <id|#n>', desc: 'dá conquista (ou enzo secreto #n)', fn: (args) => trocarConquista(true, args[0]) },

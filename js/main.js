@@ -242,9 +242,7 @@
     async function init() {
         if (estantes().length === 0) return;
         try {
-            const response = await fetch('data/database.json');
-            if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-            state.comics = validate(await response.json());
+            state.comics = validate(await window.carregarCatalogo());
             render();
         } catch (error) {
             console.error('Erro ao carregar banco de dados:', error);

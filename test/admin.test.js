@@ -189,3 +189,24 @@ test('8. POST de admin exige mesma origem (CSRF)', async (t) => {
     const res = await chefe('POST', `/api/admin/users/${ele.id}/kick`, undefined);
     assert.equal(res.status, 415);
 });
+
+test('reveal: só admin revela/esconde um gibi hidden; a lista de revelados é pública e o log registra', async (t) => {
+    const { db, chefe, leitor, navegador } = await cenario();
+    t.after(() => db.close());
+
+    assert.deepEqual((await navegador()('GET', '/api/site/revelados')).dados, { ids: [] });
+    assert.equal((await leitor('POST', '/api/admin/reveal', { id: 'capitulo-8', revelar: true })).status, 404);
+    assert.equal((await chefe('POST', '/api/admin/reveal', { id: 'Capítulo 8!', revelar: true })).status, 400);
+    assert.equal((await chefe('POST', '/api/admin/reveal', { id: 'capitulo-8', revelar: 'sim' })).status, 400);
+
+    const r = await chefe('POST', '/api/admin/reveal', { id: 'capitulo-8', revelar: true });
+    assert.deepEqual(r.dados, { id: 'capitulo-8', revelado: true, mudou: true });
+    assert.equal((await chefe('POST', '/api/admin/reveal', { id: 'capitulo-8', revelar: true })).dados.mudou, false);
+    assert.deepEqual((await navegador()('GET', '/api/site/revelados')).dados, { ids: ['capitulo-8'] });
+
+    assert.equal((await chefe('POST', '/api/admin/reveal', { id: 'capitulo-8', revelar: false })).dados.mudou, true);
+    assert.deepEqual((await navegador()('GET', '/api/site/revelados')).dados, { ids: [] });
+    const log = (await chefe('GET', '/api/admin/log')).dados;
+    const acoes = (log.log || log.acoes || log).map((l) => `${l.acao}:${l.detalhe}`);
+    assert.ok(acoes.includes('reveal:capitulo-8') && acoes.includes('hide:capitulo-8'), JSON.stringify(acoes));
+});

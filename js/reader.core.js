@@ -672,9 +672,7 @@
         }
 
         try {
-            const response = await fetch('data/database.json');
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            state.db = await response.json();
+            state.db = await window.carregarCatalogo();
             if (!Array.isArray(state.db?.comics)) throw new Error('database.json sem a lista "comics"');
             loadComic(comicId, chapterId);
             if (enteringFromComic) {

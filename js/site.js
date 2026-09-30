@@ -8,6 +8,23 @@
         img.srcset = info.variants.map(v => `${v.src} ${v.width}w`).join(', ');
         img.src = info.variants[0].src;
     };
+    /**
+     * Catálogo (data/database.json) já sem os gibis `hidden` que ainda não foram revelados.
+     * Quem revela é um admin, pelo comando `reveal <id>` do terminal (admin.html).
+     * Se a API não responder, ficam escondidos.
+     */
+    window.carregarCatalogo = async () => {
+        const resposta = await fetch('data/database.json');
+        if (!resposta.ok) throw new Error(`Erro HTTP: ${resposta.status}`);
+        const db = await resposta.json();
+        if (!Array.isArray(db?.comics) || !db.comics.some((c) => c && c.hidden === true)) return db;
+        let revelados = [];
+        try {
+            const r = await fetch('/api/site/revelados', { cache: 'no-store' });
+            if (r.ok) revelados = (await r.json()).ids || [];
+        } catch (erro) { /* sem API: continua escondido */ }
+        return { ...db, comics: db.comics.filter((c) => c?.hidden !== true || revelados.includes(c.id)) };
+    };
     window.siteImageUrl = source => window.SiteImages?.[source]?.variants[0].src || source;
     /**
      * Capas fora do formato 9:16 (ex.: 2:3) não podem ser cortadas: entram

@@ -78,6 +78,11 @@ module.exports = [
         created_at BIGINT NOT NULL
     )`,
     'CREATE INDEX IF NOT EXISTS idx_admin_log_created ON admin_log(created_at)',
+    // Gibis com `hidden: true` no catálogo que um admin já revelou (comando `reveal` do terminal).
+    `CREATE TABLE IF NOT EXISTS gibis_revelados (
+        comic_id TEXT PRIMARY KEY,
+        created_at BIGINT NOT NULL
+    )`,
     // Cartas dos Leitores (api/comentarios.js). censuras = JSON [[inicio, fim], ...];
     // apagar é "soft delete" (apagado_em), para o histórico saber o que saiu.
     `CREATE TABLE IF NOT EXISTS comments (

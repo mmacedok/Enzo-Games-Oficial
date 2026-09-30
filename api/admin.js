@@ -14,6 +14,8 @@
 //   POST /api/admin/scores/:id/verify             { verified } (entra/sai do ranking)
 //   POST /api/admin/scores/:id/delete
 //   GET  /api/admin/log                           histórico das ações de admin
+//   POST /api/admin/reveal                        { id, revelar } mostra/esconde um gibi `hidden` do catálogo
+//   GET  /api/site/revelados                      (público) ids dos gibis escondidos que já foram revelados
 // Toda mudança fica registrada em admin_log.
 // ============================================================================
 const crypto = require('node:crypto');
@@ -64,6 +66,29 @@ const partida = (s) => ({
 });
 
 const rotas = [
+    {
+        // Público: o site pergunta antes de montar as estantes. Não é segredo, só decide o que listar.
+        metodo: 'GET', caminho: '/api/site/revelados',
+        async executar(ctx) {
+            const linhas = await ctx.db.query('SELECT comic_id FROM gibis_revelados ORDER BY created_at');
+            return { ids: linhas.map((l) => l.comic_id) };
+        },
+    },
+    {
+        metodo: 'POST', caminho: '/api/admin/reveal', admin: true,
+        async executar(ctx) {
+            const { id, revelar } = await ctx.corpo();
+            if (typeof id !== 'string' || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) throw new HttpError(400, 'id de gibi inválido');
+            if (typeof revelar !== 'boolean') throw new HttpError(400, 'revelar deve ser true ou false');
+            const linhas = revelar
+                ? await ctx.db.query(
+                    'INSERT INTO gibis_revelados (comic_id, created_at) VALUES ($1, $2) ON CONFLICT (comic_id) DO NOTHING RETURNING comic_id',
+                    [id, ctx.agora()])
+                : await ctx.db.query('DELETE FROM gibis_revelados WHERE comic_id = $1 RETURNING comic_id', [id]);
+            if (linhas.length) await registrar(ctx, revelar ? 'reveal' : 'hide', null, id);
+            return { id, revelado: revelar, mudou: linhas.length > 0 };
+        },
+    },
     {
         metodo: 'GET', caminho: '/api/admin/overview', admin: true,
         async executar(ctx) {

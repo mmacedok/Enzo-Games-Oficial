@@ -165,8 +165,7 @@ function build() {
     const manifest = readManifest();
     const scanned = [...scanMainSeries(), ...scanSpinOffs()].sort((a, b) => a.order - b.order);
 
-    // `hidden: true` no manifesto tira o gibi do catálogo sem apagar as imagens (esconder temporariamente).
-    const comics = scanned.filter(({ comic }) => manifest.comics[comic.id]?.hidden !== true).map(({ comic }) => {
+    const comics = scanned.map(({ comic }) => {
         const custom = manifest.comics[comic.id] || {};
         return {
             id: custom.id || comic.id,
@@ -175,6 +174,8 @@ function build() {
             description: custom.description ?? comic.description,
             order: custom.order ?? scanned.find(entry => entry.comic === comic).order,
             featured: custom.featured === undefined ? true : Boolean(custom.featured),
+            // `hidden: true` no manifesto: o site não mostra o gibi até um admin rodar `reveal <id>` no terminal.
+            ...(custom.hidden === true ? { hidden: true } : {}),
             // Título/descrição por capítulo: manifest "chapters": { "2": { "title": ..., "description": ... } }
             chapters: comic.chapters.map((chapter) => ({ ...chapter, ...(custom.chapters?.[chapter.id] || {}) })),
         };

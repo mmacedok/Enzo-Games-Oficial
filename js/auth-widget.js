@@ -749,10 +749,7 @@
 
     let catalogoPronto = null;
     function carregarCatalogo() {
-        catalogoPronto ??= fetch('data/database.json').then((r) => {
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            return r.json();
-        }).catch((erro) => { catalogoPronto = null; throw erro; });
+        catalogoPronto ??= window.carregarCatalogo().catch((erro) => { catalogoPronto = null; throw erro; });
         return catalogoPronto;
     }
 
