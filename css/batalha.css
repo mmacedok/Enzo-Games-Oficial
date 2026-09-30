@@ -1115,6 +1115,8 @@ dialog.bt-regras.bt-editor:not([open]) { display: none; }
 .bt-editor-info { display: grid; gap: 3px; min-width: 0; }
 .bt-editor-nome { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; letter-spacing: .5px; }
 .bt-editor-frase { font-size: .8rem; opacity: .7; }
+.bt-editor-menu summary { cursor: pointer; font-size: .85rem; font-weight: 700; color: var(--paper-ink); padding: 4px 0; }
+.bt-editor-menu[open] summary { margin-bottom: 2px; }
 .bt-editor-desc { margin: 0; font-size: .82rem; line-height: 1.3; white-space: pre-line; }
 .bt-editor-controle { display: flex; align-items: center; gap: 8px; }
 .bt-editor-mm { width: 40px; height: 40px; padding: 0; font: 1.6rem/1 var(--font-heading); color: var(--paper-ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 50%; box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }

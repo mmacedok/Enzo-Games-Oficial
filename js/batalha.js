@@ -414,7 +414,12 @@
             info.appendChild(el('strong', 'bt-editor-nome', nomeVisivel(c.id)));
             const dc = def(c.id);
             if (dc.frase) info.appendChild(el('span', 'bt-editor-frase', `(${dc.frase})`));
-            if (dc.tcg) info.appendChild(el('p', 'bt-editor-desc', dc.tcg));
+            if (dc.tcg) {
+                // menu que abre e fecha com a descrição da carta
+                const menu = el('details', 'bt-editor-menu');
+                menu.append(el('summary', '', 'Ver o que faz'), el('p', 'bt-editor-desc', dc.tcg));
+                info.appendChild(menu);
+            }
             const menos = botao('bt-editor-mm', '−', () => mexer(c, -1));
             const mais = botao('bt-editor-mm', '+', () => mexer(c, 1));
             menos.setAttribute('aria-label', `Tirar ${nomeVisivel(c.id)}`);
