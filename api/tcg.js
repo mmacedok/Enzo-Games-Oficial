@@ -23,11 +23,8 @@ const { HttpError } = require('./http.js');
 const R = require('../js/tcg-regras.js');
 const { DECKS_PRONTOS } = require('../js/tcg-cartas.js');
 
-const SALA_DURA = 15 * 60 * 1000;
-/** A sala só aparece na lista se a tela de espera do dono renovou há menos que isso. */
-const SALA_VIVA = 20 * 1000;
-/** A tela de espera pergunta a cada segundo; o visto_em só é regravado a cada 5 s. */
-const RENOVAR_VISTO = 5 * 1000;
+/** Sala pública: fica na lista por 7 minutos esperando alguém entrar; depois some sozinha. */
+const SALA_DURA = 7 * 60 * 1000;
 const SALAS_NA_LISTA = 20;
 const PLACAR_TOP = 50;
 const TURNO = 60 * 1000;
@@ -271,17 +268,17 @@ const rotas = [
         async executar(ctx) {
             const agora = ctx.agora();
             const linhas = await ctx.db.query(
-                `SELECT s.codigo, s.deck, s.criado_em, u.display_name,
+                `SELECT s.codigo, s.deck, s.criado_em, s.expira_em, u.display_name,
                         (SELECT COUNT(*) FROM tcg_resultados r WHERE r.vencedor = s.criador) AS vitorias,
                         (SELECT COUNT(*) FROM tcg_resultados r WHERE r.perdedor = s.criador) AS derrotas
                    FROM tcg_salas s JOIN users u ON u.id = s.criador
-                  WHERE s.partida_id IS NULL AND s.expira_em >= $1 AND s.visto_em >= $2
-                    AND s.criador <> $3 AND u.role <> 'banned'
-                  ORDER BY s.criado_em DESC LIMIT $4`,
-                [agora, agora - SALA_VIVA, ctx.usuario.id, SALAS_NA_LISTA]);
+                  WHERE s.partida_id IS NULL AND s.expira_em >= $1
+                    AND s.criador <> $2 AND u.role <> 'banned'
+                  ORDER BY s.criado_em DESC LIMIT $3`,
+                [agora, ctx.usuario.id, SALAS_NA_LISTA]);
             return {
                 salas: linhas.map((l) => ({
-                    codigo: l.codigo, deck: l.deck, criador: l.display_name, desde: Number(l.criado_em),
+                    codigo: l.codigo, deck: l.deck, criador: l.display_name, desde: Number(l.criado_em), expira: Number(l.expira_em),
                     vitorias: Number(l.vitorias), derrotas: Number(l.derrotas),
                 })),
             };
@@ -324,11 +321,6 @@ const rotas = [
             const [s] = await ctx.db.query(
                 `SELECT s.*, u.display_name FROM tcg_salas s JOIN users u ON u.id = s.criador WHERE s.codigo = $1`, [codigo]);
             if (!s || (Number(s.expira_em) < ctx.agora() && !s.partida_id)) throw new HttpError(404, 'sala não encontrada ou expirada');
-            // Quem criou está na tela de espera perguntando: a sala continua "viva" na lista.
-            const agora = ctx.agora();
-            if (s.criador === ctx.usuario.id && !s.partida_id && !(Number(s.visto_em) > agora - RENOVAR_VISTO)) {
-                await ctx.db.query('UPDATE tcg_salas SET visto_em = $2 WHERE codigo = $1 AND partida_id IS NULL', [codigo, agora]);
-            }
             return {
                 codigo, deck: s.deck, criador: s.display_name, minha: s.criador === ctx.usuario.id,
                 expira: Number(s.expira_em), partida: s.partida_id || null,
@@ -345,7 +337,7 @@ const rotas = [
             await semPartidaAberta(ctx);
             const [s] = await ctx.db.query('SELECT * FROM tcg_salas WHERE codigo = $1', [codigo]);
             if (!s || Number(s.expira_em) < ctx.agora() || s.partida_id) throw new HttpError(404, 'sala não encontrada ou expirada');
-            if (s.criador === eu) throw new HttpError(400, 'essa sala é sua: mande o código para um amigo');
+            if (s.criador === eu) throw new HttpError(400, 'essa sala é sua: espere alguém entrar');
             await conferirLimites(ctx, eu);
             if (await partidaEmAndamento(ctx, s.criador)) throw new HttpError(409, 'quem criou a sala já está em outra partida');
 
@@ -447,4 +439,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_VIVA };
+module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA };

@@ -15,7 +15,7 @@
 //
 // Online (outro jogador): o servidor é o juiz (api/tcg.js). A tela guarda só a VISÃO do jogador
 // (a mão do outro é um número), manda cada jogada para a API e toca os eventos que voltam.
-// Na vez do outro pergunta "teve jogada?" a cada 2,5 s. batalha.html?sala=TORA-XXX abre o convite.
+// Na vez do outro pergunta "teve jogada?" a cada 2,5 s. As salas são públicas: ficam na lista por 7 minutos.
 //
 // Teste: batalha.html?auto=1 faz o robô jogar pelos dois lados; &rapido=1 sem esperas.
 // ============================================================================
@@ -122,7 +122,6 @@
     const cartasVivas = new Map();   // uid -> elemento .bt-carta (reaproveitado entre desenhos)
     // Partida online: { id, versao, prazo, dif (relógio do servidor - o daqui), timer } ou null.
     let online = null;
-    const convite = (params.get('sala') || '').trim().toUpperCase() || null;
 
     /** Nome do outro lado: "o NPC" ou o nome do outro jogador. */
     const dele = () => (online ? (String(estado?.jogadores[NPC]?.nome || '').trim().split(/\s+/)[0] || 'o outro jogador') : 'o NPC');
@@ -245,10 +244,9 @@
         facil.append(rosto('facil', '🤖'), el('strong', '', 'NPC fácil'), el('span', '', 'Para aprender'));
         normal.append(rosto('normal', '😈'), el('strong', '', 'NPC normal'), el('span', '', 'Joga para ganhar'));
         const pvpTexto = el('span', '', 'Procurando o servidor...');
-        pvp.append(rosto('pvp', '🧑‍🤝‍🧑'), el('strong', '', convite ? `Entrar na sala ${convite}` : 'Outro jogador'), pvpTexto);
+        pvp.append(rosto('pvp', '🧑‍🤝‍🧑'), el('strong', '', 'Outro jogador'), pvpTexto);
         pvp.disabled = true;
         pvp.addEventListener('click', () => telaOnline());
-        if (convite) pvp.classList.add('bt-rival--convite');
         verificarOnline().then((situacao) => {
             if (!pvp.isConnected) return;
             pvp.disabled = situacao === 'fora';
@@ -258,7 +256,7 @@
             }
             pvpTexto.textContent = {
                 fora: 'Só no site', login: 'Entre com o Google', partida: 'Voltar para a partida',
-                ok: convite ? 'Escolha o deck e toque aqui' : 'Com um amigo',
+                ok: 'Salas online',
             }[situacao];
         });
         caixa.appendChild(rivais);
@@ -1530,7 +1528,7 @@
         return `há ${Math.floor(h / 24)} dia${plu(Math.floor(h / 24))}`;
     };
 
-    /** Tela "Outro jogador": criar sala, entrar com código, voltar para a partida. */
+    /** Tela "Outro jogador": lista de salas públicas ou criar a sua (sem código), ou voltar para a partida. */
     async function telaOnline(aviso) {
         pararOnline();
         limparMesa();
@@ -1574,124 +1572,111 @@
         const trocar = botao('bt-link', 'trocar deck', telaMenu);
         corpo.lastChild.append(' ', trocar);
 
-        // O mesmo fluxo de "entrar na sala" para o código digitado e para o botão da lista.
-        const entrarPorCodigo = async (codigo, alvo, b) => {
-            b.disabled = true;
-            try {
-                const d = await api('POST', `/api/tcg/salas/${encodeURIComponent(codigo)}/entrar`, { deck: deckEscolhido.id });
-                limparConvite();
-                salasAbertas?.parar();
-                comecarOnline(d);
-            } catch (erro) {
-                b.disabled = false;
-                if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
-                if (erro.status === 409 && !erro.dados?.recarregar) { msg(erro.message, 'bt-online-msg--erro'); salasAbertas?.atualizar(); return; }
-                balao(alvo, erro.message, 'erro');
-            }
-        };
-
-        // Salas esperando: lista com 1 clique para entrar (renova a cada 3 s, só com a aba visível).
-        const listaSalas = el('div', 'bt-online-salas');
-        const corpoSalas = el('div', 'bt-online-salas-lista');
-        listaSalas.append(el('h3', 'bt-online-salas-titulo', 'Salas esperando'), corpoSalas);
-        corpo.appendChild(listaSalas);
-        const renderSalas = (salas) => {
-            if (!corpoSalas.isConnected) return;
-            if (!salas.length) {
-                corpoSalas.replaceChildren(el('p', 'bt-online-vazio', 'Ninguém esperando agora. Crie uma sala e ela aparece aqui para os outros.'));
-                return;
-            }
-            corpoSalas.replaceChildren(...salas.map((s) => {
-                const d = DECKS.find((x) => x.id === s.deck);
-                const linha = el('div', 'bt-sala-linha');
-                linha.append(el('span', 'bt-sala-nome', s.criador),
-                    el('span', 'bt-sala-deck', d ? d.nome : s.deck),
-                    el('span', 'bt-sala-placar', `V ${s.vitorias} · D ${s.derrotas}`),
-                    el('span', 'bt-sala-espera', haQuanto(s.desde)));
-                const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarPorCodigo(s.codigo, b, b));
-                linha.appendChild(b);
-                return linha;
-            }));
-        };
-        const atualizarSalas = async () => {
-            if (!corpoSalas.isConnected || salasAbertas !== controleSalas) return;
-            try { const d = await api('GET', '/api/tcg/salas'); renderSalas(d.salas || []); }
-            catch { /* sem servidor agora: tenta de novo no próximo ciclo */ }
-        };
-        let timerSalas = null;
-        const checarSalas = async () => {
-            timerSalas = null;
-            if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
-            await atualizarSalas();
-            if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
-            timerSalas = setTimeout(checarSalas, SALAS_MS);
-        };
-        const visivelSalas = () => { if (!document.hidden && !timerSalas && corpoSalas.isConnected && salasAbertas === controleSalas) checarSalas(); };
-        const controleSalas = {
-            parar() {
-                if (timerSalas) clearTimeout(timerSalas);
-                document.removeEventListener('visibilitychange', visivelSalas);
-                if (salasAbertas === controleSalas) salasAbertas = null;
-            },
-            atualizar: () => atualizarSalas(),
-        };
-        salasAbertas = controleSalas;
-        document.addEventListener('visibilitychange', visivelSalas);
-        timerSalas = setTimeout(checarSalas, 0);
-
-        // Entrar numa sala (código do amigo).
-        const entrar = el('form', 'bt-online-entrar');
-        const campo = el('input', 'bt-online-codigo');
-        campo.placeholder = 'TORA-XXX';
-        campo.maxLength = 8;
-        campo.autocomplete = 'off';
-        campo.setAttribute('aria-label', 'Código da sala');
-        campo.value = convite || '';
-        const bEntrar = botao('bt-botao bt-botao--forte', 'Entrar na sala');
-        bEntrar.type = 'submit';
-        entrar.append(campo, bEntrar);
-        entrar.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            let codigo = campo.value.trim().toUpperCase().replace(/\s+/g, '');
-            if (/^[A-Z0-9]{3}$/.test(codigo)) codigo = `TORA-${codigo}`;
-            await entrarPorCodigo(codigo, entrar, bEntrar);
-        });
-
-        const criar = botao('bt-botao', 'Criar sala e chamar um amigo', async () => {
+        const opcoes = el('div', 'bt-online-opcoes');
+        const bLista = botao('bt-botao bt-botao--forte', null, () => mostrarLista());
+        bLista.append(el('strong', '', 'Lista de salas'),
+            el('span', '', salasEsperando ? `${salasEsperando} sala${plu(salasEsperando)} esperando` : 'ver quem está esperando'));
+        const criar = botao('bt-botao', null, async () => {
             criar.disabled = true;
             try {
                 const d = await api('POST', '/api/tcg/salas', { deck: deckEscolhido.id });
-                mostrarSala(d.codigo);
+                mostrarSala(d.codigo, d.expira);
             } catch (erro) {
                 criar.disabled = false;
                 if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
                 balao(criar, erro.message, 'erro');
             }
         });
-        if (convite) {
-            msg(`Você foi chamado para a sala ${convite}.`);
-            corpo.append(entrar, el('p', 'bt-online-ou', 'ou'), criar);
-        } else {
-            corpo.append(criar, el('p', 'bt-online-ou', 'ou entre na sala de um amigo:'), entrar);
-        }
-        if (atual.sala) mostrarSala(atual.sala.codigo);
+        criar.append(el('strong', '', 'Criar sala'), el('span', '', 'fica na lista por 7 minutos'));
+        opcoes.append(bLista, criar);
+        corpo.appendChild(opcoes);
+        if (atual.sala) mostrarSala(atual.sala.codigo, atual.sala.expira);
 
-        function mostrarSala(codigo) {
+        /** Lista de salas públicas: todo mundo que criou sala e está esperando. */
+        function mostrarLista() {
+            corpo.replaceChildren();
+            corpo.appendChild(el('p', 'bt-online-deck', `Seu deck: ${deckEscolhido.nome}`));
+            // Entrar numa sala da lista (1 clique).
+            const entrarNaSala = async (codigo, alvo, b) => {
+                b.disabled = true;
+                try {
+                    const d = await api('POST', `/api/tcg/salas/${encodeURIComponent(codigo)}/entrar`, { deck: deckEscolhido.id });
+                    salasAbertas?.parar();
+                    comecarOnline(d);
+                } catch (erro) {
+                    b.disabled = false;
+                    if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
+                    if (erro.status === 409 && !erro.dados?.recarregar) { msg(erro.message, 'bt-online-msg--erro'); salasAbertas?.atualizar(); return; }
+                    balao(alvo, erro.message, 'erro');
+                }
+            };
+
+            // Salas esperando: lista com 1 clique para entrar (renova a cada 3 s, só com a aba visível).
+            const listaSalas = el('div', 'bt-online-salas');
+            const corpoSalas = el('div', 'bt-online-salas-lista');
+            listaSalas.append(el('h3', 'bt-online-salas-titulo', 'Salas esperando'), corpoSalas);
+            corpo.appendChild(listaSalas);
+            const renderSalas = (salas) => {
+                if (!corpoSalas.isConnected) return;
+                if (!salas.length) {
+                    corpoSalas.replaceChildren(el('p', 'bt-online-vazio', 'Ninguém esperando agora. Crie uma sala e ela aparece aqui para os outros.'));
+                    return;
+                }
+                corpoSalas.replaceChildren(...salas.map((s) => {
+                    const d = DECKS.find((x) => x.id === s.deck);
+                    const linha = el('div', 'bt-sala-linha');
+                    linha.append(el('span', 'bt-sala-nome', s.criador),
+                        el('span', 'bt-sala-deck', d ? d.nome : s.deck),
+                        el('span', 'bt-sala-placar', `V ${s.vitorias} · D ${s.derrotas}`),
+                        el('span', 'bt-sala-espera', haQuanto(s.desde)));
+                    const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarNaSala(s.codigo, b, b));
+                    linha.appendChild(b);
+                    return linha;
+                }));
+            };
+            const atualizarSalas = async () => {
+                if (!corpoSalas.isConnected || salasAbertas !== controleSalas) return;
+                try { const d = await api('GET', '/api/tcg/salas'); renderSalas(d.salas || []); }
+                catch { /* sem servidor agora: tenta de novo no próximo ciclo */ }
+            };
+            let timerSalas = null;
+            const checarSalas = async () => {
+                timerSalas = null;
+                if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
+                await atualizarSalas();
+                if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
+                timerSalas = setTimeout(checarSalas, SALAS_MS);
+            };
+            const visivelSalas = () => { if (!document.hidden && !timerSalas && corpoSalas.isConnected && salasAbertas === controleSalas) checarSalas(); };
+            const controleSalas = {
+                parar() {
+                    if (timerSalas) clearTimeout(timerSalas);
+                    document.removeEventListener('visibilitychange', visivelSalas);
+                    if (salasAbertas === controleSalas) salasAbertas = null;
+                },
+                atualizar: () => atualizarSalas(),
+            };
+            salasAbertas = controleSalas;
+            document.addEventListener('visibilitychange', visivelSalas);
+            timerSalas = setTimeout(checarSalas, 0);
+            corpo.appendChild(botao('bt-link', '← Voltar às opções', () => telaOnline()));
+        }
+
+        function mostrarSala(codigo, expira) {
             salasAbertas?.parar();
             corpo.replaceChildren();
-            const link = `${location.origin}${location.pathname}?sala=${codigo}`;
-            corpo.append(el('p', 'bt-online-msg', 'Mande este código (ou o link) para o seu amigo:'),
-                el('p', 'bt-online-sala', codigo));
-            const copiar = botao('bt-botao bt-botao--forte', 'Copiar link', async () => {
-                try { await navigator.clipboard.writeText(link); balao(copiar, 'Link copiado!'); } catch { balao(copiar, link); }
-            });
-            const espera = el('p', 'bt-online-espera', 'Esperando alguém entrar...');
+            corpo.append(el('p', 'bt-online-msg', 'Sua sala está na lista de salas. Quem escolher ela entra direto.'));
+            const relogio = el('p', 'bt-online-sala', '');
+            const restante = () => Math.max(0, Math.ceil(((expira || Date.now()) - Date.now()) / 1000));
+            const desenharRelogio = () => { const s = restante(); relogio.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+            desenharRelogio();
+            const espera = el('p', 'bt-online-espera', 'Esperando alguém entrar... sem ninguém em 7 minutos a sala sai da lista.');
             const cancelar = botao('bt-botao', 'Cancelar sala', async () => {
                 esperaSala?.parar();
                 try { await api('POST', `/api/tcg/salas/${codigo}/cancelar`, {}); } catch { /* sala já sumiu */ }
                 telaOnline();
             });
-            corpo.append(copiar, espera, cancelar);
+            corpo.append(relogio, espera, cancelar);
             // Pergunta de tempos em tempos se alguém entrou (parado com a aba escondida).
             let timer = null;
             const checar = async () => {
@@ -1702,14 +1687,16 @@
                     if (!caixa.isConnected || esperaSala !== controle) return;
                     if (s.partida) { controle.parar(); abrirPartida(s.partida); return; }
                 } catch (erro) {
-                    if (erro.status === 404) { controle.parar(); telaOnline('A sala expirou. Crie outra.'); return; }
+                    if (erro.status === 404) { controle.parar(); telaOnline('A sala expirou: 7 minutos sem ninguém entrar. Crie outra.'); return; }
                 }
                 if (esperaSala === controle) timer = setTimeout(checar, BUSCA_MS);
             };
             const visivel = () => { if (!document.hidden && !timer && esperaSala === controle) checar(); };
+            const contagem = setInterval(() => { if (!caixa.isConnected) clearInterval(contagem); else desenharRelogio(); }, 1000);
             const controle = {
                 parar() {
                     if (timer) clearTimeout(timer);
+                    clearInterval(contagem);
                     document.removeEventListener('visibilitychange', visivel);
                     if (esperaSala === controle) esperaSala = null;
                 },
@@ -1718,13 +1705,6 @@
             document.addEventListener('visibilitychange', visivel);
             timer = setTimeout(checar, BUSCA_MS);
         }
-    }
-
-    function limparConvite() {
-        if (!params.has('sala')) return;
-        params.delete('sala');
-        const q = params.toString();
-        history.replaceState(null, '', `${location.pathname}${q ? `?${q}` : ''}`);
     }
 
     /** Recado do servidor + botão "Recarregar" (partida de regra velha, jogo atualizado). */
@@ -2796,8 +2776,7 @@
         if (!mesa.painel.hidden) fecharPainel();
         else if (modo && modo.tipo !== 'preparar') { modo = null; desenhar(); }
     });
-    if (convite) telaOnline();
-    else telaMenu();
+    telaMenu();
     if (AUTO) comecar(params.get('nivel') || 'normal');
     else if (!cartilhaJaVista()) mostrarRegras();   // primeira vez na Batalha: mostra as cartilhas
 })();

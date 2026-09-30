@@ -947,18 +947,12 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-online-msg { margin: 0; font-weight: 700; }
 .bt-online-msg--erro { color: #b3261e; }
 .bt-online-deck { margin: 0; }
-.bt-online-ou { margin: 0; font-size: 0.9rem; opacity: 0.8; }
-.bt-online-entrar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.bt-online-codigo {
-    width: 9.5em;
-    padding: 8px 10px;
-    font: 700 1.2rem/1 var(--font-heading, inherit);
-    letter-spacing: 2px;
-    text-align: center;
-    text-transform: uppercase;
-    border: 3px solid var(--ink);
-    border-radius: 10px;
-}
+/* As duas opções do multiplayer: lista de salas e criar sala. */
+.bt-online-opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+.bt-online-opcoes .bt-botao { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px; }
+.bt-online-opcoes .bt-botao strong { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 400; letter-spacing: 1px; }
+.bt-online-opcoes .bt-botao span { font-size: 0.85rem; font-weight: 700; opacity: 0.85; }
+@media (max-width: 480px) { .bt-online-opcoes { grid-template-columns: 1fr; } }
 .bt-online-sala {
     margin: 0;
     font-family: var(--font-heading);
@@ -970,7 +964,6 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 }
 .bt-online-espera { margin: 0; font-weight: 700; animation: bt-piscar 1.4s ease-in-out infinite; }
 @keyframes bt-piscar { 50% { opacity: 0.45; } }
-.bt-rival--convite { outline: 4px solid var(--caution); outline-offset: 2px; }
 /* Salas abertas na tela online (lista com 1 clique para entrar). */
 .bt-online-salas { width: 100%; }
 .bt-online-salas-titulo { margin: 0 0 6px; font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; }

@@ -94,13 +94,15 @@ test('T2. Sala: criar, ver, não entrar na própria, entrar, e só um consegue e
     assert.equal((await a('POST', '/api/tcg/salas', { deck: 'turma' })).status, 409);
 });
 
-test('T3. Sala expira em 15 minutos', async (t) => {
+test('T3. Sala expira em 7 minutos sem ninguém entrar', async (t) => {
     const m = montar();
     t.after(() => m.db.close());
     const a = await jogador(m, 'a', 'Ana');
     const b = await jogador(m, 'b', 'Beto');
     const sala = await a('POST', '/api/tcg/salas', { deck: 'turma' });
-    m.relogio.agora += 16 * 60 * 1000;
+    m.relogio.agora += 6 * 60 * 1000;
+    assert.equal((await b('GET', `/api/tcg/salas/${sala.dados.codigo}`)).status, 200);
+    m.relogio.agora += 90 * 1000;   // 7min30
     assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'turma' })).status, 404);
 });
 
@@ -288,12 +290,18 @@ test('T9. Salas abertas: aparece para os outros enquanto o dono espera; some ao 
     const sala = await a('POST', '/api/tcg/salas', { deck: 'turma' });
     assert.deepEqual((await lista(b)).map((s) => [s.codigo, s.criador, s.deck]), [[sala.dados.codigo, 'Ana', 'turma']]);
     assert.deepEqual(await lista(a), [], 'a própria sala não aparece para o dono');
-    // O dono some (fechou a aba): depois de SALA_VIVA sem a tela de espera perguntar, sai da lista.
-    m.relogio.agora += Tcg.SALA_VIVA + 1000;
-    assert.deepEqual(await lista(b), []);
-    // A tela de espera volta a perguntar: a sala reaparece.
-    await a('GET', `/api/tcg/salas/${sala.dados.codigo}`);
+    // Sala pública: continua na lista por 7 minutos (SALA_DURA), mesmo que o dono feche a aba...
+    assert.equal(Tcg.SALA_DURA, 7 * 60 * 1000);
+    m.relogio.agora += Tcg.SALA_DURA - 1000;
     assert.equal((await lista(b)).length, 1);
+    assert.equal((await lista(b))[0].expira - m.relogio.agora, 1000);
+    // ...e depois disso some sozinha e não dá mais para entrar.
+    m.relogio.agora += 2000;
+    assert.deepEqual(await lista(b), []);
+    assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'legiao' })).status, 404);
+    const nova = await a('POST', '/api/tcg/salas', { deck: 'turma' });   // criar outra é permitido
+    assert.equal((await lista(b)).length, 1);
+    sala.dados.codigo = nova.dados.codigo;
     // Entrou alguém: sai da lista de todo mundo.
     assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'legiao' })).status, 200);
     assert.deepEqual(await lista(c), []);
