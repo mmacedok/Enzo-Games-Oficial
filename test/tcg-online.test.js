@@ -235,7 +235,7 @@ test('T6. Relógio: estourou o turno passa a vez; 3 estouros seguidos = derrota 
     const [linha] = await m.db.query('SELECT motivo, vencedor FROM tcg_partidas WHERE id = $1', [id]);
     assert.equal(linha.vencedor, ativo, 'quem sumiu primeiro (e mais vezes) perde');
     assert.equal(linha.motivo, 'inatividade');
-    assert.deepEqual(d.visao.jogadores.map((x) => x.pontos), [0, 0], 'inatividade não vira ponto de carta');
+    assert.deepEqual(d.visao.jogadores.map((x) => x.vida), [R.VIDA_INICIAL, R.VIDA_INICIAL], 'inatividade não tira vida');
 });
 
 test('T7. Limite de partidas por jogador por dia', async (t) => {
@@ -275,4 +275,80 @@ test('T8. "Teve jogada?" sem novidade só lê a versão (1 consulta, sem a mesa)
     // Com novidade (ou pedindo do zero) vem a mesa inteira.
     const tudo = (await a('GET', `/api/tcg/partidas/${id}?desde=-1`)).dados;
     assert.ok(tudo.visao);
+});
+
+test('T9. Salas abertas: aparece para os outros enquanto o dono espera; some ao sumir, entrar ou cancelar', async (t) => {
+    const m = montar();
+    t.after(() => m.db.close());
+    const a = await jogador(m, 'a', 'Ana');
+    const b = await jogador(m, 'b', 'Beto');
+    const c = await jogador(m, 'c', 'Caio');
+    const lista = async (quem) => (await quem('GET', '/api/tcg/salas')).dados.salas;
+    assert.equal((await m.navegador()('GET', '/api/tcg/salas')).status, 401);
+    const sala = await a('POST', '/api/tcg/salas', { deck: 'turma' });
+    assert.deepEqual((await lista(b)).map((s) => [s.codigo, s.criador, s.deck]), [[sala.dados.codigo, 'Ana', 'turma']]);
+    assert.deepEqual(await lista(a), [], 'a própria sala não aparece para o dono');
+    // O dono some (fechou a aba): depois de SALA_VIVA sem a tela de espera perguntar, sai da lista.
+    m.relogio.agora += Tcg.SALA_VIVA + 1000;
+    assert.deepEqual(await lista(b), []);
+    // A tela de espera volta a perguntar: a sala reaparece.
+    await a('GET', `/api/tcg/salas/${sala.dados.codigo}`);
+    assert.equal((await lista(b)).length, 1);
+    // Entrou alguém: sai da lista de todo mundo.
+    assert.equal((await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: 'legiao' })).status, 200);
+    assert.deepEqual(await lista(c), []);
+    // Cancelada também some.
+    const outra = await c('POST', '/api/tcg/salas', { deck: 'turma' });
+    const d = await jogador(m, 'd', 'Duda');
+    assert.equal((await lista(d)).length, 1);
+    await c('POST', `/api/tcg/salas/${outra.dados.codigo}/cancelar`, {});
+    assert.deepEqual(await lista(d), []);
+});
+
+test('T10. Placar permanente: vitória, derrota e empate por conta; visitante vê o top', async (t) => {
+    const m = montar();
+    t.after(() => m.db.close());
+    const a = await jogador(m, 'a', 'Ana');
+    const b = await jogador(m, 'b', 'Beto');
+    // Duas partidas: B desiste nas duas (A vence 2×).
+    for (let i = 0; i < 2; i++) {
+        const { id } = await comecar(m, a, b);
+        const d = (await b('GET', `/api/tcg/partidas/${id}`)).dados;
+        assert.equal((await b('POST', `/api/tcg/partidas/${id}/jogada`, {
+            jogada: { tipo: 'desistir' }, versao: d.versao, regras: R.REGRAS_VERSAO })).status, 200);
+    }
+    // Um empate gravado direto (o empate não tem vencedor, mas conta para os dois).
+    const [ua] = await m.db.query(`SELECT id FROM users WHERE display_name = 'Ana'`);
+    const [ub] = await m.db.query(`SELECT id FROM users WHERE display_name = 'Beto'`);
+    await m.db.query(
+        `INSERT INTO tcg_resultados (partida_id, vencedor, perdedor, decks, turnos, motivo, fim_em, jogador_a, jogador_b)
+         VALUES ('empate-1', NULL, NULL, '[]', 30, 'limiteTurnos', 1, $1, $2)`, [ua.id, ub.id]);
+    const pa = (await a('GET', '/api/tcg/placar')).dados;
+    assert.deepEqual(pa.meu, { nome: 'Ana', vitorias: 2, derrotas: 0, empates: 1, posicao: 1 });
+    assert.deepEqual(pa.top.map((l) => [l.nome, l.vitorias, l.derrotas, l.empates, l.eu]),
+        [['Ana', 2, 0, 1, true], ['Beto', 0, 2, 1, false]]);
+    const visitante = (await m.navegador()('GET', '/api/tcg/placar')).dados;
+    assert.equal(visitante.meu, null);
+    assert.equal(visitante.top.length, 2);
+    // A sala de quem tem placar mostra as vitórias dele na lista.
+    await a('POST', '/api/tcg/salas', { deck: 'turma' });
+    const [s] = (await b('GET', '/api/tcg/salas')).dados.salas;
+    assert.deepEqual([s.vitorias, s.derrotas], [2, 0]);
+});
+
+test('T11. Partida da regra antiga é encerrada sem resultado e não trava o jogador', async (t) => {
+    const m = montar();
+    t.after(() => m.db.close());
+    const a = await jogador(m, 'a', 'Ana');
+    const b = await jogador(m, 'b', 'Beto');
+    const { id } = await comecar(m, a, b);
+    await m.db.query('UPDATE tcg_partidas SET regras = $2 WHERE id = $1', [id, R.REGRAS_VERSAO - 1]);
+    assert.equal((await a('GET', '/api/tcg/atual')).dados.partida, null, 'não conta como partida em andamento');
+    const r = await a('GET', `/api/tcg/partidas/${id}?desde=-1`);
+    assert.equal(r.status, 409);
+    assert.equal(r.dados.recarregar, true);
+    const [linha] = await m.db.query('SELECT status, motivo FROM tcg_partidas WHERE id = $1', [id]);
+    assert.deepEqual([linha.status, linha.motivo], ['fim', 'atualizacao']);
+    assert.equal((await m.db.query('SELECT * FROM tcg_resultados WHERE partida_id = $1', [id])).length, 0);
+    assert.equal((await a('POST', '/api/tcg/salas', { deck: 'turma' })).status, 200, 'pode criar sala nova');
 });

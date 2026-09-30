@@ -191,4 +191,12 @@ module.exports = [
         motivo TEXT,
         fim_em BIGINT NOT NULL
     )`,
+    // Os dois jogadores (o empate não tem vencedor/perdedor, mas conta no placar).
+    'ALTER TABLE tcg_resultados ADD COLUMN IF NOT EXISTS jogador_a TEXT',
+    'ALTER TABLE tcg_resultados ADD COLUMN IF NOT EXISTS jogador_b TEXT',
+    'CREATE INDEX IF NOT EXISTS idx_tcg_resultados_vencedor ON tcg_resultados(vencedor)',
+    'CREATE INDEX IF NOT EXISTS idx_tcg_resultados_perdedor ON tcg_resultados(perdedor)',
+    // visto_em: a tela de espera de quem criou a sala renova; a lista de salas abertas só mostra
+    // sala com dono esperando de verdade (quem fechou a aba some da lista em segundos).
+    'ALTER TABLE tcg_salas ADD COLUMN IF NOT EXISTS visto_em BIGINT',
 ];

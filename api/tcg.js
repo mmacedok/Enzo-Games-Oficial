@@ -7,6 +7,8 @@
 //   GET  /api/tcg/salas/:codigo              quem criou, deck e se a partida já começou
 //   POST /api/tcg/salas/:codigo/entrar       { deck }  -> cria a partida
 //   POST /api/tcg/salas/:codigo/cancelar     só quem criou, antes de alguém entrar
+//   GET  /api/tcg/salas                      salas abertas com o dono esperando (para entrar com 1 clique)
+//   GET  /api/tcg/placar                     placar permanente (vitórias/derrotas online) + o meu
 //   GET  /api/tcg/atual                      partida em andamento e sala aberta do jogador
 //   GET  /api/tcg/partidas/:id?desde=<n>     "teve jogada?": { versao } ou visão + eventos novos
 //   POST /api/tcg/partidas/:id/jogada        { jogada, versao, regras }
@@ -22,6 +24,12 @@ const R = require('../js/tcg-regras.js');
 const { DECKS_PRONTOS } = require('../js/tcg-cartas.js');
 
 const SALA_DURA = 15 * 60 * 1000;
+/** A sala só aparece na lista se a tela de espera do dono renovou há menos que isso. */
+const SALA_VIVA = 20 * 1000;
+/** A tela de espera pergunta a cada segundo; o visto_em só é regravado a cada 5 s. */
+const RENOVAR_VISTO = 5 * 1000;
+const SALAS_NA_LISTA = 20;
+const PLACAR_TOP = 50;
 const TURNO = 60 * 1000;
 const ESTOUROS_PARA_PERDER = 3;
 const PARTIDAS_POR_DIA = 50;
@@ -82,6 +90,14 @@ async function carregar(ctx, id) {
     const p = linhaParaPartida(l);
     p.eu = p.jogadores.indexOf(ctx.usuario.id);
     if (p.eu < 0) throw new HttpError(404, 'partida não encontrada');
+    // Partida começada numa regra antiga (ex.: pontos, antes da vida): o estado não serve no
+    // motor novo. Termina sem resultado (não conta no placar) e o jogador recarrega.
+    if (Number(l.regras) !== R.REGRAS_VERSAO && p.status === 'jogando') {
+        await ctx.db.query(
+            `UPDATE tcg_partidas SET status = 'fim', motivo = 'atualizacao', atualizado_em = $2 WHERE id = $1 AND status = 'jogando'`,
+            [id, ctx.agora()]);
+        throw new HttpError(409, 'o jogo foi atualizado e essa partida foi encerrada sem resultado', { recarregar: true });
+    }
     return p;
 }
 
@@ -119,9 +135,40 @@ async function registrarResultado(ctx, p) {
     const vencedor = v === 0 || v === 1 ? p.jogadores[v] : null;
     const perdedor = v === 0 || v === 1 ? p.jogadores[1 - v] : null;
     await ctx.db.query(
-        `INSERT INTO tcg_resultados (partida_id, vencedor, perdedor, decks, turnos, motivo, fim_em)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (partida_id) DO NOTHING`,
-        [p.id, vencedor, perdedor, JSON.stringify(p.decks), p.estado.turno, p.estado.motivo, ctx.agora()]);
+        `INSERT INTO tcg_resultados (partida_id, vencedor, perdedor, decks, turnos, motivo, fim_em, jogador_a, jogador_b)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (partida_id) DO NOTHING`,
+        [p.id, vencedor, perdedor, JSON.stringify(p.decks), p.estado.turno, p.estado.motivo, ctx.agora(),
+            p.jogadores[0], p.jogadores[1]]);
+}
+
+/**
+ * Placar permanente: vitórias, derrotas e empates das partidas online (só as do servidor:
+ * contra o NPC roda no navegador e não dá para conferir). Top 50 + a linha de quem pede.
+ */
+async function placar(ctx) {
+    const linhas = await ctx.db.query(
+        `WITH r AS (
+             SELECT vencedor AS id, 1 AS v, 0 AS d, 0 AS e FROM tcg_resultados WHERE vencedor IS NOT NULL
+             UNION ALL SELECT perdedor, 0, 1, 0 FROM tcg_resultados WHERE perdedor IS NOT NULL
+             UNION ALL SELECT jogador_a, 0, 0, 1 FROM tcg_resultados WHERE vencedor IS NULL AND jogador_a IS NOT NULL
+             UNION ALL SELECT jogador_b, 0, 0, 1 FROM tcg_resultados WHERE vencedor IS NULL AND jogador_b IS NOT NULL
+         ), t AS (
+             SELECT r.id, u.display_name, SUM(r.v) AS vitorias, SUM(r.d) AS derrotas, SUM(r.e) AS empates
+               FROM r JOIN users u ON u.id = r.id
+              WHERE u.role <> 'banned'
+              GROUP BY r.id, u.display_name
+         )
+         SELECT *, RANK() OVER (ORDER BY vitorias DESC, derrotas ASC) AS posicao FROM t
+          ORDER BY posicao, display_name`);
+    const linha = (l) => ({
+        nome: l.display_name, vitorias: Number(l.vitorias), derrotas: Number(l.derrotas),
+        empates: Number(l.empates), posicao: Number(l.posicao),
+    });
+    const eu = ctx.usuario ? linhas.find((l) => l.id === ctx.usuario.id) : null;
+    return {
+        top: linhas.slice(0, PLACAR_TOP).map((l) => ({ ...linha(l), eu: !!eu && l.id === eu.id })),
+        meu: eu ? linha(eu) : null,
+    };
 }
 
 /**
@@ -194,8 +241,8 @@ async function limpar(ctx) {
 
 async function partidaEmAndamento(ctx, userId) {
     const [l] = await ctx.db.query(
-        `SELECT id FROM tcg_partidas WHERE status = 'jogando' AND (jogador_a = $1 OR jogador_b = $1)
-          ORDER BY criado_em DESC LIMIT 1`, [userId]);
+        `SELECT id FROM tcg_partidas WHERE status = 'jogando' AND (jogador_a = $1 OR jogador_b = $1) AND regras = $2
+          ORDER BY criado_em DESC LIMIT 1`, [userId, R.REGRAS_VERSAO]);
     return l?.id || null;
 }
 
@@ -215,6 +262,32 @@ async function semPartidaAberta(ctx) {
 
 const rotas = [
     {
+        // Salas esperando alguém (sem as minhas), mais novas primeiro, com o placar de quem criou.
+        metodo: 'GET', caminho: '/api/tcg/salas', login: true,
+        async executar(ctx) {
+            const agora = ctx.agora();
+            const linhas = await ctx.db.query(
+                `SELECT s.codigo, s.deck, s.criado_em, u.display_name,
+                        (SELECT COUNT(*) FROM tcg_resultados r WHERE r.vencedor = s.criador) AS vitorias,
+                        (SELECT COUNT(*) FROM tcg_resultados r WHERE r.perdedor = s.criador) AS derrotas
+                   FROM tcg_salas s JOIN users u ON u.id = s.criador
+                  WHERE s.partida_id IS NULL AND s.expira_em >= $1 AND s.visto_em >= $2
+                    AND s.criador <> $3 AND u.role <> 'banned'
+                  ORDER BY s.criado_em DESC LIMIT $4`,
+                [agora, agora - SALA_VIVA, ctx.usuario.id, SALAS_NA_LISTA]);
+            return {
+                salas: linhas.map((l) => ({
+                    codigo: l.codigo, deck: l.deck, criador: l.display_name, desde: Number(l.criado_em),
+                    vitorias: Number(l.vitorias), derrotas: Number(l.derrotas),
+                })),
+            };
+        },
+    },
+    {
+        metodo: 'GET', caminho: '/api/tcg/placar',
+        executar: (ctx) => placar(ctx),
+    },
+    {
         metodo: 'POST', caminho: '/api/tcg/salas', login: true,
         async executar(ctx) {
             const { deck } = await ctx.corpo();
@@ -228,9 +301,10 @@ const rotas = [
             for (let tentativa = 0; tentativa < 8; tentativa++) {
                 const codigo = novoCodigo(ctx.aleatorio);
                 const linhas = await ctx.db.query(
-                    `INSERT INTO tcg_salas (codigo, criador, deck, criado_em, expira_em) VALUES ($1, $2, $3, $4, $5)
+                    `INSERT INTO tcg_salas (codigo, criador, deck, criado_em, expira_em, visto_em) VALUES ($1, $2, $3, $4, $5, $4)
                      ON CONFLICT (codigo) DO UPDATE SET criador = EXCLUDED.criador, deck = EXCLUDED.deck,
-                         criado_em = EXCLUDED.criado_em, expira_em = EXCLUDED.expira_em, partida_id = NULL
+                         criado_em = EXCLUDED.criado_em, expira_em = EXCLUDED.expira_em, partida_id = NULL,
+                         visto_em = EXCLUDED.visto_em
                       WHERE tcg_salas.expira_em < $4 AND tcg_salas.partida_id IS NULL
                      RETURNING codigo`,
                     [codigo, ctx.usuario.id, d.id, agora, agora + SALA_DURA]);
@@ -246,6 +320,11 @@ const rotas = [
             const [s] = await ctx.db.query(
                 `SELECT s.*, u.display_name FROM tcg_salas s JOIN users u ON u.id = s.criador WHERE s.codigo = $1`, [codigo]);
             if (!s || (Number(s.expira_em) < ctx.agora() && !s.partida_id)) throw new HttpError(404, 'sala não encontrada ou expirada');
+            // Quem criou está na tela de espera perguntando: a sala continua "viva" na lista.
+            const agora = ctx.agora();
+            if (s.criador === ctx.usuario.id && !s.partida_id && !(Number(s.visto_em) > agora - RENOVAR_VISTO)) {
+                await ctx.db.query('UPDATE tcg_salas SET visto_em = $2 WHERE codigo = $1 AND partida_id IS NULL', [codigo, agora]);
+            }
             return {
                 codigo, deck: s.deck, criador: s.display_name, minha: s.criador === ctx.usuario.id,
                 expira: Number(s.expira_em), partida: s.partida_id || null,
@@ -364,4 +443,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR };
+module.exports = { rotas, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_VIVA };

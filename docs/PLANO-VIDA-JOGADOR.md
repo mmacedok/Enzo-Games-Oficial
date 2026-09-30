@@ -109,7 +109,8 @@ A recarga usa o mesmo formato, só que no **próprio atacante**:
   - **Vírgula-rangue** (Degustador da Noite);
   - **Bala Dourada** (O Inominável).
 
-  Todos os outros ficam com recarga 0. Atacar o jogador **não** vira a carta.
+  Todos os outros ficam com recarga 0. Atacar o jogador **não vira a carta por si só**: só esses
+  quatro ataques viram, e viram em qualquer alvo (carta ou jogador).
 - **Verso da Batalha:** a carta virada e a mão escondida do rival usam o verso novo: fundo escuro
   com o `assets/Batalha/logo.png` (a capa) no meio, pelo `UI.verso` com uma variante
   `carta-tcg--verso-batalha`. O `logo.png` é horizontal (1600×800), então no começo é CSS. Se o
