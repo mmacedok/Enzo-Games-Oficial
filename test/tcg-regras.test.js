@@ -1068,3 +1068,97 @@ test('texto do TCG de cada carta: existe e cita todos os ataques e o poder (não
         if (c.hp) assert.ok(carta.tcg.includes(`Vida ${String(c.hp * R.ESCALA).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`), `${carta.id}: vida diferente do jogo`);
     }
 });
+
+// ---- Banimento de cartas (antes de qualquer carta ir à mesa) ----------------------
+const comBanimento = () => R.criarPartida({ semente: 7, decks: [DECK, DECK], banimento: true });
+const banir = (e, j, cartas) => R.aplicar(e, { tipo: 'banir', jogador: j, cartas });
+const naoLendarias = (e, j) => e.jogadores[j].deck.filter((c) => R.banivel(c));
+
+test('banimento: a partida começa sem mãos, com os decks inteiros, e os dois precisam banir', () => {
+    const e = comBanimento();
+    assert.equal(e.fase, 'banimento');
+    assert.deepEqual(R.quemDeve(e), [0, 1]);
+    assert.ok(e.jogadores.every((x) => x.deck.length === 15 && x.mao.length === 0));
+    invalida(() => jogar({ ...e, vez: 0 }, { tipo: 'passar' }), 'banir primeiro');
+    invalida(() => R.aplicar(e, { tipo: 'preparar', jogador: 0, ativo: 'x', banco: [] }), 'banir primeiro');
+    // sem banimento o jogo é como sempre (mãos já compradas)
+    const normal = R.criarPartida({ semente: 7, decks: [DECK, DECK] });
+    assert.equal(normal.fase, 'preparacao');
+    assert.equal(normal.jogadores[0].mao.length, R.MAO_INICIAL);
+});
+
+test('banimento: 2 cartas não lendárias do deck do adversário, sem repetir e sem deixar o deck sem lutador', () => {
+    const e = comBanimento();
+    const possiveis = naoLendarias(e, 1);
+    const [a, b] = possiveis;
+    invalida(() => banir(e, 0, [a.uid]), 'escolha 2 cartas');
+    invalida(() => banir(e, 0, [a.uid, a.uid]), 'repetida');
+    invalida(() => banir(e, 0, [a.uid, 'xxx']), 'não está no deck');
+    const lendaria = e.jogadores[1].deck.find((c) => !R.banivel(c));
+    invalida(() => banir(e, 0, [a.uid, lendaria.uid]), 'lendária');
+    // cartas do PRÓPRIO deck não valem (o uid é do deck do outro lado)
+    invalida(() => banir(e, 0, [e.jogadores[0].deck[0].uid, e.jogadores[0].deck[1].uid]), 'não está no deck');
+    assert.doesNotThrow(() => banir(e, 0, [a.uid, b.uid]));
+    // deck com 1 só lutador: banir esse lutador deixaria o deck sem ninguém para lutar
+    const fino = comBanimento();
+    const mk = (id, n) => ({ uid: `1-f${n}`, id, dano: 0, aura: 0, estados: {}, escudo: null });
+    fino.jogadores[1].deck = [mk('cara-de-coracao', 0), mk('estacionamento-noturno', 1), mk('toradolandia', 2), mk('piscina-de-macarronada', 3)];
+    invalida(() => banir(fino, 0, ['1-f0', '1-f1']), 'sem ninguém para lutar');
+    assert.doesNotThrow(() => banir(fino, 0, ['1-f1', '1-f2']));
+});
+
+test('banimento: os dois banindo, as cartas somem dos decks, aparecem para todos e as mãos são compradas sem elas', () => {
+    let e = comBanimento();
+    const [a0, b0] = naoLendarias(e, 1);   // o jogador 0 bane do deck do 1
+    const [a1, b1] = naoLendarias(e, 0);
+    let r = banir(e, 0, [a0.uid, b0.uid]);
+    e = r.estado;
+    assert.equal(e.fase, 'banimento', 'falta o outro');
+    assert.deepEqual(R.quemDeve(e), [1]);
+    invalida(() => banir(e, 0, [a0.uid, b0.uid]), 'já baniu');
+    assert.deepEqual(r.eventos.map((ev) => ev.tipo), ['banimentoPronto']);
+    r = banir(e, 1, [a1.uid, b1.uid]);
+    e = r.estado;
+    assert.equal(e.fase, 'preparacao');
+    const quais = r.eventos.filter((ev) => ev.tipo === 'banimento');
+    assert.equal(quais.length, 2);
+    assert.deepEqual(quais.find((ev) => ev.alvo === 1).cartas.map((c) => c.uid).sort(), [a0.uid, b0.uid].sort());
+    for (const i of [0, 1]) {
+        const x = e.jogadores[i];
+        assert.equal(x.deck.length + x.mao.length, 13);
+        assert.equal(x.mao.length, R.MAO_INICIAL);
+        assert.equal(e.banidas[i].length, 2);
+        assert.ok(![...x.deck, ...x.mao].some((c) => e.banidas[i].some((b) => b.uid === c.uid)), 'banida não volta');
+    }
+    assert.equal(e.banimento, null);
+});
+
+test('banimento: cada um vê a lista do deck do outro, mas não o que o outro escolheu; depois só a quantidade', () => {
+    let e = comBanimento();
+    const v = R.visaoDe(e, 0);
+    assert.ok(Array.isArray(v.jogadores[1].deck) && v.jogadores[1].deck[0].id);
+    const [a0, b0] = naoLendarias(e, 1);
+    e = banir(e, 0, [a0.uid, b0.uid]).estado;
+    const vista = R.visaoDe(e, 1);
+    assert.deepEqual(vista.banimento.feitos, [true, false], 'o outro só sabe que já escolheu');
+    assert.ok(!JSON.stringify(vista).includes(a0.uid) || vista.jogadores[1].deck.some((c) => c.uid === a0.uid), 'a escolha não vaza fora da lista do próprio deck');
+    const [a1, b1] = naoLendarias(e, 0);
+    e = banir(e, 1, [a1.uid, b1.uid]).estado;
+    assert.equal(typeof R.visaoDe(e, 0).jogadores[1].deck, 'number');
+});
+
+test('banimento: o robô bane as cartas mais fortes e a partida inteira fecha', () => {
+    let e = R.criarPartida({ semente: 11, decks: [DECK, DECK], banimento: true });
+    for (let i = 0; i < 2000 && e.fase !== 'fim'; i++) {
+        const quem = Robo.quemJoga(e);
+        e = R.aplicar(e, Robo.escolherJogada(e, quem, { nivel: 'normal' })).estado;
+    }
+    assert.equal(e.fase, 'fim');
+    assert.equal(e.banidas[0].length, 2);
+    assert.ok(e.banidas.every((l) => l.every((c) => R.banivel({ id: c.id }))));
+});
+
+test('rodada: o par de turnos (1 e 2 = rodada 1) e o limite em rodadas', () => {
+    assert.deepEqual([1, 2, 3, 4, 29, 30].map(R.rodadaDe), [1, 1, 2, 2, 15, 15]);
+    assert.equal(R.RODADAS_MAX, 15);
+});

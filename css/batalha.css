@@ -1218,3 +1218,28 @@ dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
 .bt-online-ilustracao { width: min(170px, 50%); height: auto; }
 .bt-online-vazio-caixa { display: grid; justify-items: center; gap: 6px; }
 .bt-online-vs { width: 34px; height: 34px; margin: 0 8px; object-fit: contain; vertical-align: middle; }
+
+/* ---- Contador de rodadas ---- */
+.bt-rodada { position: absolute; top: 6px; left: 50%; z-index: 5; margin: 0; padding: 3px 14px; transform: translateX(-50%); font-family: var(--font-heading); font-size: 1.15rem; letter-spacing: 1px; color: var(--ink); background: var(--caution); border: 3px solid var(--ink); border-radius: 16px; box-shadow: 2px 2px 0 var(--ink); pointer-events: none; }
+
+/* ---- Banimento de cartas ---- */
+.bt-banir { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 10px; background: rgba(0, 0, 0, 0.78); }
+.bt-banir-miolo { box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; width: min(980px, 100%); max-height: calc(100dvh - 20px); overflow-y: auto; padding: 16px; color: var(--paper-ink); background: var(--halftone), var(--paper); border: 4px solid var(--ink); border-radius: 14px; box-shadow: 5px 5px 0 var(--ink); }
+.bt-banir-miolo h2 { margin: 0; font-family: var(--font-heading); font-size: 1.8rem; font-weight: 400; }
+.bt-banir-miolo h3 { margin: 0 0 4px; font-family: var(--font-heading); font-size: 1.3rem; font-weight: 400; }
+.bt-banir-contador { margin: 0; font-family: var(--font-heading); font-size: 1.3rem; }
+.bt-banir-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.bt-banir-grade--pequena { grid-template-columns: repeat(auto-fill, minmax(100px, 120px)); }
+.bt-banir-item { position: relative; display: grid; justify-items: center; gap: 4px; padding: 6px; background: #fff; border: 3px solid var(--ink); border-radius: 10px; }
+.bt-banir-item--marcada, .bt-banir-item:has(.bt-banir-item--marcada) { background: #ffd0c8; border-color: #b3261e; }
+.bt-banir-item--trava { opacity: 0.6; }
+.bt-banir-carta { padding: 0; background: none; border: 0; cursor: pointer; }
+.bt-banir-carta:disabled { cursor: default; }
+.bt-banir-carta .carta-tcg { width: 96px; }
+.bt-banir-item--marcada .carta-tcg { outline: 4px solid #b3261e; outline-offset: 2px; }
+.bt-banir-nome { font-family: var(--font-heading); font-size: 1.05rem; text-align: center; }
+.bt-banir-selo { padding: 1px 8px; font-family: var(--font-heading); font-size: 0.95rem; color: #fff; background: #555; border-radius: 10px; }
+.bt-banir-item--banida .bt-banir-selo { background: #b3261e; }
+.bt-banir-item--banida .carta-tcg { filter: grayscale(0.7); }
+.bt-banir-secao { margin-top: 4px; }
+.bt-banir-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }

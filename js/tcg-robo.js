@@ -70,6 +70,14 @@
         const eu = estado.jogadores[j];
         const por = (tipo) => validas.filter((v) => v.tipo === tipo);
 
+        if (estado.fase === 'banimento') {
+            // Bane as 2 cartas mais fortes (não lendárias) do deck do adversário (o fácil às vezes escolhe ao acaso, em escolherFacil).
+            const deckDele = estado.jogadores[1 - j].deck;
+            // campos não têm vida nem ataque: valem pouco para o robô (ele prefere banir lutadores fortes)
+            const nota = (uid) => { const id = deckDele.find((c) => c.uid === uid).id; return R.ehLutador(id) ? forca(id) : 40; };
+            const opcoes = por('banir');
+            return opcoes.map((v) => ({ v, n: v.cartas.reduce((s, u) => s + nota(u), 0) })).sort((a, b) => b.n - a.n)[0].v;
+        }
         if (estado.fase === 'preparacao') {
             const lutadores = eu.mao.filter((c) => R.ehLutador(c.id)).sort((a, b) => forca(b.id) - forca(a.id));
             return { tipo: 'preparar', jogador: j, ativo: lutadores[0].uid,
@@ -161,6 +169,7 @@
     /** Quem precisa jogar agora (null = ninguém / partida acabou). */
     function quemJoga(estado) {
         if (estado.fase === 'fim') return null;
+        if (estado.fase === 'banimento') return [0, 1].find((j) => !estado.banimento.feitos[j]);
         if (estado.fase === 'preparacao') return estado.jogadores.findIndex((x) => !x.preparado);
         if (estado.pendentes.length) return estado.pendentes[0].jogador;
         return estado.vez;

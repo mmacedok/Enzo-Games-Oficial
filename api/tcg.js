@@ -127,7 +127,7 @@ const quemDeve = R.quemDeve;
 
 /** O que o servidor joga por quem estourou o tempo. */
 function jogadaAutomatica(estado, j) {
-    if (estado.fase === 'preparacao' || estado.pendentes.length) return R.jogadasValidas(estado, j)[0];
+    if (estado.fase === 'banimento' || estado.fase === 'preparacao' || estado.pendentes.length) return R.jogadasValidas(estado, j)[0];
     return { tipo: 'passar', jogador: j };
 }
 
@@ -383,6 +383,7 @@ async function criarRevanche(ctx, l) {
     const deckB = deckGuardado(l.deck_a, l.lista_a);
     const estado = R.criarPartida({
         semente: ctx.aleatorio(2 ** 31 - 1),
+        banimento: true,
         decks: [deckA.cartas, deckB.cartas],
         nomes: [nomeA?.display_name || 'Jogador 1', nomeB?.display_name || 'Jogador 2'],
     });
@@ -623,6 +624,7 @@ const rotas = [
             const deckA = deckGuardado(pegou[0].deck, pegou[0].lista);
             const estado = R.criarPartida({
                 semente: ctx.aleatorio(2 ** 31 - 1),
+        banimento: true,
                 decks: [deckA.cartas, d.cartas],
                 nomes: [nomeA?.display_name || 'Jogador 1', ctx.usuario.display_name || 'Jogador 2'],
             });

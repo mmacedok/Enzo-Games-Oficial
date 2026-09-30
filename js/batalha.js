@@ -168,6 +168,7 @@
     const custom = { estado: 'nada', cartas: null, nome: '', descricao: '', publico: false, erros: [], limites: null, obj: null };
     const aplicarDeckDoServidor = (d) => Object.assign(custom, { estado: 'ok', cartas: d.cartas, nome: d.nome || '', descricao: d.descricao || '', publico: d.publico === true, erros: d.erros || [], limites: d.limites || custom.limites });
     let ocupado = false;
+    let banirSel = new Set();   // uids (do deck do adversário) marcados para banir agora
     let modo = null;            // { tipo: 'alvo', jogada, alvos, texto } | { tipo: 'aura' } | { tipo: 'preparar', ativo, banco }
     let partida = 0;            // muda a cada batalha: a vez do NPC antiga para sozinha
     let mesa = null;            // elementos fixos da mesa
@@ -764,9 +765,11 @@
             semente: `${Date.now()}-${Math.random()}`,
             decks: [deckEscolhido.cartas, deckNpc.cartas],
             nomes: ['Você', `NPC (${deckNpc.nome})`],
+            banimento: true,
         });
-        // O NPC escolhe o ativo e o banco escondido.
+        // Primeiro o banimento: o NPC já escolheu (em segredo); o jogador escolhe na tela. O NPC prepara depois do jogador.
         estado = R.aplicar(estado, Robo.escolherJogada(estado, NPC, { nivel })).estado;
+        banirSel = new Set();
         montarMesa();
         registrar(`Você joga com ${deckEscolhido.nome}; o NPC com ${deckNpc.nome}.`);
         if (AUTO) {
@@ -775,7 +778,7 @@
             executar(Robo.escolherJogada(estado, EU, { nivel: 'normal' }));
             return;
         }
-        modo = { tipo: 'preparar', ativo: null, banco: [] };
+        modo = null;
         desenhar();
     }
 
@@ -891,7 +894,9 @@
         m.seta.setAttribute('class', 'bt-seta');
         m.seta.innerHTML = '<defs><marker id="bt-ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs><path class="bt-seta-linha" d="" marker-end="url(#bt-ponta)"/>';
 
-        m.raiz.append(m.fundo, m.fundoNovo, m.npc.l, m.centro, m.eu.l, m.mao, m.menu, m.voltar, m.log, m.seta, m.efeitos, m.painel);
+        m.rodada = el('p', 'bt-rodada');
+        m.rodada.hidden = true;
+        m.raiz.append(m.fundo, m.fundoNovo, m.npc.l, m.centro, m.eu.l, m.mao, m.menu, m.voltar, m.rodada, m.log, m.seta, m.efeitos, m.painel);
         raiz.appendChild(m.raiz);
         mesa = m;
         // Tocar numa dica recolhida abre de novo (e ela recolhe sozinha depois).
@@ -1005,6 +1010,8 @@
 
     function desenhar() {
         if (!mesa || !estado) return;
+        // Acabou o banimento: agora é escolher o ativo e o banco.
+        if (!modo && !AUTO && !ESPECTADOR && estado.fase === 'preparacao' && !estado.jogadores[EU].preparado) modo = { tipo: 'preparar', ativo: null, banco: [] };
         const antes = posicoes();
         // A carta que fica no mesmo lugar dispensa a segunda medida do FLIP — desde que a vaga
         // dela não tenha se mexido (a dica do centro, o relógio, a barra do lado mexem a mesa toda).
@@ -1215,8 +1222,17 @@
         mesa.raiz.classList.toggle('bt-mesa--mirando', modo?.tipo === 'alvo');
         if (modo?.tipo !== 'alvo') mesa.seta.classList.remove('bt-seta--viva');
 
+        // Contador de rodadas (cada rodada = um turno de cada jogador; a partida acaba na última).
+        mesa.rodada.hidden = estado.fase !== 'jogo' || !estado.turno;
+        if (!mesa.rodada.hidden) {
+            mesa.rodada.textContent = `Rodada ${R.rodadaDe(estado.turno)}/${R.RODADAS_MAX}`;
+            mesa.rodada.title = `Turno ${estado.turno} de ${R.LIMITE_TURNOS}: a partida acaba no fim da rodada ${R.RODADAS_MAX}`;
+        }
+        sincronizarBanimento();
+
         let dica = '';
-        if (preparando) dica = modo.ativo ? 'Arraste até 3 cartas para o banco (opcional) e toque em Começar!' : 'Arraste um personagem ou goon da mão para o ATIVO. Toque numa carta para ver o que ela faz.';
+        if (estado.fase === 'banimento') dica = '';
+        else if (preparando) dica = modo.ativo ? 'Arraste até 3 cartas para o banco (opcional) e toque em Começar!' : 'Arraste um personagem ou goon da mão para o ATIVO. Toque numa carta para ver o que ela faz.';
         else if (estado.fase === 'fim') dica = '';
         else if (modo?.tipo === 'alvo') dica = modo.texto;
         else if (modo?.tipo === 'aura') dica = 'Toque na carta que vai receber a Aura. Ela fica presa ali e acumula.';
@@ -1226,6 +1242,112 @@
         else if (estado.pendentes.length && online) dica = `Esperando ${dele()} escolher o novo ativo...`;
         else if (estado.fase === 'jogo') dica = `Vez de ${dele()}...`;
         mostrarDica(dica);
+    }
+
+    // ---------------------------------------------------------------- banimento de cartas
+    /** Janela de banimento: escolhe 2 cartas não lendárias do deck do adversário (vale para local e online). */
+    function sincronizarBanimento() {
+        const aberta = mesa.raiz.querySelector('.bt-banir');
+        if (estado.fase !== 'banimento') { aberta?.remove(); return; }
+        if (ESPECTADOR) { mesaDica('Os jogadores estão escolhendo as cartas para banir...'); return; }
+        const feito = !!estado.banimento?.feitos?.[EU];
+        const deckDele = estado.jogadores[NPC].deck;   // na hora de banir a visão traz a lista do deck dele
+        if (!Array.isArray(deckDele)) return;
+        const assinatura = `${feito}|${deckDele.length}`;
+        if (aberta && aberta.dataset.assinatura === assinatura) return;
+        aberta?.remove();
+        const caixa = el('div', 'bt-banir');
+        caixa.dataset.assinatura = assinatura;
+        const miolo = el('div', 'bt-banir-miolo');
+        caixa.appendChild(miolo);
+        if (feito) {
+            miolo.append(el('h2', '', 'Banimento enviado'),
+                el('p', 'bt-placar-nota', `Esperando ${online ? dele() : 'o NPC'} escolher as cartas que vai banir do seu deck...`));
+            mesa.raiz.appendChild(caixa);
+            return;
+        }
+        const possiveis = deckDele.filter((c) => R.banivel(c));
+        const n = Math.min(R.BANIDAS_POR_JOGADOR, possiveis.length);
+        miolo.append(el('h2', '', `Banimento: escolha ${n} carta${n === 1 ? '' : 's'} do deck de ${online ? dele() : 'NPC'}`),
+            el('p', 'bt-placar-nota', 'As cartas banidas saem do deck dele antes de qualquer carta ir para a mesa. Lendárias não podem ser banidas. Vocês dois escolhem ao mesmo tempo, sem ver a escolha do outro.'));
+        const contador = el('p', 'bt-banir-contador', '');
+        const erro = el('p', 'bt-editor-erro', '');
+        const grade = el('ul', 'bt-banir-grade');
+        const botoes = new Map();
+        const confirmar = botao('bt-botao bt-botao--forte', 'Banir', async () => {
+            const jogada = { tipo: 'banir', cartas: [...banirSel] };
+            const motivoErro = R.motivoInvalida(estado, { ...jogada, jogador: EU });
+            if (motivoErro) { erro.textContent = motivoErro; return; }
+            confirmar.disabled = true;
+            await executar(jogada);
+        });
+        const atualizar = () => {
+            contador.textContent = `Banidas: ${banirSel.size}/${n}`;
+            confirmar.disabled = banirSel.size !== n;
+            for (const [uid, b] of botoes) {
+                b.classList.toggle('bt-banir-item--marcada', banirSel.has(uid));
+                b.disabled = !banirSel.has(uid) && banirSel.size >= n;
+            }
+            erro.textContent = '';
+        };
+        // agrupa as cópias iguais só na aparência: cada cópia é uma carta que pode ser banida
+        for (const c of [...deckDele].sort((a, b) => (R.banivel(a) - R.banivel(b)) || String(a.id).localeCompare(b.id))) {
+            const li = el('li', 'bt-banir-item');
+            const pode = R.banivel(c);
+            const b = botao('bt-banir-carta', null, () => {
+                if (banirSel.has(c.uid)) banirSel.delete(c.uid); else if (banirSel.size < n) banirSel.add(c.uid);
+                atualizar();
+            });
+            b.disabled = !pode;
+            b.setAttribute('aria-label', `${nomeVisivel(c.id)}${pode ? '' : ' (lendária: não pode ser banida)'}`);
+            b.appendChild(UI.carta(c.id));
+            if (pode) botoes.set(c.uid, b);
+            else li.classList.add('bt-banir-item--trava');
+            li.append(b, el('span', 'bt-banir-nome', nomeVisivel(c.id)));
+            if (!pode) li.appendChild(el('span', 'bt-banir-selo', 'LENDÁRIA'));
+            else if (def(c.id).tcg) {
+                const menu = el('details', 'bt-editor-menu');
+                const desc = el('p', 'bt-editor-desc');
+                desc.appendChild(descricaoColorida(def(c.id).tcg));
+                menu.append(el('summary', '', 'Ver o que faz'), desc);
+                li.appendChild(menu);
+            }
+            grade.appendChild(li);
+        }
+        const topo = el('div', 'bt-banir-topo');
+        topo.append(contador, confirmar);
+        miolo.append(topo, erro, grade);
+        atualizar();
+        mesa.raiz.appendChild(caixa);
+    }
+    const mesaDica = (texto) => { if (mesa) mostrarDica(texto); };
+
+    /** Depois que os dois banem: mostra o que saiu de cada deck. */
+    async function mostrarBanidas() {
+        mesa.raiz.querySelector('.bt-banir')?.remove();   // a janela de escolha sai; fica só o resultado
+        const caixa = el('div', 'bt-banir');
+        const miolo = el('div', 'bt-banir-miolo');
+        caixa.appendChild(miolo);
+        miolo.appendChild(el('h2', '', 'Cartas banidas!'));
+        const nomeDe = (j) => (!ESPECTADOR && j === EU ? 'Seu deck' : `Deck de ${nomeDoLado(j)}`);
+        for (const j of [0, 1]) {
+            const secao = el('div', 'bt-banir-secao');
+            secao.appendChild(el('h3', '', `${nomeDe(j)} perdeu:`));
+            const lista = el('ul', 'bt-banir-grade bt-banir-grade--pequena');
+            for (const c of estado.banidas[j]) {
+                const li = el('li', 'bt-banir-item bt-banir-item--banida');
+                li.append(UI.carta(c.id), el('span', 'bt-banir-nome', nomeVisivel(c.id)), el('span', 'bt-banir-selo', 'BANIDA'));
+                lista.appendChild(li);
+            }
+            secao.appendChild(lista);
+            miolo.appendChild(secao);
+        }
+        let fechar;
+        const pronto = new Promise((r) => { fechar = r; });
+        miolo.appendChild(botao('bt-botao bt-botao--forte', 'Continuar', () => fechar()));
+        mesa.raiz.appendChild(caixa);
+        await Promise.race([pronto, esperar(6000)]);
+        caixa.remove();
     }
 
     // A dica aparece inteira quando muda e, depois de DICA_MS, vira uma linha pequena
@@ -2413,6 +2535,8 @@
         const quem = (j) => (ESPECTADOR ? nomeDoLado(j) : (j === EU ? 'Você' : Dele()));
         const n = (uid) => nomeDoUid(uid, estado, antes);
         switch (ev.tipo) {
+            case 'banimentoPronto': registrar(`${ev.jogador === EU && !ESPECTADOR ? 'Você escolheu' : `${nomeDoLado(ev.jogador)} escolheu`} as cartas para banir.`); break;
+            case 'banimento': registrar(`${nomeDoLado(ev.alvo)} perdeu do deck: ${ev.cartas.map((c) => nomeVisivel(c.id)).join(' e ')}.`); break;
             case 'inicio': registrar(`${quem(ev.primeiro)} começa.`); break;
             case 'turno': registrar(`— Turno ${ev.turno}: ${ESPECTADOR ? `vez de ${nomeDoLado(ev.jogador)}` : (ev.jogador === EU ? 'sua vez' : `vez de ${dele()}`)} —`); break;
             case 'tempo': registrar([icone(A('relogio'), '⏱'), ` ${quem(ev.jogador)} ficou sem jogar: inatividade ${ev.estouros} de ${ESTOUROS_PARA_PERDER}.`]); break;
@@ -3038,15 +3162,22 @@
     async function tocar(ev, antes) {
         if (!mesa) return;
         switch (ev.tipo) {
+            case 'banimento':
+                // Os dois eventos (um por deck) chegam juntos: a janela mostra as duas listas uma vez só.
+                if (ev.alvo === 0) await mostrarBanidas();
+                break;
             case 'inicio': {
                 // Cara ou coroa para ver quem começa: o jogador 0 é Games (cara, o Enzo) e o
                 // jogador 1 é Torado (coroa, o touro). O motor já sorteou; a moeda só mostra.
+                // Todo mundo (os dois jogadores e quem assiste) vê o mesmo: a moeda, o texto de cima (quem é cara e quem
+                // é coroa, com os nomes) e o nome de quem começa embaixo.
                 const lado = ev.primeiro === 0 ? 'cara' : 'coroa';
+                const nomeDe = (j) => (!ESPECTADOR && j === EU ? 'Você' : nomeDoLado(j));
                 await moeda(lado, {
-                    chamada: `Você é ${EU === 0 ? 'GAMES' : 'TORADO'}`,
-                    rotulo: lado === 'cara' ? 'GAMES!' : 'TORADO!',
+                    chamada: `${nomeDe(0)} = CARA · ${nomeDe(1)} = COROA`,
+                    rotulo: `${nomeDe(ev.primeiro).toUpperCase()}!`,
                 });
-                await banner(ev.primeiro === EU ? 'VOCÊ COMEÇA!' : `${Dele().toUpperCase()} COMEÇA!`);
+                await banner(!ESPECTADOR && ev.primeiro === EU ? 'VOCÊ COMEÇA!' : `${nomeDe(ev.primeiro).toUpperCase()} COMEÇA!`);
                 break;
             }
             case 'turno':

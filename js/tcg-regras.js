@@ -25,7 +25,7 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 8;
+    const REGRAS_VERSAO = 9;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
@@ -131,7 +131,43 @@
         return { auras: 1, reforco: 0, campo: false, recuo: false, trocarCarta: false, poderes: [], devolvidasMao: 0, devolvidasMesa: 0 };
     }
 
-    function criarPartida({ semente = Date.now(), decks, nomes = ['Jogador 1', 'Jogador 2'] } = {}) {
+    /** Cartas que um deck pode ter banidas pelo adversário: só as que não são lendárias. */
+    const banivel = (inst) => Baralho.carta(inst.id)?.raridade !== 'lendario';
+    const BANIDAS_POR_JOGADOR = 2;
+
+    /** Mão inicial de cada um: embaralha e compra; mão sem ninguém para lutar volta e compra de novo (sem castigo). */
+    function distribuirMaos(estado) {
+        for (const jogador of estado.jogadores) {
+            for (;;) {
+                jogador.deck.push(...jogador.mao.splice(0));
+                embaralhar(estado, jogador.deck);
+                jogador.mao = jogador.deck.splice(0, MAO_INICIAL);
+                if (jogador.mao.some((c) => ehLutador(c.id))) break;
+                jogador.mulligans++;
+            }
+        }
+    }
+
+    /** Erro de um banimento (vazio = ok): `uids` são cartas do deck do adversário (`deckAdv`). */
+    function erroDoBanimento(deckAdv, uids) {
+        const possiveis = deckAdv.filter(banivel);
+        const esperado = Math.min(BANIDAS_POR_JOGADOR, possiveis.length);
+        if (!Array.isArray(uids) || uids.length !== esperado) return `escolha ${esperado} carta${esperado === 1 ? '' : 's'} para banir`;
+        if (new Set(uids).size !== uids.length) return 'carta repetida na escolha';
+        for (const uid of uids) {
+            const c = deckAdv.find((x) => x.uid === uid);
+            if (!c) return 'essa carta não está no deck dele';
+            if (!banivel(c)) return 'lendária não pode ser banida';
+        }
+        if (!deckAdv.some((c) => !uids.includes(c.uid) && ehLutador(c.id))) return 'banir essas cartas deixaria o deck dele sem ninguém para lutar';
+        return null;
+    }
+
+    /** Rodada = par de turnos (o turno é de um jogador só): a rodada 1 tem os turnos 1 e 2. */
+    const rodadaDe = (turno) => Math.max(1, Math.ceil(turno / 2));
+    const RODADAS_MAX = Math.ceil(LIMITE_TURNOS / 2);
+
+    function criarPartida({ semente = Date.now(), decks, nomes = ['Jogador 1', 'Jogador 2'], banimento = false } = {}) {
         if (!Array.isArray(decks) || decks.length !== 2) throw new JogadaInvalida('A partida precisa de 2 decks.');
         decks.forEach((d, i) => {
             const erros = validarDeck(d);
@@ -158,16 +194,16 @@
                 flags: flagsDoTurno(), espiada: null,
             })),
         };
-        for (const jogador of estado.jogadores) {
-            // Mão sem ninguém para lutar: devolve, embaralha e compra de novo (sem castigo).
-            for (;;) {
-                jogador.deck.push(...jogador.mao.splice(0));
-                embaralhar(estado, jogador.deck);
-                jogador.mao = jogador.deck.splice(0, MAO_INICIAL);
-                if (jogador.mao.some((c) => ehLutador(c.id))) break;
-                jogador.mulligans++;
-            }
+        if (banimento) {
+            // Antes de qualquer carta ir à mesa: cada um bane 2 cartas não lendárias do deck do outro (em segredo, ao mesmo
+            // tempo). As mãos só são compradas depois, já sem as cartas banidas.
+            estado.fase = 'banimento';
+            estado.banimento = { feitos: [null, null] };
+            estado.banidas = [[], []];
+            estado.primeiro = sortear(estado) < 0.5 ? 0 : 1;
+            return estado;
         }
+        distribuirMaos(estado);
         estado.primeiro = sortear(estado) < 0.5 ? 0 : 1;
         return estado;
     }
@@ -239,6 +275,12 @@
         const ele = estado.jogadores[outro(j)];
 
         if (jogada.tipo === 'desistir') return null;
+
+        if (estado.fase === 'banimento') {
+            if (jogada.tipo !== 'banir') return 'escolha as cartas para banir primeiro';
+            if (estado.banimento.feitos[j]) return 'você já baniu';
+            return erroDoBanimento(ele.deck, jogada.cartas);
+        }
 
         if (estado.fase === 'preparacao') {
             if (jogada.tipo !== 'preparar') return 'escolha o ativo e o banco primeiro';
@@ -630,6 +672,26 @@
                 encerrar(estado, outro(j), jogada.motivo === 'inatividade' ? 'inatividade' : 'desistencia', eventos);
                 return;
 
+            case 'banir': {
+                estado.banimento.feitos[j] = jogada.cartas.slice();
+                eventos.push({ tipo: 'banimentoPronto', jogador: j });
+                if (estado.banimento.feitos.every(Boolean)) {
+                    // Os dois escolheram: as cartas saem dos decks, aparecem para todos e as mãos são compradas.
+                    for (const i of [0, 1]) {
+                        const alvo = estado.jogadores[i];
+                        const uids = estado.banimento.feitos[outro(i)];
+                        const banidas = alvo.deck.filter((c) => uids.includes(c.uid));
+                        alvo.deck = alvo.deck.filter((c) => !uids.includes(c.uid));
+                        estado.banidas[i] = banidas.map((c) => ({ uid: c.uid, id: c.id }));
+                        eventos.push({ tipo: 'banimento', jogador: outro(i), alvo: i, cartas: estado.banidas[i] });
+                    }
+                    estado.banimento = null;
+                    distribuirMaos(estado);
+                    estado.fase = 'preparacao';
+                }
+                return;
+            }
+
             case 'preparar': {
                 eu.ativo = tirarDaMao(eu, jogada.ativo);
                 eu.banco = (jogada.banco || []).map((uid) => tirarDaMao(eu, uid));
@@ -802,7 +864,14 @@
         const eu = estado.jogadores[j];
         const ele = estado.jogadores[outro(j)];
         const candidatas = [];
-        if (estado.fase === 'preparacao') {
+        if (estado.fase === 'banimento') {
+            if (estado.banimento.feitos[j]) return [];
+            const possiveis = ele.deck.filter(banivel).map((c) => c.uid);
+            const n = Math.min(BANIDAS_POR_JOGADOR, possiveis.length);
+            if (n === 0) candidatas.push({ tipo: 'banir', jogador: j, cartas: [] });
+            else if (n === 1) for (const a of possiveis) candidatas.push({ tipo: 'banir', jogador: j, cartas: [a] });
+            else for (let a = 0; a < possiveis.length; a++) for (let b = a + 1; b < possiveis.length; b++) candidatas.push({ tipo: 'banir', jogador: j, cartas: [possiveis[a], possiveis[b]] });
+        } else if (estado.fase === 'preparacao') {
             if (eu.preparado) return [];
             const lutadores = eu.mao.filter((c) => ehLutador(c.id)).map((c) => c.uid);
             // Cada ativo possível com todos os outros lutadores no banco (até 3), e sozinho.
@@ -853,8 +922,11 @@
         const v = clonar(estado);
         delete v.rng;
         delete v.semente;
+        // Na hora de banir, cada jogador vê a lista do deck do adversário (cartas e ids); depois só a quantidade.
+        const listaDosDecks = estado.fase === 'banimento' && (j === 0 || j === 1);
+        if (v.banimento) v.banimento = { feitos: v.banimento.feitos.map((f) => !!f) };
         v.jogadores.forEach((x, i) => {
-            x.deck = qtd(x.deck);
+            x.deck = listaDosDecks ? x.deck.map((c) => ({ uid: c.uid, id: c.id })) : qtd(x.deck);
             if (i !== j) {
                 x.mao = qtd(x.mao);
                 x.espiada = null;
@@ -867,6 +939,7 @@
     /** Quem precisa agir agora (online, o relógio do turno corre para eles). */
     function quemDeve(estado) {
         if (estado.fase === 'fim') return [];
+        if (estado.fase === 'banimento') return [0, 1].filter((j) => !estado.banimento.feitos[j]);
         if (estado.fase === 'preparacao') return [0, 1].filter((j) => !estado.jogadores[j].preparado);
         if (estado.pendentes.length) return [...new Set(estado.pendentes.map((p) => p.jogador))];
         return [estado.vez];
@@ -904,8 +977,8 @@
     return {
         TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAX_LENDARIAS_CUSTOM, MAO_INICIAL, VAGAS_BANCO, LIMITE_TURNOS,
         ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR, PROTECAO_ATIVO, DEVOLVER_MAO_POR_TURNO, DEVOLVER_MESA_POR_TURNO,
-        REGRAS_VERSAO, JogadaInvalida,
+        REGRAS_VERSAO, JogadaInvalida, BANIDAS_POR_JOGADOR, banivel,
         validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, quemDeve, repetir,
-        hpMax, custoRecuo, calcularDano, danoNocaute, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado, virada,
+        rodadaDe, RODADAS_MAX, hpMax, custoRecuo, calcularDano, danoNocaute, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado, virada,
     };
 });

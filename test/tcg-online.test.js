@@ -53,12 +53,24 @@ async function jogador(m, sub, nome) {
 }
 
 /** Cria a sala com A e faz B entrar; devolve o id da partida e a primeira resposta de B. */
-async function comecar(m, a, b, decks = ['turma', 'legiao']) {
+async function comecar(m, a, b, decks = ['turma', 'legiao'], { banir = true } = {}) {
     const sala = await a('POST', '/api/tcg/salas', { deck: decks[0] });
     assert.equal(sala.status, 200, sala.texto);
     const entrou = await b('POST', `/api/tcg/salas/${sala.dados.codigo}/entrar`, { deck: decks[1] });
     assert.equal(entrou.status, 200, entrou.texto);
-    return { id: entrou.dados.id, codigo: sala.dados.codigo, primeira: entrou.dados };
+    const id = entrou.dados.id;
+    let primeira = entrou.dados;
+    // A partida começa com o banimento (os dois banem 2 cartas não lendárias); os testes que não tratam disso já passam por ele.
+    if (banir) {
+        for (const [j, lado] of [[0, a], [1, b]]) {
+            const d = (await lado('GET', `/api/tcg/partidas/${id}`)).dados;
+            assert.equal(d.visao.fase, 'banimento');
+            const r = await lado('POST', `/api/tcg/partidas/${id}/jogada`, { jogada: R.jogadasValidas(d.visao, j)[0], versao: d.versao, regras: R.REGRAS_VERSAO });
+            assert.equal(r.status, 200, r.texto);
+            primeira = r.dados;
+        }
+    }
+    return { id, codigo: sala.dados.codigo, primeira };
 }
 
 test('T1. Sem login as rotas dão 401; deck desconhecido dá 400', async (t) => {
@@ -111,7 +123,7 @@ test('T4. Partida inteira pela API com dois robôs: ninguém vê a mão do outro
     t.after(() => m.db.close());
     const a = await jogador(m, 'a', 'Ana');
     const b = await jogador(m, 'b', 'Beto');
-    const { id } = await comecar(m, a, b);
+    const { id } = await comecar(m, a, b, undefined, { banir: false });   // os robôs também banem, pela API
     const lados = [a, b];
     const versoes = [-1, -1];
     const visoes = [null, null];
@@ -129,7 +141,8 @@ test('T4. Partida inteira pela API com dois robôs: ninguém vê a mão do outro
             // Segredos: a mão e o deck do outro são só números; sem a sorte.
             const outro = r.dados.visao.jogadores[1 - j];
             assert.equal(typeof outro.mao, 'number');
-            assert.equal(typeof outro.deck, 'number');
+            // (só na hora de banir cada um vê a lista do deck do outro, para escolher as cartas)
+            if (r.dados.visao.fase !== 'banimento') assert.equal(typeof outro.deck, 'number');
             assert.equal(r.dados.visao.rng, undefined);
             assert.equal(r.dados.visao.semente, undefined);
             for (const ev of r.dados.eventos) {
@@ -166,7 +179,7 @@ test('T4. Partida inteira pela API com dois robôs: ninguém vê a mão do outro
     const lista = (await m.db.query('SELECT jogada FROM tcg_jogadas WHERE partida_id = $1 ORDER BY n', [id])).map((l) => JSON.parse(l.jogada));
     assert.deepEqual(R.repetir({ semente: estado.semente, decks: [
         require('../js/tcg-cartas.js').DECKS_PRONTOS[0].cartas, require('../js/tcg-cartas.js').DECKS_PRONTOS[1].cartas,
-    ], nomes: ['Ana', 'Beto'] }, lista), estado);
+    ], nomes: ['Ana', 'Beto'], banimento: true }, lista), estado);
     const [res] = await m.db.query('SELECT * FROM tcg_resultados WHERE partida_id = $1', [id]);
     assert.ok(res, 'resultado guardado');
     // Terminada, a partida não aparece mais como em andamento e dá para criar outra sala.
@@ -183,7 +196,7 @@ test('T5. Jogada fora da vez, de lado trocado ou com versão velha é recusada',
     const v = primeira.visao;
     // B prepara com uma jogada que diz ser do jogador 0: o servidor usa o lado do login.
     const prep = R.jogadasValidas(v, 1)[0];
-    const r = await b('POST', `/api/tcg/partidas/${id}/jogada`, { jogada: { ...prep, jogador: 0 }, versao: 0, regras: R.REGRAS_VERSAO });
+    const r = await b('POST', `/api/tcg/partidas/${id}/jogada`, { jogada: { ...prep, jogador: 0 }, versao: primeira.versao, regras: R.REGRAS_VERSAO });
     assert.equal(r.status, 200, r.texto);
     assert.equal(r.dados.visao.jogadores[1].preparado, true);
     assert.equal(r.dados.visao.jogadores[0].preparado, false);

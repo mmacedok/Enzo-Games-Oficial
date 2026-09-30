@@ -1,6 +1,6 @@
 # Batalha dos Torados — regras, cartas, efeitos e danos
 
-O TCG do site Enzo Games (`batalha.html`). Este documento vale para a versão de regras **8** (`REGRAS_VERSAO` em `js/tcg-regras.js`).
+O TCG do site Enzo Games (`batalha.html`). Este documento vale para a versão de regras **9** (`REGRAS_VERSAO` em `js/tcg-regras.js`).
 Os números das cartas vêm de `js/tcg-cartas.js` (multiplicados por 20) e os textos de `js/baralho-dados.js`. Se uma regra mudar, o motor (`js/tcg-regras.js`) manda; este arquivo deve ser regenerado.
 
 ## 1. Objetivo
@@ -14,6 +14,8 @@ Os números das cartas vêm de `js/tcg-cartas.js` (multiplicados por 20) e os te
 - **Deck:** 15 cartas, até 2 cópias de cada e só 1 de cada lendária, com pelo menos 1 personagem ou goon.
 - Decks prontos: **Turma do Enzo**, **Legião do Mal** e **Bichos da Internet**.
 - **Deck customizado (4º deck):** montado por cada conta com **qualquer carta do jogo** (cartas infinitas, não depende da coleção). Mesmas 15 cartas, **no máximo 2 lendárias** (1 cópia de cada) e até 2 cópias das outras; Vale contra o NPC e online. O dono pode **listar** o deck (nome e descrição curta) em **Decks de players**, onde os outros jogadores veem as cartas e podem copiá-lo para o próprio deck.
+- **Banimento (antes de tudo):** cada jogador bane 2 cartas não lendárias do deck do adversário, em segredo e ao mesmo tempo, antes de qualquer carta ir à mesa. As banidas saem do deck (ficam 13 cartas) e aparecem para os dois; só depois as mãos são compradas. Não dá para banir as cartas que deixariam o deck sem nenhum lutador.
+- **Contador de rodadas:** cada rodada é um turno de cada jogador; aparece "Rodada N/15" na mesa (a partida acaba no fim da rodada 15).
 - **Mão inicial:** 5 cartas. Mão sem lutador volta para o baralho e compra de novo, sem castigo.
 - **Preparação:** cada um escolhe 1 lutador ativo e até 3 no banco.
 - **Primeiro turno:** quem começa não ataca no 1º turno. Quem joga em segundo ganha **+1 Aura de Reforço** no 1º turno, e ela só pode ir para o banco.
