@@ -75,6 +75,8 @@ Um campo por vez na mesa; vale para os dois lados. Cabo Côco no ativo impede o 
 - **Salas públicas:** "Outro jogador" tem **Lista de salas** e **Criar sala**. A sala fica 5 minutos na lista e o tempo recomeça enquanto a tela de espera do dono está aberta.
 - **Relógio:** 60 segundos por turno; 3 estouros seguidos = derrota.
 - **Revanche:** ao fim da partida, os dois podem pedir revanche (até 2 minutos): mesma dupla, mesmos decks, lados trocados.
+- **Assistir:** em "Outro jogador" → **Assistir** aparece a lista de partidas em andamento. Quem entra vê a mesa como espectador: as duas mãos e os baralhos só como quantidade, sem poder jogar.
+- **Comentários:** durante a partida online, quem joga e quem assiste podem comentar (até 140 caracteres, 1 a cada 2 segundos, 300 por partida). Os comentários são temporários: o servidor apaga todos quando a partida termina.
 - **Placar:** vitórias, derrotas e empates só das partidas online.
 
 ## 8. Créditos (para comprar pacotes no Baralho)

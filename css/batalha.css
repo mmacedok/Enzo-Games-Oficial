@@ -954,7 +954,39 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-online-opcoes .bt-botao { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px; }
 .bt-online-opcoes .bt-botao strong { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 400; letter-spacing: 1px; }
 .bt-online-opcoes .bt-botao span { font-size: 0.85rem; font-weight: 700; opacity: 0.85; }
+.bt-online-opcoes { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 @media (max-width: 480px) { .bt-online-opcoes { grid-template-columns: 1fr; } }
+
+/* Quem só assiste: sem mão, sem botões de jogar, sem dica de vez e sem clique nas cartas. */
+.bt-espectador .bt-mao--eu, .bt-espectador .bt-aura, .bt-espectador .bt-passar, .bt-espectador .bt-cancelar,
+.bt-espectador .bt-dica, .bt-espectador .bt-menu-jogo > :nth-child(4) { display: none; }
+.bt-espectador .bt-carta { pointer-events: none; }
+
+/* Comentários da partida (chat temporário). */
+.bt-chat { position: absolute; left: 8px; top: 46%; z-index: 7; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.bt-chat-abrir {
+    position: relative; width: 42px; height: 42px; font-size: 1.3rem; cursor: pointer;
+    border: 3px solid var(--ink); border-radius: 50%; background: var(--paper); box-shadow: 2px 2px 0 var(--ink);
+}
+.bt-chat-novos {
+    position: absolute; top: -6px; right: -6px; min-width: 18px; padding: 0 4px; font: 700 0.75rem/18px var(--font-body, sans-serif);
+    color: #fff; background: #d62828; border-radius: 9px; text-align: center;
+}
+.bt-chat-novos[hidden] { display: none; }
+.bt-chat-painel {
+    display: flex; flex-direction: column; gap: 6px; width: min(300px, 78vw); max-height: 46vh; padding: 8px;
+    color: var(--paper-ink, #222); background: var(--paper); border: 3px solid var(--ink); border-radius: 12px; box-shadow: 3px 3px 0 var(--ink);
+}
+.bt-chat-painel[hidden] { display: none; }
+.bt-chat-aviso { margin: 0; font-size: 0.72rem; opacity: 0.75; }
+.bt-chat-lista { list-style: none; margin: 0; padding: 0; min-height: 60px; overflow-y: auto; font-size: 0.85rem; display: grid; gap: 3px; align-content: start; }
+.bt-chat-item { overflow-wrap: anywhere; }
+.bt-chat-item--meu { background: rgba(255, 204, 0, 0.25); border-radius: 4px; }
+.bt-chat-nome { color: #7a2a00; }
+.bt-chat-nome--plateia { color: #1f6f8b; }
+.bt-chat-form { display: flex; gap: 6px; }
+.bt-chat-campo { flex: 1; min-width: 0; padding: 5px 8px; font: inherit; border: 2px solid var(--ink); border-radius: 8px; }
+.bt-chat-enviar { padding: 4px 10px; }
 /* Revanche pedida pelo outro jogador: o botão pisca chamando. */
 .bt-botao--chamando { animation: bt-piscar 0.9s ease-in-out infinite; outline: 3px solid var(--caution); }
 .bt-online-sala {

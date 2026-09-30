@@ -447,3 +447,72 @@ test('T13. Créditos da Batalha: online 500/150 (uma vez só), NPC 250/50 com li
     m.relogio.agora += Tcg.NPC_INTERVALO + 1000;
     assert.equal((await a('POST', '/api/tcg/npc', { resultado: 'vitoria' })).dados.motivo, 'limite');
 });
+
+test('T14. Assistir: lista ao vivo, visão sem as mãos, e nenhuma jogada de quem só assiste', async (t) => {
+    const m = montar();
+    t.after(() => m.db.close());
+    const a = await jogador(m, 'a', 'Ana');
+    const b = await jogador(m, 'b', 'Beto');
+    const c = await jogador(m, 'c', 'Caio');
+    assert.equal((await m.navegador()('GET', '/api/tcg/ao-vivo')).status, 401);
+    assert.deepEqual((await c('GET', '/api/tcg/ao-vivo')).dados.partidas, []);
+    const { id } = await comecar(m, a, b);
+    const lista = (await c('GET', '/api/tcg/ao-vivo')).dados.partidas;
+    assert.equal(lista.length, 1);
+    assert.deepEqual([lista[0].id, lista[0].jogadores], [id, ['Ana', 'Beto']]);
+
+    const v = (await c('GET', `/api/tcg/assistir/${id}?desde=-1`)).dados;
+    assert.equal(v.eu, -1);
+    assert.equal(typeof v.visao.jogadores[0].mao, 'number', 'mão de Ana escondida');
+    assert.equal(typeof v.visao.jogadores[1].mao, 'number', 'mão de Beto escondida');
+    assert.equal(typeof v.visao.jogadores[0].deck, 'number');
+    assert.equal(v.status, 'jogando');
+    // Sem novidade: só a versão.
+    assert.equal((await c('GET', `/api/tcg/assistir/${id}?desde=${v.versao}`)).dados.visao, undefined);
+    // Quem assiste não joga nem vê a visão de jogador.
+    assert.equal((await c('POST', `/api/tcg/partidas/${id}/jogada`, { jogada: { tipo: 'desistir' }, versao: v.versao, regras: R.REGRAS_VERSAO })).status, 404);
+    assert.equal((await c('GET', `/api/tcg/partidas/${id}`)).status, 404);
+    assert.equal((await c('GET', '/api/tcg/assistir/naoexiste')).status, 404);
+
+    // Terminada, sai da lista ao vivo.
+    const d = (await b('GET', `/api/tcg/partidas/${id}`)).dados;
+    await b('POST', `/api/tcg/partidas/${id}/jogada`, { jogada: { tipo: 'desistir' }, versao: d.versao, regras: R.REGRAS_VERSAO });
+    assert.deepEqual((await c('GET', '/api/tcg/ao-vivo')).dados.partidas, []);
+    assert.equal((await c('GET', `/api/tcg/assistir/${id}?desde=-1`)).dados.status, 'fim');
+});
+
+test('T15. Comentários da partida: jogadores e espectadores, limites, e tudo some quando a partida termina', async (t) => {
+    const m = montar();
+    t.after(() => m.db.close());
+    const a = await jogador(m, 'a', 'Ana Silva');
+    const b = await jogador(m, 'b', 'Beto');
+    const c = await jogador(m, 'c', 'Caio Souza');
+    const { id } = await comecar(m, a, b);
+    const url = `/api/tcg/partidas/${id}/comentarios`;
+
+    assert.equal((await m.navegador()('GET', url)).status, 401);
+    assert.equal((await a('POST', url, { texto: '   ' })).status, 400);
+    assert.equal((await a('POST', url, { texto: 'Boa sorte!' })).status, 200);
+    assert.equal((await a('POST', url, { texto: 'de novo' })).status, 429, 'um por 2 s');
+    m.relogio.agora += 2500;
+    assert.equal((await c('POST', url, { texto: `torcendo\u0007 pela   Ana ${'x'.repeat(300)}` })).status, 200);
+    m.relogio.agora += 2500;
+    assert.equal((await b('POST', url, { texto: 'valeu' })).status, 200);
+
+    // Todos leem (quem joga e quem assiste); o lado diz quem é jogador; o texto vem limpo e curto.
+    const lidos = (await c('GET', `${url}?desde=0`)).dados;
+    assert.equal(lidos.ativa, true);
+    assert.deepEqual(lidos.comentarios.map((x) => [x.nome, x.lado, x.meu]), [['Ana', 0, false], ['Caio', null, true], ['Beto', 1, false]]);
+    assert.ok(lidos.comentarios[1].texto.startsWith('torcendo pela Ana x'));
+    assert.equal(lidos.comentarios[1].texto.length, 140);
+    // Incremental.
+    assert.equal((await a('GET', `${url}?desde=${lidos.comentarios[1].n}`)).dados.comentarios.length, 1);
+
+    // A partida acaba: os comentários somem do banco e ninguém comenta mais.
+    const d = (await b('GET', `/api/tcg/partidas/${id}`)).dados;
+    await b('POST', `/api/tcg/partidas/${id}/jogada`, { jogada: { tipo: 'desistir' }, versao: d.versao, regras: R.REGRAS_VERSAO });
+    assert.deepEqual((await c('GET', url)).dados, { ativa: false, comentarios: [] });
+    assert.equal((await c('POST', url, { texto: 'e agora?' })).status, 409);
+    const [{ n }] = await m.db.query('SELECT COUNT(*) AS n FROM tcg_comentarios');
+    assert.equal(Number(n), 0);
+});

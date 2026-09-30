@@ -32,6 +32,7 @@
     // Contra o NPC você é sempre o 0. Online, quem criou a sala é o 0 e quem entrou é o 1.
     let EU = 0;
     let NPC = 1;           // o outro lado (NPC ou o outro jogador)
+    let ESPECTADOR = false; // assistindo uma partida de outros: vê da posição do jogador 0, sem mãos e sem jogar
     const params = new URLSearchParams(location.search);
     const AUTO = params.has('auto');
     const RAPIDO = params.has('rapido');
@@ -179,6 +180,7 @@
     // ---------------------------------------------------------------- menu
     function telaMenu() {
         pararOnline();
+        ESPECTADOR = false;
         limparMesa();
         raiz.replaceChildren();
         raiz.className = 'batalha batalha--menu';
@@ -415,6 +417,7 @@
     // ---------------------------------------------------------------- começo da partida
     function comecar(n) {
         pararOnline();
+        ESPECTADOR = false;
         EU = 0;
         NPC = 1;
         nivel = n;
@@ -717,10 +720,11 @@
             lado.inativo.setAttribute('aria-label', lado.inativo.title);
             lado.deck.textContent = `🂠 ${x.deck}`;
             lado.deck.title = `${x.deck} cartas no deck`;
-            if (j === NPC) lado.mao.replaceChildren(icone(A('mao-cartas'), '✋'), ` ${x.mao}`);
+            const nMao = x.maoQtd ?? (Array.isArray(x.mao) ? x.mao.length : x.mao);
+            if (j === NPC || ESPECTADOR) lado.mao.replaceChildren(icone(A('mao-cartas'), '✋'), ` ${nMao}`);
             else lado.mao.textContent = '';
-            lado.mao.hidden = j !== NPC;
-            lado.mao.title = `${x.mao} cartas na mão`;
+            lado.mao.hidden = j !== NPC && !ESPECTADOR;
+            lado.mao.title = `${nMao} cartas na mão`;
             lado.ativo.replaceChildren();
             lado.vagas.forEach((v) => v.replaceChildren());
             if (x.ativo) por(x.ativo, lado.ativo);
@@ -1398,7 +1402,7 @@
         const aviso = online
             ? 'Sair da mesa? A partida continua e o tempo corre: 3 vezes sem jogar e você perde. Dá para voltar pelo menu.'
             : 'Sair desta batalha? Ela não fica salva.';
-        if (estado && estado.fase !== 'fim' && !(await perguntar(aviso, 'Sair'))) return;
+        if (!ESPECTADOR && estado && estado.fase !== 'fim' && !(await perguntar(aviso, 'Sair'))) return;
         // Durante uma animação ou a vez do NPC o botão parecia morto: espera o passo acabar (até ~8 s) e sai.
         for (let i = 0; ocupado && i < 80; i++) await new Promise((ok) => setTimeout(ok, 100));
         if (ocupado) return;
@@ -1506,6 +1510,7 @@
     function pararOnline() {
         if (online?.timer) clearTimeout(online.timer);
         if (online?.relogioTimer) clearInterval(online.relogioTimer);
+        online?.chatParar?.();
         online = null;
         esperaSala?.parar();
         esperaSala = null;
@@ -1532,6 +1537,7 @@
     /** Tela "Outro jogador": lista de salas públicas ou criar a sua (sem código), ou voltar para a partida. */
     async function telaOnline(aviso) {
         pararOnline();
+        ESPECTADOR = false;
         limparMesa();
         raiz.replaceChildren();
         raiz.className = 'batalha batalha--menu';
@@ -1589,9 +1595,37 @@
             }
         });
         criar.append(el('strong', '', 'Criar sala'), el('span', '', 'fica na lista enquanto a tela estiver aberta'));
-        opcoes.append(bLista, criar);
+        const bAssistir = botao('bt-botao', null, () => mostrarAoVivo());
+        bAssistir.append(el('strong', '', 'Assistir'), el('span', '', 'partidas ao vivo'));
+        opcoes.append(bLista, criar, bAssistir);
         corpo.appendChild(opcoes);
         if (atual.sala) mostrarSala(atual.sala.codigo, atual.sala.expira);
+
+        /** Partidas em andamento: escolha uma para assistir (só olhar e comentar). */
+        function mostrarAoVivo() {
+            corpo.replaceChildren();
+            corpo.appendChild(el('p', 'bt-online-deck', 'Partidas em andamento. Escolha uma para assistir:'));
+            const lista = el('div', 'bt-online-salas-lista');
+            corpo.append(lista, botao('bt-link', '← Voltar às opções', () => telaOnline()));
+            const primeiro = (nome) => String(nome || '').trim().split(/\s+/)[0] || '?';
+            const desenharLista = (partidas) => {
+                if (!partidas.length) { lista.replaceChildren(el('p', 'bt-online-vazio', 'Nenhuma partida acontecendo agora.')); return; }
+                lista.replaceChildren(...partidas.map((p) => {
+                    const linha = el('div', 'bt-sala-linha');
+                    const b = botao('bt-botao bt-botao--forte', 'Assistir', () => abrirAssistir(p.id, b));
+                    linha.append(el('span', 'bt-sala-nome', `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`),
+                        el('span', 'bt-sala-deck', `turno ${p.turno}`),
+                        el('span', 'bt-sala-placar', `❤ ${num(p.vida[0])} × ${num(p.vida[1])}`), b);
+                    return linha;
+                }));
+            };
+            const carregar = async () => {
+                if (!lista.isConnected) return;
+                if (!document.hidden) { try { desenharLista((await api('GET', '/api/tcg/ao-vivo')).partidas || []); } catch { /* tenta de novo */ } }
+                if (lista.isConnected) setTimeout(carregar, 4000);
+            };
+            carregar();
+        }
 
         /** Lista de salas públicas: todo mundo que criou sala e está esperando. */
         function mostrarLista() {
@@ -1730,10 +1764,161 @@
         }
     }
 
+    // ---------------------------------------------------------------- assistir
+    const nomeDoLado = (j) => String(estado?.jogadores[j]?.nome || '').trim().split(/\s+/)[0] || `Jogador ${j + 1}`;
+
+    /** A visão de quem assiste traz as duas mãos como número: a do lado 0 vira lista vazia + contagem. */
+    function veEspectador(v) {
+        const x = v.jogadores[EU];
+        if (typeof x.mao === 'number') { x.maoQtd = x.mao; x.mao = []; }
+        return v;
+    }
+
+    /** Entra numa partida em andamento como espectador (só olha e comenta). */
+    async function abrirAssistir(id, alvo) {
+        try {
+            comecarAssistindo(await api('GET', `/api/tcg/assistir/${encodeURIComponent(id)}?desde=-1`));
+        } catch (erro) {
+            if (erro.dados?.recarregar) { avisarRecarregar(erro.message); return; }
+            balao(alvo || raiz, erro.status ? erro.message : 'Sem conexão. Tente de novo.', 'erro');
+        }
+    }
+
+    function comecarAssistindo(d) {
+        pararOnline();
+        if (d.regras !== R.REGRAS_VERSAO) { location.reload(); return; }
+        ESPECTADOR = true;
+        EU = 0;
+        NPC = 1;
+        partida++;
+        depoisDaMoeda = null;
+        online = { id: d.id, versao: d.versao, prazo: d.prazo, estouros: d.estouros || [0, 0], dif: d.agora - Date.now(), timer: null, relogioTimer: null, espectador: true };
+        estado = veEspectador(d.visao);
+        montarMesa();
+        mesa.raiz.classList.add('bt-espectador');
+        registrar(`Você está assistindo ${nomeDoLado(0)} × ${nomeDoLado(1)}.`);
+        modo = null;
+        desenhar();
+        online.relogioTimer = setInterval(atualizarRelogio, 500);
+        montarChat();
+        if (estado.fase === 'fim') telaFim();
+        else agendarBusca();
+    }
+
+    /** Fim da partida vista de fora: quem venceu e para onde voltar. */
+    function telaFimEspectador() {
+        if (!mesa || mesa.raiz.querySelector('.bt-fim')) return;
+        desenhar();
+        const v = estado.vencedor;
+        const vida = (j) => num(estado.jogadores[j].vida);
+        const caixa = el('div', 'bt-fim bt-fim--empate');
+        const miolo = el('div', 'bt-fim-miolo');
+        miolo.append(el('h2', 'bt-fim-titulo', v === 'empate' ? 'EMPATE!' : `${nomeDoLado(v)} venceu!`),
+            el('p', 'bt-fim-placar', `Vida: ${vida(0)} × ${vida(1)}`));
+        const acoes = el('div', 'bt-fim-acoes');
+        pararOnline();
+        mesa.raiz.querySelector('.bt-chat')?.remove();
+        acoes.append(botao('bt-botao bt-botao--forte', 'Ver outras partidas', () => telaOnline()), botao('bt-botao', 'Menu', telaMenu));
+        miolo.appendChild(acoes);
+        caixa.appendChild(miolo);
+        mesa.raiz.appendChild(caixa);
+        acoes.querySelector('button').focus({ preventScroll: true });
+    }
+
+    // ---------------------------------------------------------------- comentários da partida
+    /** Chat temporário de quem joga e de quem assiste: o servidor apaga tudo quando a partida termina. */
+    function montarChat() {
+        if (!online || !mesa) return;
+        const idPartida = online.id;
+        const caixa = el('div', 'bt-chat');
+        const abrir = botao('bt-chat-abrir', null, () => alternar());
+        const novos = el('span', 'bt-chat-novos');
+        novos.hidden = true;
+        abrir.append(el('span', '', '💬'), novos);
+        abrir.setAttribute('aria-label', 'Comentários da partida');
+        abrir.title = 'Comentários da partida';
+        const painel = el('div', 'bt-chat-painel');
+        painel.hidden = true;
+        const lista = el('ol', 'bt-chat-lista');
+        const form = el('form', 'bt-chat-form');
+        const campo = el('input', 'bt-chat-campo');
+        campo.maxLength = 140;
+        campo.autocomplete = 'off';
+        campo.placeholder = 'Comente a partida...';
+        campo.setAttribute('aria-label', 'Comentário');
+        const enviar = botao('bt-botao bt-chat-enviar', 'Enviar');
+        enviar.type = 'submit';
+        form.append(campo, enviar);
+        painel.append(el('p', 'bt-chat-aviso', 'Os comentários somem quando a partida terminar.'), lista, form);
+        caixa.append(abrir, painel);
+        mesa.raiz.appendChild(caixa);
+
+        let ultimo = 0;
+        let naoLidos = 0;
+        let parou = false;
+        let timer = 0;
+        const marcar = () => { novos.textContent = String(naoLidos); novos.hidden = !naoLidos; };
+        const alternar = () => {
+            painel.hidden = !painel.hidden;
+            if (painel.hidden) return;
+            naoLidos = 0;
+            marcar();
+            lista.scrollTop = lista.scrollHeight;
+            campo.focus({ preventScroll: true });
+        };
+        const adicionar = (c) => {
+            const li = el('li', `bt-chat-item${c.meu ? ' bt-chat-item--meu' : ''}`);
+            li.append(el('strong', c.lado === null ? 'bt-chat-nome bt-chat-nome--plateia' : 'bt-chat-nome', `${c.nome}${c.lado === null ? ' 👁' : ''}`), ' ', document.createTextNode(c.texto));
+            lista.appendChild(li);
+            while (lista.children.length > 100) lista.firstChild.remove();
+        };
+        const buscarNovos = async () => {
+            timer = 0;
+            if (parou || !caixa.isConnected || !online || online.id !== idPartida) return;
+            if (!document.hidden) {
+                try {
+                    const d = await api('GET', `/api/tcg/partidas/${idPartida}/comentarios?desde=${ultimo}`);
+                    if (!d.ativa) { parou = true; return; }
+                    const noFim = lista.scrollHeight - lista.scrollTop - lista.clientHeight < 40;
+                    for (const c of d.comentarios) {
+                        ultimo = Math.max(ultimo, c.n);
+                        adicionar(c);
+                        if (painel.hidden && !c.meu) naoLidos++;
+                    }
+                    if (d.comentarios.length) {
+                        marcar();
+                        if (noFim || !painel.hidden) lista.scrollTop = lista.scrollHeight;
+                    }
+                } catch { /* tenta de novo */ }
+            }
+            if (!parou) timer = setTimeout(buscarNovos, 2500);
+        };
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const texto = campo.value.trim();
+            if (!texto) return;
+            enviar.disabled = true;
+            try {
+                await api('POST', `/api/tcg/partidas/${idPartida}/comentarios`, { texto });
+                campo.value = '';
+                if (timer) clearTimeout(timer);
+                buscarNovos();
+            } catch (erro) {
+                balao(enviar, erro.status ? erro.message : 'Sem conexão.', 'erro');
+            } finally {
+                enviar.disabled = false;
+                campo.focus({ preventScroll: true });
+            }
+        });
+        timer = setTimeout(buscarNovos, 300);
+        online.chatParar = () => { parou = true; if (timer) clearTimeout(timer); };
+    }
+
     /** Monta a mesa de uma partida online a partir da resposta do servidor. */
     function comecarOnline(d) {
         pararOnline();
         if (d.regras !== R.REGRAS_VERSAO) { location.reload(); return; }
+        ESPECTADOR = false;
         EU = d.eu;
         NPC = 1 - d.eu;
         partida++;
@@ -1746,6 +1931,7 @@
         modo = estado.fase === 'preparacao' && !estado.jogadores[EU].preparado ? { tipo: 'preparar', ativo: null, banco: [] } : null;
         desenhar();
         online.relogioTimer = setInterval(atualizarRelogio, 500);
+        if (estado.fase !== 'fim') montarChat();
         if (estado.fase === 'fim') telaFim();
         else agendarBusca();
     }
@@ -1772,7 +1958,7 @@
         if (d.creditos !== undefined) creditosFim = d.creditos;
         if (d.visao) {
             const antes = estado;
-            estado = d.visao;
+            estado = ESPECTADOR ? veEspectador(d.visao) : d.visao;
             // O que eu estava fazendo pode não valer mais (o tempo acabou, o servidor escolheu por mim).
             if (modo?.tipo === 'preparar' && estado.jogadores[EU].preparado) modo = null;
             if (!modo && estado.fase === 'preparacao' && !estado.jogadores[EU].preparado) modo = { tipo: 'preparar', ativo: null, banco: [] };
@@ -1827,7 +2013,7 @@
         const id = online.id;
         let d = null;
         try {
-            d = await api('GET', `/api/tcg/partidas/${id}?desde=${online.versao}`);
+            d = await api('GET', `/api/tcg/${online.espectador ? 'assistir' : 'partidas'}/${id}?desde=${online.versao}`);
         } catch (erro) {
             if (erro.status === 404) { pararOnline(); telaOnline('Essa partida não existe mais.'); return; }
             if (erro.dados?.recarregar) { pararOnline(); avisarRecarregar(erro.message); return; }
@@ -1856,7 +2042,7 @@
             // Só eu preciso agir: nada muda até eu jogar ou o meu tempo acabar. Se o outro também
             // precisa (preparo, escolha de ativo), continua perguntando.
             const quem = R.quemDeve(estado);
-            espera = quem.length === 1 && quem[0] === EU
+            espera = !ESPECTADOR && quem.length === 1 && quem[0] === EU
                 ? Math.max(1000, online.prazo - agoraServidor() + 1500)
                 : BUSCA_MS;
         }
@@ -1876,13 +2062,13 @@
         while (mesa.log.children.length > 60) mesa.log.lastChild.remove();
     }
     function registrarEvento(ev, antes) {
-        const quem = (j) => (j === EU ? 'Você' : Dele());
+        const quem = (j) => (ESPECTADOR ? nomeDoLado(j) : (j === EU ? 'Você' : Dele()));
         const n = (uid) => nomeDoUid(uid, estado, antes);
         switch (ev.tipo) {
             case 'inicio': registrar(`${quem(ev.primeiro)} começa.`); break;
-            case 'turno': registrar(`— Turno ${ev.turno}: ${ev.jogador === EU ? 'sua vez' : `vez de ${dele()}`} —`); break;
+            case 'turno': registrar(`— Turno ${ev.turno}: ${ESPECTADOR ? `vez de ${nomeDoLado(ev.jogador)}` : (ev.jogador === EU ? 'sua vez' : `vez de ${dele()}`)} —`); break;
             case 'tempo': registrar([icone(A('relogio'), '⏱'), ` ${quem(ev.jogador)} ficou sem jogar: inatividade ${ev.estouros} de ${ESTOUROS_PARA_PERDER}.`]); break;
-            case 'compra': if (ev.jogador === EU) registrar(`Você comprou ${nomeVisivel(ev.id)}.`); break;
+            case 'compra': if (!ESPECTADOR && ev.jogador === EU) registrar(`Você comprou ${nomeVisivel(ev.id)}.`); break;
             case 'baixar': registrar(`${quem(ev.jogador)} pôs ${nomeVisivel(ev.id)} ${ev.ativo ? 'no ativo (mesa vazia)' : 'no banco'}.`); break;
             case 'aura': registrar(`${n(ev.uid)} ganhou Aura (${ev.aura}).`); break;
             case 'campo': registrar(`${quem(ev.jogador)} jogou o campo ${nomeVisivel(ev.id)}.`); break;
@@ -2779,6 +2965,7 @@
     }
 
     function telaFim() {
+        if (ESPECTADOR) { telaFimEspectador(); return; }
         if (!mesa || mesa.raiz.querySelector('.bt-fim--vitoria, .bt-fim--derrota, .bt-fim--empate')) return;
         desenhar();
         const v = estado.vencedor;
@@ -2798,6 +2985,7 @@
         const acoes = el('div', 'bt-fim-acoes');
         if (online) {
             if (creditosFim > 0) mostrarCreditos(creditos, creditosFim);
+            mesa.raiz.querySelector('.bt-chat')?.remove();   // os comentários acabam com a partida
             const idPartida = online.id;
             const nomeDele = dele();   // antes do pararOnline(): depois dele o nome viraria "o NPC"
             pararOnline();

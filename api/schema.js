@@ -197,6 +197,18 @@ module.exports = [
     'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_a BOOLEAN NOT NULL DEFAULT FALSE',
     'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_b BOOLEAN NOT NULL DEFAULT FALSE',
     'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_id TEXT',
+    // Comentários da partida (chat de quem joga e de quem assiste): só existem enquanto ela dura,
+    // o servidor apaga tudo quando a partida termina (api/tcg.js, registrarResultado).
+    `CREATE TABLE IF NOT EXISTS tcg_comentarios (
+        n BIGSERIAL PRIMARY KEY,
+        partida_id TEXT NOT NULL REFERENCES tcg_partidas(id) ON DELETE CASCADE,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        nome TEXT NOT NULL,
+        lado INTEGER,
+        texto TEXT NOT NULL,
+        criado_em BIGINT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_tcg_comentarios_partida ON tcg_comentarios(partida_id, n)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_a ON tcg_partidas(jogador_a, status)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_b ON tcg_partidas(jogador_b, status)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_criado ON tcg_partidas(criado_em)',

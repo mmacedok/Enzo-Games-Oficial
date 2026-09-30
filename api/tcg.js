@@ -9,6 +9,9 @@
 //   POST /api/tcg/salas/:codigo/cancelar     só quem criou, antes de alguém entrar
 //   GET  /api/tcg/salas                      salas abertas com o dono esperando (para entrar com 1 clique)
 //   GET  /api/tcg/placar                     placar permanente (vitórias/derrotas online) + o meu
+//   GET  /api/tcg/ao-vivo                    partidas em andamento (para assistir)
+//   GET  /api/tcg/assistir/:id               visão de quem assiste (sem as mãos), como a de jogar; ?desde=versão
+//   GET/POST /api/tcg/partidas/:id/comentarios  comentários da partida (quem joga e quem assiste); somem ao terminar
 //   GET  /api/tcg/atual                      partida em andamento e sala aberta do jogador
 //   GET  /api/tcg/partidas/:id?desde=<n>     "teve jogada?": { versao } ou visão + eventos novos
 //   POST /api/tcg/partidas/:id/jogada        { jogada, versao, regras }
@@ -37,6 +40,12 @@ const REVANCHE_DURA = 2 * 60 * 1000;
  * Contra o NPC a partida roda no navegador e o servidor não confere, então o prêmio tem trava:
  * poucas partidas premiadas por dia e um intervalo mínimo entre elas.
  */
+const COMENTARIO_MAX = 140;
+const COMENTARIOS_POR_PARTIDA = 300;
+const COMENTARIO_INTERVALO = 2000;
+/** Partida sem nenhuma jogada há mais que isso não aparece na lista "ao vivo". */
+const AO_VIVO_FRESCA = 10 * 60 * 1000;
+const AO_VIVO_NA_LISTA = 20;
 const NPC_PREMIADAS_POR_DIA = 10;
 const NPC_INTERVALO = 90 * 1000;
 const SALAS_NA_LISTA = 20;
@@ -151,6 +160,8 @@ async function registrarResultado(ctx, p) {
         [p.id, vencedor, perdedor, JSON.stringify(p.decks), p.estado.turno, p.estado.motivo, ctx.agora(),
             p.jogadores[0], p.jogadores[1]]);
     // Créditos do Baralho: 500 a quem venceu, 150 a quem perdeu (empate paga como derrota). Uma vez só por partida.
+    // O chat da partida some junto com ela.
+    await ctx.db.query('DELETE FROM tcg_comentarios WHERE partida_id = $1', [p.id]);
     if (novo.length) {
         const { creditarConta } = require('./baralho.js');
         for (const lado of [0, 1]) {
@@ -289,6 +300,19 @@ async function conferirLimites(ctx, userId) {
 async function semPartidaAberta(ctx) {
     const id = await partidaEmAndamento(ctx, ctx.usuario.id);
     if (id) throw new HttpError(409, 'você já está numa partida', { partida: id });
+}
+
+/** Texto do comentário: sem caracteres de controle, espaços juntos, até COMENTARIO_MAX. */
+function limparComentario(texto) {
+    return String(texto ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, COMENTARIO_MAX);
+}
+
+/** Partida em andamento (qualquer jogador logado pode ver e comentar). */
+async function lerAoVivo(ctx, id) {
+    if (!ID.test(id)) throw new HttpError(404, 'partida não encontrada');
+    const [l] = await ctx.db.query('SELECT * FROM tcg_partidas WHERE id = $1', [id]);
+    if (!l) throw new HttpError(404, 'partida não encontrada');
+    return l;
 }
 
 async function lerParaRevanche(ctx, id) {
@@ -488,6 +512,88 @@ const rotas = [
         },
     },
     {
+        // Partidas em andamento, para entrar como espectador.
+        metodo: 'GET', caminho: '/api/tcg/ao-vivo', login: true,
+        async executar(ctx) {
+            const agora = ctx.agora();
+            const linhas = await ctx.db.query(
+                `SELECT p.id, p.deck_a, p.deck_b, p.criado_em, p.versao, p.estado, ua.display_name AS nome_a, ub.display_name AS nome_b
+                   FROM tcg_partidas p
+                   JOIN users ua ON ua.id = p.jogador_a JOIN users ub ON ub.id = p.jogador_b
+                  WHERE p.status = 'jogando' AND p.regras = $1 AND p.atualizado_em > $2
+                  ORDER BY p.atualizado_em DESC LIMIT $3`,
+                [R.REGRAS_VERSAO, agora - AO_VIVO_FRESCA, AO_VIVO_NA_LISTA]);
+            return {
+                partidas: linhas.map((l) => {
+                    const e = JSON.parse(l.estado);
+                    return {
+                        id: l.id, jogadores: [l.nome_a, l.nome_b], decks: [l.deck_a, l.deck_b], desde: Number(l.criado_em),
+                        turno: e.turno, vida: [e.jogadores[0].vida, e.jogadores[1].vida],
+                    };
+                }),
+            };
+        },
+    },
+    {
+        // Quem assiste vê a mesa como um terceiro: as duas mãos e os baralhos só como quantidade.
+        metodo: 'GET', caminho: /^\/api\/tcg\/assistir\/([^/]{1,64})$/, login: true,
+        async executar(ctx) {
+            const desde = ctx.url.searchParams.has('desde') ? Number(ctx.url.searchParams.get('desde')) : -1;
+            const l = await lerAoVivo(ctx, ctx.params[0]);
+            if (Number(l.regras) !== R.REGRAS_VERSAO && l.status === 'jogando') throw new HttpError(409, 'o jogo foi atualizado; recarregue', { recarregar: true });
+            const base = {
+                id: l.id, versao: Number(l.versao), prazo: Number(l.prazo), agora: ctx.agora(), eu: -1,
+                estouros: [Number(l.estouros_a), Number(l.estouros_b)], status: l.status, regras: R.REGRAS_VERSAO,
+            };
+            if (desde === base.versao) return base;
+            let eventos = [];
+            if (Number.isInteger(desde) && desde >= 0 && desde < base.versao) {
+                const linhas = await ctx.db.query('SELECT eventos FROM tcg_jogadas WHERE partida_id = $1 AND n > $2 ORDER BY n', [l.id, desde]);
+                eventos = linhas.flatMap((x) => R.eventosPara(JSON.parse(x.eventos), -1));
+            }
+            return { ...base, decks: [l.deck_a, l.deck_b], visao: R.visaoDe(JSON.parse(l.estado), -1), eventos };
+        },
+    },
+    {
+        metodo: 'GET', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/comentarios$/, login: true,
+        async executar(ctx) {
+            const l = await lerAoVivo(ctx, ctx.params[0]);
+            if (l.status !== 'jogando') return { ativa: false, comentarios: [] };
+            const desde = Number.parseInt(ctx.url.searchParams.get('desde'), 10) || 0;
+            const linhas = await ctx.db.query(
+                'SELECT n, user_id, nome, lado, texto, criado_em FROM tcg_comentarios WHERE partida_id = $1 AND n > $2 ORDER BY n LIMIT 100',
+                [l.id, desde]);
+            return {
+                ativa: true,
+                comentarios: linhas.map((c) => ({
+                    n: Number(c.n), nome: c.nome, lado: c.lado === null ? null : Number(c.lado), texto: c.texto,
+                    em: Number(c.criado_em), meu: c.user_id === ctx.usuario.id,
+                })),
+            };
+        },
+    },
+    {
+        metodo: 'POST', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/comentarios$/, login: true,
+        async executar(ctx) {
+            const l = await lerAoVivo(ctx, ctx.params[0]);
+            if (l.status !== 'jogando') throw new HttpError(409, 'a partida terminou: os comentários se foram');
+            const texto = limparComentario((await ctx.corpo()).texto);
+            if (!texto) throw new HttpError(400, 'escreva alguma coisa');
+            const agora = ctx.agora();
+            const [{ n, ultimo }] = await ctx.db.query(
+                `SELECT COUNT(*) AS n, MAX(CASE WHEN user_id = $2 THEN criado_em END) AS ultimo FROM tcg_comentarios WHERE partida_id = $1`,
+                [l.id, ctx.usuario.id]);
+            if (Number(n) >= COMENTARIOS_POR_PARTIDA) throw new HttpError(429, 'os comentários dessa partida lotaram');
+            if (ultimo !== null && agora - Number(ultimo) < COMENTARIO_INTERVALO) throw new HttpError(429, 'devagar: um comentário a cada 2 segundos');
+            const lado = [l.jogador_a, l.jogador_b].indexOf(ctx.usuario.id);
+            const nome = String(ctx.usuario.display_name || 'Leitor').trim().split(/\s+/)[0].slice(0, 20);
+            const [c] = await ctx.db.query(
+                `INSERT INTO tcg_comentarios (partida_id, user_id, nome, lado, texto, criado_em) VALUES ($1, $2, $3, $4, $5, $6) RETURNING n`,
+                [l.id, ctx.usuario.id, nome, lado < 0 ? null : lado, texto, agora]);
+            return { n: Number(c.n) };
+        },
+    },
+    {
         // Prêmio da partida contra o NPC: { resultado: 'vitoria' | 'derrota' | 'empate' }.
         metodo: 'POST', caminho: '/api/tcg/npc', login: true,
         async executar(ctx) {
@@ -567,4 +673,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline };
+module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline, COMENTARIO_MAX, COMENTARIO_INTERVALO };
