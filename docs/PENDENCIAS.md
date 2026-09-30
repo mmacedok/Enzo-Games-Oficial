@@ -77,6 +77,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Botão Voltar na mesa da Batalha:** canto superior esquerdo (no celular só a seta), com a mesma confirmação do 🏠 (o 🏠 do canto direito ficava atrás da conta).
 - 2026-09-30: **"Ver cartas" na escolha de deck da Batalha:** cada deck ganhou o botão; abre as cartas do deck (com ×quantidade) e, ao tocar numa, mostra a carta grande com a frase e o que ela faz no TCG (`mostrarCartasDoDeck` em `js/batalha.js`).
 - 2026-09-30: **Placar da Batalha na ficha de cada leitor:** quadro "Batalha dos Torados" (vitórias, derrotas, empates e posição, só partidas online) na Minha ficha e nas fichas públicas; `/api/readers/:id` ganhou `batalha`. (o Henrique liberou; `CLAUDE.md` atualizado).
 - 2026-09-30: **Capítulo 6 refeito:** as 5 páginas novas (de `Enzo Games Shit/CAP6`) no lugar das antigas (apagadas, com os webp antigos) e a tarja de censura do capítulo 6 removida do `data/comics.manifest.json` (a do capítulo 5 continua).

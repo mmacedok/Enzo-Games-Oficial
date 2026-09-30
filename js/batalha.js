@@ -514,6 +514,11 @@
             m.menu.children[i].setAttribute('aria-label', rotulo);
             m.menu.children[i].title = rotulo;
         });
+        // Voltar no canto superior esquerdo (o mesmo "Voltar ao menu" do 🏠, que fica atrás da conta no canto direito).
+        m.voltar = botao('bt-voltar', null, sair);
+        m.voltar.append(el('span', 'bt-voltar-seta', '←'), el('span', 'bt-voltar-txt', 'Voltar'));
+        m.voltar.setAttribute('aria-label', 'Voltar ao menu');
+        m.voltar.title = 'Voltar ao menu';
         m.log = el('ol', 'bt-log');
 
         m.efeitos = el('div', 'bt-efeitos');   // camada de números, balões e voos
@@ -523,7 +528,7 @@
         m.seta.setAttribute('class', 'bt-seta');
         m.seta.innerHTML = '<defs><marker id="bt-ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs><path class="bt-seta-linha" d="" marker-end="url(#bt-ponta)"/>';
 
-        m.raiz.append(m.fundo, m.fundoNovo, m.npc.l, m.centro, m.eu.l, m.mao, m.menu, m.log, m.seta, m.efeitos, m.painel);
+        m.raiz.append(m.fundo, m.fundoNovo, m.npc.l, m.centro, m.eu.l, m.mao, m.menu, m.voltar, m.log, m.seta, m.efeitos, m.painel);
         raiz.appendChild(m.raiz);
         mesa = m;
         // Tocar numa dica recolhida abre de novo (e ela recolhe sozinha depois).

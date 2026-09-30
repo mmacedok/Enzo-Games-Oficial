@@ -565,6 +565,31 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 .bt-botao--forte { background: var(--caution); }
 
 .bt-menu-jogo { position: absolute; top: 8px; right: 10px; z-index: 6; display: flex; gap: 4px; }
+.bt-voltar {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    z-index: 7;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+    color: var(--paper);
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid var(--ink);
+    border-radius: 17px;
+    cursor: pointer;
+}
+.bt-voltar:hover { background: rgba(0, 0, 0, 0.8); }
+.bt-voltar-seta { font-size: 1.2rem; line-height: 1; }
+@media (max-width: 700px) {
+    .bt-voltar { top: 4px; left: 4px; width: 34px; padding: 0; justify-content: center; border-radius: 50%; }
+    .bt-voltar-txt { display: none; }
+}
 .bt-icone {
     width: 34px;
     height: 34px;
