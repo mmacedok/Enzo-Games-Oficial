@@ -5,10 +5,6 @@
    ========================================================================== */
 
 .pagina-batalha {
-    /* Fonte de gibi (Gloria Hallelujah) para os textos da Batalha; os títulos continuam em Bangers. */
-    --font-sans: 'Gloria Hallelujah', 'Comic Neue', 'Trebuchet MS', sans-serif;
-    /* a Gloria Hallelujah é fina: um contorno leve no texto reforça a leitura */
-    -webkit-text-stroke: 0.35px currentColor;
     min-height: 100dvh;
     background: #121212;
     overflow-x: hidden;
@@ -119,7 +115,6 @@ dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: 
     font-size: 1.2rem;
     font-weight: 400;
     letter-spacing: 1px;
-    -webkit-text-stroke: 0;
     color: var(--caution);
     background: rgba(18, 18, 18, 0.82);
     border: 2px solid var(--caution);
@@ -959,8 +954,6 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     border-radius: 14px;
     box-shadow: 4px 4px 0 var(--ink);
 }
-.bt-online-corpo { -webkit-text-stroke: 0.5px currentColor; font-size: 1.12rem; }
-.bt-online-corpo .bt-botao, .bt-online-corpo .bt-link { -webkit-text-stroke: 0; }
 .bt-online-msg { margin: 0; font-weight: 700; }
 .bt-online-msg--erro { color: #b3261e; }
 .bt-online-deck { margin: 0; }
@@ -1036,7 +1029,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     border-radius: 8px;
 }
 .bt-sala-nome { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.bt-sala-deck, .bt-sala-placar, .bt-sala-espera { font-size: 1rem; font-weight: 700; color: var(--paper-ink); -webkit-text-stroke: 0.5px currentColor; }
+.bt-sala-deck, .bt-sala-placar, .bt-sala-espera { font-size: 1rem; font-weight: 700; color: var(--paper-ink);}
 .bt-sala-espera { white-space: nowrap; opacity: 0.8; }
 .bt-sala-linha .bt-botao { padding: 4px 10px; font-size: 0.9rem; box-shadow: 2px 2px 0 var(--ink); }
 @media (max-width: 480px) {
