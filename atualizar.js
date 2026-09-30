@@ -165,7 +165,8 @@ function build() {
     const manifest = readManifest();
     const scanned = [...scanMainSeries(), ...scanSpinOffs()].sort((a, b) => a.order - b.order);
 
-    const comics = scanned.map(({ comic }) => {
+    // `hidden: true` no manifesto tira o gibi do catálogo sem apagar as imagens (esconder temporariamente).
+    const comics = scanned.filter(({ comic }) => manifest.comics[comic.id]?.hidden !== true).map(({ comic }) => {
         const custom = manifest.comics[comic.id] || {};
         return {
             id: custom.id || comic.id,

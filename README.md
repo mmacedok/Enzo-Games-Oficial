@@ -65,6 +65,7 @@ reconstrução. O build é idempotente — rodar duas vezes não muda o arquivo.
 | `comics.<id>.title` / `description` | Texto exibido na home e no leitor |
 | `comics.<id>.id` | Força o id final (ex.: pasta "Degustador da noite" → id `degustador`) |
 | `comics.<id>.order` | Ordem no catálogo (padrão: número do capítulo; spin-offs usam 100+) |
+| `comics.<id>.hidden` | `true` esconde o gibi do catálogo (as imagens ficam no repositório); tire a linha para publicar |
 | `censorship.<comicId>[]` | Tarja "CONTEÚDO BANIDO" por `pageIndex`, liberada com a senha |
 | `easterEggs[]` | `kind: "macarronada"` (conquista) ou `image` + `box` (imagem secreta) |
 

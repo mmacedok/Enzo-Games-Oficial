@@ -22,7 +22,8 @@
       "description": "Gritaria de quarta!"
     },
     "capitulo-8": {
-      "description": "A rotina impossível!"
+      "description": "A rotina impossível!",
+      "hidden": true
     },
     "degustador-da-noite": {
       "id": "degustador",
