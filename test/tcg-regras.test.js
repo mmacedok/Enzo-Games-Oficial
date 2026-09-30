@@ -1030,3 +1030,17 @@ test('robô: sempre faz jogada válida; normal vence o fácil na maioria', () =>
     }
     assert.ok(normal >= 40, `normal venceu só ${normal} de 60`);
 });
+
+test('texto do TCG de cada carta: existe e cita todos os ataques e o poder (não fica para trás no balanceamento)', () => {
+    for (const carta of Baralho.CARTAS) {
+        const c = COMBATE[carta.id];
+        assert.ok(carta.tcg && carta.tcg.length > 10, `${carta.id} sem texto do TCG`);
+        for (const a of c.ataques || []) assert.ok(carta.tcg.includes(a.nome), `${carta.id}: falta o ataque ${a.nome}`);
+        if (c.poder) assert.ok(carta.tcg.includes(c.poder.nome), `${carta.id}: falta o poder ${c.poder.nome}`);
+        for (const a of c.ataques || []) {
+            assert.ok(carta.tcg.includes(`${a.nome} (${a.custo} Aura)`), `${carta.id}: custo de ${a.nome} diferente do jogo`);
+            if (a.dano > 0) assert.ok(carta.tcg.includes(String(a.dano * R.ESCALA).replace(/\B(?=(\d{3})+(?!\d))/g, '.')), `${carta.id}: dano de ${a.nome} diferente do jogo`);
+        }
+        if (c.hp) assert.ok(carta.tcg.includes(`Vida ${String(c.hp * R.ESCALA).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`), `${carta.id}: vida diferente do jogo`);
+    }
+});

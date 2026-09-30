@@ -77,6 +77,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Descrição das 24 cartas:** a frase de cada carta agora aparece entre parênteses e, abaixo (carta grande do Baralho e painel da Batalha), o que a carta faz no TCG (campo `tcg` em `js/baralho-dados.js`; vida, custo e dano ×20 como no jogo). Um teste (`test/tcg-regras.test.js`) confere o texto contra `js/tcg-cartas.js`: mudou balanceamento, atualize o texto.
 - 2026-09-30: **Baralho, "Abrir de uma vez ⚡"** na abertura: o pacote brilha branco, explode num clarão
   e vai direto para a mesa final com todas as cartas (a pilha continua clicando no pacote).
 - 2026-09-30: **Baralho, presentes** (`api/baralho.js`, `js/baralho.js`, `BOAS_VINDAS`/`DIARIO`/`PRESENTES_UNICOS` em `js/baralho-dados.js`):

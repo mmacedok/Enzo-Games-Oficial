@@ -3022,17 +3022,22 @@ dialog.baralho-senha::backdrop { background: transparent; }
 
 /* Carta grande (clicar no fichário). */
 .carta-zoom {
-    width: min(340px, calc(100vw - 48px));
+    width: min(376px, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
     margin: auto;
-    padding: 0;
-    overflow: visible;
+    padding: 18px;
+    overflow-x: hidden;
+    overflow-y: auto;
     background: none;
     border: 0;
 }
 .carta-zoom::backdrop { background: var(--halftone-forte), rgba(10, 6, 3, 0.8); }
 .carta-zoom[open] { animation: balao-pop 0.3s var(--ease-pop) both; }
-.carta-zoom .pagina-fechar { position: absolute; top: -14px; right: -14px; z-index: 5; }
+.carta-zoom .pagina-fechar { position: absolute; top: 6px; right: 6px; z-index: 5; }
 .carta-zoom .carta-tcg { box-shadow: 10px 10px 0 var(--ink); }
+.carta-zoom-descricao { max-width: min(92vw, 360px); margin: 14px auto 0; padding: 10px 14px; text-align: left; color: var(--ink); background: var(--paper); border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); }
+.carta-zoom-frase { margin: 0 0 6px; font-style: italic; font-weight: 700; }
+.carta-zoom-tcg { margin: 0; font-size: 0.92rem; line-height: 1.35; white-space: pre-line; }
 .carta-zoom-legenda { margin-top: 12px; font-family: var(--font-heading); font-size: 1.2rem; letter-spacing: 1px; text-align: center; color: var(--text); }
 
 /* ---- Abertura em tela cheia (à la Balatro) ---- */
