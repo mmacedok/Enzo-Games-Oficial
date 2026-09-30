@@ -139,7 +139,7 @@ terminaram sem erro no Chromium; o resto abaixo é olho humano.
 
 ### Menu
 - [ ] 3 decks com 3 cartas em leque; escolher um marca só ele. "Outro jogador" apagado ("Em breve").
-- [ ] "Como jogar" abre as regras; Esc/botão fecha.
+- [ ] "Como jogar" abre as 2 cartilhas (Próxima/Anterior/Entendi!, setas do teclado); Esc/× fecha; abre sozinho só na 1ª visita.
 - [ ] Celular (375–390 px): sem rolagem lateral; o "Voltar" não cobre o logo.
 
 ### Preparação

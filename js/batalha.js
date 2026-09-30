@@ -321,38 +321,59 @@
         escolher(ids[0]);
     }
 
+    /**
+     * "Como jogar": as duas cartilhas ilustradas (assets/Batalha/como-jogar-1.png e -2.png).
+     * Abrem sozinhas na primeira vez que a pessoa entra na Batalha (marca no navegador) e
+     * depois pelo botão "Como jogar" do menu e da mesa.
+     */
+    const CARTILHAS = [A('como-jogar-1'), A('como-jogar-2')];
+    const CHAVE_CARTILHA = 'enzo-batalha-cartilha-vista';
+    let cartilhaDaSessao = false;
+    function cartilhaJaVista() {
+        try { return localStorage.getItem(CHAVE_CARTILHA) === '1' || cartilhaDaSessao; } catch (erro) { return cartilhaDaSessao; }
+    }
+    function marcarCartilhaVista() {
+        cartilhaDaSessao = true;
+        try { localStorage.setItem(CHAVE_CARTILHA, '1'); } catch (erro) { /* sem armazenamento: vale só nesta visita */ }
+    }
+
     function mostrarRegras() {
-        const janela = el('dialog', 'bt-regras');
-        const texto = el('div', 'bt-regras-texto');
-        const itens = [
-            ['Objetivo', 'Zere a vida do adversário (6.000). Ataque o ativo dele ou o rosto dele (arraste até o rosto) — mas o golpe no jogador é mais fraco enquanto ele tiver ativo (veja Proteção).'],
-            ['Deck', '15 cartas. Você começa com 5 na mão e compra 1 por turno.'],
-            ['Mesa', 'Um ATIVO (quem luta) e até 3 no BANCO (quem espera). O CAMPO é da mesa inteira e vale para os dois.'],
-            ['Aura', 'Todo turno você ganha 1 Aura e arrasta para uma carta sua. A Aura fica presa naquela carta e vai acumulando de um turno para o outro (as bolinhas amarelas na carta). Para atacar, o ativo precisa ter a Aura do ataque presa nele (atacar não gasta).'],
-            ['Seu turno', 'Ponha cartas no banco, jogue 1 campo, prenda a Aura, use poderes, recue se precisar e ATAQUE. Atacar acaba o turno.'],
-            ['Recuar', 'Arraste uma carta do banco para o ativo. Custa a Aura de recuo, que sai da Aura presa no ativo. Voltar para o banco tira os estados.'],
-            ['Começo', 'Quem começa não ataca no 1º turno. Quem joga em segundo ganha +1 Aura de Reforço (só para o banco).'],
-            ['Estados', '🔔 Notificado: leva 200 por turno. 🔇 Silenciado: não ataca nem recua no próximo turno (e não dá para silenciar a mesma carta dois turnos seguidos). 💘 Iludido: pode errar o ataque.'],
-            ['Carta derrubada', `O dono perde vida: ${[['comum', 'comum'], ['raro', 'raro'], ['epico', 'épico'], ['lendario', 'lendário']]
-                .map(([k, nome]) => `${nome} ${R.DANO_NOCAUTE[k].toLocaleString('pt-BR')}`).join(', ')}.`],
-            ['Proteção', 'Com o ativo dele na mesa, o golpe no jogador entra só com 35% do dano.'],
-            ['Golpe extra', 'Derrubou uma carta? Você acerta o jogador de graça com o mesmo dano (inteiro).'],
-            ['De um golpe só', 'Derrubar uma carta de vida cheia num golpe só vira a sua carta até o seu próximo turno.'],
-            ['Recarga', 'Macarronada a 300%, Vírgula-rangue, Bala Dourada e Ban de 7 Dias viram a carta para baixo até o próximo turno do dono: ela não ataca, não usa poder e não recua, mas pode levar golpe.'],
-            ['Mesa vazia', 'Sem ninguém na mesa você não perde: todo ataque vai em você até baixar alguém, que entra direto como ativo.'],
-            ['Devolver cartas', `Na sua vez, dá para devolver ao baralho até ${R.DEVOLVER_MAO_POR_TURNO} cartas da mão e 1 da mesa (com ou sem Aura; a Aura se perde). Elas não voltam para a mão: vão para o baralho, embaralhado. Tirar a sua carta da mesa não tira vida. Na Casa do Enzo Games, ainda dá para trocar 1 da mão: devolve e compra outra.`],
-            ['Jogar', 'Arraste as cartas: da mão para o banco, o campo para o meio da mesa, a Aura para uma carta, e o seu ativo até o ativo ou o rosto do adversário para atacar.'],
-            ['Dica', 'Toque em qualquer carta (até as do NPC) para ver os ataques e o que ela faz.'],
-        ];
-        for (const [t, d] of itens) {
-            const p = el('p');
-            p.append(el('strong', '', `${t}: `), d);
-            texto.appendChild(p);
+        marcarCartilhaVista();
+        const janela = el('dialog', 'bt-cartilha');
+        janela.setAttribute('aria-label', 'Como jogar');
+        const img = el('img', 'bt-cartilha-img');
+        img.decoding = 'async';
+        const contador = el('span', 'bt-cartilha-contador');
+        const anterior = botao('bt-botao', '← Anterior', () => ir(pagina - 1));
+        const proxima = botao('bt-botao bt-botao--forte', null, () => (pagina === CARTILHAS.length - 1 ? janela.close() : ir(pagina + 1)));
+        const fechar = botao('bt-cartilha-fechar', '×', () => janela.close());
+        fechar.setAttribute('aria-label', 'Fechar');
+        let pagina = 0;
+        function ir(p) {
+            pagina = Math.max(0, Math.min(CARTILHAS.length - 1, p));
+            const src = arteGrande(CARTILHAS[pagina]);
+            if (src) img.src = src; else img.removeAttribute('src');
+            img.alt = `Como jogar, parte ${pagina + 1} de ${CARTILHAS.length}`;
+            contador.textContent = `${pagina + 1} / ${CARTILHAS.length}`;
+            anterior.disabled = pagina === 0;
+            proxima.textContent = pagina === CARTILHAS.length - 1 ? 'Entendi!' : 'Próxima →';
+            // Já deixa a outra página carregando.
+            const outra = arteGrande(CARTILHAS[pagina === 0 ? 1 : 0]);
+            if (outra) new Image().src = outra;
         }
-        janela.append(el('h2', '', 'Como jogar'), texto, botao('bt-botao', 'Entendi!', () => janela.close()));
+        const controles = el('div', 'bt-cartilha-controles');
+        controles.append(anterior, contador, proxima);
+        janela.append(fechar, img, controles);
+        janela.addEventListener('click', (e) => { if (e.target === janela) janela.close(); });
+        janela.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') ir(pagina + 1);
+            else if (e.key === 'ArrowLeft') ir(pagina - 1);
+        });
         janela.addEventListener('close', () => janela.remove());
         document.body.appendChild(janela);
         janela.showModal();
+        ir(0);
+        proxima.focus({ preventScroll: true });
     }
 
     /** Placar permanente (GET /api/tcg/placar): top 50 + a sua linha, se estiver fora do top. */
@@ -2778,4 +2799,5 @@
     if (convite) telaOnline();
     else telaMenu();
     if (AUTO) comecar(params.get('nivel') || 'normal');
+    else if (!cartilhaJaVista()) mostrarRegras();   // primeira vez na Batalha: mostra as cartilhas
 })();

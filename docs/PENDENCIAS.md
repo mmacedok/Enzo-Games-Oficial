@@ -77,6 +77,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **"Como jogar" da Batalha agora são as 2 cartilhas ilustradas** (`assets/Batalha/como-jogar-1.png` e `-2.png`): abrem sozinhas na primeira visita (marca `enzo-batalha-cartilha-vista` no navegador) e pelo botão Como jogar do menu e da mesa. O texto antigo das regras foi apagado do `js/batalha.js`. Quem mudar regra precisa refazer a cartilha.
 - 2026-09-30: **Botão Voltar na mesa da Batalha:** canto superior esquerdo (no celular só a seta), com a mesma confirmação do 🏠 (o 🏠 do canto direito ficava atrás da conta).
 - 2026-09-30: **"Ver cartas" na escolha de deck da Batalha:** cada deck ganhou o botão; abre as cartas do deck (com ×quantidade) e, ao tocar numa, mostra a carta grande com a frase e o que ela faz no TCG (`mostrarCartasDoDeck` em `js/batalha.js`).
 - 2026-09-30: **Placar da Batalha na ficha de cada leitor:** quadro "Batalha dos Torados" (vitórias, derrotas, empates e posição, só partidas online) na Minha ficha e nas fichas públicas; `/api/readers/:id` ganhou `batalha`. (o Henrique liberou; `CLAUDE.md` atualizado).
