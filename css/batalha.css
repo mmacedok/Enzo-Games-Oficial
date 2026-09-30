@@ -1097,22 +1097,37 @@ dialog.bt-cartilha::backdrop { background: rgba(0, 0, 0, 0.75); }
 
 /* ---- deck customizado: 4º deck do menu e o editor ---- */
 .bt-deck-vazio { display: grid; place-items: center; width: 100%; height: 108px; margin-bottom: 4px; font: 3rem/1 var(--font-heading); color: var(--caption); border: 3px dashed var(--ink); border-radius: 8px; }
-dialog.bt-regras.bt-editor { width: min(860px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); overflow-y: auto; }
-.bt-editor-resumo { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; position: sticky; top: -18px; z-index: 2; padding: 6px 0; background: var(--paper); }
+dialog.bt-regras.bt-editor { display: flex; flex-direction: column; width: min(1000px, calc(100vw - 20px)); height: calc(100dvh - 20px); max-height: calc(100dvh - 20px); overflow: hidden; }
+dialog.bt-regras.bt-editor:not([open]) { display: none; }
+.bt-editor-corpo { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; flex: 1; min-height: 0; }
+.bt-editor-lado { display: flex; flex-direction: column; gap: 6px; min-height: 0; overflow-y: auto; padding: 2px 4px 2px 2px; }
+.bt-editor-rolagem { min-height: 0; overflow-y: auto; padding: 4px 6px 4px 2px; }
+.bt-editor-resumo { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
 .bt-editor-chip { padding: 3px 12px; font-family: var(--font-heading); font-size: 1.2rem; background: var(--paper); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 2px 2px 0 var(--ink); }
 .bt-editor-chip--ok { background: #b9f5b1; }
 .bt-editor-chip--erro { background: #ffb3a8; }
-.bt-editor-erro { min-height: 1.3em; margin: 2px 0 6px; color: #b3261e; font-weight: 700; }
-.bt-editor-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; margin: 6px 0 12px; padding: 0; list-style: none; }
-.bt-editor-item { display: grid; justify-items: center; gap: 4px; padding: 6px 4px; border: 3px solid transparent; border-radius: 10px; }
+.bt-editor-erro { min-height: 1.3em; margin: 0; color: #b3261e; font-weight: 700; }
+.bt-editor-erro:empty { display: none; }
+.bt-editor-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.bt-editor-item { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px; background: var(--paper); border: 3px solid var(--ink); border-radius: 10px; }
 .bt-editor-item--no { background: #fff3c4; border-color: var(--orange); }
 .bt-editor-carta .carta-tcg { width: 96px; }
+.bt-editor-info { display: grid; gap: 3px; min-width: 0; }
+.bt-editor-nome { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; letter-spacing: .5px; }
+.bt-editor-frase { font-size: .8rem; opacity: .7; }
+.bt-editor-desc { margin: 0; font-size: .82rem; line-height: 1.3; white-space: pre-line; }
 .bt-editor-controle { display: flex; align-items: center; gap: 8px; }
 .bt-editor-mm { width: 40px; height: 40px; padding: 0; font: 1.6rem/1 var(--font-heading); color: var(--paper-ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 50%; box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
 .bt-editor-mm:disabled { opacity: .35; cursor: default; }
 .bt-editor-qtd { min-width: 1.6ch; text-align: center; font: 1.6rem/1 var(--font-heading); }
 .bt-editor-tem { font-size: .8rem; opacity: .75; }
-.bt-editor-acoes { display: flex; flex-wrap: wrap; gap: 8px; position: sticky; bottom: -18px; padding: 8px 0 0; background: var(--paper); }
+.bt-editor-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.bt-editor-acoes .bt-botao:disabled { opacity: 1; color: #777; background: #e4dcc4; box-shadow: none; cursor: default; }
+@media (max-width: 760px) {
+    .bt-editor-corpo { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    .bt-editor-lado { max-height: 42dvh; }
+    .bt-editor-grade { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* ---- Decks de players ---- */
 .bt-players { display: grid; gap: 2px; justify-items: center; width: 100%; padding: 10px 14px; color: var(--paper-ink); text-align: center; background: var(--halftone), var(--paper); border: 3px dashed var(--ink); border-radius: 10px; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
@@ -1137,3 +1152,18 @@ dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
 .bt-editor-ok { color: #1d7a1d; }
 
 .bt-aviso-flutuante { position: fixed; left: 50%; bottom: 24px; z-index: 10000; max-width: min(90vw, 460px); padding: 10px 16px; font-weight: 700; text-align: center; color: #fff; background: #b3261e; border: 3px solid var(--ink); border-radius: 10px; box-shadow: 3px 3px 0 var(--ink); transform: translateX(-50%); }
+
+/* Chat no PC: fica sempre aberto numa coluna ao lado da mesa (a mesa cede o espaço), nunca por cima das cartas. */
+@media (min-width: 1120px) {
+    .bt-mesa:has(> .bt-chat) {
+        --bt-mw: min(980px, calc(100vw - 300px));
+        --bt-ml: max(0px, calc((100vw - var(--bt-mw) - 300px) / 2));
+        width: var(--bt-mw);
+        margin-left: var(--bt-ml);
+        margin-right: 0;
+    }
+    .bt-chat { position: fixed; z-index: 7; top: 64px; bottom: 12px; left: calc(var(--bt-ml) + var(--bt-mw) + 12px); width: 272px; }
+    .bt-chat-abrir, .bt-chat-fechar { display: none; }
+    .bt-chat-painel { display: flex; flex: 1; width: 100%; max-height: none; min-height: 0; }
+    .bt-chat-lista { flex: 1; max-height: none; }
+}

@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-09-30 · Montador de decks e chat:** o montador agora tem painel fixo à esquerda (contadores, nome, erro e botões, sem barra por cima das cartas) e a lista de cartas rolando ao lado, cada carta com nome, frase e descrição (`tcg`). O chat da partida, em telas de 1120px ou mais, fica sempre aberto numa coluna ao lado da mesa (a mesa cede a largura, `:has(> .bt-chat)`); abaixo disso continua o botão 💬. Conferido só em emulação (1024 e 1366): falta ver numa partida online de verdade.
+
 - **2026-09-30 · Sem limite de partidas online:** saíram os limites de 50 partidas/dia no site e 10 por jogador (`conferirLimites` em `api/tcg.js`; teste T7 removido). O limite de créditos contra o NPC (10 premiadas/dia) continua. Se o custo do servidor preocupar, o freio pode voltar.
 
 - **2026-09-30 · "Criar sala" sem resposta:** o erro do servidor (ex.: limite de 10 partidas online por dia, 429) era mostrado em balão, que só existe na mesa e ficava mudo no menu. Agora o erro aparece como aviso vermelho flutuante (`balao` em `js/batalha.js`). Se o Henrique ainda vir a sala não abrir, o motivo aparece escrito.

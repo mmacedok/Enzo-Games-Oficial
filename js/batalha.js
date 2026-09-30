@@ -410,6 +410,11 @@
             const li = el('li', 'bt-editor-item');
             const carta = el('div', 'bt-editor-carta');
             carta.appendChild(UI.carta(c.id));
+            const info = el('div', 'bt-editor-info');
+            info.appendChild(el('strong', 'bt-editor-nome', nomeVisivel(c.id)));
+            const dc = def(c.id);
+            if (dc.frase) info.appendChild(el('span', 'bt-editor-frase', `(${dc.frase})`));
+            if (dc.tcg) info.appendChild(el('p', 'bt-editor-desc', dc.tcg));
             const menos = botao('bt-editor-mm', '−', () => mexer(c, -1));
             const mais = botao('bt-editor-mm', '+', () => mexer(c, 1));
             menos.setAttribute('aria-label', `Tirar ${nomeVisivel(c.id)}`);
@@ -417,7 +422,8 @@
             const qtd = el('b', 'bt-editor-qtd', '0');
             const controle = el('div', 'bt-editor-controle');
             controle.append(menos, qtd, mais);
-            li.append(carta, controle, el('span', 'bt-editor-tem', `até ${limiteDe(c)}${c.raridade === 'lendario' ? ' · lendária' : ''}`));
+            info.append(el('span', 'bt-editor-tem', `até ${limiteDe(c)}${c.raridade === 'lendario' ? ' · lendária' : ''}`), controle);
+            li.append(carta, info);
             grade.appendChild(li);
             linhas.set(c.id, { menos, mais, qtd, li });
         }
@@ -462,12 +468,19 @@
         const fechar = botao('bt-botao', 'Cancelar', () => janela.close());
         const acoes = el('div', 'bt-editor-acoes');
         acoes.append(salvar, listar, ...(postar ? [postar] : []), limpar, fechar);
+        // Painel fixo ao lado (contadores, nome, erro e botões) e a lista de cartas rolando ao lado dele: nada fica por cima das cartas.
+        const lado = el('div', 'bt-editor-lado');
+        lado.append(resumo, nomeCampo, descCampo,
+            el('p', 'bt-placar-nota', custom.publico ? 'Este deck está listado em "Decks de players": outros jogadores podem ver e copiar.' : 'Quer mostrar o seu deck? "Salvar e listar" coloca ele em "Decks de players" (sem links no nome).'),
+            erro, acoes);
+        const rolagem = el('div', 'bt-editor-rolagem');
+        rolagem.appendChild(grade);
+        const corpo = el('div', 'bt-editor-corpo');
+        corpo.append(lado, rolagem);
         janela.append(
             el('h2', '', 'Seu deck customizado'),
             el('p', 'bt-placar-nota', `Escolha qualquer carta. ${lim.tamanho} cartas, no máximo ${lim.lendarias} lendárias (1 cópia de cada) e até ${lim.copias} cópias das outras.`),
-            resumo, nomeCampo, descCampo,
-            el('p', 'bt-placar-nota', custom.publico ? 'Este deck está listado em "Decks de players": outros jogadores podem ver e copiar.' : 'Quer mostrar o seu deck? "Salvar e listar" coloca ele em "Decks de players" (sem links no nome).'),
-            erro, grade, acoes);
+            corpo);
         janela.addEventListener('close', () => janela.remove());
         document.body.appendChild(janela);
         janela.showModal();
@@ -2105,7 +2118,10 @@
         abrir.setAttribute('aria-label', 'Comentários da partida');
         abrir.title = 'Comentários da partida';
         const painel = el('div', 'bt-chat-painel');
-        painel.hidden = true;
+        // No PC o painel fica sempre aberto numa coluna ao lado da mesa (ver css); no celular abre e fecha pelo botão 💬.
+        const colunaFixa = window.matchMedia('(min-width: 1120px)');
+        painel.hidden = !colunaFixa.matches;
+        colunaFixa.addEventListener('change', () => { painel.hidden = !colunaFixa.matches; });
         const lista = el('ol', 'bt-chat-lista');
         const form = el('form', 'bt-chat-form');
         const campo = el('input', 'bt-chat-campo');
