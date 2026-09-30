@@ -117,3 +117,22 @@ test('A5: a ficha da conta traz os acessos; registros antigos são apagados', as
     const restam = await db.query("SELECT evento FROM acessos WHERE evento = 'login'");
     assert.equal(restam.length, 0);
 });
+
+test('A6: visitante sem login é registrado (1 por IP a cada 30 min) e o admin filtra por ele', async () => {
+    const { relogio, navegador } = montar();
+    const chefe = navegador(SP);
+    await login(chefe, 'chefe', 'Chefe');
+    const v1 = navegador(BH);
+    assert.equal((await v1('POST', '/api/visita', { pagina: '/reader.html?x=1' })).status, 200);
+    await v1('POST', '/api/visita', { pagina: '/index.html' }); // mesmo IP: não duplica
+    await navegador(SP)('POST', '/api/visita', { pagina: 'sem-barra' }); // página inválida vira vazio
+    const { acessos } = (await chefe('GET', '/api/admin/acessos?anonimo=1')).dados;
+    assert.equal(acessos.length, 2);
+    assert.ok(acessos.every((a) => a.userId === null && a.evento === 'visitante'));
+    assert.deepEqual(acessos.map((a) => a.pagina).sort((x, y) => String(x).localeCompare(String(y))), ['/reader.html?x=1', null]);
+    const resumo = (await chefe('GET', '/api/admin/acessos/resumo')).dados;
+    assert.deepEqual(resumo.semLogin, { acessos: 2, ips: 2 });
+    relogio.agora += 31 * 60 * 1000;
+    await v1('POST', '/api/visita', { pagina: '/index.html' });
+    assert.equal((await chefe('GET', '/api/admin/acessos?anonimo=1')).dados.acessos.length, 3);
+});

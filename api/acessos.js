@@ -5,7 +5,8 @@
 // para outros leitores: só o admin lê, pelo terminal (`ips`, `ip <endereço>`, ficha da conta).
 // Os registros somem sozinhos depois de RETENCAO_DIAS.
 //
-//   GET /api/admin/acessos?conta=&ip=&pais=&lugar=&pagina=            lista (lugar = pedaço do estado ou da cidade) (mais novos primeiro)
+//   POST /api/visita { pagina }                                       (público) visitante sem login; o site avisa 1x a cada 30 min
+//   GET /api/admin/acessos?conta=&ip=&pais=&lugar=&anonimo=1&pagina=            lista (lugar = pedaço do estado ou da cidade) (mais novos primeiro)
 //   GET /api/admin/acessos/resumo                                     estados/cidades e IPs repartidos entre contas
 //
 // O IP vem de CF-Connecting-IP (Cloudflare) e o lugar de request.cf (ou dos cabeçalhos de
@@ -36,6 +37,7 @@ const EVENTOS = [
     [/^\/api\/tcg\/salas\/[^/]+\/entrar$/, 'entrar-sala'],
     [/^\/api\/tcg\/partidas\/[^/]+\/comentarios$/, 'comentario'],
     [/^\/api\/tcg\/npc$/, 'npc'],
+    [/^\/api\/visita$/, 'visitante'],
     [/^\/api\/admin\//, 'admin'],
 ];
 
@@ -71,8 +73,8 @@ async function gravar(ctx, evento, userId) {
     const o = origemDe(ctx.request);
     const agora = ctx.agora();
     await ctx.db.query(
-        `INSERT INTO acessos (id, user_id, ip, pais, estado, cidade, evento, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [crypto.randomUUID(), userId, o.ip, o.pais, o.estado, o.cidade, evento, agora]);
+        `INSERT INTO acessos (id, user_id, ip, pais, estado, cidade, evento, pagina, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [crypto.randomUUID(), userId, o.ip, o.pais, o.estado, o.cidade, evento, ctx.acessoPagina ?? null, agora]);
     // Faxina barata: no máximo uma por hora por processo.
     if (agora - ultimaFaxina > 60 * 60 * 1000) {
         ultimaFaxina = agora;
@@ -98,6 +100,14 @@ async function registrarAcesso(ctx) {
             if (recente) return;
             evento = 'visita';
         }
+        if (evento === 'visitante') {
+            // Sem login: um registro por IP a cada 30 minutos (quem recarrega a página não enche o banco).
+            const { ip } = origemDe(request);
+            const [recente] = await ctx.db.query(
+                `SELECT 1 AS x FROM acessos WHERE evento = 'visitante' AND ip IS NOT DISTINCT FROM $1 AND created_at > $2 LIMIT 1`,
+                [ip, ctx.agora() - VISITA_INTERVALO]);
+            if (recente) return;
+        }
         if (evento) await gravar(ctx, evento, userId);
     } catch (erro) {
         console.error('[acessos]', erro);
@@ -106,10 +116,19 @@ async function registrarAcesso(ctx) {
 
 const linha = (l) => ({
     id: l.id, userId: l.user_id, nome: l.nome || null, email: l.email || null,
-    ip: l.ip, pais: l.pais, estado: l.estado, cidade: l.cidade, evento: l.evento, em: Number(l.created_at),
+    ip: l.ip, pais: l.pais, estado: l.estado, cidade: l.cidade, evento: l.evento, pagina: l.pagina || null, em: Number(l.created_at),
 });
 
 const rotas = [
+    {
+        // Visitante sem login (o site chama uma vez a cada 30 min). O registro é feito por registrarAcesso.
+        metodo: 'POST', caminho: '/api/visita',
+        async executar(ctx) {
+            const { pagina } = await ctx.corpo();
+            ctx.acessoPagina = typeof pagina === 'string' && pagina.startsWith('/') ? limpo(pagina, 80) : null;
+            return { ok: true };
+        },
+    },
     {
         metodo: 'GET', caminho: '/api/admin/acessos', admin: true,
         async executar(ctx) {
@@ -118,15 +137,16 @@ const rotas = [
             const conta = q.get('conta') ? exigirUuid(q.get('conta'), 'conta não encontrada') : null;
             const ip = limpo(q.get('ip'), 64);
             const pais = limpo(q.get('pais'), 2)?.toUpperCase() ?? null;
+            const anonimo = q.get('anonimo') === '1';
             const lugar = limpo(q.get('lugar'), 80);
             const filtroLugar = lugar ? `%${lugar.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
             const linhas = await ctx.db.query(
                 `SELECT a.*, u.display_name AS nome, u.email
                    FROM acessos a LEFT JOIN users u ON u.id = a.user_id
-                  WHERE ($1::text IS NULL OR a.user_id = $1) AND ($2::text IS NULL OR a.ip = $2)
+                  WHERE ($1::text IS NULL OR a.user_id = $1) AND ($7::boolean IS NOT TRUE OR a.user_id IS NULL) AND ($2::text IS NULL OR a.ip = $2)
                     AND ($3::text IS NULL OR a.pais = $3) AND ($4::text IS NULL OR a.estado ILIKE $4 OR a.cidade ILIKE $4)
                   ORDER BY a.created_at DESC, a.id LIMIT $5 OFFSET $6`,
-                [conta, ip, pais, filtroLugar, POR_PAGINA + 1, pagina * POR_PAGINA]);
+                [conta, ip, pais, filtroLugar, POR_PAGINA + 1, pagina * POR_PAGINA, anonimo]);
             return { acessos: linhas.slice(0, POR_PAGINA).map(linha), pagina, maisPaginas: linhas.length > POR_PAGINA, retencaoDias: RETENCAO_DIAS };
         },
     },
@@ -143,8 +163,10 @@ const rotas = [
                    FROM acessos WHERE created_at > $1 AND ip IS NOT NULL AND user_id IS NOT NULL
                   GROUP BY ip HAVING COUNT(DISTINCT user_id) > 1
                   ORDER BY COUNT(DISTINCT user_id) DESC, MAX(created_at) DESC LIMIT 30`, [desde]);
+            const [v] = await ctx.db.query(
+                `SELECT COUNT(*) AS acessos, COUNT(DISTINCT ip) AS ips FROM acessos WHERE created_at > $1 AND user_id IS NULL`, [desde]);
             return {
-                dias: 30, retencaoDias: RETENCAO_DIAS,
+                dias: 30, semLogin: { acessos: Number(v.acessos), ips: Number(v.ips) }, retencaoDias: RETENCAO_DIAS,
                 lugares: lugares.map((l) => ({ pais: l.pais, estado: l.estado, cidade: l.cidade, acessos: Number(l.acessos), contas: Number(l.contas), ips: Number(l.ips) })),
                 repartidos: repartidos.map((l) => ({ ip: l.ip, contas: Number(l.contas), acessos: Number(l.acessos), ultimo: Number(l.ultimo) })),
             };

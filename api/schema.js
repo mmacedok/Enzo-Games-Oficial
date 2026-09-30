@@ -89,6 +89,7 @@ module.exports = [
         estado TEXT,
         cidade TEXT,
         evento TEXT NOT NULL,
+        pagina TEXT,
         created_at BIGINT NOT NULL
     )`,
     'CREATE INDEX IF NOT EXISTS idx_acessos_user ON acessos(user_id, created_at)',

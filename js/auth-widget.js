@@ -38,9 +38,17 @@
         return { records, achievements: conquistasLocais(), lastRead: comicId && chapterId ? { comicId, chapterId } : null };
     }
 
+    /** Visitante sem login: avisa o servidor (no máximo 1x a cada 30 min por navegador) para o registro de acessos do admin. */
+    function avisarVisita() {
+        const agora = Date.now();
+        if (agora - (Number.parseInt(lerLocal('enzoVisita'), 10) || 0) < 30 * 60 * 1000) return;
+        gravarLocal('enzoVisita', String(agora));
+        pedir('/api/visita', { pagina: location.pathname }).catch(() => {});
+    }
+
     async function carregarConta() {
         const eu = await pedir('/api/auth/me');
-        if (!eu.dados?.loggedIn) { estado.usuario = null; estado.admin = false; estado.dados = null; return; }
+        if (!eu.dados?.loggedIn) { avisarVisita(); estado.usuario = null; estado.admin = false; estado.dados = null; return; }
         estado.usuario = eu.dados.user;
         estado.admin = eu.dados.admin === true;
         const sync = await pedir('/api/user/sync');

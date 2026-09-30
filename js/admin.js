@@ -898,6 +898,7 @@
                 const [resumo, lista] = await Promise.all([pedir('/api/admin/acessos/resumo'), pedir('/api/admin/acessos')]);
                 novaTela('ips', [['acessos', null]]);
                 apagado(`guarda login, partidas, cartas, compras, salas e ações de admin; some depois de ${resumo.retencaoDias} dias.`);
+                linha([`sem login (${resumo.dias} dias): ${resumo.semLogin.ips} IP(s), ${resumo.semLogin.acessos} acesso(s) `, botao('ver', 'anonimos', { link: true })]);
                 secao(`lugares · últimos ${resumo.dias} dias`);
                 if (resumo.lugares.length) {
                     tabela(['lugar', 'acessos', 'contas', 'IPs'], resumo.lugares.map((l) => [
@@ -927,6 +928,18 @@
                 const contas = new Map(acessos.filter((a) => a.userId).map((a) => [a.userId, a.nome]));
                 linha([`${contas.size} conta(s): `, ...[...contas].flatMap(([id, nome]) => [botao(primeiroNome(nome), `open ${id}`, { link: true }), ' '])]);
                 listarAcessos(acessos);
+                if (maisPaginas) apagado('mostrando os 50 mais recentes.');
+            },
+        },
+        anonimos: {
+            desc: 'quem entrou sem login (IP, lugar e página)',
+            async fn() {
+                const { acessos, maisPaginas } = await pedir('/api/admin/acessos?anonimo=1');
+                novaTela('anonimos', [['acessos', 'ips'], ['sem login', null]]);
+                if (!acessos.length) { apagado('nenhum visitante sem login guardado ainda (só aparece no site publicado).'); return; }
+                tabela(['quando', 'IP', 'lugar', 'página'], acessos.map((a) => [
+                    data(a.em), a.ip ? botao(a.ip, `ip ${a.ip}`, { link: true }) : span('apagado', '—'), lugar(a), a.pagina || span('apagado', '—'),
+                ]));
                 if (maisPaginas) apagado('mostrando os 50 mais recentes.');
             },
         },
