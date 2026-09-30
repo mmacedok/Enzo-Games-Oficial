@@ -1036,6 +1036,13 @@
         window.addEventListener('pointermove', moverArrasto);
         window.addEventListener('pointerup', soltarArrasto);
         window.addEventListener('pointercancel', cancelarArrasto);
+        // iPhone: o Safari nem sempre respeita touch-action e rola a página no meio do arrasto
+        // (e aí cancela o ponteiro). Um touchmove não passivo segura a página enquanto arrasta.
+        window.addEventListener('touchmove', segurarPagina, { passive: false });
+    }
+
+    function segurarPagina(e) {
+        if (arrasto && e.cancelable) e.preventDefault();
     }
 
     /** Para onde dá para soltar: { el, jogada } (vale), { el, motivo } (não vale e diz por quê), ou especiais. */
@@ -1163,6 +1170,7 @@
         window.removeEventListener('pointermove', moverArrasto);
         window.removeEventListener('pointerup', soltarArrasto);
         window.removeEventListener('pointercancel', cancelarArrasto);
+        window.removeEventListener('touchmove', segurarPagina);
         if (!arrasto) return;
         arrasto.fantasma?.remove();
         arrasto.alvo.classList.remove('bt-arrastando');

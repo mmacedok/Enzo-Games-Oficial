@@ -433,7 +433,10 @@
 .bt-espiada-nota { font-size: 0.85rem; opacity: 0.8; }
 
 /* ------------------------------------------------------------------ arrastar */
-.bt-mesa { -webkit-user-select: none; user-select: none; }
+.bt-mesa { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.bt-mesa img { -webkit-user-drag: none; }
+/* Sem o "elástico" do iPhone puxando a página enquanto se joga. */
+html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 .bt-carta, .bt-aura { touch-action: none; }
 .bt-fantasma {
     position: fixed;
