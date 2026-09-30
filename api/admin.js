@@ -9,6 +9,7 @@
 //   POST /api/admin/users/:id/achievement         { achievement, unlocked }
 //   POST /api/admin/users/:id/role                { role: 'player' | 'banned' }
 //   POST /api/admin/users/:id/fala                { fala }
+//   POST /api/admin/users/:id/censura             { liberada } libera/trava a censura (tarja do Cabo Côco) só para esta conta
 //   POST /api/admin/users/:id/kick                derruba as sessões
 //   GET  /api/admin/scores?game=                  partidas recentes de todo mundo
 //   POST /api/admin/scores/:id/verify             { verified } (entra/sai do ranking)
@@ -114,7 +115,7 @@ const rotas = [
             const busca = String(ctx.url.searchParams.get('q') || '').trim().slice(0, 80);
             const filtro = busca ? `%${busca.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
             const linhas = await ctx.db.query(
-                `SELECT u.id, u.display_name, u.email, u.role, u.avatar_url, u.fala, u.created_at, u.last_login_at,
+                `SELECT u.id, u.display_name, u.email, u.role, u.avatar_url, u.fala, u.censura_liberada, u.created_at, u.last_login_at,
                         COALESCE(a.conquistas, 0) AS conquistas, COALESCE(a.secretos, 0) AS secretos,
                         COALESCE(s.partidas, 0) AS partidas
                    FROM users u
@@ -130,7 +131,8 @@ const rotas = [
             return {
                 users: linhas.slice(0, POR_PAGINA).map((l) => ({
                     id: l.id, name: l.display_name, email: l.email, role: l.role, avatarUrl: l.avatar_url || null,
-                    fala: l.fala || null, criadoEm: Number(l.created_at), ultimoLogin: Number(l.last_login_at),
+                    fala: l.fala || null, censuraLiberada: l.censura_liberada === true,
+                    criadoEm: Number(l.created_at), ultimoLogin: Number(l.last_login_at),
                     conquistas: Number(l.conquistas), secretos: Number(l.secretos), partidas: Number(l.partidas),
                     admin: ehAdmin(ctx.config, l),
                 })),
@@ -158,7 +160,8 @@ const rotas = [
             const baralho = await require('./baralho.js').estado(ctx.db, id);
             return {
                 id: u.id, name: u.display_name, email: u.email, role: u.role, avatarUrl: u.avatar_url || null,
-                fala: u.fala || null, criadoEm: Number(u.created_at), ultimoLogin: Number(u.last_login_at),
+                fala: u.fala || null, censuraLiberada: u.censura_liberada === true,
+                criadoEm: Number(u.created_at), ultimoLogin: Number(u.last_login_at),
                 admin: ehAdmin(ctx.config, u), sessoes: Number(sessoes),
                 achievements: conquistas.map((c) => ({ id: c.achievement_id, em: Number(c.unlocked_at) })),
                 scores: partidas.map(partida),
@@ -201,6 +204,19 @@ const rotas = [
             if (role === 'banned') await ctx.db.query('DELETE FROM sessions WHERE user_id = $1', [alvo.id]);
             if (alvo.role !== role) await registrar(ctx, role === 'banned' ? 'ban' : 'unban', alvo.id);
             return { role };
+        },
+    },
+    {
+        metodo: 'POST', caminho: new RegExp(`^/api/admin/users/${SEGMENTO}/censura$`), admin: true,
+        async executar(ctx) {
+            const alvo = await exigirUsuario(ctx, ctx.params[0]);
+            const { liberada } = await ctx.corpo();
+            if (typeof liberada !== 'boolean') throw new HttpError(400, 'liberada deve ser true ou false');
+            const [antes] = await ctx.db.query('SELECT censura_liberada FROM users WHERE id = $1', [alvo.id]);
+            await ctx.db.query('UPDATE users SET censura_liberada = $2 WHERE id = $1', [alvo.id, liberada]);
+            const mudou = (antes?.censura_liberada === true) !== liberada;
+            if (mudou) await registrar(ctx, liberada ? 'censura-on' : 'censura-off', alvo.id);
+            return { liberada, mudou };
         },
     },
     {

@@ -348,6 +348,7 @@
             ['id', [idCurto(c.id), ' ', copiar]],
             ['e-mail', c.email],
             ['papel', [c.role, ' ', ...(souEu || c.admin ? [] : [banido ? botao('desbanir', 'unban') : botaoSeguro('banir', 'ban --sim')])]],
+            ['censura', [c.censuraLiberada ? span('ok', 'liberada') : span('apagado', 'travada'), ' ', c.censuraLiberada ? botao('travar', 'censura off') : botao('liberar', 'censura on')]],
             ['desde', data(c.criadoEm)],
             ['último login', data(c.ultimoLogin)],
             ['sessões ativas', [sessoes, ...(souEu ? [] : [' ', botaoSeguro('derrubar', 'kick --sim')])]],
@@ -405,7 +406,7 @@
                 const qtd = bInfo.colecao?.[carta.id];
                 return [
                     String(carta.numero),
-                    carta.censurada && !window.EnzoConta?.temConquista?.('cabo-coco') ? '???' : carta.nome,
+                    carta.nome,
                     carta.raridade,
                     qtd ? String(qtd) : span('apagado', '·'),
                 ];
@@ -546,7 +547,7 @@
             String(i + 1),
             botao(u.name, `open ${u.id}`, { link: true }),
             u.email,
-            u.role === 'banned' ? span('erro', 'banido') : [u.role, u.admin ? span('ok', '*') : null],
+            u.role === 'banned' ? span('erro', 'banido') : [u.role, u.admin ? span('ok', '*') : null, u.censuraLiberada ? span('aviso', ' 🔓') : null],
             String(u.conquistas),
             String(u.secretos),
             String(u.partidas),
@@ -746,6 +747,21 @@
                 else pedirConfirmacao(`banir ${alvo.name}?`, banir);
             },
         },
+        censura: {
+            uso: 'censura [on|off]',
+            desc: 'libera (on) ou trava (off) a censura do Cabo Côco na conta aberta; sem argumento inverte',
+            async fn(args) {
+                const alvo = exigirAlvo();
+                const pedido = (args[0] || '').toLowerCase();
+                if (pedido && !['on', 'off'].includes(pedido)) throw new Error('uso: censura [on|off].');
+                const liberar = pedido ? pedido === 'on' : !alvo.censuraLiberada;
+                const r = await pedir(`/api/admin/users/${alvo.id}/censura`, { liberada: liberar });
+                alvo.censuraLiberada = liberar;
+                if (!r.mudou) notificar(`censura de ${primeiroNome(alvo.name)} já estava ${liberar ? 'liberada' : 'travada'}.`, 'aviso');
+                else ok(`censura de ${primeiroNome(alvo.name)} ${liberar ? 'LIBERADA (vê o Cabo Côco sem tarja)' : 'travada de novo'}.`);
+                await recarregarConta();
+            },
+        },
         unban: {
             desc: 'desbane a conta aberta',
             async fn() {
@@ -921,6 +937,7 @@
         fila = fila.then(async () => {
             let lento = setTimeout(() => {
                 lento = 0;
+                if (feedback.textContent) return;   // já há um aviso (sucesso, erro ou pergunta): não sobrescreve
                 notificar('… carregando', 'apagado', { fixo: true });
                 feedback.dataset.carregando = '1';
             }, 400);

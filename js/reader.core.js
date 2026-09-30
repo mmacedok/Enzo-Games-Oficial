@@ -145,14 +145,8 @@
         mask.innerHTML =
             '<span class="cabo-coco-text">CONTEÚDO BANIDO<br>' +
             '<small>EM 456 PAÍSES</small></span>';
-        mask.setAttribute('role', 'button');
-        mask.tabIndex = 0;
-        mask.setAttribute('aria-label', 'Desbloquear conteúdo');
-        mask.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPasswordModal(); } });
-        mask.addEventListener('click', (event) => {
-            event.stopPropagation();
-            openPasswordModal();
-        });
+        mask.setAttribute('role', 'img');
+        mask.setAttribute('aria-label', 'Conteúdo banido em 456 países');
         return mask;
     }
 
@@ -395,17 +389,8 @@
         updateZoomUI();
     }
 
-    // ---------------------------------------------------------------- password
-    /** Pede a senha do Cabo Côco; com a certa, tira as tarjas e dá a conquista. */
-    function openPasswordModal() {
-        window.EnzoSenha?.pedir().then((confirmou) => {
-            if (!confirmou) return;
-            unlockCensorship();
-            conta()?.conquista('cabo-coco');
-        });
-    }
-
-    /** Tira as tarjas do Cabo Côco (senha certa agora ou conquista já salva na conta). */
+    // ---------------------------------------------------------------- censura
+    /** Tira as tarjas do Cabo Côco (só para conta que o admin liberou no terminal). */
     function unlockCensorship() {
         state.unlocked = true;
         document.querySelectorAll('.cabo-coco-mask').forEach((mask) => {
@@ -471,7 +456,7 @@
     /** Aplica a conta ao capítulo aberto: tarja liberada e "continuar de onde parou". */
     function applyAccount() {
         const account = conta();
-        if (!state.unlocked && account?.temConquista?.('cabo-coco')) unlockCensorship();   // vale também sem login (conquista no aparelho)
+        if (!state.unlocked && account?.censuraLiberada?.()) unlockCensorship();   // sem login ou sem liberação do admin: continua censurado
         if (!account?.usuario || !state.comic) return;
         // Edições lidas antes desta conquista existir também contam.
         account.verificarColecoes?.(state.db);
@@ -531,9 +516,6 @@
                     break;
                 case '0':
                     resetZoom();
-                    break;
-                case 'Escape':
-                    window.EnzoSenha?.fechar();
                     break;
                 default:
                     break;

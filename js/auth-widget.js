@@ -788,6 +788,8 @@
         enviarPartida,
         melhorRecorde,
         temConquista,
+        /** A censura só some para quem o admin liberou no terminal (`censura on`); sem login, sempre censurado. */
+        censuraLiberada: () => estado.usuario?.censuraLiberada === true,
         conquista,
         anunciarConquista,
         verificarColecoes,

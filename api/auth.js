@@ -44,6 +44,7 @@ function usuarioPublico(usuario) {
         firstName: primeiroNome(usuario.display_name),
         avatarUrl: usuario.avatar_url || null,
         fala: usuario.fala || null,
+        censuraLiberada: usuario.censura_liberada === true,
     };
 }
 

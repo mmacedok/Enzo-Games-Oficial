@@ -46,13 +46,7 @@
         check(!viewer.open && document.activeElement === cards[0], 'fechar devolve foco');
         const locked = document.querySelector('[data-locked="true"]');
         locked.click();
-        const input = document.querySelector('#password-input');
-        input.value = 'errada'; document.querySelector('#password-submit').click();
-        check(getComputedStyle(document.querySelector('#password-error')).display !== 'none', 'senha incorreta dá feedback');
-        input.value = 'copodelagrimas'; document.querySelector('#password-submit').click();
-        await wait(0);   // o desbloqueio vem depois da promessa de js/senha.js
-        check(locked.dataset.locked === 'false' && viewer.open, 'senha correta revela e abre ficha');
-        viewer.close();
+        check(!document.querySelector('#password-input') && locked.dataset.locked === 'true' && !viewer.open, 'ficha banida não abre nem pede senha (só o admin libera)');
     }
     if (path === '/reader.html') {
         check(document.querySelectorAll('.webtoon-image').length > 1, 'capítulo renderizado');
@@ -70,12 +64,8 @@
         const mask = document.querySelector('.cabo-coco-mask');
         if (mask) {
             mask.click();
-            const input = document.querySelector('#password-input');
-            input.value = 'errada'; document.querySelector('#password-submit').click();
-            check(getComputedStyle(document.querySelector('#password-error')).display !== 'none', 'leitor rejeita senha incorreta');
-            input.value = 'copodelagrimas'; document.querySelector('#password-submit').click();
-            await wait(550);
-            check(!document.querySelector('.cabo-coco-mask'), 'leitor remove censura após senha');
+            await wait(100);
+            check(!!document.querySelector('.cabo-coco-mask') && !document.querySelector('#password-input'), 'leitor mantém a censura e não pede senha');
         }
         const bar = document.querySelector('.floating-ui-container').getBoundingClientRect();
         check(document.querySelector('.page-wrapper').getBoundingClientRect().top >= bar.bottom - 12, 'barra não cobre a primeira página');

@@ -210,3 +210,27 @@ test('reveal: só admin revela/esconde um gibi hidden; a lista de revelados é p
     const acoes = (log.log || log.acoes || log).map((l) => `${l.acao}:${l.detalhe}`);
     assert.ok(acoes.includes('reveal:capitulo-8') && acoes.includes('hide:capitulo-8'), JSON.stringify(acoes));
 });
+
+test('censura: começa travada para todos; só o admin libera/trava uma conta e o log registra', async (t) => {
+    const { db, chefe, leitor, ele } = await cenario();
+    t.after(() => db.close());
+
+    assert.equal((await leitor('GET', '/api/auth/me')).dados.user.censuraLiberada, false);
+    assert.equal((await leitor('POST', `/api/admin/users/${ele.id}/censura`, { liberada: true })).status, 404);
+    assert.equal((await chefe('POST', `/api/admin/users/${ele.id}/censura`, { liberada: 'sim' })).status, 400);
+
+    const on = await chefe('POST', `/api/admin/users/${ele.id}/censura`, { liberada: true });
+    assert.deepEqual(on.dados, { liberada: true, mudou: true });
+    assert.equal((await chefe('POST', `/api/admin/users/${ele.id}/censura`, { liberada: true })).dados.mudou, false);
+    assert.equal((await leitor('GET', '/api/auth/me')).dados.user.censuraLiberada, true);
+    assert.equal((await chefe('GET', '/api/auth/me')).dados.user.censuraLiberada, false);   // só ele; o admin não ganha junto
+    assert.equal((await chefe('GET', `/api/admin/users/${ele.id}`)).dados.censuraLiberada, true);
+    const lista = (await chefe('GET', '/api/admin/users')).dados.users;
+    assert.equal(lista.find((u) => u.id === ele.id).censuraLiberada, true);
+
+    assert.equal((await chefe('POST', `/api/admin/users/${ele.id}/censura`, { liberada: false })).dados.mudou, true);
+    assert.equal((await leitor('GET', '/api/auth/me')).dados.user.censuraLiberada, false);
+    const log = (await chefe('GET', '/api/admin/log')).dados;
+    const acoes = (log.log || log.acoes || log).map((l) => l.acao);
+    assert.ok(acoes.includes('censura-on') && acoes.includes('censura-off'), JSON.stringify(acoes));
+});

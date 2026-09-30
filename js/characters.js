@@ -15,19 +15,11 @@
         viewer.showModal();
         document.body.classList.add('viewer-open');
     };
-    /** Pede a senha da ficha banida; com a certa, revela a ficha e dá a conquista. */
-    async function pedirSenha(card) {
-        if (!(await window.EnzoSenha?.pedir())) return;
-        unlock(card);
-        window.EnzoConta?.conquista('cabo-coco');
-        show(card);
-    }
     document.querySelectorAll('.characters-roster .character-card').forEach(card => {
         card.tabIndex = 0; card.setAttribute('role', 'button');
-        card.setAttribute('aria-label', card.dataset.locked === 'true' ? 'Ficha banida: pede senha' : `Abrir ficha: ${card.querySelector('img').alt}`);
+        card.setAttribute('aria-label', card.dataset.locked === 'true' ? 'Ficha banida' : `Abrir ficha: ${card.querySelector('img').alt}`);
         card.addEventListener('click', () => {
-            if (card.dataset.locked === 'true') pedirSenha(card);
-            else show(card);
+            if (card.dataset.locked !== 'true') show(card);   // ficha banida: só o admin libera
         });
         card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); } });
     });
@@ -39,9 +31,9 @@
         card.querySelector('.character-name').textContent = card.querySelector('img').alt;
         card.setAttribute('aria-label', `Abrir ficha: ${card.querySelector('img').alt}`);
     }
-    // Quem já descobriu a senha com login: fichas banidas ficam liberadas para sempre.
+    // Só contas que o admin liberou no terminal veem a ficha banida.
     window.EnzoConta?.aoMudar(conta => {
-        if (!conta.temConquista('cabo-coco')) return;
+        if (!conta.censuraLiberada()) return;
         document.querySelectorAll('.characters-roster .character-card[data-locked="true"]').forEach(unlock);
     });
     viewer.querySelector('button').addEventListener('click', () => viewer.close());

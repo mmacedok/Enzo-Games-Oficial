@@ -85,67 +85,20 @@
         });
     }
 
-    /** Cabo Côco só aparece sem tarja para quem descobriu a senha (conquista Acesso Confidencial). */
-    const censurada = (def) => def.censurada && !window.EnzoConta?.temConquista?.('cabo-coco');
-    /** Nome que pode aparecer (inclusive para leitor de tela): o do Cabo Côco é "???" até a senha. */
+    /** Cabo Côco só aparece sem tarja para conta que o admin liberou no terminal (`censura on`). */
+    const censurada = (def) => def.censurada && !window.EnzoConta?.censuraLiberada?.();
+    /** Nome que pode aparecer (inclusive para leitor de tela): o do Cabo Côco é "???" até a liberação. */
     const nomeVisivel = (def) => (censurada(def) ? '???' : def.nome);
 
-    /** Tarja de cena do crime (a mesma da página de personagens); clicar pede a senha. */
-    function tarja(card, def) {
-        const faixa = el('button', 'crime-scene-overlay carta-tcg-tarja');
-        faixa.type = 'button';
-        faixa.setAttribute('aria-label', 'Conteúdo banido: pede senha');
+    /** Tarja de cena do crime (a mesma da página de personagens). Não abre nada: só o admin libera. */
+    function tarja() {
+        const faixa = el('div', 'crime-scene-overlay carta-tcg-tarja');
+        faixa.setAttribute('role', 'img');
+        faixa.setAttribute('aria-label', 'Conteúdo banido em 456 países');
         const aviso = el('span', '', 'Conteúdo banido');
         aviso.appendChild(el('small', '', 'em 456 países'));
         faixa.appendChild(aviso);
-        faixa.addEventListener('click', (e) => {
-            // Na abertura e na batalha o clique é da carta (arrastar, virar, jogar), não da senha.
-            if (card.closest('.abertura, .batalha')) return;
-            e.stopPropagation();
-            pedirSenha(def);
-        });
         return faixa;
-    }
-
-    /** A senha é a mesma do site ("copo de lágrimas"); acertou = conquista Acesso Confidencial. */
-    function pedirSenha(def) {
-        const janela = el('dialog', 'password-overlay baralho-senha');
-        const caixa = el('form', 'password-modal');
-        caixa.method = 'dialog';
-        const texto = el('p');
-        texto.append(el('strong', '', 'Conteúdo banido em 456 países'), el('br'), 'Insira a senha de acesso confidencial:');
-        const campo = el('input');
-        Object.assign(campo, { type: 'password', placeholder: 'Sua senha...', autocomplete: 'off' });
-        campo.setAttribute('aria-label', 'Senha');
-        const erro = el('div', 'password-error', ' Senha incorreta! Acesso negado.');
-        erro.prepend(icone('acesso-negado', '❌'));
-        const acoes = el('div', 'password-actions');
-        const ok = el('button', 'btn btn--danger', 'Decodificar');
-        const cancelar = el('button', 'btn btn--muted', 'Cancelar');
-        cancelar.type = 'button';
-        cancelar.addEventListener('click', () => janela.close());
-        acoes.append(ok, cancelar);
-        const alerta = el('h3', '', ' Alerta ');
-        alerta.prepend(icone('sirene', '🚨'));
-        alerta.append(icone('sirene', '🚨'));
-        caixa.append(alerta, texto, campo, erro, acoes);
-        caixa.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!window.EnzoSenha.confere(campo.value)) {
-                erro.style.display = 'block';
-                campo.select();
-                return;
-            }
-            janela.close();
-            await window.EnzoConta?.conquista?.('cabo-coco');
-            liberarCensuradas();
-        });
-        janela.addEventListener('close', () => janela.remove());
-        janela.addEventListener('click', (e) => { if (e.target === janela) janela.close(); });
-        janela.appendChild(caixa);
-        document.body.appendChild(janela);
-        janela.showModal();
-        campo.focus();
     }
 
     /** Troca na tela toda carta censurada pela versão liberada. */
@@ -158,6 +111,11 @@
             velha.replaceWith(nova);
         });
     }
+
+    // Conta liberada pelo admin no terminal: as cartas já na tela perdem a tarja sem recarregar.
+    const ouvirConta = () => window.EnzoConta?.aoMudar?.((conta) => { if (conta.censuraLiberada()) liberarCensuradas(); });
+    if (window.EnzoConta) ouvirConta();
+    else window.addEventListener('load', ouvirConta, { once: true });
 
     function carta(cardId) {
         const def = B.carta(cardId);
@@ -180,7 +138,7 @@
         arte.appendChild(img);
         if (censurada(def)) {
             card.classList.add('carta-tcg--censurada');
-            arte.appendChild(tarja(card, def));
+            arte.appendChild(tarja());
         }
 
         const moldura = el('div', 'carta-tcg-moldura');
