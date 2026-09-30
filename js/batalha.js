@@ -57,6 +57,9 @@
             caixas: { turma: A('caixa-turma'), legiao: A('caixa-legiao'), internet: A('caixa-internet') },
             rivais: { facil: A('icone-npc-facil'), normal: A('icone-npc-normal'), pvp: A('icone-outro-jogador') },
         },
+        // Tela "Outro jogador" (tarefa 02 do Codex). Cada peça é opcional: sem o arquivo, a tela usa o visual de antes.
+        online: Object.fromEntries(['fundo', 'cabecalho', 'caixa', 'icone-criar', 'icone-entrar', 'icone-assistir', 'espera', 'vazia', 'vs']
+            .map((n) => [n, A(`sala-${n}`)])),
         campos: Object.fromEntries(['piscina-de-macarronada', 'toradolandia', 'mansao-do-inominavel', 'estacionamento-noturno',
             'casa-do-enzo-games', 'sao-joao-do-butico'].map((id) => [id, A(`mesa-${id}`)])),
     };
@@ -74,6 +77,15 @@
         if (!src) return emoji;
         const img = document.createElement('img');
         Object.assign(img, { className: 'bt-ic', src, alt: '', decoding: 'async' });
+        return img;
+    };
+
+    /** <img> de uma peça da tela online, ou null se o arquivo ainda não existe. */
+    const imgOnline = (nome, classe = 'bt-online-img', alt = '') => {
+        const src = arte(ARTE.online[nome]);
+        if (!src) return null;
+        const img = document.createElement('img');
+        Object.assign(img, { className: classe, src, alt, decoding: 'async' });
         return img;
     };
 
@@ -1874,14 +1886,20 @@
         limparMesa();
         raiz.replaceChildren();
         raiz.className = 'batalha batalha--menu';
-        const fundoMenu = arteGrande(ARTE.menu.fundo);
+        const fundoMenu = arteGrande(ARTE.online.fundo) || arteGrande(ARTE.menu.fundo);
         if (fundoMenu) {
             raiz.style.setProperty('--fundo-menu', `url('${new URL(fundoMenu, document.baseURI).href}')`);
             raiz.classList.add('batalha--menu-arte');
         }
         const caixa = el('div', 'bt-menu bt-online');
-        caixa.append(el('h2', 'bt-menu-sub', 'Outro jogador'));
+        const cabecalho = imgOnline('cabecalho', 'bt-online-cabecalho', 'Salas online');
+        caixa.append(cabecalho || el('h2', 'bt-menu-sub', 'Outro jogador'));
         const corpo = el('div', 'bt-online-corpo');
+        const molduraSala = arte(ARTE.online.caixa);
+        if (molduraSala) {
+            corpo.classList.add('bt-online-corpo--arte');
+            corpo.style.setProperty('--moldura-sala', `url('${new URL(molduraSala, document.baseURI).href}')`);
+        }
         caixa.append(corpo, botao('bt-link', '← Voltar', telaMenu));
         raiz.appendChild(caixa);
         const msg = (texto, tipo = '') => { const p = el('p', `bt-online-msg ${tipo}`, texto); corpo.appendChild(p); return p; };
@@ -1925,6 +1943,8 @@
             }
         });
         criar.className = 'bt-botao bt-botao--forte';
+        const icCriar = imgOnline('icone-criar', 'bt-online-icone');
+        if (icCriar) criar.prepend(icCriar);
         criar.append(el('strong', '', 'Criar sala'), el('span', '', 'fica na lista enquanto a tela estiver aberta'));
         opcoes.appendChild(criar);
         corpo.appendChild(opcoes);
@@ -1958,13 +1978,27 @@
             const renderSalas = (salas, partidas = []) => {
                 if (!corpoSalas.isConnected) return;
                 if (!salas.length && !partidas.length) {
-                    corpoSalas.replaceChildren(el('p', 'bt-online-vazio', 'Nada por aqui agora. Crie uma sala e ela aparece para os outros.'));
+                    const vazio = el('div', 'bt-online-vazio-caixa');
+                    const ilus = imgOnline('vazia', 'bt-online-ilustracao');
+                    if (ilus) vazio.appendChild(ilus);
+                    vazio.appendChild(el('p', 'bt-online-vazio', 'Nada por aqui agora. Crie uma sala e ela aparece para os outros.'));
+                    corpoSalas.replaceChildren(vazio);
                     return;
                 }
                 const aoVivo = partidas.map((p) => {
                     const linha = el('div', 'bt-sala-linha bt-sala-linha--ao-vivo');
                     const b = botao('bt-botao', 'Assistir', () => abrirAssistir(p.id, b));
-                    linha.append(el('span', 'bt-sala-nome', `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`), b);
+                    const icVer = imgOnline('icone-assistir', 'bt-online-icone-botao');
+                    if (icVer) b.prepend(icVer);
+                    const vs = imgOnline('vs', 'bt-online-vs');
+                    if (vs) {
+                        const nome = el('span', 'bt-sala-nome');
+                        nome.append(primeiro(p.jogadores[0]), vs, primeiro(p.jogadores[1]));
+                        nome.title = `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`;
+                        linha.append(nome, b);
+                    } else {
+                        linha.append(el('span', 'bt-sala-nome', `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`), b);
+                    }
                     return linha;
                 });
                 corpoSalas.replaceChildren(...salas.map((s) => {
@@ -1972,6 +2006,8 @@
                     // "Nome × alguém": quem criou a sala e a vaga esperando
                     linha.append(el('span', 'bt-sala-nome', `${primeiro(s.criador)} × alguém`));
                     const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarNaSala(s.codigo, b, b));
+                    const icEntrar = imgOnline('icone-entrar', 'bt-online-icone-botao');
+                    if (icEntrar) b.prepend(icEntrar);
                     linha.appendChild(b);
                     return linha;
                 }), ...aoVivo);
@@ -2013,6 +2049,8 @@
             const restante = () => Math.max(0, Math.ceil(((expira || Date.now()) - Date.now()) / 1000));
             const desenharRelogio = () => { const s = restante(); relogio.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
             desenharRelogio();
+            const ilusEspera = imgOnline('espera', 'bt-online-ilustracao');
+            if (ilusEspera) corpo.appendChild(ilusEspera);
             const espera = el('p', 'bt-online-espera', 'Esperando alguém entrar... a sala continua na lista enquanto esta tela estiver aberta (5 minutos a cada renovação).');
             const cancelar = botao('bt-botao', 'Cancelar sala', async () => {
                 esperaSala?.parar();

@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-09-30 · Tela online pronta para as imagens (tarefa 02 do Codex):** o código já usa `assets/Batalha/sala-{fundo,cabecalho,caixa,icone-criar,icone-entrar,icone-assistir,espera,vazia,vs}.png` quando existirem (sem o arquivo, tudo fica como antes). Falta o Henrique rodar o Codex em `E:AI WorkshopCodexBridge` ("faça a próxima tarefa"); depois: `node conferir.cjs tarefas/02-sala-online.md`, `node atualizar.js` (registra em `js/images.generated.js`), olhar a tela, commit e push.
+
 - **2026-09-30 · Tela "Outro jogador" simplificada:** só o botão **Criar sala**; logo abaixo uma lista única (renova a cada 3 s) com as salas esperando (Entrar) e as partidas ao vivo (Assistir). Saíram os botões "Lista de salas" e "Assistir" e as telas separadas. Plano de assets (fundo, cabeçalho, moldura, ícones) só no chat; falta o Henrique mandar as imagens.
 
 - **2026-09-30 · Superkid e Encantadora (REGRAS_VERSAO 7):** a Aura de 67 Segundos do Superkid deixa ele virado quando derruba qualquer carta (antes só de um golpe só; flag `recargaSeDerrubar`). O Vem Cá da Encantadora virou **poder** (1x por turno, de qualquer lugar da mesa, como o da Hatsune): escolhe quem vem do banco do rival e ela fica virada por 1 turno; o único ataque dela é a Chama Rosa. Testes e simulação (2000 partidas, Encantadora 47,6%) ok. Interpretei "enfasada" como **virada** (não ataca, não usa poder, não recua por 1 turno): confirmar com o Henrique. Animação do laço agora no poder (`EFEITOS_PODER`).

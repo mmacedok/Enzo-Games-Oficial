@@ -1208,3 +1208,12 @@ dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
 .bt-sala-linha { box-sizing: border-box; max-width: 100%; }
 .bt-sala-nome { font-size: 1.1rem; }
 .bt-online-salas-lista { grid-template-columns: minmax(0, 1fr); }
+
+/* ---- Tela online com as imagens da tarefa 02 (cada uma só vale se o arquivo existir) ---- */
+.bt-online-cabecalho { display: block; width: min(440px, 88vw); height: auto; margin: 6px auto 0; }
+.bt-online-corpo--arte { background: var(--moldura-sala) center / 100% 100% no-repeat; border: 0; box-shadow: none; padding: 34px 30px; }
+.bt-online-icone { width: 64px; height: 64px; object-fit: contain; }
+.bt-online-icone-botao { width: 28px; height: 28px; margin-right: 6px; object-fit: contain; vertical-align: middle; }
+.bt-online-ilustracao { width: min(200px, 60%); height: auto; }
+.bt-online-vazio-caixa { display: grid; justify-items: center; gap: 6px; }
+.bt-online-vs { width: 34px; height: 34px; margin: 0 8px; object-fit: contain; vertical-align: middle; }
