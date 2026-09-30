@@ -125,6 +125,27 @@ module.exports = [
         resultado TEXT
     )`,
     'CREATE INDEX IF NOT EXISTS idx_pacotes_usuario ON pacotes(user_id, aberto_em)',
+    // Pacote diário: último dia (AAAA-MM-DD, Brasília) e dias seguidos.
+    'ALTER TABLE carteira ADD COLUMN IF NOT EXISTS diario_dia TEXT',
+    'ALTER TABLE carteira ADD COLUMN IF NOT EXISTS diario_seq INTEGER NOT NULL DEFAULT 0',
+    // Presentes de uma vez só por conta (PRESENTES_UNICOS e 'visitante').
+    `CREATE TABLE IF NOT EXISTS presentes (
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        presente_id TEXT NOT NULL,
+        created_at BIGINT NOT NULL,
+        PRIMARY KEY (user_id, presente_id)
+    )`,
+    // Pacotes de boas-vindas abertos por visitante sem login. id = código guardado no
+    // navegador; ao entrar, as cartas vão para a conta (uma vez: resgatado_por).
+    // resultado = JSON [{ tipo, cartas: [ids] }].
+    `CREATE TABLE IF NOT EXISTS pacotes_visitante (
+        id TEXT PRIMARY KEY,
+        resultado TEXT NOT NULL,
+        created_at BIGINT NOT NULL,
+        resgatado_por TEXT REFERENCES users(id) ON DELETE SET NULL,
+        resgatado_em BIGINT
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_pacotes_visitante_data ON pacotes_visitante(created_at)',
     `CREATE TABLE IF NOT EXISTS colecao (
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         card_id TEXT NOT NULL,

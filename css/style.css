@@ -3298,6 +3298,36 @@ dialog.baralho-senha::backdrop { background: transparent; }
 /* Carta grande: o dedo inclina a carta em vez de rolar a tela. */
 .carta-zoom .juice-balanca { touch-action: none; }
 
+/* ---- Chegada do visitante e presentes da entrada (js/baralho.js) ---- */
+dialog.baralho-presente,
+dialog.baralho-salvar,
+dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
+.baralho-presente[open],
+.baralho-salvar[open],
+.baralho-entrada[open] { align-items: center; gap: 12px; padding: 26px 20px 18px; text-align: center; }
+.baralho-presente-titulo,
+.baralho-salvar-titulo,
+.baralho-entrada-titulo { margin: 0; font-family: var(--font-heading); font-size: clamp(1.4rem, 5.5vw, 1.9rem); letter-spacing: 1px; line-height: 1.05; }
+.baralho-salvar-texto { font-size: 0.95rem; line-height: 1.35; }
+.baralho-presente-pacotes { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
+.baralho-presente-pacotes .pacote-tcg { width: min(112px, 30%); }
+.baralho-presente-abrir,
+.baralho-salvar-login,
+.baralho-entrada-abrir { width: 100%; padding: 12px 18px; font-size: 1.25rem; }
+.baralho-entrada-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 12px; width: 100%; margin: 0; padding: 0; list-style: none; }
+.baralho-entrada-item { display: grid; justify-items: center; gap: 6px; }
+.baralho-entrada-item .pacote-tcg { width: min(96px, 100%); }
+.baralho-entrada-rotulo { font-family: var(--font-heading); font-size: 0.95rem; line-height: 1.1; letter-spacing: 0.5px; }
+.baralho-sequencia { display: grid; gap: 4px; width: 100%; }
+.baralho-sequencia-texto { margin: 0; font-family: var(--font-heading); font-size: 1rem; letter-spacing: 0.5px; }
+.baralho-sequencia-trilha { display: block; width: 100%; height: 12px; overflow: hidden; background: var(--paper); border: 2px solid var(--ink); border-radius: 6px; }
+.baralho-sequencia-cheio { display: block; height: 100%; background: var(--caution); }
+@media (max-width: 560px) {
+    /* No celular os 3 pacotes continuam lado a lado, menores (empilhados passam da tela). */
+    .baralho-presente-pacotes { gap: 6px; }
+    .baralho-presente-pacotes .pacote-tcg { width: 31%; }
+}
+
 /* Atalho da aba Baralho para a Batalha dos Torados (batalha.html) */
 .baralho-batalha {
     grid-column: 1 / -1;

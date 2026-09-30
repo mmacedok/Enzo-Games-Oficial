@@ -183,6 +183,8 @@
         let visto = false;
         try { visto = sessionStorage.getItem(CONVITE_VISTO) === '1'; } catch { /* sem sessionStorage */ }
         if (visto || !document.querySelector('[data-conta]') || document.querySelector('dialog[open]')) return;
+        // O baralho (js/baralho.js) mostra os pacotes grátis do visitante; se mostrou, o convite fica quieto.
+        if (window.EnzoBaralhoUI?.chegadaVisitante?.()) return;
         abrirConvite();
     }
 

@@ -77,6 +77,14 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Baralho, presentes** (`api/baralho.js`, `js/baralho.js`, `BOAS_VINDAS`/`DIARIO`/`PRESENTES_UNICOS` em `js/baralho-dados.js`):
+  - visitante sem login ganha e abre 3 pacotes (1 de cada) na chegada; depois, "Quer salvar suas cartas? Faça login".
+    No login as mesmas cartas vão para a conta (só conta que nunca abriu pacote; código vale 7 dias);
+  - conta nova: 3 pacotes de boas-vindas (antes 1 Estacionamento);
+  - pacote do dia (Toradolândia) com sequência 🔥; a cada 7 dias seguidos, Piscina de Macarronada;
+  - presente único da grande atualização: 1 Piscina para toda conta (para encerrar, apagar a linha em `PRESENTES_UNICOS`).
+  - Pendente: QA completo pelo Gemini (celular, Esc/foco, 2 abas); a rota de visitante não tem limite por IP
+    (dá para abrir de novo em aba anônima até tirar lendária — risco aceito pelo Henrique).
 - 2026-09-30: **Capítulo 8 ("A rotina impossível!") no site**: capa e 12 páginas (1080×1920) em
   `assets/Capitulo 8/`, PNGs recomprimidos sem perda (64 MB → 44 MB, pixels idênticos) e entrada no
   `data/comics.manifest.json`. Aparece como destaque da home e no leitor.

@@ -125,8 +125,27 @@
     /** Créditos por ponto em cada partida verificada (sem limite diário). */
     const CREDITOS_POR_PONTO = Object.freeze({ 'flappy-enzo': 10 });
 
-    /** Pacote dado de presente no primeiro acesso ao Baralho. */
-    const PACOTE_BOAS_VINDAS = 'estacionamento';
+    /**
+     * Presente de boas-vindas: um de cada pacote. O visitante sem login abre
+     * esses mesmos 3 na chegada ao site; ao entrar, as cartas vão para a conta.
+     */
+    const BOAS_VINDAS = Object.freeze(['estacionamento', 'toradolandia', 'piscina-de-macarronada']);
+    /** Compatibilidade: o primeiro pacote do presente. */
+    const PACOTE_BOAS_VINDAS = BOAS_VINDAS[0];
+
+    /**
+     * Pacote diário (1 por dia ao entrar no site com login, dia de Brasília).
+     * Dias seguidos formam a sequência; a cada `especialACada` dias vem o `especial`.
+     */
+    const DIARIO = Object.freeze({ tipo: 'toradolandia', especial: 'piscina-de-macarronada', especialACada: 7 });
+
+    /**
+     * Presentes que cada conta ganha UMA vez (as que já existem e as novas).
+     * Para encerrar um presente, apague a linha (quem já ganhou continua com ele).
+     */
+    const PRESENTES_UNICOS = congelar([
+        { id: 'grande-atualizacao-2026-10', tipo: 'piscina-de-macarronada', nome: 'Presente da grande atualização' },
+    ]);
 
     /** Máximo de pacotes abertos (ou comprados) de uma vez. */
     const MAX_POR_VEZ = 10;
@@ -141,7 +160,7 @@
     const valorPo = (cardId) => raridade(carta(cardId)?.raridade)?.po ?? 0;
 
     return {
-        RARIDADES, CARTAS, PACOTES, CREDITOS_POR_PONTO, PACOTE_BOAS_VINDAS, MAX_POR_VEZ,
+        RARIDADES, CARTAS, PACOTES, CREDITOS_POR_PONTO, PACOTE_BOAS_VINDAS, BOAS_VINDAS, DIARIO, PRESENTES_UNICOS, MAX_POR_VEZ,
         carta, pacote, raridade, nivel, cartasDaRaridade, valorPo,
     };
 });

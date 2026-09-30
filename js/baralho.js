@@ -28,6 +28,9 @@
     const TIPOS = { campo: 'Campo', goon: 'Capanga' };
     const NOMES_JOGOS = { 'flappy-enzo': 'Flappy Enzo', 'ronda-noturna': 'Degustação Noturna' };
     const CONFIRMAR_MS = 4000;
+    const PRESENTE_VISITANTE = 'enzo-presente-visitante';   // cartas abertas sem login (ficam só aqui)
+    const CONVITE_VISTO = 'enzo-convite-visto';             // mesma chave do convite de login (js/auth-widget.js)
+    const DIA_MS = 24 * 60 * 60 * 1000;
 
     const el = (tag, classe, texto) => {
         const elemento = document.createElement(tag);
@@ -53,6 +56,16 @@
             return { ok: false, status: 0, dados: { error: 'sem conexão' } };
         }
     }
+
+    /** Dia de Brasília (UTC−3) no formato AAAA-MM-DD — o mesmo do servidor (api/baralho.js). */
+    const diaBrasilia = (ms = Date.now()) => new Date(ms - 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    // Presente do visitante: o servidor guarda as cartas pelo código; aqui fica só o código.
+    const lerPresente = () => {
+        try { const g = JSON.parse(localStorage.getItem(PRESENTE_VISITANTE)); return g?.codigo ? g : null; } catch { return null; }
+    };
+    const gravarPresente = (valor) => { try { localStorage.setItem(PRESENTE_VISITANTE, JSON.stringify(valor)); } catch { /* modo privado */ } };
+    const apagarPresente = () => { try { localStorage.removeItem(PRESENTE_VISITANTE); } catch { /* modo privado */ } };
 
     // ------------------------------------------------------------ desenho da carta
     /** Zonas com mola: o pointermove de lá mede uma vez e cuida do brilho da carta de dentro. */
@@ -466,9 +479,15 @@
             moeda('baralho-moeda--po', dados.carteira.po, 'pó de estrela'));
         const regras = Object.entries(B.CREDITOS_POR_PONTO)
             .map(([jogo, fator]) => `${NOMES_JOGOS[jogo] || jogo}: ${fator === 1 ? '1 crédito' : `${fator} créditos`} por ponto`);
-        return quadro('quadro--carteira', 'Carteira', saldo,
+        const conteudo = [saldo,
             el('p', 'quadro-texto', 'Jogue para ganhar créditos!'),
-            el('p', 'baralho-regras', regras.join(' · ')));
+            el('p', 'baralho-regras', regras.join(' · '))];
+        // Sequência do pacote do dia: vale se a última entrada foi hoje ou ontem (Brasília).
+        const d = dados.diario;
+        if (d?.sequencia > 0 && (d.dia === diaBrasilia() || d.dia === diaBrasilia(Date.now() - DIA_MS))) {
+            conteudo.push(el('p', 'baralho-sequencia-texto', `🔥 ${d.sequencia} dias seguidos`));
+        }
+        return quadro('quadro--carteira', 'Carteira', ...conteudo);
     }
 
     function quadroLoja() {
@@ -633,7 +652,7 @@
         }
         dados = resposta;
         aviso = resposta.boasVindas
-            ? { texto: `Presente de boas-vindas: 1 ${B.pacote(B.PACOTE_BOAS_VINDAS).nome} no seu inventário!`, tipo: 'ok' }
+            ? { texto: 'Presente de boas-vindas: 1 de cada pacote no seu inventário!', tipo: 'ok' }
             : null;
         desenhar();
     }
@@ -705,8 +724,9 @@
      * (da mais comum à mais rara) que a pessoa arrasta para o lado, uma a uma →
      * todas lado a lado no fim.
      * `colecao` é a coleção DEPOIS de abrir: dá o "REPETIDA ×N" certo de cada cópia.
+     * `opcoes.visitante` (nº de cartas) = abriu sem login: ao fechar, oferece salvar na conta.
      */
-    function abertura(abertos, colecao) {
+    function abertura(abertos, colecao, opcoes = {}) {
         if (!abertos?.length) return;
         // antes = cópias na coleção agora − cópias que saíram neste lote.
         const antes = {};
@@ -731,7 +751,9 @@
         tela.addEventListener('close', () => {
             fundo?.parar();
             tela.remove();
-            window.EnzoConta?.abrirFicha?.('baralho');
+            // Sem login não adianta reabrir a Ficha (exige conta): oferece salvar as cartas.
+            if (opcoes.visitante) caixaSalvar(opcoes.visitante);
+            else window.EnzoConta?.abrirFicha?.('baralho');
         });
         document.body.appendChild(tela);
         tela.showModal();
@@ -1002,5 +1024,178 @@
         mostrarPacote();
     }
 
-    window.EnzoBaralhoUI = { aba, carta, verso, pacoteArte, abertura, nomeVisivel };
+    // ------------------------------------------------- chegada do visitante (sem login)
+    /**
+     * Na 1ª página da visita: os 3 pacotes de boas-vindas, um de cada, lado a lado.
+     * "Abrir meus pacotes" chama a abertura; "Agora não" deixa para a próxima sessão.
+     */
+    function janelaBoasVindas() {
+        const janela = el('dialog', 'pagina-gibi baralho-presente');
+        janela.setAttribute('aria-labelledby', 'baralho-presente-titulo');
+        const titulo = el('h2', 'baralho-presente-titulo', 'Você ganhou 3 pacotes grátis!');
+        titulo.id = 'baralho-presente-titulo';
+        const pacotes = el('div', 'baralho-presente-pacotes');
+        for (const tipo of B.BOAS_VINDAS) pacotes.appendChild(pacoteArte(tipo));
+        const abrir = botao('baralho-botao baralho-botao--abrir baralho-presente-abrir', 'Abrir meus pacotes');
+        abrir.addEventListener('click', async () => {
+            abrir.disabled = true;
+            const { ok, dados: resposta } = await pedir('/api/baralho/visitante', {});
+            if (!ok) {
+                janela.close();
+                window.siteToast?.({ icon: ['convite-baralho', '🃏'], burst: 'Ops!', label: 'Pacotes grátis',
+                    text: resposta?.error ? `Não deu para abrir: ${resposta.error}.` : 'Não deu para abrir os pacotes agora.' });
+                return;
+            }
+            const cartas = resposta.abertos.reduce((n, p) => n + p.cartas.length, 0);
+            gravarPresente({ codigo: resposta.codigo, cartas, em: Date.now() });
+            janela.close();
+            abertura(resposta.abertos, {}, { visitante: cartas });
+        });
+        const depois = botao('conta-convite-depois', 'Agora não');
+        depois.addEventListener('click', () => janela.close());
+        janela.append(titulo, pacotes, abrir, depois);
+        janela.addEventListener('click', (e) => { if (e.target === janela) janela.close(); });
+        janela.addEventListener('close', () => janela.remove());
+        document.body.appendChild(janela);
+        janela.showModal();
+        abrir.focus();
+    }
+
+    /** Caixa que oferece guardar as cartas do visitante na conta (login com Google). */
+    function caixaSalvar(nCartas, titulo = 'Quer salvar suas cartas? Faça login') {
+        const janela = el('dialog', 'pagina-gibi baralho-salvar');
+        janela.setAttribute('aria-labelledby', 'baralho-salvar-titulo');
+        const manchete = el('h2', 'baralho-salvar-titulo', titulo);
+        manchete.id = 'baralho-salvar-titulo';
+        const texto = el('p', 'baralho-salvar-texto',
+            `Essas ${numero(nCartas)} cartas são suas. Entre com o Google para guardar na sua coleção e ganhar um pacote todo dia!`);
+        const salvar = botao('baralho-botao baralho-botao--abrir baralho-salvar-login', 'Salvar minhas cartas');
+        salvar.addEventListener('click', () => { janela.close(); window.EnzoConta?.pedirLogin?.(); });
+        const depois = botao('conta-convite-depois', 'Agora não');
+        depois.addEventListener('click', () => janela.close());
+        janela.append(manchete, texto, salvar, depois);
+        janela.addEventListener('click', (e) => { if (e.target === janela) janela.close(); });
+        janela.addEventListener('close', () => janela.remove());
+        document.body.appendChild(janela);
+        janela.showModal();
+        salvar.focus();
+    }
+
+    /**
+     * Na chegada sem login (chamada pelo convite, js/auth-widget.js): mostra os
+     * pacotes grátis (ainda não abriu) ou a caixa "suas cartas estão esperando".
+     * Devolve true quando mostrou algo, para o convite de login não abrir junto.
+     */
+    function chegadaVisitante() {
+        const conta = window.EnzoConta;
+        if (!conta?.loginAtivo || conta.usuario) return false;
+        let visto = false;
+        try { visto = sessionStorage.getItem(CONVITE_VISTO) === '1'; } catch { /* sem sessionStorage */ }
+        if (visto || !document.querySelector('[data-conta]') || document.querySelector('dialog[open]')) return false;
+        try { sessionStorage.setItem(CONVITE_VISTO, '1'); } catch { /* sem sessionStorage */ }
+        const guardado = lerPresente();
+        if (guardado) caixaSalvar(guardado.cartas || 0, `Suas ${numero(guardado.cartas || 0)} cartas estão esperando...`);
+        else janelaBoasVindas();
+        return true;
+    }
+
+    // ------------------------------------------------- entrada com login (presentes)
+    /** Rótulo de um presente da entrada. */
+    function rotuloDeGanho(g, especialACada) {
+        if (g.motivo === 'boas-vindas') return 'Boas-vindas: 1 de cada pacote';
+        if (g.motivo === 'diario') {
+            const n = g.sequencia || 0;
+            return n % especialACada === 0 ? `Pacote especial de ${n} dias seguidos!` : `Pacote do dia — 🔥 ${n} dias seguidos`;
+        }
+        return g.nome || 'Presente';
+    }
+
+    /** Barrinha da sequência: quantos dias seguidos e quanto falta para o pacote especial. */
+    function barraSequencia(n, especialACada) {
+        const caixa = el('div', 'baralho-sequencia');
+        const falta = especialACada - (n % especialACada);
+        caixa.appendChild(el('p', 'baralho-sequencia-texto', `🔥 ${n} dias seguidos — faltam ${falta} para o pacote especial`));
+        const trilha = el('span', 'baralho-sequencia-trilha');
+        const cheio = el('span', 'baralho-sequencia-cheio');
+        cheio.style.width = `${Math.round(((n % especialACada || especialACada) / especialACada) * 100)}%`;
+        trilha.appendChild(cheio);
+        caixa.appendChild(trilha);
+        return caixa;
+    }
+
+    /** Janela "Presentes!" ao entrar: cada ganho com o desenho do pacote. */
+    function janelaPresentes({ ganhos, sequencia, especialACada }) {
+        const janela = el('dialog', 'pagina-gibi baralho-entrada');
+        janela.setAttribute('aria-labelledby', 'baralho-entrada-titulo');
+        const titulo = el('h2', 'baralho-entrada-titulo', 'Presentes!');
+        titulo.id = 'baralho-entrada-titulo';
+        const lista = el('ul', 'baralho-entrada-lista');
+        for (const g of ganhos) {
+            const item = el('li', 'baralho-entrada-item');
+            item.append(pacoteArte(g.tipo), el('span', 'baralho-entrada-rotulo', rotuloDeGanho(g, especialACada)));
+            lista.appendChild(item);
+        }
+        const agora = botao('baralho-botao baralho-botao--abrir baralho-entrada-abrir', 'Abrir agora');
+        agora.addEventListener('click', () => { janela.close(); window.EnzoConta?.abrirFicha?.('baralho'); });
+        const depois = botao('conta-convite-depois', 'Depois');
+        depois.addEventListener('click', () => janela.close());
+        janela.append(titulo, lista);
+        if (sequencia > 0) janela.appendChild(barraSequencia(sequencia, especialACada));
+        janela.append(agora, depois);
+        janela.addEventListener('click', (e) => { if (e.target === janela) janela.close(); });
+        janela.addEventListener('close', () => janela.remove());
+        document.body.appendChild(janela);
+        janela.showModal();
+        agora.focus();
+    }
+
+    let resgateFeito = false;
+    /** Depois do login: as cartas abertas como visitante entram na conta (uma vez só). */
+    async function resgatarVisitante() {
+        if (resgateFeito) return;
+        const guardado = lerPresente();
+        if (!guardado) return;
+        resgateFeito = true;
+        const { ok, status } = await pedir('/api/baralho/visitante/resgatar', { codigo: guardado.codigo });
+        // Sem conexão: guarda o código para tentar de novo depois (apaga só quando o servidor respondeu).
+        if (!ok && status === 0) { resgateFeito = false; return; }
+        apagarPresente();
+        if (ok) {
+            window.siteToast?.({ icon: ['convite-baralho', '🃏'], burst: 'SAVO!', label: 'Cartas salvas',
+                text: `Suas ${numero(guardado.cartas)} cartas foram salvas na coleção!` });
+        } else if (status === 409) {
+            window.siteToast?.({ icon: ['convite-baralho', '🃏'], label: 'Cartas de visitante',
+                text: 'Essas cartas de visitante só vão para conta nova.' });
+        }
+    }
+
+    let entradaFeita = false;
+    /** Depois do login: resgata o visitante e busca os presentes (1×/página, no máx. 1×/dia). */
+    async function depoisDoLogin() {
+        const usuario = window.EnzoConta?.usuario;
+        if (!usuario) return;
+        await resgatarVisitante();
+        if (entradaFeita) return;
+        const chave = `enzo-entrada-${usuario.id}-${diaBrasilia()}`;
+        try { if (sessionStorage.getItem(chave) === '1') return; } catch { /* sem sessionStorage */ }
+        entradaFeita = true;
+        const { ok, dados: resposta } = await pedir('/api/baralho/entrada', {});
+        if (!ok) { entradaFeita = false; return; }
+        try { sessionStorage.setItem(chave, '1'); } catch { /* sem sessionStorage */ }
+        if (resposta?.ganhos?.length) janelaPresentes(resposta);
+    }
+
+    // Depois do login (js/auth-widget.js): resgata o visitante e mostra os presentes.
+    // O EnzoConta nasce depois deste arquivo, então espera o DOM terminar de carregar.
+    const ligarConta = () => {
+        const conta = window.EnzoConta;
+        if (!conta) return;
+        const tentar = () => { if (conta.usuario) depoisDoLogin(); };
+        conta.aoMudar(tentar);
+        conta.pronto.then(tentar);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligarConta, { once: true });
+    else ligarConta();
+
+    window.EnzoBaralhoUI = { aba, carta, verso, pacoteArte, abertura, nomeVisivel, chegadaVisitante };
 })();

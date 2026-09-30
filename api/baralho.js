@@ -3,7 +3,10 @@
 // Cartas, preços e chances vêm de js/baralho-dados.js; o sorteio é SÓ aqui.
 //
 //   GET  /api/baralho                      carteira, pacotes fechados, coleção
-//                                          (no 1º acesso: carteira + pacote de boas-vindas)
+//                                          (no 1º acesso: carteira + pacotes de boas-vindas)
+//   POST /api/baralho/entrada              boas-vindas, presentes únicos e pacote do dia
+//   POST /api/baralho/visitante            (sem login) abre as boas-vindas; devolve { codigo, abertos }
+//   POST /api/baralho/visitante/resgatar   { codigo }  cartas do visitante vão para a conta
 //   POST /api/baralho/comprar              { tipo, moeda: 'creditos'|'po', quantidade? }
 //   POST /api/baralho/abrir                { pacotes: [ids] }  (até MAX_POR_VEZ)
 //   POST /api/baralho/po                   { cartas: { cardId: quantas } } ou { todas: true }
@@ -89,7 +92,7 @@ const garantirCarteira = (ctx, usuarioId = ctx.usuario.id) => ctx.db.query(
 /** Tudo o que a aba Baralho mostra. */
 async function estado(db, usuarioId) {
     const [[carteira], pacotes, colecao] = await Promise.all([
-        db.query('SELECT creditos, po FROM carteira WHERE user_id = $1', [usuarioId]),
+        db.query('SELECT creditos, po, diario_dia, diario_seq FROM carteira WHERE user_id = $1', [usuarioId]),
         db.query(
             `SELECT id, tipo, origem, created_at FROM pacotes
               WHERE user_id = $1 AND aberto_em IS NULL ORDER BY created_at, id`, [usuarioId]),
@@ -103,6 +106,7 @@ async function estado(db, usuarioId) {
         pacotes: pacotes.map((l) => ({ id: l.id, tipo: l.tipo, origem: l.origem, criadoEm: Number(l.created_at) })),
         colecao: cartas,
         diferentes: Object.keys(cartas).length,
+        diario: { dia: carteira?.diario_dia ?? null, sequencia: Number(carteira?.diario_seq ?? 0) },
         total: Baralho.CARTAS.length,
     };
 }
@@ -128,6 +132,73 @@ const darPacotes = (ctx, usuarioId, tipo, quantidade, origem) => ctx.db.query(
      SELECT gen_random_uuid()::text, $1, $2, $3, $4 FROM generate_series(1, $5::int)`,
     [usuarioId, tipo, origem, ctx.agora(), quantidade]);
 
+/** Dia de Brasília (UTC−3, sem horário de verão) no formato AAAA-MM-DD. */
+const DIA_MS = 24 * 60 * 60 * 1000;
+const diaBrasilia = (ms) => new Date(ms - 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+/** Pacote de visitante não resgatado some depois de 7 dias. */
+const VISITANTE_VALIDADE = 7 * DIA_MS;
+
+/** Boas-vindas uma vez só (1 de cada pacote): marcar e dar os pacotes no mesmo comando. */
+async function darBoasVindas(ctx, eu) {
+    const dados = await ctx.db.query(
+        `WITH marcou AS (
+             UPDATE carteira SET boas_vindas = TRUE WHERE user_id = $1 AND NOT boas_vindas RETURNING user_id)
+         INSERT INTO pacotes (id, user_id, tipo, origem, created_at)
+         SELECT gen_random_uuid()::text, marcou.user_id, t.tipo, 'boas-vindas', $3
+           FROM marcou, jsonb_array_elements_text($2::jsonb) AS t(tipo) RETURNING tipo`,
+        [eu, JSON.stringify(Baralho.BOAS_VINDAS), ctx.agora()]);
+    return dados.map((l) => l.tipo);
+}
+
+/**
+ * Presentes da entrada no site: boas-vindas, presentes únicos e o pacote do dia.
+ * Cada um é um comando só com a condição dentro, então duas abas ao mesmo tempo
+ * não ganham em dobro. Devolve a lista do que entrou agora e a sequência.
+ */
+async function darPresentes(ctx, eu) {
+    const agora = ctx.agora();
+    const hoje = diaBrasilia(agora);
+    const ontem = diaBrasilia(agora - DIA_MS);
+    const ganhos = (await darBoasVindas(ctx, eu)).map((tipo) => ({ motivo: 'boas-vindas', tipo }));
+
+    const unicos = await ctx.db.query(
+        `WITH lista AS (
+             SELECT g->>'id' AS id, g->>'tipo' AS tipo FROM jsonb_array_elements($2::jsonb) g),
+         marcou AS (
+             INSERT INTO presentes (user_id, presente_id, created_at)
+             SELECT $1, id, $3 FROM lista ON CONFLICT DO NOTHING RETURNING presente_id)
+         INSERT INTO pacotes (id, user_id, tipo, origem, created_at)
+         SELECT gen_random_uuid()::text, $1, lista.tipo, 'presente:' || lista.id, $3
+           FROM marcou JOIN lista ON lista.id = marcou.presente_id RETURNING tipo, origem`,
+        [eu, JSON.stringify(Baralho.PRESENTES_UNICOS), agora]);
+    for (const l of unicos) {
+        const p = Baralho.PRESENTES_UNICOS.find((g) => `presente:${g.id}` === l.origem);
+        ganhos.push({ motivo: 'presente', tipo: l.tipo, nome: p?.nome ?? null });
+    }
+
+    // Pacote do dia: ontem → sequência + 1; outro dia → volta a 1. No SET, diario_dia
+    // ainda é o valor antigo.
+    const { tipo, especial, especialACada } = Baralho.DIARIO;
+    const diario = await ctx.db.query(
+        `WITH marcou AS (
+             UPDATE carteira
+                SET diario_seq = CASE WHEN diario_dia = $3 THEN diario_seq + 1 ELSE 1 END, diario_dia = $2
+              WHERE user_id = $1 AND diario_dia IS DISTINCT FROM $2 RETURNING diario_seq)
+         INSERT INTO pacotes (id, user_id, tipo, origem, created_at)
+         SELECT gen_random_uuid()::text, $1,
+                CASE WHEN diario_seq % $4 = 0 THEN $5 ELSE $6 END, 'diario', $7
+           FROM marcou RETURNING tipo`,
+        [eu, hoje, ontem, especialACada, especial, tipo, agora]);
+    const [carteira] = await ctx.db.query(
+        'SELECT diario_seq, diario_dia FROM carteira WHERE user_id = $1', [eu]);
+    // Sequência que vale hoje (quem não entrou ontem nem hoje está em 0).
+    const seq = carteira && (carteira.diario_dia === hoje || carteira.diario_dia === ontem)
+        ? Number(carteira.diario_seq) : 0;
+    if (diario.length) ganhos.push({ motivo: 'diario', tipo: diario[0].tipo, sequencia: seq });
+    return { ganhos, sequencia: seq, especialACada };
+}
+
 function lerQuantidade(valor, padrao = 1) {
     if (valor === undefined || valor === null) return padrao;
     if (!Number.isInteger(valor) || valor < 1 || valor > Baralho.MAX_POR_VEZ) {
@@ -142,14 +213,91 @@ const rotas = [
         async executar(ctx) {
             const eu = ctx.usuario.id;
             await garantirCarteira(ctx);
-            // Boas-vindas uma vez só: marcar e dar o pacote no mesmo comando.
-            const presente = await ctx.db.query(
-                `WITH marcou AS (
-                     UPDATE carteira SET boas_vindas = TRUE WHERE user_id = $1 AND NOT boas_vindas RETURNING user_id)
-                 INSERT INTO pacotes (id, user_id, tipo, origem, created_at)
-                 SELECT gen_random_uuid()::text, user_id, $2, 'boas-vindas', $3 FROM marcou RETURNING id`,
-                [eu, Baralho.PACOTE_BOAS_VINDAS, ctx.agora()]);
+            const presente = await darBoasVindas(ctx, eu);
             return { ...(await estado(ctx.db, eu)), boasVindas: presente.length > 0 };
+        },
+    },
+    {
+        // Chamada pela página ao entrar no site com login: boas-vindas, presentes
+        // únicos e o pacote do dia. { ganhos: [{ motivo, tipo, nome?, sequencia? }], sequencia }
+        metodo: 'POST', caminho: '/api/baralho/entrada', login: true,
+        async executar(ctx) {
+            await garantirCarteira(ctx);
+            return darPresentes(ctx, ctx.usuario.id);
+        },
+    },
+    {
+        // Visitante sem login abre os pacotes de boas-vindas. O resultado fica guardado
+        // no servidor; o navegador guarda só o código para resgatar depois do login.
+        metodo: 'POST', caminho: '/api/baralho/visitante',
+        async executar(ctx) {
+            const agora = ctx.agora();
+            const sorteio = Baralho.BOAS_VINDAS.map((tipo) => ({ tipo, cartas: sortearPacote(tipo, ctx.aleatorio) }));
+            const [linha] = await ctx.db.query(
+                `WITH limpou AS (
+                     DELETE FROM pacotes_visitante WHERE resgatado_em IS NULL AND created_at < $3)
+                 INSERT INTO pacotes_visitante (id, resultado, created_at)
+                 VALUES (gen_random_uuid()::text, $1, $2) RETURNING id`,
+                [JSON.stringify(sorteio), agora, agora - VISITANTE_VALIDADE]);
+            const vistas = new Set();
+            return {
+                codigo: linha.id,
+                abertos: sorteio.map((p, i) => ({
+                    pacote: `visitante-${i}`,
+                    tipo: p.tipo,
+                    cartas: p.cartas.map((cardId) => {
+                        const nova = !vistas.has(cardId);
+                        vistas.add(cardId);
+                        return { id: cardId, raridade: Baralho.carta(cardId)?.raridade ?? null, nova };
+                    }),
+                })),
+            };
+        },
+    },
+    {
+        // Depois do login: as cartas abertas como visitante entram na conta, no lugar
+        // das boas-vindas. Só para conta que ainda não abriu nenhum pacote e nunca
+        // resgatou; os pacotes de boas-vindas ainda fechados são trocados pelos abertos.
+        metodo: 'POST', caminho: '/api/baralho/visitante/resgatar', login: true,
+        async executar(ctx) {
+            const { codigo } = await ctx.corpo();
+            if (typeof codigo !== 'string' || !ID.test(codigo)) throw new HttpError(400, 'código inválido');
+            const eu = ctx.usuario.id;
+            const agora = ctx.agora();
+            await garantirCarteira(ctx);
+            const resgate = await ctx.db.query(
+                `WITH pode AS (
+                     SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM pacotes WHERE user_id = $1 AND aberto_em IS NOT NULL)
+                                AND NOT EXISTS (SELECT 1 FROM presentes WHERE user_id = $1 AND presente_id = 'visitante')),
+                 resgatou AS (
+                     UPDATE pacotes_visitante SET resgatado_por = $1, resgatado_em = $2
+                      WHERE id = $3 AND resgatado_em IS NULL AND created_at >= $4 AND EXISTS (SELECT 1 FROM pode)
+                     RETURNING resultado),
+                 marcou AS (
+                     INSERT INTO presentes (user_id, presente_id, created_at)
+                     SELECT $1, 'visitante', $2 FROM resgatou ON CONFLICT DO NOTHING RETURNING user_id),
+                 lista AS (
+                     SELECT p->>'tipo' AS tipo, p->'cartas' AS cartas
+                       FROM resgatou, marcou, jsonb_array_elements(resgatou.resultado::jsonb) p),
+                 boas AS (
+                     UPDATE carteira SET boas_vindas = TRUE WHERE user_id = $1 AND EXISTS (SELECT 1 FROM marcou)),
+                 trocou AS (
+                     DELETE FROM pacotes WHERE user_id = $1 AND origem = 'boas-vindas' AND aberto_em IS NULL
+                        AND EXISTS (SELECT 1 FROM marcou)),
+                 guardou AS (
+                     INSERT INTO pacotes (id, user_id, tipo, origem, created_at, aberto_em, resultado)
+                     SELECT gen_random_uuid()::text, $1, tipo, 'boas-vindas', $2, $2, cartas::text FROM lista),
+                 contagem AS (
+                     SELECT c.card_id, COUNT(*)::int AS n
+                       FROM lista CROSS JOIN LATERAL jsonb_array_elements_text(lista.cartas) AS c(card_id)
+                      GROUP BY c.card_id)
+                 INSERT INTO colecao (user_id, card_id, qtd, primeira_em)
+                 SELECT $1, card_id, n, $2 FROM contagem
+                 ON CONFLICT (user_id, card_id) DO UPDATE SET qtd = colecao.qtd + EXCLUDED.qtd
+                 RETURNING card_id`,
+                [eu, agora, codigo, agora - VISITANTE_VALIDADE]);
+            if (!resgate.length) throw new HttpError(409, 'esses pacotes não podem ser resgatados nesta conta');
+            return { resgatadas: resgate.length, ...(await estado(ctx.db, eu)) };
         },
     },
     {

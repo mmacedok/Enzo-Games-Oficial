@@ -62,7 +62,7 @@ test('B1. Sem login: GET /api/baralho, POST comprar, abrir e po dão 401', async
     assert.equal((await visitante('POST', '/api/baralho/po', { todas: true })).status, 401);
 });
 
-test('B2. 1º GET /api/baralho: boasVindas true, 1 pacote estacionamento, carteira zero, colecao vazia, total 24', async (t) => {
+test('B2. 1º GET /api/baralho: boasVindas true, 3 pacotes de boas-vindas, carteira zero, colecao vazia, total 24', async (t) => {
     const { db, navegador } = montar();
     t.after(() => db.close());
     const leitor = navegador();
@@ -71,16 +71,16 @@ test('B2. 1º GET /api/baralho: boasVindas true, 1 pacote estacionamento, cartei
     const res = await leitor('GET', '/api/baralho');
     assert.equal(res.status, 200);
     assert.equal(res.dados.boasVindas, true);
-    assert.equal(res.dados.pacotes.length, 1);
-    assert.equal(res.dados.pacotes[0].tipo, 'estacionamento');
-    assert.equal(res.dados.pacotes[0].origem, 'boas-vindas');
+    assert.equal(res.dados.pacotes.length, 3);
+    assert.deepEqual(res.dados.pacotes.map((p) => p.tipo).sort(), [...Baralho.BOAS_VINDAS].sort());
+    assert.ok(res.dados.pacotes.every((p) => p.origem === 'boas-vindas'));
     assert.deepEqual(res.dados.carteira, { creditos: 0, po: 0 });
     assert.deepEqual(res.dados.colecao, {});
     assert.equal(res.dados.diferentes, 0);
     assert.equal(res.dados.total, 24);
 });
 
-test('B3. 2º e 3º GET: boasVindas false e continua 1 pacote só', async (t) => {
+test('B3. 2º e 3º GET: boasVindas false e continuam os 3 pacotes só', async (t) => {
     const { db, navegador } = montar();
     t.after(() => db.close());
     const leitor = navegador();
@@ -92,12 +92,12 @@ test('B3. 2º e 3º GET: boasVindas false e continua 1 pacote só', async (t) =>
     const res2 = await leitor('GET', '/api/baralho');
     assert.equal(res2.status, 200);
     assert.equal(res2.dados.boasVindas, false);
-    assert.equal(res2.dados.pacotes.length, 1);
+    assert.equal(res2.dados.pacotes.length, 3);
 
     const res3 = await leitor('GET', '/api/baralho');
     assert.equal(res3.status, 200);
     assert.equal(res3.dados.boasVindas, false);
-    assert.equal(res3.dados.pacotes.length, 1);
+    assert.equal(res3.dados.pacotes.length, 3);
 });
 
 test('B4. Comprar sem saldo {tipo: "estacionamento"}: 402, erro contém "insuficientes", preco 100', async (t) => {
@@ -178,9 +178,9 @@ test('B7. Clique duplo: com 300 créditos, Promise.all de 2x comprar {tipo: "tor
 
     const baralho = await leitor('GET', '/api/baralho');
     assert.equal(baralho.dados.carteira.creditos, 0);
-    // 1 de boas-vindas + 1 comprado = 2 pacotes fechados
-    assert.equal(baralho.dados.pacotes.length, 2);
-    assert.equal(baralho.dados.pacotes.filter((p) => p.tipo === 'toradolandia').length, 1);
+    // 3 de boas-vindas + 1 comprado = 4 pacotes fechados
+    assert.equal(baralho.dados.pacotes.length, 4);
+    assert.equal(baralho.dados.pacotes.filter((p) => p.origem === 'compra').length, 1);
 });
 
 test('B8. Comprar {tipo: "estacionamento", quantidade: 3}: 200, 3 comprados. Validações 11 (400), xyz (400), po no toradolandia (400)', async (t) => {
@@ -215,7 +215,7 @@ test('B9. Abrir o pacote de boas-vindas: 200, 3 cartas válidas e coleção soma
     await entrar(leitor, 'leitor8', 'Leitor Oito');
 
     const baralho = await leitor('GET', '/api/baralho');
-    const pacoteId = baralho.dados.pacotes[0].id;
+    const pacoteId = baralho.dados.pacotes.find((p) => p.tipo === 'estacionamento').id;
 
     const abrir = await leitor('POST', '/api/baralho/abrir', { pacotes: [pacoteId] });
     assert.equal(abrir.status, 200);
@@ -239,7 +239,7 @@ test('B10. Abrir o mesmo pacote de novo dá 404; Promise.all de 2x abrir o mesmo
     await entrar(leitor, 'leitor9', 'Leitor Nove');
 
     const baralho = await leitor('GET', '/api/baralho');
-    const pacoteId = baralho.dados.pacotes[0].id;
+    const pacoteId = baralho.dados.pacotes.find((p) => p.tipo === 'estacionamento').id;
 
     // Concorrência: 2 chamadas simultâneas para o mesmo pacote
     const [a1, a2] = await Promise.all([
@@ -275,7 +275,7 @@ test('B11. Pacote de outra conta dá 404 e continua fechado para o dono', async 
 
     // Confere que continua fechado para a vítima
     const bVitimaApos = await vitima('GET', '/api/baralho');
-    assert.equal(bVitimaApos.dados.pacotes.length, 1);
+    assert.equal(bVitimaApos.dados.pacotes.length, 3);
     assert.equal(bVitimaApos.dados.pacotes[0].id, pacoteVitima);
 });
 
@@ -287,7 +287,7 @@ test('B12. Repetida: com aleatorio sempre 0 (Cara de Coração comum), colecao.c
     await entrar(leitor, 'leitor10', 'Leitor Dez');
 
     const baralho = await leitor('GET', '/api/baralho');
-    const pacoteId = baralho.dados.pacotes[0].id;
+    const pacoteId = baralho.dados.pacotes.find((p) => p.tipo === 'estacionamento').id;
 
     const abrir = await leitor('POST', '/api/baralho/abrir', { pacotes: [pacoteId] });
     assert.equal(abrir.status, 200);
@@ -303,7 +303,8 @@ test('B13. Pó: continuar B12, converter 2 cara-de-coracao em 10 pó; erros 409 
     await entrar(leitor, 'leitor11', 'Leitor Onze');
 
     const baralho = await leitor('GET', '/api/baralho');
-    await leitor('POST', '/api/baralho/abrir', { pacotes: [baralho.dados.pacotes[0].id] });
+    const pacoteId = baralho.dados.pacotes.find((p) => p.tipo === 'estacionamento').id;
+    await leitor('POST', '/api/baralho/abrir', { pacotes: [pacoteId] });
 
     // Transforma 2 cópias de cara-de-coracao (comum = 5 pó cada -> 10 pó)
     const poRes = await leitor('POST', '/api/baralho/po', { cartas: { 'cara-de-coracao': 2 } });
@@ -391,7 +392,7 @@ test('B16. Garantias: 300 pacotes toradolandia têm >=1 raro/epico/lendario; 300
         await chefe('POST', `/api/admin/users/${u.id}/baralho`, { pacote: 'toradolandia', quantidade: 10 });
     }
     let b = await leitor('GET', '/api/baralho');
-    const pacotesTor = b.dados.pacotes.filter((p) => p.tipo === 'toradolandia').map((p) => p.id);
+    const pacotesTor = b.dados.pacotes.filter((p) => p.tipo === 'toradolandia' && p.origem === 'admin').map((p) => p.id);
     assert.equal(pacotesTor.length, 300);
 
     for (let i = 0; i < 300; i += 10) {
@@ -410,7 +411,7 @@ test('B16. Garantias: 300 pacotes toradolandia têm >=1 raro/epico/lendario; 300
         await chefe('POST', `/api/admin/users/${u.id}/baralho`, { pacote: 'piscina-de-macarronada', quantidade: 10 });
     }
     b = await leitor('GET', '/api/baralho');
-    const pacotesPis = b.dados.pacotes.filter((p) => p.tipo === 'piscina-de-macarronada').map((p) => p.id);
+    const pacotesPis = b.dados.pacotes.filter((p) => p.tipo === 'piscina-de-macarronada' && p.origem === 'admin').map((p) => p.id);
     assert.equal(pacotesPis.length, 300);
 
     for (let i = 0; i < 300; i += 10) {
@@ -492,7 +493,7 @@ test('B19. GET /api/admin/users/:id retorna baralho.carteira, baralho.colecao e 
     assert.ok(res.dados.baralho.carteira, 'deve conter carteira');
     assert.ok(res.dados.baralho.colecao, 'deve conter colecao');
     assert.ok(Array.isArray(res.dados.baralho.pacotes), 'deve conter pacotes');
-    assert.equal(res.dados.baralho.pacotes.length, 1);
+    assert.equal(res.dados.baralho.pacotes.length, 3);
 });
 
 test('B20. Cabo Côco: chance fixa de 0,5% por carta (200 mil sorteios, ±0,1 pp) e nunca sai no sorteio por raridade', () => {
