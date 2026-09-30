@@ -1964,18 +1964,13 @@
                 const aoVivo = partidas.map((p) => {
                     const linha = el('div', 'bt-sala-linha bt-sala-linha--ao-vivo');
                     const b = botao('bt-botao', 'Assistir', () => abrirAssistir(p.id, b));
-                    linha.append(el('span', 'bt-sala-nome', `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`),
-                        el('span', 'bt-sala-deck', `ao vivo · turno ${p.turno}`),
-                        el('span', 'bt-sala-placar', `❤ ${num(p.vida[0])} × ${num(p.vida[1])}`), b);
+                    linha.append(el('span', 'bt-sala-nome', `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`), b);
                     return linha;
                 });
                 corpoSalas.replaceChildren(...salas.map((s) => {
-                    const d = DECKS.find((x) => x.id === s.deck);
                     const linha = el('div', 'bt-sala-linha');
-                    linha.append(el('span', 'bt-sala-nome', s.criador),
-                        el('span', 'bt-sala-deck', d ? d.nome : (s.deck === 'custom' ? 'Deck customizado' : s.deck)),
-                        el('span', 'bt-sala-placar', `V ${s.vitorias} · D ${s.derrotas}`),
-                        el('span', 'bt-sala-espera', haQuanto(s.desde)));
+                    // só o nome de quem criou a sala
+                    linha.append(el('span', 'bt-sala-nome', s.criador));
                     const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarNaSala(s.codigo, b, b));
                     linha.appendChild(b);
                     return linha;

@@ -1204,3 +1204,7 @@ dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
 
 .bt-online-opcoes--uma { grid-template-columns: 1fr; }
 .bt-sala-linha--ao-vivo { background: #f2ecff; }
+.bt-online-salas, .bt-online-salas-lista { width: 100%; min-width: 0; box-sizing: border-box; }
+.bt-sala-linha { box-sizing: border-box; max-width: 100%; }
+.bt-sala-nome { font-size: 1.1rem; }
+.bt-online-salas-lista { grid-template-columns: minmax(0, 1fr); }
