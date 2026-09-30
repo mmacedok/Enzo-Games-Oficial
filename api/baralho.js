@@ -126,6 +126,20 @@ async function creditarPartida(ctx, gameId, score, ref) {
     return valor;
 }
 
+/** Soma créditos a qualquer conta (partida da Batalha) e anota no extrato. Devolve quantos entraram. */
+async function creditarConta(ctx, userId, valor, motivo, ref) {
+    if (!(valor > 0)) return 0;
+    await ctx.db.query(
+        `WITH somou AS (
+             INSERT INTO carteira (user_id, creditos, created_at) VALUES ($1, $2, $3)
+             ON CONFLICT (user_id) DO UPDATE SET creditos = carteira.creditos + EXCLUDED.creditos
+             RETURNING user_id)
+         INSERT INTO extrato (id, user_id, moeda, delta, motivo, ref, created_at)
+         SELECT gen_random_uuid()::text, user_id, 'creditos', $2, $5, $4, $3 FROM somou`,
+        [userId, valor, ctx.agora(), ref, motivo]);
+    return valor;
+}
+
 /** Dá `quantidade` pacotes do tipo (boas-vindas, admin). */
 const darPacotes = (ctx, usuarioId, tipo, quantidade, origem) => ctx.db.query(
     `INSERT INTO pacotes (id, user_id, tipo, origem, created_at)
@@ -484,4 +498,4 @@ const rotas = [
 ];
 
 module.exports = {
-    rotas, estado, creditarPartida, sortearPacote, sortearRaridade, sortearCarta, sortearFixa, aleatorioSeguro };
+    rotas, estado, creditarPartida, creditarConta, sortearPacote, sortearRaridade, sortearCarta, sortearFixa, aleatorioSeguro };

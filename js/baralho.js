@@ -437,6 +437,9 @@
             moeda('baralho-moeda--po', dados.carteira.po, 'pó de estrela'));
         const regras = Object.entries(B.CREDITOS_POR_PONTO)
             .map(([jogo, fator]) => `${NOMES_JOGOS[jogo] || jogo}: ${fator === 1 ? '1 crédito' : `${fator} créditos`} por ponto`);
+        const bt = B.CREDITOS_BATALHA;
+        regras.push(`Batalha online: ${bt.online.vitoria} se ganhar, ${bt.online.derrota} se perder`,
+            `contra o NPC: ${bt.npc.vitoria} / ${bt.npc.derrota}`);
         const conteudo = [saldo,
             el('p', 'quadro-texto', 'Jogue para ganhar créditos!'),
             el('p', 'baralho-regras', regras.join(' · '))];

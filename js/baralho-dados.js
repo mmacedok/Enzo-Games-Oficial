@@ -150,6 +150,15 @@
     const CREDITOS_POR_PONTO = Object.freeze({ 'flappy-enzo': 10 });
 
     /**
+     * Créditos da Batalha dos Torados por partida. Empate paga o mesmo que a derrota.
+     * "online" vem do servidor (api/tcg.js); "npc" é pedido pelo navegador e tem limite diário.
+     */
+    const CREDITOS_BATALHA = Object.freeze({
+        online: Object.freeze({ vitoria: 500, derrota: 150 }),
+        npc: Object.freeze({ vitoria: 250, derrota: 50 }),
+    });
+
+    /**
      * Presente de boas-vindas: um de cada pacote. O visitante sem login abre
      * esses mesmos 3 na chegada ao site; ao entrar, as cartas vão para a conta.
      */
@@ -184,7 +193,7 @@
     const valorPo = (cardId) => raridade(carta(cardId)?.raridade)?.po ?? 0;
 
     return {
-        RARIDADES, CARTAS, PACOTES, CREDITOS_POR_PONTO, PACOTE_BOAS_VINDAS, BOAS_VINDAS, DIARIO, PRESENTES_UNICOS, MAX_POR_VEZ,
+        RARIDADES, CARTAS, PACOTES, CREDITOS_POR_PONTO, CREDITOS_BATALHA, PACOTE_BOAS_VINDAS, BOAS_VINDAS, DIARIO, PRESENTES_UNICOS, MAX_POR_VEZ,
         carta, pacote, raridade, nivel, cartasDaRaridade, valorPo,
     };
 });

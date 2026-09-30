@@ -22,6 +22,7 @@ const crypto = require('node:crypto');
 const { HttpError } = require('./http.js');
 const R = require('../js/tcg-regras.js');
 const { DECKS_PRONTOS } = require('../js/tcg-cartas.js');
+const Baralho = require('../js/baralho-dados.js');
 
 /**
  * Sala pública: fica na lista por 5 minutos e o tempo recomeça enquanto a tela de espera do dono
@@ -32,6 +33,12 @@ const SALA_DURA = 5 * 60 * 1000;
 const RENOVAR_SALA = 5 * 1000;
 /** Depois que a partida termina, os dois têm este tempo para pedir a revanche. */
 const REVANCHE_DURA = 2 * 60 * 1000;
+/**
+ * Contra o NPC a partida roda no navegador e o servidor não confere, então o prêmio tem trava:
+ * poucas partidas premiadas por dia e um intervalo mínimo entre elas.
+ */
+const NPC_PREMIADAS_POR_DIA = 10;
+const NPC_INTERVALO = 90 * 1000;
 const SALAS_NA_LISTA = 20;
 const PLACAR_TOP = 50;
 const TURNO = 60 * 1000;
@@ -138,11 +145,24 @@ async function registrarResultado(ctx, p) {
     const v = p.estado.vencedor;
     const vencedor = v === 0 || v === 1 ? p.jogadores[v] : null;
     const perdedor = v === 0 || v === 1 ? p.jogadores[1 - v] : null;
-    await ctx.db.query(
+    const novo = await ctx.db.query(
         `INSERT INTO tcg_resultados (partida_id, vencedor, perdedor, decks, turnos, motivo, fim_em, jogador_a, jogador_b)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (partida_id) DO NOTHING`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (partida_id) DO NOTHING RETURNING partida_id`,
         [p.id, vencedor, perdedor, JSON.stringify(p.decks), p.estado.turno, p.estado.motivo, ctx.agora(),
             p.jogadores[0], p.jogadores[1]]);
+    // Créditos do Baralho: 500 a quem venceu, 150 a quem perdeu (empate paga como derrota). Uma vez só por partida.
+    if (novo.length) {
+        const { creditarConta } = require('./baralho.js');
+        for (const lado of [0, 1]) {
+            await creditarConta(ctx, p.jogadores[lado], recompensaOnline(p.estado.vencedor, lado), 'batalha', `online:${p.id}`);
+        }
+    }
+}
+
+/** Créditos de quem jogou no `lado` numa partida online que acabou com `vencedor` (0, 1 ou 'empate'). */
+function recompensaOnline(vencedor, lado) {
+    const c = Baralho.CREDITOS_BATALHA.online;
+    return vencedor === lado ? c.vitoria : c.derrota;
 }
 
 /**
@@ -221,6 +241,9 @@ async function recarregarSeMudou(ctx, p) {
 const respostaBase = (ctx, p) => ({
     id: p.id, versao: p.versao, prazo: p.prazo, agora: ctx.agora(), eu: p.eu,
     estouros: p.estouros, status: p.status, regras: R.REGRAS_VERSAO,
+    // Partida online acabada com resultado: quanto rendeu de créditos para este jogador.
+    ...(p.status === 'fim' && p.estado && p.estado.motivo !== 'atualizacao'
+        ? { creditos: recompensaOnline(p.estado.vencedor, p.eu) } : {}),
 });
 
 /**
@@ -465,6 +488,25 @@ const rotas = [
         },
     },
     {
+        // Prêmio da partida contra o NPC: { resultado: 'vitoria' | 'derrota' | 'empate' }.
+        metodo: 'POST', caminho: '/api/tcg/npc', login: true,
+        async executar(ctx) {
+            const { resultado } = await ctx.corpo();
+            if (!['vitoria', 'derrota', 'empate'].includes(resultado)) throw new HttpError(400, 'resultado deve ser vitoria, derrota ou empate');
+            const agora = ctx.agora();
+            const [{ n, ultima }] = await ctx.db.query(
+                `SELECT COUNT(*) AS n, MAX(created_at) AS ultima FROM extrato
+                  WHERE user_id = $1 AND motivo = 'batalha-npc' AND created_at > $2`, [ctx.usuario.id, agora - DIA]);
+            if (Number(n) >= NPC_PREMIADAS_POR_DIA) return { creditos: 0, motivo: 'limite' };
+            if (ultima !== null && agora - Number(ultima) < NPC_INTERVALO) return { creditos: 0, motivo: 'rapido' };
+            const c = Baralho.CREDITOS_BATALHA.npc;
+            const valor = resultado === 'vitoria' ? c.vitoria : c.derrota;
+            const { creditarConta } = require('./baralho.js');
+            await creditarConta(ctx, ctx.usuario.id, valor, 'batalha-npc', `npc:${crypto.randomUUID()}`);
+            return { creditos: valor };
+        },
+    },
+    {
         // Revanche: como está o pedido (meu, do outro) e, quando os dois querem, a partida nova.
         metodo: 'GET', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/revanche$/, login: true,
         async executar(ctx) {
@@ -525,4 +567,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA, REVANCHE_DURA };
+module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline };

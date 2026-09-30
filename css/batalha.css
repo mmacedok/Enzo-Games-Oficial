@@ -870,6 +870,8 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 .bt-fim--empate .bt-fim-titulo { color: var(--orange-light); }
 .bt-fim p { margin: 0; font-weight: 700; }
 .bt-fim-placar { font-family: var(--font-heading); font-size: 1.4rem; }
+.bt-fim-creditos { margin: 0; font-weight: 700; color: var(--caution); text-shadow: 1px 1px 0 var(--ink); }
+.bt-fim-creditos[hidden] { display: none; }
 .bt-fim-acoes { display: flex; gap: 10px; margin-top: 10px; }
 .bt-confete {
     position: absolute;

@@ -1515,6 +1515,7 @@
         pararAoMudar = null;
     }
 
+    let creditosFim = null;  // créditos que o servidor pagou pela partida online que acabou
     let esperaSala = null;   // { parar } enquanto espera alguém entrar na sala
     let salasAbertas = null; // { parar, atualizar } enquanto a lista de salas abertas está na tela
 
@@ -1738,6 +1739,7 @@
         partida++;
         depoisDaMoeda = null;
         online = { id: d.id, versao: d.versao, prazo: d.prazo, estouros: d.estouros || [0, 0], dif: d.agora - Date.now(), timer: null, relogioTimer: null };
+        creditosFim = d.creditos ?? null;
         estado = d.visao;
         montarMesa();
         registrar(`Partida online: você contra ${dele()}.`);
@@ -1767,6 +1769,7 @@
         online.prazo = d.prazo;
         if (d.estouros) online.estouros = d.estouros;
         online.dif = d.agora - Date.now();
+        if (d.creditos !== undefined) creditosFim = d.creditos;
         if (d.visao) {
             const antes = estado;
             estado = d.visao;
@@ -2756,6 +2759,25 @@
         return rev;
     }
 
+    function mostrarCreditos(no, valor) {
+        no.textContent = `+${valor.toLocaleString('pt-BR')} créditos para o Baralho`;
+        no.hidden = false;
+    }
+
+    /** Contra o NPC o servidor paga 250 (vitória) ou 50, com limite por dia; só para quem está logado no site. */
+    async function premiarNpc(tipo, no) {
+        no.hidden = true;
+        const conta = Conta();
+        if (AUTO || !conta || estado.motivo === 'desistencia') return;   // desistir não rende
+        if (!conta.usuario) { no.textContent = 'Entre com o Google no site para ganhar créditos contra o NPC.'; no.hidden = false; return; }
+        try {
+            const r = await api('POST', '/api/tcg/npc', { resultado: tipo });
+            if (r.creditos > 0) mostrarCreditos(no, r.creditos);
+            else if (r.motivo === 'limite') { no.textContent = 'Limite de créditos contra o NPC de hoje atingido (10 partidas).'; no.hidden = false; }
+            else if (r.motivo === 'rapido') { no.textContent = 'Partida muito rápida: sem créditos dessa vez.'; no.hidden = false; }
+        } catch { /* sem servidor: joga do mesmo jeito, só não ganha */ }
+    }
+
     function telaFim() {
         if (!mesa || mesa.raiz.querySelector('.bt-fim--vitoria, .bt-fim--derrota, .bt-fim--empate')) return;
         desenhar();
@@ -2771,14 +2793,18 @@
         const miolo = el('div', 'bt-fim-miolo');
         miolo.append(el('h2', 'bt-fim-titulo', titulos[tipo]), el('p', '', motivos[estado.motivo] || ''),
             el('p', 'bt-fim-placar', `Vida: ${num(estado.jogadores[EU].vida)} × ${num(estado.jogadores[NPC].vida)}`));
+        const creditos = el('p', 'bt-fim-creditos');
+        miolo.appendChild(creditos);
         const acoes = el('div', 'bt-fim-acoes');
         if (online) {
+            if (creditosFim > 0) mostrarCreditos(creditos, creditosFim);
             const idPartida = online.id;
             const nomeDele = dele();   // antes do pararOnline(): depois dele o nome viraria "o NPC"
             pararOnline();
             const revanche = estado.motivo === 'atualizacao' ? null : botaoRevanche(idPartida, nomeDele);
             acoes.append(...(revanche ? [revanche] : []), botao(revanche ? 'bt-botao' : 'bt-botao bt-botao--forte', 'Nova partida online', () => telaOnline()), botao('bt-botao', 'Menu', telaMenu));
         } else {
+            premiarNpc(tipo, creditos);
             acoes.append(botao('bt-botao bt-botao--forte', 'Jogar de novo', () => comecar(nivel)), botao('bt-botao', 'Menu', telaMenu));
         }
         miolo.appendChild(acoes);

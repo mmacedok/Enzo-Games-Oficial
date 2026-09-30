@@ -410,3 +410,40 @@ test('T12. Revanche: os dois pedem, nasce outra partida com os mesmos decks e os
     assert.equal((await c('GET', `/api/tcg/partidas/${id2}/revanche`)).dados.expirou, true);
     assert.equal((await c('POST', `/api/tcg/partidas/${id2}/revanche`, {})).status, 409);
 });
+
+test('T13. Créditos da Batalha: online 500/150 (uma vez só), NPC 250/50 com limite diário e intervalo', async (t) => {
+    const m = montar();
+    t.after(() => m.db.close());
+    const a = await jogador(m, 'a', 'Ana');
+    const b = await jogador(m, 'b', 'Beto');
+    const creditos = async (quem) => (await quem('GET', '/api/baralho')).dados.carteira.creditos;
+    const antesA = await creditos(a);
+    const antesB = await creditos(b);
+
+    // Online: Beto desiste, Ana vence.
+    const { id } = await comecar(m, a, b);
+    const d = (await b('GET', `/api/tcg/partidas/${id}`)).dados;
+    await b('POST', `/api/tcg/partidas/${id}/jogada`, { jogada: { tipo: 'desistir' }, versao: d.versao, regras: R.REGRAS_VERSAO });
+    assert.equal((await creditos(a)) - antesA, 500);
+    assert.equal((await creditos(b)) - antesB, 150);
+    // A resposta da partida diz quanto cada um levou; ler de novo não paga de novo.
+    assert.equal((await a('GET', `/api/tcg/partidas/${id}?desde=-1`)).dados.creditos, 500);
+    assert.equal((await b('GET', `/api/tcg/partidas/${id}?desde=-1`)).dados.creditos, 150);
+    assert.equal((await creditos(a)) - antesA, 500);
+
+    // NPC: vitória 250, derrota 50; validação, intervalo mínimo e limite por dia.
+    assert.equal((await a('POST', '/api/tcg/npc', { resultado: 'ganhei' })).status, 400);
+    assert.equal((await m.navegador()('POST', '/api/tcg/npc', { resultado: 'vitoria' })).status, 401);
+    const base = await creditos(a);
+    assert.equal((await a('POST', '/api/tcg/npc', { resultado: 'vitoria' })).dados.creditos, 250);
+    assert.equal((await a('POST', '/api/tcg/npc', { resultado: 'vitoria' })).dados.motivo, 'rapido');
+    m.relogio.agora += Tcg.NPC_INTERVALO + 1000;
+    assert.equal((await a('POST', '/api/tcg/npc', { resultado: 'derrota' })).dados.creditos, 50);
+    assert.equal((await creditos(a)) - base, 300);
+    for (let i = 0; i < Tcg.NPC_PREMIADAS_POR_DIA - 2; i++) {
+        m.relogio.agora += Tcg.NPC_INTERVALO + 1000;
+        assert.equal((await a('POST', '/api/tcg/npc', { resultado: 'empate' })).dados.creditos, 50);
+    }
+    m.relogio.agora += Tcg.NPC_INTERVALO + 1000;
+    assert.equal((await a('POST', '/api/tcg/npc', { resultado: 'vitoria' })).dados.motivo, 'limite');
+});
