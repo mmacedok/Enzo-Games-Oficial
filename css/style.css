@@ -1420,9 +1420,6 @@ body.theme-degustador .section-title { color: var(--purple); }
     user-select: none;
 }
 /* Easter egg: o título abre a Caçada ao Inominável (js/cacada.js) */
-.batman-title[data-ronda-trigger] { width: fit-content; margin-inline: auto; border-radius: var(--radius-sm); transition: filter 0.2s, scale 0.2s; }
-.batman-title[data-ronda-trigger]:hover { filter: drop-shadow(0 0 14px rgba(255, 140, 0, 0.55)); scale: 1.02; }
-.batman-title[data-ronda-trigger]:focus-visible { outline: 3px solid var(--focus); outline-offset: 6px; }
 
 /* ================================================================ cursores */
 /* Uma lista só de itens clicáveis; cada tema troca as duas imagens pelas variáveis. */
@@ -3380,7 +3377,6 @@ dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
     height: clamp(350px, 48vw, 540px);
     margin: 0 auto;
     overflow: hidden;
-    cursor: pointer;
     border: var(--stroke-thick);
     border-radius: var(--radius);
     background: var(--halftone), radial-gradient(ellipse at 50% 42%, #99400e 0%, #451b14 48%, #1b1215 100%);
@@ -3388,12 +3384,12 @@ dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
     isolation: isolate;
 }
 .arcade-machine:hover { box-shadow: 8px 8px 0 var(--ink); }
-.arcade-machine:focus-visible { outline-offset: 6px; }
 .arcade-machine__scene {
     position: absolute;
     inset: 0;
     z-index: 1;
     display: block;
+    cursor: pointer;
 }
 .arcade-machine__scene canvas { display: block; width: 100%; height: 100%; }
 .arcade-machine__floor {
@@ -3409,7 +3405,8 @@ dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
 }
 .arcade-machine__prompt {
     position: absolute;
-    z-index: 2;
+    z-index: 4;
+    cursor: pointer;
     bottom: 14px;
     left: 50%;
     width: max-content;
@@ -3427,6 +3424,69 @@ dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
     transform: translateX(-50%);
 }
 .arcade-machine--error .arcade-machine__prompt { background: var(--danger-light); }
+
+/* Menu de jogos: aparece em cima da tela do fliperama quando a máquina chega perto.
+   Posição e tamanho são calculados em js/arcade-home.js a partir da tela 3D. */
+.arcade-menu {
+    position: absolute;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 3%;
+    padding: 2.5%;
+    box-sizing: border-box;
+    container-type: size;
+    background: #06080b;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+}
+.arcade-menu[hidden] { display: none; }
+.arcade-menu--aberto { opacity: 1; pointer-events: auto; }
+.arcade-jogo {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid #ffdd6c;
+    border-radius: 3px;
+    background: #111;
+    box-shadow: 0 0 8px rgba(255, 158, 19, 0.45);
+}
+.arcade-jogo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.arcade-jogo__nome {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 2px 3px 3px;
+    color: #ffdd6c;
+    background: rgba(0, 0, 0, 0.74);
+    font-family: var(--font-heading);
+    font-size: clamp(8px, 5.6cqw, 17px);
+    letter-spacing: 0.4px;
+    line-height: 1.1;
+    text-align: center;
+    text-shadow: 1px 1px 0 #000;
+}
+.arcade-jogo:hover, .arcade-jogo:focus-visible { border-color: #fff; outline: none; filter: brightness(1.18); }
+.arcade-jogo:hover .arcade-jogo__nome, .arcade-jogo:focus-visible .arcade-jogo__nome { color: #fff; }
+.arcade-jogo[disabled] { cursor: not-allowed; filter: grayscale(0.85) brightness(0.7); box-shadow: none; border-color: #6e7479; }
+.arcade-jogo__breve {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    padding: 1px 5px;
+    color: #111;
+    background: #ffdd6c;
+    border-radius: 2px;
+    font-family: var(--font-heading);
+    font-size: clamp(7px, 4cqw, 12px);
+    line-height: 1.2;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
 @media (max-width: 600px) {
     .arcade-machine { height: clamp(350px, 110vw, 460px); }
     .arcade-machine__prompt { bottom: 10px; }

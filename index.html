@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=arcade1">
+    <link rel="stylesheet" href="css/style.css?v=arcade3">
     <script type="importmap">
         {"imports":{"three":"/assets/fliperama-3d/vendor/three.module.js"}}
     </script>
@@ -25,7 +25,7 @@
 <body>
 
     <header class="site-header">
-        <h1 class="garfield-classic-logo" title="Enzo Games" data-flappy-trigger>
+        <h1 class="garfield-classic-logo" title="Enzo Games">
             <img data-original="assets/enzo-cabeca-logo.png" src="assets/web/86ba0c6f0fe68894-600.webp" srcset="assets/web/86ba0c6f0fe68894-600.webp 600w" sizes="(max-width: 600px) 90vw, 420px" width="600" height="542" class="logo-cat" alt="" aria-hidden="true" draggable="false">
             <span class="char c1" data-text="E">E</span><span class="char c2" data-text="N">N</span><span class="char c3" data-text="Z">Z</span><span class="char c4" data-text="O">O</span><span class="space"></span><span class="char c5" data-text="G">G</span><span class="char c6" data-text="A">A</span><span class="char c7" data-text="M">M</span><span class="char c8" data-text="E">E</span><span class="char c9" data-text="S">S</span>
             <svg class="logo-tail" viewBox="0 0 70 96" aria-hidden="true" focusable="false">
@@ -67,11 +67,12 @@
         <section class="section arcade-section" id="arcade" aria-labelledby="arcade-title">
             <h2 class="section-title section-title--center" id="arcade-title">Fliperama Enzo Games</h2>
             <p class="arcade-intro">Uma máquina apareceu no mundo do Enzo...</p>
-            <button class="arcade-machine" id="arcade-machine" type="button" aria-label="Aproximar o fliperama" aria-pressed="false">
+            <div class="arcade-machine" id="arcade-machine">
                 <span class="arcade-machine__scene" id="arcade-scene" aria-hidden="true"></span>
                 <span class="arcade-machine__floor" aria-hidden="true"></span>
-                <span class="arcade-machine__prompt" id="arcade-prompt">Toque no fliperama para chegar mais perto</span>
-            </button>
+                <div class="arcade-menu" id="arcade-menu" role="group" aria-label="Escolha o jogo" hidden></div>
+                <button class="arcade-machine__prompt" id="arcade-prompt" type="button" aria-pressed="false">Toque no fliperama para chegar mais perto</button>
+            </div>
         </section>
     </main>
 
@@ -99,6 +100,6 @@
     <script src="js/shelf.js?v=rev0926"></script>
     <script src="js/comic-open.js?v=rev0926"></script>
     <script src="js/main.js?v=rev0930x"></script>
-    <script type="module" src="js/arcade-home.js?v=arcade1"></script>
+    <script type="module" src="js/arcade-home.js?v=arcade2"></script>
 </body>
 </html>

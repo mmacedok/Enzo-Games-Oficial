@@ -1,11 +1,25 @@
 import * as THREE from 'three';
 import { createEnzoArcade } from './fliperama-arcade.js';
 
-const button = document.getElementById('arcade-machine');
+// Fliperama da home: o único ponto de entrada dos jogos do site. Ao chegar perto, a tela da máquina
+// mostra os jogos (capa + nome); clicar abre o jogo escolhido.
+const machine = document.getElementById('arcade-machine');
 const stage = document.getElementById('arcade-scene');
 const prompt = document.getElementById('arcade-prompt');
+const menu = document.getElementById('arcade-menu');
 
-if (button && stage) {
+// 'flappy' e 'ronda' são os nomes que o js/main.js (window.EnzoJogos) conhece.
+const JOGOS = [
+  { nome: 'Flappy Enzo', capa: 'flappy', abrir: () => window.EnzoJogos?.abrir('flappy') },
+  { nome: 'Caçada ao Inominável', capa: 'cacada', abrir: () => window.EnzoJogos?.abrir('ronda') },
+  { nome: 'Batalha dos Torados', capa: 'batalha', abrir: () => { location.href = 'batalha.html'; } },
+  { nome: 'Degustação Noturna', capa: 'degustacao', breve: true },
+];
+
+// Cantos da tela do fliperama no modelo 3D (js/fliperama-arcade.js, "Tela do jogo").
+const TELA = [[-0.405, 1.205, 0.510], [0.405, 1.205, 0.510], [0.405, 1.695, 0.393], [-0.405, 1.695, 0.393]];
+
+if (machine && stage && prompt && menu) {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let renderer;
   let model;
@@ -17,6 +31,60 @@ if (button && stage) {
   let progress = 0;
   let target = 0;
   let lastTime = 0;
+  let loading = false;
+
+  for (const jogo of JOGOS) {
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'arcade-jogo';
+    botao.setAttribute('aria-label', jogo.breve ? `${jogo.nome} (em breve)` : jogo.nome);
+    const img = document.createElement('img');
+    img.src = `/assets/fliperama-3d/jogos/${jogo.capa}.webp`;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    const nome = document.createElement('span');
+    nome.className = 'arcade-jogo__nome';
+    nome.textContent = jogo.nome;
+    botao.append(img, nome);
+    if (jogo.breve) {
+      botao.disabled = true;
+      const breve = document.createElement('span');
+      breve.className = 'arcade-jogo__breve';
+      breve.textContent = 'Em breve';
+      botao.append(breve);
+    } else {
+      botao.addEventListener('click', jogo.abrir);
+    }
+    menu.append(botao);
+  }
+
+  /** Encaixa o menu HTML sobre a tela 3D (projeta os cantos da tela na imagem da câmera). */
+  const posicionarMenu = () => {
+    if (!model || !camera) return;
+    const { width, height } = stage.getBoundingClientRect();
+    model.updateMatrixWorld(true);
+    const [bl, br, tr, tl] = TELA.map(([x, y, z]) => {
+      const v = new THREE.Vector3(x, y, z);
+      model.localToWorld(v);
+      v.project(camera);
+      return { x: ((v.x + 1) / 2) * width, y: ((1 - v.y) / 2) * height };
+    });
+    const esquerda = Math.max(bl.x, tl.x);
+    const direita = Math.min(br.x, tr.x);
+    const topo = Math.min(tl.y, tr.y);
+    const base = Math.max(bl.y, br.y);
+    Object.assign(menu.style, {
+      left: `${esquerda}px`, top: `${topo}px`, width: `${direita - esquerda}px`, height: `${base - topo}px`,
+    });
+  };
+
+  const mostrarMenu = () => {
+    const perto = target === 1 && progress > 0.94;
+    if (perto) { menu.hidden = false; posicionarMenu(); }
+    menu.classList.toggle('arcade-menu--aberto', perto);
+    if (!perto && progress < 0.02) menu.hidden = true;
+  };
 
   const resize = () => {
     if (!renderer || !camera) return;
@@ -27,6 +95,7 @@ if (button && stage) {
     camera.updateProjectionMatrix();
     renderer.setSize(width, height, false);
     renderer.render(scene, camera);
+    posicionarMenu();
   };
 
   const animate = (time) => {
@@ -44,6 +113,7 @@ if (button && stage) {
     const scale = 1 + progress * 0.52;
     model.scale.setScalar(scale);
     renderer.render(scene, camera);
+    mostrarMenu();
     if (!reducedMotion.matches || progress !== target) frame = requestAnimationFrame(animate);
   };
 
@@ -55,8 +125,8 @@ if (button && stage) {
   };
 
   async function load() {
-    if (loaded || button.dataset.loading) return;
-    button.dataset.loading = 'true';
+    if (loaded || loading) return;
+    loading = true;
     try {
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(37, 1, 0.1, 30);
@@ -77,31 +147,33 @@ if (button && stage) {
       model = await createEnzoArcade('/assets/fliperama-3d/');
       scene.add(model);
       loaded = true;
-      button.classList.add('arcade-machine--ready');
+      machine.classList.add('arcade-machine--ready');
       resize();
       start();
     } catch (error) {
       console.error('Não foi possível carregar o fliperama 3D.', error);
-      button.classList.add('arcade-machine--error');
+      machine.classList.add('arcade-machine--error');
       prompt.textContent = 'O fliperama não carregou. Toque para tentar novamente.';
       renderer?.dispose();
       renderer?.domElement.remove();
       renderer = null;
-      button.dataset.loading = '';
+      loading = false;
     }
   }
 
-  button.addEventListener('click', () => {
+  const alternar = () => {
     if (!loaded) {
       load();
       return;
     }
     target = target ? 0 : 1;
-    button.setAttribute('aria-pressed', String(Boolean(target)));
-    button.setAttribute('aria-label', target ? 'Afastar o fliperama' : 'Aproximar o fliperama');
-    prompt.textContent = target ? 'Toque para afastar o fliperama' : 'Toque no fliperama para chegar mais perto';
+    prompt.setAttribute('aria-pressed', String(Boolean(target)));
+    prompt.textContent = target ? 'Escolha um jogo na tela · toque para afastar' : 'Toque no fliperama para chegar mais perto';
+    mostrarMenu();
     start();
-  });
+  };
+  prompt.addEventListener('click', alternar);
+  stage.addEventListener('click', alternar);
 
   new ResizeObserver(resize).observe(stage);
   new IntersectionObserver((entries) => {
@@ -113,7 +185,7 @@ if (button && stage) {
       cancelAnimationFrame(frame);
       frame = 0;
     }
-  }, { rootMargin: '250px 0px', threshold: 0 }).observe(button);
+  }, { rootMargin: '250px 0px', threshold: 0 }).observe(machine);
   document.addEventListener('visibilitychange', start);
   reducedMotion.addEventListener('change', start);
 }

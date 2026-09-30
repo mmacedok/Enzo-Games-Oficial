@@ -295,17 +295,8 @@
             .catch((error) => { console.error('[jogo]', error); carregando[nome] = null; });
     }
 
-    // Logo da home abre o Flappy; título do Degustador abre a Caçada ao Inominável.
-    for (const [seletor, nome] of [['[data-flappy-trigger]', 'flappy'], ['[data-ronda-trigger]', 'ronda']]) {
-        const gatilho = document.querySelector(seletor);
-        if (!gatilho) continue;
-        gatilho.tabIndex = 0;
-        gatilho.setAttribute('role', 'button');
-        gatilho.addEventListener('click', () => abrirJogo(nome));
-        gatilho.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); abrirJogo(nome); }
-        });
-    }
+    // Os jogos só abrem pelo fliperama da home (js/arcade-home.js): 'flappy' e 'ronda' (Caçada ao Inominável).
+    window.EnzoJogos = { abrir: abrirJogo };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
