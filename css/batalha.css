@@ -1114,15 +1114,15 @@ dialog.bt-regras.bt-editor:not([open]) { display: none; }
 .bt-editor-carta .carta-tcg { width: 96px; }
 .bt-editor-info { display: grid; gap: 3px; min-width: 0; }
 .bt-editor-nome { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; letter-spacing: .5px; }
-.bt-editor-frase { font-size: .8rem; opacity: .7; }
+.bt-editor-frase { font-size: .85rem; color: #4a3a22; }
 .bt-editor-menu summary { cursor: pointer; font-size: .85rem; font-weight: 700; color: var(--paper-ink); padding: 4px 0; }
 .bt-editor-menu[open] summary { margin-bottom: 2px; }
-.bt-editor-desc { margin: 0; font-size: .82rem; line-height: 1.3; white-space: pre-line; }
+.bt-editor-desc { margin: 0; font-size: .92rem; line-height: 1.4; color: #1c1408; }
 .bt-editor-controle { display: flex; align-items: center; gap: 8px; }
 .bt-editor-mm { width: 40px; height: 40px; padding: 0; font: 1.6rem/1 var(--font-heading); color: var(--paper-ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 50%; box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
 .bt-editor-mm:disabled { opacity: .35; cursor: default; }
 .bt-editor-qtd { min-width: 1.6ch; text-align: center; font: 1.6rem/1 var(--font-heading); }
-.bt-editor-tem { font-size: .8rem; opacity: .75; }
+.bt-editor-tem { font-size: .85rem; font-weight: 700; color: #4a3a22; }
 .bt-editor-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .bt-editor-acoes .bt-botao:disabled { opacity: 1; color: #777; background: #e4dcc4; box-shadow: none; cursor: default; }
 @media (max-width: 760px) {
@@ -1169,3 +1169,18 @@ dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
     .bt-chat-painel { display: flex; flex: 1; width: 100%; max-height: none; min-height: 0; }
     .bt-chat-lista { flex: 1; max-height: none; }
 }
+
+/* Descrição das cartas: cores por tipo de informação (texto escuro no fundo claro, partes importantes em destaque). */
+.bt-desc-linha { display: block; margin-bottom: 3px; }
+.bt-desc-nome { font-family: var(--font-heading); font-size: 1.05em; font-weight: 400; letter-spacing: .4px; color: #1c1408; }
+.bt-desc-vida { font-weight: 800; color: #1b6b2a; }
+.bt-desc-recuo { font-weight: 800; color: #7a4a00; }
+.bt-desc-dano { font-weight: 800; color: #b3120a; }
+.bt-desc-cura { font-weight: 800; color: #0f7a5a; }
+.bt-desc-escudo { font-weight: 800; color: #1452a8; }
+.bt-desc-estado { font-weight: 800; color: #b34a00; }
+.bt-desc-recarga { font-weight: 700; font-style: italic; color: #4a5568; }
+.bt-desc-aura { font-weight: 800; color: #6a1fb0; }
+.bt-desc-cartas .bt-desc-linha { margin-bottom: 4px; }
+
+.bt-editor .bt-placar-nota { color: #3a2d18; opacity: 1; font-size: .9rem; }

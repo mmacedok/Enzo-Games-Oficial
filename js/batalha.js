@@ -106,6 +106,42 @@
     };
     const def = (id) => B.carta(id);
     const nomeVisivel = (id) => (UI.nomeVisivel ? UI.nomeVisivel(def(id)) : def(id).nome);
+    /**
+     * Descrição da carta com as partes importantes coloridas (mesma regra em todo lugar):
+     * vida = verde, dano = vermelho, Aura = roxo, cura = verde-claro, escudo = azul, estados = laranja, recarga = cinza,
+     * e o nome de cada ataque/poder em negrito.
+     */
+    const PARTES_DESCRICAO = [
+        ['vida', /Vida [\d.]+/],
+        ['recuo', /Recuo \d+ Aura/],
+        ['dano', /[\d.]+(?:\s*\+\s*[\d.]+)?(?: por \w+)? de dano|[\d.]+ de vida/],
+        ['cura', /cura[r]? [\d.]+|compra \d+ carta|puxa [^.;]*/],
+        ['escudo', /segura [\d.]+|escudo(?: de)? [\d.]+|protege o banco/],
+        ['estado', /Notificado|Iludido|Silenciado|Escudo/],
+        ['recarga', /fica virad[oa][^.;]*|virada[^.;]*/],
+        ['aura', /\+?\d+ Aura|\(\d+ Aura\)|Aura/],
+    ];
+    function descricaoColorida(texto) {
+        const raiz = document.createDocumentFragment();
+        String(texto).split('\n').forEach((linha, i) => {
+            const p = el('span', 'bt-desc-linha');
+            // nome do ataque/poder: o que vem antes de " (N Aura)" ou de ":" (a 1ª linha é só Vida/Recuo)
+            let resto = linha;
+            const m = i > 0 && linha.match(/^(.+?)(?= \(\d+ Aura\)|:)/);
+            if (m) { p.appendChild(el('strong', 'bt-desc-nome', m[1])); resto = linha.slice(m[1].length); }
+            const junto = new RegExp(PARTES_DESCRICAO.map(([, r]) => `(${r.source})`).join('|'), 'g');
+            let fim = 0;
+            for (const achou of resto.matchAll(junto)) {
+                if (achou.index > fim) p.appendChild(document.createTextNode(resto.slice(fim, achou.index)));
+                const tipo = PARTES_DESCRICAO[achou.findIndex((v, k) => k > 0 && v !== undefined) - 1][0];
+                p.appendChild(el('span', `bt-desc-${tipo}`, achou[0]));
+                fim = achou.index + achou[0].length;
+            }
+            if (fim < resto.length) p.appendChild(document.createTextNode(resto.slice(fim)));
+            raiz.appendChild(p);
+        });
+        return raiz;
+    }
     /** Número grande no formato do site: 6.000. */
     const num = (v) => Number(v).toLocaleString('pt-BR');
     /** Número da escala pequena das cartas (tcg-cartas.js) no valor real da partida (×20). */
@@ -417,7 +453,9 @@
             if (dc.tcg) {
                 // menu que abre e fecha com a descrição da carta
                 const menu = el('details', 'bt-editor-menu');
-                menu.append(el('summary', '', 'Ver o que faz'), el('p', 'bt-editor-desc', dc.tcg));
+                const desc = el('p', 'bt-editor-desc');
+                desc.appendChild(descricaoColorida(dc.tcg));
+                menu.append(el('summary', '', 'Ver o que faz'), desc);
                 info.appendChild(menu);
             }
             const menos = botao('bt-editor-mm', '−', () => mexer(c, -1));
@@ -583,7 +621,7 @@
             grande.appendChild(UI.carta(id));
             const info = el('div', 'bt-cartas-info');
             info.append(el('h3', '', nomeVisivel(id)), el('p', 'bt-painel-frase', `(${d.frase})`));
-            if (d.tcg) info.appendChild(el('p', 'bt-painel-tcg', d.tcg));
+            if (d.tcg) { const t = el('p', 'bt-painel-tcg bt-desc-cartas'); t.appendChild(descricaoColorida(d.tcg)); info.appendChild(t); }
             detalhe.replaceChildren(grande, info);
             grade.querySelectorAll('.bt-cartas-item').forEach((x) => x.classList.toggle('bt-cartas-item--ativa', x.dataset.carta === id));
         };
