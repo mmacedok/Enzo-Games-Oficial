@@ -5,6 +5,9 @@
    ========================================================================== */
 
 .pagina-batalha {
+    /* Fonte de gibi (Shantell Sans) para os textos da Batalha; os títulos continuam em Bangers. */
+    --font-sans: 'Shantell Sans', 'Comic Neue', 'Trebuchet MS', sans-serif;
+    font-weight: 600;
     min-height: 100dvh;
     background: #121212;
     overflow-x: hidden;
