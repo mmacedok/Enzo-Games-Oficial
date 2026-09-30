@@ -1376,11 +1376,13 @@
     }
 
     async function sair() {
-        if (ocupado) return;
         const aviso = online
             ? 'Sair da mesa? A partida continua e o tempo corre: 3 vezes sem jogar e você perde. Dá para voltar pelo menu.'
             : 'Sair desta batalha? Ela não fica salva.';
         if (estado && estado.fase !== 'fim' && !(await perguntar(aviso, 'Sair'))) return;
+        // Durante uma animação ou a vez do NPC o botão parecia morto: espera o passo acabar (até ~8 s) e sai.
+        for (let i = 0; ocupado && i < 80; i++) await new Promise((ok) => setTimeout(ok, 100));
+        if (ocupado) return;
         pararOnline();
         estado = null;
         depoisDaMoeda = null;
