@@ -10,7 +10,8 @@
     };
     /**
      * Catálogo (data/database.json) já sem os gibis `hidden` que ainda não foram revelados.
-     * Quem revela é um admin, pelo comando `reveal <id>` do terminal (admin.html).
+     * Quem revela é um admin, pelo comando `reveal <id>` do terminal (admin.html), ou o próprio horário
+     * `revealAt` do gibi (comparado com o relógio do servidor, não o do aparelho).
      * Se a API não responder, ficam escondidos.
      */
     window.carregarCatalogo = async () => {
@@ -19,11 +20,13 @@
         const db = await resposta.json();
         if (!Array.isArray(db?.comics) || !db.comics.some((c) => c && c.hidden === true)) return db;
         let revelados = [];
+        let agora = 0;
         try {
             const r = await fetch('/api/site/revelados', { cache: 'no-store' });
-            if (r.ok) revelados = (await r.json()).ids || [];
+            if (r.ok) { const dados = await r.json(); revelados = dados.ids || []; agora = Number(dados.agora) || 0; }
         } catch (erro) { /* sem API: continua escondido */ }
-        return { ...db, comics: db.comics.filter((c) => c?.hidden !== true || revelados.includes(c.id)) };
+        const liberado = (c) => c?.hidden !== true || revelados.includes(c.id) || (agora > 0 && Number(c.revealAt) <= agora);
+        return { ...db, comics: db.comics.filter(liberado) };
     };
     window.siteImageUrl = source => window.SiteImages?.[source]?.variants[0].src || source;
     /**

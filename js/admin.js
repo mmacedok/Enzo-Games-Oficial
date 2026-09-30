@@ -610,17 +610,20 @@
     /** Gibis com `hidden` no catálogo (data/comics.manifest.json) e quais já foram revelados. */
     async function lerGibis() {
         const catalogo = await (await fetch('data/database.json', { cache: 'no-store' })).json();
-        const { ids } = await (await fetch('/api/site/revelados', { cache: 'no-store' })).json();
-        return { escondidos: catalogo.comics.filter((c) => c.hidden === true), ids };
+        const { ids, agora } = await (await fetch('/api/site/revelados', { cache: 'no-store' })).json();
+        return { escondidos: catalogo.comics.filter((c) => c.hidden === true), ids, agora };
     }
 
     async function telaGibis() {
-        const { escondidos, ids } = await lerGibis();
+        const { escondidos, ids, agora } = await lerGibis();
         novaTela('reveal', [['gibis escondidos', null]]);
         if (!escondidos.length) { apagado('nenhum gibi escondido no catálogo.'); return; }
         tabela(['id', 'título', 'estado', ''], escondidos.map((c) => {
-            const revelado = ids.includes(c.id);
-            return [c.id, c.title, span(revelado ? 'ok' : 'aviso', revelado ? 'revelado' : 'escondido'),
+            const porHorario = Number.isFinite(c.revealAt);
+            const revelado = ids.includes(c.id) || (porHorario && c.revealAt <= agora);
+            const quando = porHorario ? data(c.revealAt) : '';
+            const estadoTexto = revelado ? (porHorario && !ids.includes(c.id) ? `revelado (${quando})` : 'revelado') : (porHorario ? `escondido · abre ${quando}` : 'escondido');
+            return [c.id, c.title, span(revelado ? 'ok' : 'aviso', estadoTexto),
                 revelado ? botao('esconder', `hide ${c.id}`) : botao('revelar', `reveal ${c.id}`)];
         }));
         apagado('os botões mudam o site na hora.');

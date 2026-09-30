@@ -16,7 +16,7 @@
 //   POST /api/admin/scores/:id/delete
 //   GET  /api/admin/log                           histórico das ações de admin
 //   POST /api/admin/reveal                        { id, revelar } mostra/esconde um gibi `hidden` do catálogo
-//   GET  /api/site/revelados                      (público) ids dos gibis escondidos que já foram revelados
+//   GET  /api/site/revelados                      (público) ids dos gibis escondidos que já foram revelados + a hora do servidor
 // Toda mudança fica registrada em admin_log.
 // ============================================================================
 const crypto = require('node:crypto');
@@ -72,7 +72,8 @@ const rotas = [
         metodo: 'GET', caminho: '/api/site/revelados',
         async executar(ctx) {
             const linhas = await ctx.db.query('SELECT comic_id FROM gibis_revelados ORDER BY created_at');
-            return { ids: linhas.map((l) => l.comic_id) };
+            // `agora` (relógio do servidor) deixa o site liberar sozinho os gibis com `revealAt` (data/comics.manifest.json).
+            return { ids: linhas.map((l) => l.comic_id), agora: ctx.agora() };
         },
     },
     {

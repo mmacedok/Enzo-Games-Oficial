@@ -176,6 +176,8 @@ function build() {
             featured: custom.featured === undefined ? true : Boolean(custom.featured),
             // `hidden: true` no manifesto: o site não mostra o gibi até um admin rodar `reveal <id>` no terminal.
             ...(custom.hidden === true ? { hidden: true } : {}),
+            // `revealAt` (data ISO com fuso, ex.: "2026-09-30T10:00:00-03:00"): o site revela o gibi sozinho nesse horário (relógio do servidor).
+            ...(custom.hidden === true && Number.isFinite(Date.parse(custom.revealAt)) ? { revealAt: Date.parse(custom.revealAt) } : {}),
             // Título/descrição por capítulo: manifest "chapters": { "2": { "title": ..., "description": ... } }
             chapters: comic.chapters.map((chapter) => ({ ...chapter, ...(custom.chapters?.[chapter.id] || {}) })),
         };
