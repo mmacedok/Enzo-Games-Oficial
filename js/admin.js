@@ -1,6 +1,8 @@
 // ============================================================================
 // Painel do admin (admin.html): um terminal que conversa com /api/admin/*.
-// Tudo é comando ("help" lista). Clicar num [botão] digita o comando por você.
+// Tudo é comando ("help" lista), mas quase tudo também é clicável: nomes abrem a conta,
+// botões agem no lugar e a tela é SUBSTITUÍDA (nada de empilhar linhas): só há uma tela,
+// migalhas para voltar e uma linha de aviso. Digitar continua funcionando.
 // Quem não é admin só vê "acesso negado": a API responde 404 para os outros,
 // então esta página não tem nada de secreto — o poder está no servidor.
 // Todo texto vindo do banco entra com textContent (nunca innerHTML).
@@ -26,6 +28,7 @@
     const saida = $('saida');
     const entrada = $('entrada');
     const ps = $('ps');
+    const feedback = $('feedback');
 
     const estado = {
         eu: null,
@@ -35,6 +38,9 @@
         historico: [],
         posHistorico: 0,
         confirmar: null,    // ação esperando "s"
+        tela: null,         // comando da tela aberta (para "atualizar")
+        pilha: [],          // comandos das telas anteriores (para "voltar")
+        secoes: {},         // seções dobráveis abertas/fechadas (lembra entre contas)
         numeros: null,
         apiFalhou: false,
     };
@@ -50,14 +56,68 @@
         return no;
     }
 
-    const colado = () => saida.scrollHeight - saida.scrollTop - saida.clientHeight < 60;
+    /** Onde o conteúdo entra: a saída (boot) ou a tela atual (ou uma seção dobrável dela). */
+    let destino = saida;
+    let tela = null;
 
-    /** Acrescenta um nó na saída; só rola se já estava no fim (como um terminal de verdade). */
     function imprimir(no) {
-        const rolar = colado();
-        saida.appendChild(no);
-        if (rolar) saida.scrollTop = saida.scrollHeight;
+        destino.appendChild(no);
         return no;
+    }
+
+    /** Roda `fn` imprimindo dentro de `caixa` (ex.: o corpo de uma seção). */
+    function dentroDe(caixa, fn) {
+        const antes = destino;
+        destino = caixa;
+        try { fn(); } finally { destino = antes; }
+    }
+
+    /**
+     * Troca a tela inteira (não acrescenta). `caminho` são as migalhas: [[rótulo, comando?], ...].
+     * `comando` fica guardado para "atualizar"; o anterior vai para a pilha do "voltar".
+     */
+    function novaTela(comando, caminho = []) {
+        if (estado.tela && estado.tela !== comando) {
+            estado.pilha.push(estado.tela);
+            if (estado.pilha.length > 30) estado.pilha.shift();
+        }
+        estado.tela = comando;
+        const migalhas = el('nav', 'migalhas');
+        migalhas.setAttribute('aria-label', 'Onde estou');
+        const btVoltar = el('button', 'cmd cmd--link', '‹ voltar');
+        btVoltar.type = 'button';
+        btVoltar.disabled = !estado.pilha.length;
+        btVoltar.title = 'voltar para a tela anterior (Esc)';
+        btVoltar.addEventListener('click', () => voltar());
+        migalhas.appendChild(btVoltar);
+        [['início', 'status'], ...caminho].forEach(([rotulo, cmd], i, todos) => {
+            if (i) migalhas.appendChild(span('migalha-sep', '›'));
+            if (cmd && i < todos.length - 1) migalhas.appendChild(botao(rotulo, cmd, { link: true }));
+            else migalhas.appendChild(span('migalha-atual', rotulo));
+        });
+        const atualizar = el('button', 'cmd cmd--link migalha-atualizar', '↻ atualizar');
+        atualizar.type = 'button';
+        atualizar.addEventListener('click', () => {
+            const atual = estado.tela;
+            estado.tela = null;
+            if (atual) rodar(atual);
+        });
+        migalhas.appendChild(atualizar);
+        tela = el('div', 'tela');
+        saida.replaceChildren(migalhas, tela);
+        saida.scrollTop = 0;
+        destino = tela;
+        return tela;
+    }
+
+    /** Uma linha só de retorno, sempre no mesmo lugar (some sozinha; a próxima substitui). */
+    let apagaAviso = 0;
+    function notificar(conteudo, tipo = 'ok', { fixo = false } = {}) {
+        clearTimeout(apagaAviso);
+        delete feedback.dataset.carregando;
+        feedback.className = `feedback feedback--${tipo}`;
+        feedback.replaceChildren(...[].concat(conteudo).map((p) => (p instanceof Node ? p : document.createTextNode(String(p)))));
+        if (!fixo && conteudo) apagaAviso = setTimeout(() => { if (!estado.confirmar) feedback.replaceChildren(); }, tipo === 'erro' ? 9000 : 4500);
     }
 
     function linha(partes, classe = '') {
@@ -68,30 +128,51 @@
         }
         return imprimir(p);
     }
-    const ok = (texto) => linha(texto, 'l--ok');
+    const ok = (texto) => notificar(`✔ ${texto}`, 'ok');
     const aviso = (texto) => linha(texto, 'l--aviso');
-    const erro = (texto) => linha(`erro: ${texto}`, 'l--erro');
+    const erro = (texto) => notificar(`✖ ${texto}`, 'erro');
     const apagado = (texto) => linha(texto, 'l--apagado');
     const secao = (texto) => linha(`── ${texto} ${'─'.repeat(Math.max(4, 44 - texto.length))}`, 'l--secao');
     const span = (classe, texto) => el('span', classe, texto);
 
-    /** [rótulo] que digita e roda um comando. */
-    function botao(rotulo, comando, { perigo = false, link = false } = {}) {
+    /**
+     * [rótulo] que roda um comando. Com `preencher`, só deixa o comando no prompt para
+     * completar (ex.: "grant "). Com `seguro`, exige um segundo clique ("certeza?") no próprio botão.
+     */
+    function botao(rotulo, comando, { perigo = false, link = false, preencher = false, seguro = false } = {}) {
         const b = el('button', `cmd${perigo ? ' cmd--perigo' : ''}${link ? ' cmd--link' : ''}`, rotulo);
         b.type = 'button';
         b.title = comando;
-        b.addEventListener('click', () => rodar(comando));
+        let armado = 0;
+        b.addEventListener('click', () => {
+            if (preencher) { entrada.value = comando; entrada.focus(); return; }
+            if (seguro && !armado) {
+                b.textContent = 'certeza?';
+                b.classList.add('cmd--armado');
+                armado = setTimeout(() => { armado = 0; b.textContent = rotulo; b.classList.remove('cmd--armado'); }, 3000);
+                return;
+            }
+            clearTimeout(armado);
+            armado = 0;
+            b.textContent = rotulo;
+            b.classList.remove('cmd--armado');
+            rodar(comando);
+        });
         return b;
     }
+    const botaoSeguro = (rotulo, comando) => botao(rotulo, comando, { perigo: true, seguro: true });
 
-    function tabela(cabecalho, linhas) {
-        const grade = el('div', 'tabela');
+    /** `aoClicar(i)` deixa a linha inteira clicável (além dos botões dentro dela). */
+    function tabela(cabecalho, linhas, aoClicar = null) {
+        const grade = el('div', `tabela${aoClicar ? ' tabela--clicavel' : ''}`);
         grade.style.gridTemplateColumns = `repeat(${cabecalho.length}, auto)`;
         for (const titulo of cabecalho) grade.appendChild(el('span', 'cab', titulo));
         for (const celulas of linhas) {
             const tr = el('div', 'tabela-linha');
+            const indice = grade.querySelectorAll('.tabela-linha').length;
             for (const celula of celulas) {
                 const td = el('span');
+                if (aoClicar) td.addEventListener('click', (e) => { if (!e.target.closest('button, input, a')) aoClicar(indice); });
                 for (const parte of [].concat(celula)) {
                     if (parte === null || parte === undefined) continue;
                     td.append(parte instanceof Node ? parte : document.createTextNode(String(parte)));
@@ -128,16 +209,19 @@
         const caixa = $('numeros');
         caixa.replaceChildren();
         const itens = [
-            ['contas', n.contas, null],
-            ['ativos 7d', n.ativos_7d, n.contas],
-            ['sessões', n.sessoes, n.contas],
-            ['partidas', n.partidas, n.partidas + n.partidas_fora],
-            ['conquistas', n.conquistas, null],
-            ['caps lidos', n.capitulos_lidos, null],
-            ['banidos', n.banidos, n.contas],
+            ['contas', n.contas, null, 'users'],
+            ['ativos 7d', n.ativos_7d, n.contas, 'users'],
+            ['sessões', n.sessoes, n.contas, 'users'],
+            ['partidas', n.partidas, n.partidas + n.partidas_fora, 'scores'],
+            ['conquistas', n.conquistas, null, 'users'],
+            ['caps lidos', n.capitulos_lidos, null, 'users'],
+            ['banidos', n.banidos, n.contas, 'users'],
         ];
-        for (const [rotulo, valor, total] of itens) {
-            const item = el('div', 'numero');
+        for (const [rotulo, valor, total, destino] of itens) {
+            const item = el('button', 'numero');
+            item.type = 'button';
+            item.title = destino;
+            item.addEventListener('click', () => rodar(destino));
             item.append(el('span', 'numero-rotulo', rotulo), el('span', 'numero-valor', valor));
             if (total !== null) item.appendChild(barra(valor, total));
             caixa.appendChild(item);
@@ -207,13 +291,42 @@
 
     function campo(userId, nome, valor) {
         for (const no of document.querySelectorAll(`[data-campo="${nome}"]`)) {
-            if (no.dataset.user === userId) no.textContent = valor;
+            if (no.dataset.user !== userId) continue;
+            if (no.tagName === 'INPUT') no.value = valor;
+            else no.textContent = valor;
         }
+    }
+
+    /** Seção dobrável: o título abre/fecha; lembra o estado entre uma conta e outra. */
+    function secaoDobravel(chave, titulo, preencher, abertaPadrao = true) {
+        const d = el('details', 'secao');
+        d.open = estado.secoes[chave] ?? abertaPadrao;
+        d.addEventListener('toggle', () => { estado.secoes[chave] = d.open; });
+        d.appendChild(el('summary', '', titulo));
+        const corpo = el('div', 'secao-corpo');
+        d.appendChild(corpo);
+        imprimir(d);
+        dentroDe(corpo, preencher);
+    }
+
+    /** Linha de controle: rótulo, valor atual e botões que agem no lugar. */
+    function acaoLinha(rotulo, valor, controles) {
+        const linhaAcao = el('div', 'acao-linha');
+        linhaAcao.append(el('span', 'acao-rotulo', rotulo), el('b', 'acao-valor', valor), ...controles);
+        return imprimir(linhaAcao);
+    }
+
+    /** Botões −1000 … +1000 de um comando numérico (credits/dust). Os negativos pedem um 2º clique. */
+    function passos(comando) {
+        return [-1000, -100, -10, 10, 100, 1000].map((n) => (n < 0
+            ? botaoSeguro(`−${Math.abs(n)}`, `${comando} ${n} --sim`)
+            : botao(`+${n}`, `${comando} ${n}`)));
     }
 
     function mostrarConta(c) {
         const souEu = c.id === estado.eu.id;
-        linha(c.name, 'l--titulo');
+        const banido = c.role === 'banned';
+        linha([c.name, banido ? span('erro', '  [banido]') : null, c.admin ? span('ok', '  [admin]') : null], 'l--titulo');
         if (/^https:\/\//.test(c.avatarUrl || '')) {
             const img = el('img', 'avatar');
             img.src = c.avatarUrl;
@@ -221,111 +334,133 @@
             img.referrerPolicy = 'no-referrer';
             imprimir(img);
         }
-        const role = span('', c.role);
-        role.dataset.user = c.id;
-        role.dataset.campo = 'role';
-        const acoesRole = souEu || c.admin ? null
-            : [' ', botao('banir', 'ban', { perigo: true }), ' ', botao('desbanir', 'unban')];
+        apagado('tudo aqui age no lugar: clique nas caixas, números e botões · Esc ou ‹ voltar retorna.');
+
+        const copiar = el('button', 'cmd cmd--link', 'copiar');
+        copiar.type = 'button';
+        copiar.addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(c.id); notificar('✔ id copiado.', 'ok'); } catch (e) { notificar('não deu para copiar (o navegador bloqueou).', 'aviso'); }
+        });
         const sessoes = span('', c.sessoes);
         sessoes.dataset.user = c.id;
         sessoes.dataset.campo = 'sessoes';
-        const fala = span('', c.fala ? `"${c.fala}"` : '(fala do Enzo)');
-        fala.dataset.user = c.id;
-        fala.dataset.campo = 'fala';
-        const mudarFala = el('button', 'cmd', 'mudar');
-        mudarFala.type = 'button';
-        mudarFala.addEventListener('click', () => { entrada.value = `fala ${c.fala || ''}`; entrada.focus(); });
-
         tabela(['campo', 'valor'], [
-            ['id', c.id],
+            ['id', [idCurto(c.id), ' ', copiar]],
             ['e-mail', c.email],
-            ['papel', [role, c.admin ? span('ok', ' + admin') : null, ...(acoesRole || [])]],
+            ['papel', [c.role, ' ', ...(souEu || c.admin ? [] : [banido ? botao('desbanir', 'unban') : botaoSeguro('banir', 'ban --sim')])]],
             ['desde', data(c.criadoEm)],
             ['último login', data(c.ultimoLogin)],
-            ['sessões ativas', [sessoes, souEu ? null : ' ', souEu ? null : botao('derrubar', 'kick', { perigo: true })]],
-            ['fala', [fala, ' ', mudarFala]],
+            ['sessões ativas', [sessoes, ...(souEu ? [] : [' ', botaoSeguro('derrubar', 'kick --sim')])]],
         ]);
 
+        const fala = el('input', 'campo-texto');
+        fala.value = c.fala || '';
+        fala.placeholder = '(fala do Enzo)';
+        fala.maxLength = 200;
+        fala.setAttribute('aria-label', 'Fala pública');
+        fala.dataset.user = c.id;
+        fala.dataset.campo = 'fala';
+        fala.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); rodar(`fala ${fala.value.trim() || '-'}`); }
+        });
+        const salvar = el('button', 'cmd', 'salvar');
+        salvar.type = 'button';
+        salvar.addEventListener('click', () => rodar(`fala ${fala.value.trim() || '-'}`));
+        const linhaFala = el('div', 'acao-linha');
+        linhaFala.append(el('span', 'acao-rotulo', 'fala'), fala, salvar, botao('do Enzo', 'fala -'));
+        imprimir(linhaFala);
+
         const tem = new Map(c.achievements.map((a) => [a.id, a.em]));
-        secao(`conquistas ${C.LISTA.filter((d) => tem.has(d.id)).length}/${C.LISTA.length}`);
-        tabela(['', 'id', 'nome', 'desde'], C.LISTA.map((d) => {
-            const ligada = tem.has(d.id);
-            const caixa = el('button', 'caixa', ligada ? '[x]' : '[ ]');
-            caixa.type = 'button';
-            caixa.setAttribute('role', 'checkbox');
-            caixa.setAttribute('aria-checked', String(ligada));
-            caixa.setAttribute('aria-label', d.titulo);
-            caixa.dataset.user = c.id;
-            caixa.dataset.conquista = d.id;
-            caixa.addEventListener('click', () => rodar(`${caixa.getAttribute('aria-checked') === 'true' ? 'revoke' : 'grant'} ${d.id}`));
-            return [caixa, d.id, d.titulo, ligada ? data(tem.get(d.id)) : span('apagado', 'bloqueada')];
-        }));
+        secaoDobravel('conquistas', `conquistas ${C.LISTA.filter((d) => tem.has(d.id)).length}/${C.LISTA.length}`, () => {
+            tabela(['', 'id', 'nome', 'desde'], C.LISTA.map((d) => {
+                const ligada = tem.has(d.id);
+                const caixa = el('button', 'caixa', ligada ? '[x]' : '[ ]');
+                caixa.type = 'button';
+                caixa.setAttribute('role', 'checkbox');
+                caixa.setAttribute('aria-checked', String(ligada));
+                caixa.setAttribute('aria-label', d.titulo);
+                caixa.dataset.user = c.id;
+                caixa.dataset.conquista = d.id;
+                caixa.addEventListener('click', () => rodar(`${caixa.getAttribute('aria-checked') === 'true' ? 'revoke' : 'grant'} ${d.id}`));
+                return [caixa, d.id, d.titulo, ligada ? data(tem.get(d.id)) : span('apagado', 'bloqueada')];
+            }));
+        });
 
         const bInfo = c.baralho || { carteira: { creditos: 0, po: 0 }, pacotes: [], colecao: {}, diferentes: 0, total: 7 };
         const diferentes = bInfo.diferentes ?? (bInfo.colecao ? Object.keys(bInfo.colecao).length : 0);
         const totalCartas = bInfo.total ?? (B?.CARTAS?.length || 7);
-        secao(`baralho ${diferentes}/${totalCartas}`);
+        secaoDobravel('baralho', `baralho ${diferentes}/${totalCartas}`, () => {
+            const contagemPacotes = {};
+            for (const p of (bInfo.pacotes || [])) contagemPacotes[p.tipo] = (contagemPacotes[p.tipo] || 0) + 1;
+            const pacotesTexto = Object.entries(contagemPacotes).map(([tipo, n]) => `${n}× ${tipo}`).join(', ') || 'nenhum';
+            const tiposPacote = B?.PACOTES?.length
+                ? B.PACOTES.map((p) => [p.id, p.nome || p.id])
+                : [['estacionamento', 'estacionamento'], ['toradolandia', 'toradolândia'], ['piscina-de-macarronada', 'piscina']];
 
-        const contagemPacotes = {};
-        for (const p of (bInfo.pacotes || [])) {
-            contagemPacotes[p.tipo] = (contagemPacotes[p.tipo] || 0) + 1;
-        }
-        const pacotesLista = (B?.PACOTES || [])
-            .filter((p) => contagemPacotes[p.id])
-            .map((p) => `${contagemPacotes[p.id]}× ${p.id}`);
-        for (const tipo of Object.keys(contagemPacotes)) {
-            if (!B?.PACOTES?.some((p) => p.id === tipo)) {
-                pacotesLista.push(`${contagemPacotes[tipo]}× ${tipo}`);
-            }
-        }
-        const pacotesTexto = pacotesLista.length ? pacotesLista.join(', ') : 'nenhum';
+            acaoLinha('créditos', bInfo.carteira?.creditos ?? 0, passos('credits'));
+            acaoLinha('pó', bInfo.carteira?.po ?? 0, passos('dust'));
+            acaoLinha('pacotes', pacotesTexto, tiposPacote.map(([id, nome]) => botao(`+ ${nome}`, `pack ${id}`)));
 
-        tabela(['campo', 'valor'], [
-            ['créditos', String(bInfo.carteira?.creditos ?? 0)],
-            ['pó', String(bInfo.carteira?.po ?? 0)],
-            ['pacotes fechados', pacotesTexto],
-        ]);
-
-        const todasCartas = B?.CARTAS || [];
-        tabela(['#', 'carta', 'raridade', 'qtd'], todasCartas.map((carta) => {
-            const qtd = bInfo.colecao?.[carta.id];
-            return [
-                String(carta.numero),
-                carta.censurada && !window.EnzoConta?.temConquista?.('cabo-coco') ? '???' : carta.nome,
-                carta.raridade,
-                qtd ? String(qtd) : span('apagado', '·'),
-            ];
-        }));
+            tabela(['#', 'carta', 'raridade', 'qtd'], (B?.CARTAS || []).map((carta) => {
+                const qtd = bInfo.colecao?.[carta.id];
+                return [
+                    String(carta.numero),
+                    carta.censurada && !window.EnzoConta?.temConquista?.('cabo-coco') ? '???' : carta.nome,
+                    carta.raridade,
+                    qtd ? String(qtd) : span('apagado', '·'),
+                ];
+            }));
+        });
 
         const secretos = c.achievements.filter((a) => C.numeroSecreto(a.id) !== null).length;
-        secao(`enzos secretos ${secretos}/${C.SECRETOS}`);
-        const grade = el('div', 'grade');
-        grade.setAttribute('aria-label', 'Enzos secretos (clique para dar ou tirar)');
-        for (let n = 1; n <= C.SECRETOS; n++) {
-            const id = C.idSecreto(n);
-            const b = el('button', '', String(n).padStart(2, '0'));
-            b.type = 'button';
-            b.setAttribute('aria-pressed', String(tem.has(id)));
-            b.dataset.user = c.id;
-            b.dataset.conquista = id;
-            b.title = `enzo secreto #${n}`;
-            b.addEventListener('click', () => rodar(`${b.getAttribute('aria-pressed') === 'true' ? 'revoke' : 'grant'} #${n}`));
-            grade.appendChild(b);
-        }
-        imprimir(grade);
+        secaoDobravel('secretos', `enzos secretos ${secretos}/${C.SECRETOS}`, () => {
+            const grade = el('div', 'grade');
+            grade.setAttribute('aria-label', 'Enzos secretos (clique para dar ou tirar)');
+            for (let n = 1; n <= C.SECRETOS; n++) {
+                const id = C.idSecreto(n);
+                const b = el('button', '', String(n).padStart(2, '0'));
+                b.type = 'button';
+                b.setAttribute('aria-pressed', String(tem.has(id)));
+                b.dataset.user = c.id;
+                b.dataset.conquista = id;
+                b.title = `enzo secreto #${n}`;
+                b.addEventListener('click', () => rodar(`${b.getAttribute('aria-pressed') === 'true' ? 'revoke' : 'grant'} #${n}`));
+                grade.appendChild(b);
+            }
+            imprimir(grade);
+        }, false);
 
-        secao(`partidas ${c.scores.length}${c.scores.length === 100 ? '+' : ''}`);
-        if (c.scores.length) listarPartidas(c.scores.map((s) => ({ ...s, name: c.name, userId: c.id })), false);
-        else apagado('nenhuma partida.');
+        secaoDobravel('partidas', `partidas ${c.scores.length}${c.scores.length === 100 ? '+' : ''}`, () => {
+            if (c.scores.length) listarPartidas(c.scores.map((s) => ({ ...s, name: c.name, userId: c.id })), false);
+            else apagado('nenhuma partida.');
+        }, false);
 
         const lidos = c.reading.filter((r) => r.completed).length;
-        secao(`leitura ${lidos}/${c.reading.length} capítulos completos`);
-        if (c.reading.length) {
-            tabela(['gibi', 'capítulo', 'pág', 'fim', 'quando'], c.reading.map((r) => [
-                r.comicId, r.chapterId, r.page + 1, r.completed ? span('ok', '✔') : span('apagado', '·'), data(r.em),
-            ]));
-        } else apagado('não leu nada logado ainda.');
-        apagado('dica: clique nas caixas e números para dar/tirar. "close" fecha a conta.');
+        secaoDobravel('leitura', `leitura ${lidos}/${c.reading.length} capítulos completos`, () => {
+            if (c.reading.length) {
+                tabela(['gibi', 'capítulo', 'pág', 'fim', 'quando'], c.reading.map((r) => [
+                    r.comicId, r.chapterId, r.page + 1, r.completed ? span('ok', '✔') : span('apagado', '·'), data(r.em),
+                ]));
+            } else apagado('não leu nada logado ainda.');
+        }, false);
+    }
+
+    /** Apaga a tela atual e desenha a conta aberta de novo (usado ao abrir e depois de cada mudança). */
+    function desenharConta() {
+        tela.replaceChildren();
+        dentroDe(tela, () => mostrarConta(estado.alvo));
+    }
+
+    /** Busca a conta de novo e redesenha no lugar, mantendo a rolagem. */
+    async function recarregarConta() {
+        if (!estado.alvo || estado.tela !== `open ${estado.alvo.id}`) return;
+        const minha = tela;
+        const rolagem = saida.scrollTop;
+        const nova = await pedir(`/api/admin/users/${encodeURIComponent(estado.alvo.id)}`);
+        if (tela !== minha) return;
+        estado.alvo = nova;
+        desenharConta();
+        saida.scrollTop = rolagem;
     }
 
     function listarPartidas(partidas, comNome = true) {
@@ -338,7 +473,7 @@
             const acoes = el('span');
             acoes.dataset.partida = s.id;
             acoes.dataset.campo = 'acoes';
-            acoes.append(botao(s.verified ? 'tirar' : 'devolver', `${s.verified ? 'hide' : 'show'} ${i + 1}`), ' ', botao('apagar', `rm ${i + 1}`, { perigo: true }));
+            acoes.append(botao(s.verified ? 'tirar' : 'devolver', `${s.verified ? 'hide' : 'show'} ${i + 1}`), ' ', botaoSeguro('apagar', `rm ${i + 1} --sim`));
             const convidado = s.metadata && s.metadata.includes('convidado') ? span('apagado', ' (local)') : null;
             return [
                 String(i + 1),
@@ -381,7 +516,8 @@
         if (users.length === 1) return users[0].id;
         if (!users.length) throw new Error(`nenhuma conta com "${ref}".`);
         estado.contas = users;
-        aviso(`${users.length} contas batem com "${ref}". escolha uma:`);
+        novaTela(`users ${ref}`, [['leitores', 'users'], [`"${ref}"`, null]]);
+        aviso(`${users.length} contas batem com "${ref}". clique numa:`);
         listarContas(users);
         return null;
     }
@@ -408,19 +544,55 @@
     function listarContas(users) {
         tabela(['#', 'nome', 'e-mail', 'papel', 'conq', 'secr', 'jogos', 'último login'], users.map((u, i) => [
             String(i + 1),
-            botao(u.name, `open ${i + 1}`, { link: true }),
+            botao(u.name, `open ${u.id}`, { link: true }),
             u.email,
             u.role === 'banned' ? span('erro', 'banido') : [u.role, u.admin ? span('ok', '*') : null],
             String(u.conquistas),
             String(u.secretos),
             String(u.partidas),
             data(u.ultimoLogin),
-        ]));
+        ]), (i) => rodar(`open ${users[i].id}`));
     }
 
+    /** Tela de leitores: busca ao vivo e a linha inteira abre a conta. */
+    async function telaLeitores(busca) {
+        novaTela(busca ? `users ${busca}` : 'users', [['leitores', null]]);
+        const campoBusca = el('input', 'campo-texto campo-busca');
+        campoBusca.type = 'search';
+        campoBusca.placeholder = 'buscar por nome ou e-mail…';
+        campoBusca.value = busca;
+        campoBusca.setAttribute('aria-label', 'Buscar leitor');
+        const lista = el('div', 'lista');
+        imprimir(campoBusca);
+        imprimir(lista);
+
+        let ultima = 0;
+        let espera = 0;
+        const carregar = async (q) => {
+            const minha = ++ultima;
+            const { users, maisPaginas } = await pedir(`/api/admin/users${q ? `?q=${encodeURIComponent(q)}` : ''}`);
+            if (minha !== ultima) return;
+            estado.contas = users;
+            lista.replaceChildren();
+            dentroDe(lista, () => {
+                if (!users.length) { apagado(q ? `ninguém bate com "${q}".` : 'nenhuma conta.'); return; }
+                listarContas(users);
+                apagado(`${users.length}${maisPaginas ? '+' : ''} conta(s) · clique numa linha para abrir.`);
+            });
+        };
+        campoBusca.addEventListener('input', () => {
+            clearTimeout(espera);
+            espera = setTimeout(() => carregar(campoBusca.value.trim()).catch((e) => erro(e.message)), 250);
+        });
+        await carregar(busca);
+        campoBusca.focus({ preventScroll: true });
+    }
+
+    /** Pergunta no próprio terminal (linha de aviso), com [sim] [não] clicáveis; "s"/"n" digitados também valem. */
     function pedirConfirmacao(pergunta, acao) {
-        aviso(`${pergunta} [s/N]`);
         estado.confirmar = acao;
+        const sim = botao('sim', 's', { perigo: true });
+        notificar([`${pergunta} `, sim, ' ', botao('não', 'n')], 'aviso', { fixo: true });
         atualizarPrompt();
     }
 
@@ -430,63 +602,102 @@
         const r = await pedir(`/api/admin/users/${alvo.id}/achievement`, { achievement: conquista, unlocked: ligar });
         marcarConquista(alvo.id, conquista, ligar);
         const nome = C.definicao(conquista)?.titulo || `enzo secreto #${C.numeroSecreto(conquista)}`;
-        if (!r.changed) apagado(`${nome}: nada mudou (${ligar ? 'já tinha' : 'não tinha'}).`);
-        else ok(`${ligar ? '+' : '-'} ${nome} ${ligar ? 'desbloqueada para' : 'removida de'} ${primeiroNome(alvo.name)}.`);
+        if (!r.changed) notificar(`${nome}: nada mudou (${ligar ? 'já tinha' : 'não tinha'}).`, 'aviso');
+        else ok(`${ligar ? '+' : '−'} ${nome} ${ligar ? 'desbloqueada para' : 'removida de'} ${primeiroNome(alvo.name)}.`);
     }
 
-    /** reveal/hide: gibis marcados com `hidden` no catálogo (data/comics.manifest.json). */
-    async function trocarGibi(revelar, id) {
+    /** Gibis com `hidden` no catálogo (data/comics.manifest.json) e quais já foram revelados. */
+    async function lerGibis() {
         const catalogo = await (await fetch('data/database.json', { cache: 'no-store' })).json();
-        const escondidos = catalogo.comics.filter((c) => c.hidden === true);
         const { ids } = await (await fetch('/api/site/revelados', { cache: 'no-store' })).json();
-        if (!id) {
-            if (!escondidos.length) return apagado('nenhum gibi escondido no catálogo.');
-            tabela(['id', 'título', 'estado'], escondidos.map((c) => [botao(c.id, revelar ? `reveal ${c.id}` : `hide ${c.id}`, { link: true }), c.title, ids.includes(c.id) ? 'revelado' : 'escondido']));
-            return apagado('reveal <id> mostra no site · hide <id> esconde de novo.');
+        return { escondidos: catalogo.comics.filter((c) => c.hidden === true), ids };
+    }
+
+    async function telaGibis() {
+        const { escondidos, ids } = await lerGibis();
+        novaTela('reveal', [['gibis escondidos', null]]);
+        if (!escondidos.length) { apagado('nenhum gibi escondido no catálogo.'); return; }
+        tabela(['id', 'título', 'estado', ''], escondidos.map((c) => {
+            const revelado = ids.includes(c.id);
+            return [c.id, c.title, span(revelado ? 'ok' : 'aviso', revelado ? 'revelado' : 'escondido'),
+                revelado ? botao('esconder', `hide ${c.id}`) : botao('revelar', `reveal ${c.id}`)];
+        }));
+        apagado('os botões mudam o site na hora.');
+    }
+
+    /** reveal/hide <id> age; sem id só mostra a tela dos gibis. */
+    async function trocarGibi(revelar, id) {
+        if (id) {
+            const { escondidos } = await lerGibis();
+            if (!escondidos.some((c) => c.id === id)) throw new Error(`"${id}" não tem hidden no catálogo. Escondidos: ${escondidos.map((c) => c.id).join(', ') || 'nenhum'}.`);
+            const r = await pedir('/api/admin/reveal', { id, revelar });
+            if (!r.mudou) notificar(`${id} já estava ${revelar ? 'revelado' : 'escondido'}.`, 'aviso');
+            else ok(`${id} ${revelar ? 'revelado: já aparece no site' : 'escondido de novo'}.`);
         }
-        if (!escondidos.some((c) => c.id === id)) throw new Error(`"${id}" não tem hidden no catálogo. Escondidos: ${escondidos.map((c) => c.id).join(', ') || 'nenhum'}.`);
-        const r = await pedir('/api/admin/reveal', { id, revelar });
-        if (!r.mudou) return apagado(`${id} já estava ${revelar ? 'revelado' : 'escondido'}.`);
-        ok(`${id} ${revelar ? 'revelado: já aparece no site' : 'escondido de novo'}.`);
+        await telaGibis();
+    }
+
+    /** Valor numérico de credits/dust: inteiro diferente de zero. */
+    function valorNumerico(args, nome) {
+        if (!args[0]) throw new Error(`uso: ${nome} <n> (número inteiro).`);
+        const n = Number(args[0]);
+        if (!Number.isInteger(n)) throw new Error(`${nome}: número inteiro.`);
+        if (n === 0) throw new Error(`${nome}: valor diferente de zero.`);
+        return n;
+    }
+
+    /** Soma/tira créditos ou pó; tirar pede confirmação (a menos que venha "--sim" do botão de 2 cliques). */
+    async function mexerCarteira(args, campoApi, rotulo) {
+        const alvo = exigirAlvo();
+        const n = valorNumerico(args, campoApi === 'creditos' ? 'credits' : 'dust');
+        const aplicar = async () => {
+            const novo = await pedir(`/api/admin/users/${alvo.id}/baralho`, { [campoApi]: n });
+            ok(`${rotulo} de ${primeiroNome(alvo.name)}: ${novo.carteira[campoApi]} (${n > 0 ? '+' : ''}${n}).`);
+            await recarregarConta();
+        };
+        if (n < 0 && !args.includes('--sim')) pedirConfirmacao(`tirar ${Math.abs(n)} ${rotulo} de ${alvo.name}?`, aplicar);
+        else await aplicar();
     }
 
     const COMANDOS = {
         help: {
             desc: 'lista os comandos',
             fn() {
-                tabela(['comando', 'o que faz'], Object.entries(COMANDOS).map(([nome, c]) => [botao(c.uso || nome, nome, { link: true }), c.desc]));
-                apagado('↑/↓ histórico · tab completa · clique nos [colchetes] para rodar.');
+                novaTela('help', [['ajuda', null]]);
+                tabela(['comando', 'o que faz'], Object.entries(COMANDOS).map(([nome, c]) => {
+                    const pedeArgumento = /</.test(c.uso || '');
+                    return [botao(c.uso || nome, pedeArgumento ? `${nome} ` : nome, { link: true, preencher: pedeArgumento }), c.desc];
+                }));
+                apagado('clique num comando para rodar (os que pedem argumento vão para o prompt) · ↑/↓ histórico · Tab completa · / foca o prompt · Esc volta.');
             },
         },
         status: {
-            desc: 'números do site e últimas ações',
+            desc: 'início: números do site e últimas ações',
             async fn() {
                 const { numeros, log, agora } = await pedir('/api/admin/overview');
+                novaTela('status');
                 mostrarNumeros(numeros);
-                tabela(['métrica', 'valor'], [
-                    ['contas', `${numeros.contas} (${numeros.banidos} banidas)`],
-                    ['ativas em 7 dias', numeros.ativos_7d],
-                    ['sessões abertas', numeros.sessoes],
-                    ['partidas no ranking', numeros.partidas],
-                    ['partidas fora do ranking', numeros.partidas_fora],
-                    ['conquistas desbloqueadas', numeros.conquistas],
-                    ['capítulos lidos até o fim', numeros.capitulos_lidos],
-                    ['relógio do servidor', data(agora)],
-                ]);
+                const linhas = [
+                    ['contas', `${numeros.contas} (${numeros.banidos} banidas)`, 'users'],
+                    ['ativas em 7 dias', numeros.ativos_7d, 'users'],
+                    ['sessões abertas', numeros.sessoes, 'users'],
+                    ['partidas no ranking', numeros.partidas, 'scores'],
+                    ['partidas fora do ranking', numeros.partidas_fora, 'scores'],
+                    ['conquistas desbloqueadas', numeros.conquistas, 'users'],
+                    ['capítulos lidos até o fim', numeros.capitulos_lidos, 'users'],
+                    ['relógio do servidor', data(agora), null],
+                ];
+                tabela(['métrica', 'valor'], linhas.map(([rotulo, valor, destino]) => [
+                    destino ? botao(rotulo, destino, { link: true }) : rotulo,
+                    String(valor),
+                ]), (i) => { if (linhas[i][2]) rodar(linhas[i][2]); });
                 if (log.length) { secao('últimas ações'); mostrarLog(log); }
             },
         },
         users: {
             uso: 'users [busca]',
-            desc: 'lista contas (nome ou e-mail)',
-            async fn(args) {
-                const busca = args.join(' ');
-                const { users, maisPaginas } = await pedir(`/api/admin/users${busca ? `?q=${encodeURIComponent(busca)}` : ''}`);
-                estado.contas = users;
-                if (!users.length) { apagado('nenhuma conta.'); return; }
-                listarContas(users);
-                apagado(`${users.length}${maisPaginas ? '+' : ''} conta(s). "open <n>" abre uma.`);
-            },
+            desc: 'lista contas (nome ou e-mail), com busca ao vivo',
+            async fn(args) { await telaLeitores(args.join(' ')); },
         },
         open: {
             uso: 'open <n|id|nome>',
@@ -494,37 +705,45 @@
             async fn(args) {
                 const id = await acharConta(args.join(' '));
                 if (!id) return;
-                estado.alvo = await pedir(`/api/admin/users/${encodeURIComponent(id)}`);
+                const conta = await pedir(`/api/admin/users/${encodeURIComponent(id)}`);
+                estado.alvo = conta;
+                novaTela(`open ${conta.id}`, [['leitores', 'users'], [conta.name, null]]);
                 atualizarPrompt();
-                mostrarConta(estado.alvo);
+                desenharConta();
             },
         },
         reveal: {
             uso: 'reveal [id]',
-            desc: 'revela um gibi escondido (sem id: lista os escondidos)',
+            desc: 'gibis escondidos: revela um (sem id: a tela dos gibis)',
             async fn(args) { await trocarGibi(true, args[0]); },
         },
-        close: { desc: 'fecha a conta aberta', fn() { estado.alvo = null; atualizarPrompt(); apagado('conta fechada.'); } },
+        close: {
+            desc: 'fecha a conta aberta e volta aos leitores',
+            async fn() { estado.alvo = null; atualizarPrompt(); await telaLeitores(''); },
+        },
         grant: { uso: 'grant <id|#n>', desc: 'dá conquista (ou enzo secreto #n)', fn: (args) => trocarConquista(true, args[0]) },
         revoke: { uso: 'revoke <id|#n>', desc: 'tira conquista (ou enzo secreto #n)', fn: (args) => trocarConquista(false, args[0]) },
         achievements: {
             desc: 'ids das conquistas',
             fn() {
-                tabela(['id', 'nome', 'como ganha'], C.LISTA.map((d) => [d.id, d.titulo, d.descricao]));
-                apagado(`e os enzos secretos: #1 a #${C.SECRETOS}.`);
+                novaTela('achievements', [['conquistas', null]]);
+                tabela(['id', 'nome', 'como ganha'], C.LISTA.map((d) => [
+                    estado.alvo ? botao(d.id, `grant ${d.id}`, { link: true }) : d.id, d.titulo, d.descricao,
+                ]));
+                apagado(`e os enzos secretos: #1 a #${C.SECRETOS}.${estado.alvo ? ` Clique num id para dar a ${primeiroNome(estado.alvo.name)}.` : ''}`);
             },
         },
         ban: {
             desc: 'bane a conta aberta (some do ranking, cai a sessão)',
-            fn() {
+            async fn(args) {
                 const alvo = exigirAlvo();
-                pedirConfirmacao(`banir ${alvo.name}?`, async () => {
+                const banir = async () => {
                     await pedir(`/api/admin/users/${alvo.id}/role`, { role: 'banned' });
-                    campo(alvo.id, 'role', 'banned');
-                    campo(alvo.id, 'sessoes', '0');
-                    alvo.role = 'banned';
                     ok(`${primeiroNome(alvo.name)} banido.`);
-                });
+                    await recarregarConta();
+                };
+                if (args.includes('--sim')) await banir();
+                else pedirConfirmacao(`banir ${alvo.name}?`, banir);
             },
         },
         unban: {
@@ -532,20 +751,21 @@
             async fn() {
                 const alvo = exigirAlvo();
                 await pedir(`/api/admin/users/${alvo.id}/role`, { role: 'player' });
-                campo(alvo.id, 'role', 'player');
-                alvo.role = 'player';
                 ok(`${primeiroNome(alvo.name)} de volta como player.`);
+                await recarregarConta();
             },
         },
         kick: {
             desc: 'derruba as sessões da conta aberta',
-            fn() {
+            async fn(args) {
                 const alvo = exigirAlvo();
-                pedirConfirmacao(`derrubar as sessões de ${alvo.name}?`, async () => {
+                const derrubar = async () => {
                     const { sessoes } = await pedir(`/api/admin/users/${alvo.id}/kick`, {});
                     campo(alvo.id, 'sessoes', '0');
                     ok(`${sessoes} sessão(ões) derrubada(s).`);
-                });
+                };
+                if (args.includes('--sim')) await derrubar();
+                else pedirConfirmacao(`derrubar as sessões de ${alvo.name}?`, derrubar);
             },
         },
         fala: {
@@ -556,51 +776,19 @@
                 const texto = resto.trim() === '-' ? null : resto;
                 const { fala } = await pedir(`/api/admin/users/${alvo.id}/fala`, { fala: texto });
                 alvo.fala = fala;
-                campo(alvo.id, 'fala', fala ? `"${fala}"` : '(fala do Enzo)');
+                campo(alvo.id, 'fala', fala || '');
                 ok(fala ? `fala agora: "${fala}"` : 'fala voltou para a do Enzo.');
             },
         },
         credits: {
             uso: 'credits <n>',
             desc: 'soma ou tira créditos da conta aberta',
-            async fn(args) {
-                const alvo = exigirAlvo();
-                if (!args[0]) throw new Error('uso: credits <n> (número inteiro).');
-                const n = Number(args[0]);
-                if (!Number.isInteger(n)) throw new Error('créditos: número inteiro.');
-                if (n === 0) throw new Error('créditos: valor diferente de zero.');
-                const aplicar = async () => {
-                    const novo = await pedir(`/api/admin/users/${alvo.id}/baralho`, { creditos: n });
-                    ok(`créditos de ${primeiroNome(alvo.name)}: ${novo.carteira.creditos} (${n > 0 ? '+' : ''}${n}).`);
-                    await COMANDOS.open.fn([alvo.id]);
-                };
-                if (n < 0) {
-                    pedirConfirmacao(`tirar ${Math.abs(n)} créditos de ${alvo.name}?`, aplicar);
-                } else {
-                    await aplicar();
-                }
-            },
+            fn: (args) => mexerCarteira(args, 'creditos', 'créditos'),
         },
         dust: {
             uso: 'dust <n>',
             desc: 'soma ou tira pó da conta aberta',
-            async fn(args) {
-                const alvo = exigirAlvo();
-                if (!args[0]) throw new Error('uso: dust <n> (número inteiro).');
-                const n = Number(args[0]);
-                if (!Number.isInteger(n)) throw new Error('pó: número inteiro.');
-                if (n === 0) throw new Error('pó: valor diferente de zero.');
-                const aplicar = async () => {
-                    const novo = await pedir(`/api/admin/users/${alvo.id}/baralho`, { po: n });
-                    ok(`pó de ${primeiroNome(alvo.name)}: ${novo.carteira.po} (${n > 0 ? '+' : ''}${n}).`);
-                    await COMANDOS.open.fn([alvo.id]);
-                };
-                if (n < 0) {
-                    pedirConfirmacao(`tirar ${Math.abs(n)} pó de ${alvo.name}?`, aplicar);
-                } else {
-                    await aplicar();
-                }
-            },
+            fn: (args) => mexerCarteira(args, 'po', 'pó'),
         },
         pack: {
             uso: 'pack <tipo> [qtd]',
@@ -614,7 +802,7 @@
                 if (!Number.isInteger(qtd) || qtd < 1 || qtd > 10) throw new Error('quantidade: de 1 a 10.');
                 const novo = await pedir(`/api/admin/users/${alvo.id}/baralho`, { pacote: tipo, quantidade: qtd });
                 ok(`+ ${qtd}× ${tipo} para ${primeiroNome(alvo.name)} (${novo.pacotes.length} pacote(s) fechado(s)).`);
-                await COMANDOS.open.fn([alvo.id]);
+                await recarregarConta();
             },
         },
         scores: {
@@ -624,9 +812,12 @@
                 const id = args[0] ? APELIDOS_JOGO[args[0].toLowerCase()] : null;
                 if (args[0] && !id) throw new Error('jogos: flappy, degustacao.');
                 const { scores } = await pedir(`/api/admin/scores${id ? `?game=${id}` : ''}`);
+                novaTela(id ? `scores ${args[0].toLowerCase()}` : 'scores', [['partidas', null]]);
+                const filtros = [['todos', null, 'scores'], ['Flappy', 'flappy-enzo', 'scores flappy'], ['Degustação', 'ronda-noturna', 'scores degustacao']];
+                linha(['jogo: ', ...filtros.flatMap(([rotulo, jogoId, cmd]) => [jogoId === id ? span('ok', `[${rotulo}]`) : botao(rotulo, cmd), ' '])]);
                 if (!scores.length) { apagado('nenhuma partida.'); estado.partidas = []; return; }
                 listarPartidas(scores);
-                apagado('"hide <n>" tira do ranking · "show <n>" devolve · "rm <n>" apaga.');
+                apagado('tirar/devolver mexem no ranking · apagar pede um segundo clique · clique no nome para abrir o leitor.');
             },
         },
         hide: {
@@ -650,26 +841,35 @@
         },
         rm: {
             uso: 'rm <n>', desc: 'apaga a partida para sempre',
-            fn(args) {
+            async fn(args) {
                 const s = partidaDoArgumento(args[0]);
-                pedirConfirmacao(`apagar a partida ${args[0]} (${jogo(s.gameId)}, ${s.score} pts de ${primeiroNome(s.name)})?`, async () => {
+                const apagar = async () => {
                     await pedir(`/api/admin/scores/${s.id}/delete`, {});
                     marcarPartida(s.id, { apagada: true });
                     ok('partida apagada.');
-                });
+                };
+                if (args.includes('--sim')) await apagar();
+                else pedirConfirmacao(`apagar a partida ${args[0]} (${jogo(s.gameId)}, ${s.score} pts de ${primeiroNome(s.name)})?`, apagar);
             },
         },
         log: {
             desc: 'histórico das ações de admin',
             async fn() {
                 const { log } = await pedir('/api/admin/log');
+                novaTela('log', [['histórico', null]]);
                 if (!log.length) { apagado('nenhuma ação ainda.'); return; }
                 mostrarLog(log);
             },
         },
         site: { desc: 'abre o site numa aba nova', fn() { window.open('index.html', '_blank', 'noopener'); } },
-        whoami: { desc: 'quem está no terminal', fn() { tabela(['campo', 'valor'], [['nome', estado.eu.name], ['id', estado.eu.id], ['poder', 'root']]); } },
-        clear: { desc: 'limpa a tela', fn() { saida.replaceChildren(); } },
+        whoami: {
+            desc: 'quem está no terminal',
+            fn() {
+                novaTela('whoami', [['eu', null]]);
+                tabela(['campo', 'valor'], [['nome', estado.eu.name], ['id', estado.eu.id], ['poder', 'root']]);
+            },
+        },
+        clear: { desc: 'volta ao início', fn: () => COMANDOS.status.fn() },
         exit: { desc: 'volta para o site', fn() { location.href = 'index.html'; } },
     };
     const APELIDOS = { ls: 'users', cd: 'open', '?': 'help', cls: 'clear', quit: 'exit', sair: 'exit', ajuda: 'help' };
@@ -687,28 +887,26 @@
     // ---------------------------------------------------------------- execução
     let fila = Promise.resolve();
 
-    function eco(texto) {
-        const p = el('p', 'l l--cmd');
-        p.append(span('ps', `${ps.textContent} `), texto);
-        imprimir(p);
-        saida.scrollTop = saida.scrollHeight;
+    async function responderConfirmacao(sim) {
+        const acao = estado.confirmar;
+        estado.confirmar = null;
+        notificar('');
+        atualizarPrompt();
+        if (!acao) return;
+        if (sim) await acao();
+        else notificar('cancelado.', 'aviso');
     }
 
     async function executar(texto) {
         const limpo = texto.trim();
-        eco(limpo);
         if (estado.confirmar) {
-            if (/^(s|sim|y|yes)$/i.test(limpo)) {
-                const acao = estado.confirmar;
-                estado.confirmar = null;
-                atualizarPrompt();
-                await acao();
-            } else if (/^(n|nao|não|no)$/i.test(limpo)) {
-                estado.confirmar = null;
-                atualizarPrompt();
-                apagado('cancelado.');
-            } else apagado('há uma confirmação pendente: responda s ou n.');
-            return;
+            if (!limpo) return;
+            if (/^(s|sim|y|yes)$/i.test(limpo)) return responderConfirmacao(true);
+            if (/^(n|nao|não|no)$/i.test(limpo)) return responderConfirmacao(false);
+            // qualquer outro comando cancela a pergunta pendente
+            estado.confirmar = null;
+            notificar('');
+            atualizarPrompt();
         }
         if (!limpo) return;
         const [primeira, ...args] = limpo.split(/\s+/);
@@ -720,10 +918,30 @@
 
     /** Roda um comando na fila (cliques rápidos não se atropelam). */
     function rodar(texto) {
-        fila = fila.then(() => executar(texto)).catch((e) => {
+        fila = fila.then(async () => {
+            let lento = setTimeout(() => {
+                lento = 0;
+                notificar('… carregando', 'apagado', { fixo: true });
+                feedback.dataset.carregando = '1';
+            }, 400);
+            try {
+                await executar(texto);
+            } finally {
+                if (lento) clearTimeout(lento);
+                if (feedback.dataset.carregando) notificar('');
+            }
+        }).catch((e) => {
             erro(e.status === 404 && /rota/.test(e.message) ? 'permissão negada.' : e.message);
         }).finally(atualizarPrompt);
         return fila;
+    }
+
+    /** Volta para a tela anterior (botão "‹ voltar" e a tecla Esc). */
+    function voltar() {
+        const anterior = estado.pilha.pop();
+        if (!anterior) return;
+        estado.tela = null;
+        rodar(anterior);
     }
 
     // ---------------------------------------------------------------- teclado
@@ -746,7 +964,9 @@
             opcoes = ['estacionamento', 'toradolandia', 'piscina-de-macarronada', 'est', 'tor', 'pis'].filter((p) => p.startsWith(partes[1].toLowerCase()));
         } else return;
         if (opcoes.length === 1) entrada.value = `${prefixo}${opcoes[0]} `;
-        else if (opcoes.length > 1) apagado(opcoes.join('   '));
+        else if (opcoes.length > 1) {
+            notificar(opcoes.flatMap((o) => [botao(o, `${prefixo}${o} `, { link: true, preencher: true }), ' ']), 'apagado', { fixo: true });
+        }
     }
 
     $('prompt').addEventListener('submit', (evento) => {
@@ -770,11 +990,24 @@
             estado.posHistorico = Math.max(0, Math.min(estado.historico.length, estado.posHistorico + passo));
             entrada.value = estado.historico[estado.posHistorico] ?? '';
         }
-        if (evento.key === 'l' && evento.ctrlKey) { evento.preventDefault(); saida.replaceChildren(); }
+        if (evento.key === 'l' && evento.ctrlKey) { evento.preventDefault(); rodar('clear'); }
     });
 
-    // Clicar no fundo do terminal volta o foco para o prompt (sem roubar seleção de texto).
-    saida.addEventListener('mouseup', () => { if (!getSelection().toString()) entrada.focus({ preventScroll: true }); });
+    // Esc: cancela a pergunta pendente, limpa o prompt ou volta uma tela.
+    document.addEventListener('keydown', (evento) => {
+        if (evento.key !== 'Escape' || evento.defaultPrevented) return;
+        if (estado.confirmar) { rodar('n'); return; }
+        if (document.activeElement === entrada && entrada.value) { entrada.value = ''; return; }
+        const busca = document.activeElement;
+        if (busca?.type === 'search' && busca.value) { busca.value = ''; busca.dispatchEvent(new Event('input')); return; }
+        voltar();
+    });
+
+    // Clicar no vazio do terminal devolve o foco ao prompt (sem roubar de botões, campos ou seleção de texto).
+    saida.addEventListener('mouseup', (evento) => {
+        if (evento.target.closest('button, input, textarea, select, summary, a')) return;
+        if (!getSelection().toString()) entrada.focus({ preventScroll: true });
+    });
 
     const relogio = $('relogio');
     const tique = () => { relogio.textContent = new Date().toLocaleTimeString('pt-BR'); };
@@ -826,7 +1059,7 @@
             erro(`não foi possível verificar sua sessão: ${e.message}`);
             const tentar = el('button', 'cmd', 'tentar novamente');
             tentar.type = 'button';
-            tentar.addEventListener('click', () => { saida.replaceChildren(); boot(); });
+            tentar.addEventListener('click', () => { saida.replaceChildren(); destino = saida; boot(); });
             linha(['a API está indisponível. ', tentar, ' ou volte mais tarde.'], 'l--aviso');
             return;
         }
@@ -842,8 +1075,6 @@
             return;
         }
         estado.eu = eu.user;
-        linha(`acesso concedido. bem-vindo, ${eu.user.firstName}.`, 'l--ok');
-        linha(['digite ', botao('help', 'help'), ' ou use os atalhos ao lado.'], 'l--apagado');
         mostrarAtalhos();
         mostrarDashboard();
         desenharAscii();
@@ -851,6 +1082,7 @@
         entrada.focus();
         atualizarPrompt();
         await rodar('status');
+        notificar(`✔ acesso concedido. bem-vindo, ${eu.user.firstName}. Clique nos números, nomes e botões; "/" foca o prompt.`, 'ok');
     }
 
     document.addEventListener('keydown', (evento) => {

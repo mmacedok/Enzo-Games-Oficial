@@ -77,6 +77,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Terminal admin interativo (mesmo visual hacker ASCII):** a tela é substituída em vez de empilhar linhas (migalhas ‹ voltar / ↻ / Esc), uma linha de aviso única (`>>`), busca ao vivo em leitores e linhas clicáveis, números do painel clicáveis, conta com seções dobráveis, botões de créditos/pó (±10…1000), pacotes, fala editável, ban/kick/apagar com "certeza?" no próprio botão, gibis escondidos com [revelar]/[esconder]. Comandos digitados continuam valendo. Só conferido no navegador local; falta olho do Henrique no celular.
 - 2026-09-30: **Capítulo 8 escondido temporariamente** (`"hidden": true` em `capitulo-8` no `data/comics.manifest.json`; suporte novo em `atualizar.js`). Para publicar de novo, usar `reveal capitulo-8` no terminal admin; `hide capitulo-8` esconde novamente. O manifesto continua com `hidden: true`. Enquanto estiver escondido, o "Leitor da Saga" exige só os capítulos 1 a 7.
 - 2026-09-30: **"Como jogar" da Batalha agora são as 2 cartilhas ilustradas** (`assets/Batalha/como-jogar-1.png` e `-2.png`): abrem sozinhas na primeira visita (marca `enzo-batalha-cartilha-vista` no navegador) e pelo botão Como jogar do menu e da mesa. O texto antigo das regras foi apagado do `js/batalha.js`. Quem mudar regra precisa refazer a cartilha.
 - 2026-09-30: **Botão Voltar na mesa da Batalha:** canto superior esquerdo (no celular só a seta), com a mesma confirmação do 🏠 (o 🏠 do canto direito ficava atrás da conta).
