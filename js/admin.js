@@ -303,6 +303,7 @@
     /** Seção dobrável: o título abre/fecha; lembra o estado entre uma conta e outra. */
     function secaoDobravel(chave, titulo, preencher, abertaPadrao = true) {
         const d = el('details', 'secao');
+        d.dataset.secao = chave;
         d.open = estado.secoes[chave] ?? abertaPadrao;
         d.addEventListener('toggle', () => { estado.secoes[chave] = d.open; });
         d.appendChild(el('summary', '', titulo));

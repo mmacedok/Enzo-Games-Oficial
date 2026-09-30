@@ -10,6 +10,10 @@
     --neon: #39ff88;
     --vidro: rgba(1, 9, 5, .78);
     --brilho-ciano: 0 0 8px rgba(38, 243, 255, .65);
+    --ambar: #ffc247;
+    --laranja: #ff8a3d;
+    --violeta: #a78bff;
+    --azul: #5aa8ff;
     --brilho-neon: 0 0 10px rgba(57, 255, 136, .7), 0 0 26px rgba(57, 255, 136, .25);
 }
 
@@ -112,22 +116,23 @@ html, body { background: #000; }
 .dashboard summary::before { color: var(--magenta); text-shadow: 0 0 8px var(--magenta); }
 .dashboard-hint { color: var(--ciano); }
 .dashboard-grupo {
-    border: 1px solid rgba(38, 243, 255, .16);
+    --g: var(--ciano);
+    border: 1px solid color-mix(in srgb, var(--g) 18%, transparent);
     background:
-        linear-gradient(var(--ciano), var(--ciano)) top left / 14px 2px no-repeat,
-        linear-gradient(var(--ciano), var(--ciano)) top left / 2px 14px no-repeat,
-        linear-gradient(var(--ciano), var(--ciano)) top right / 14px 2px no-repeat,
-        linear-gradient(var(--ciano), var(--ciano)) top right / 2px 14px no-repeat,
-        linear-gradient(var(--ciano), var(--ciano)) bottom left / 14px 2px no-repeat,
-        linear-gradient(var(--ciano), var(--ciano)) bottom left / 2px 14px no-repeat,
-        linear-gradient(var(--ciano), var(--ciano)) bottom right / 14px 2px no-repeat,
-        linear-gradient(var(--ciano), var(--ciano)) bottom right / 2px 14px no-repeat,
+        linear-gradient(var(--g), var(--g)) top left / 14px 2px no-repeat,
+        linear-gradient(var(--g), var(--g)) top left / 2px 14px no-repeat,
+        linear-gradient(var(--g), var(--g)) top right / 14px 2px no-repeat,
+        linear-gradient(var(--g), var(--g)) top right / 2px 14px no-repeat,
+        linear-gradient(var(--g), var(--g)) bottom left / 14px 2px no-repeat,
+        linear-gradient(var(--g), var(--g)) bottom left / 2px 14px no-repeat,
+        linear-gradient(var(--g), var(--g)) bottom right / 14px 2px no-repeat,
+        linear-gradient(var(--g), var(--g)) bottom right / 2px 14px no-repeat,
         rgba(0, 12, 8, .7);
     transition: box-shadow .2s, border-color .2s;
 }
-.dashboard-grupo:hover { border-color: rgba(38, 243, 255, .5); box-shadow: 0 0 22px rgba(38, 243, 255, .18), inset 0 0 22px rgba(38, 243, 255, .06); }
-.dashboard-grupo h2 { color: var(--ciano); text-shadow: var(--brilho-ciano); }
-.dashboard-grupo h2::before { content: '▌'; color: var(--magenta); margin-right: 4px; }
+.dashboard-grupo:hover { border-color: color-mix(in srgb, var(--g) 55%, transparent); box-shadow: 0 0 22px color-mix(in srgb, var(--g) 22%, transparent), inset 0 0 22px color-mix(in srgb, var(--g) 7%, transparent); }
+.dashboard-grupo h2 { color: var(--g); text-shadow: 0 0 8px color-mix(in srgb, var(--g) 65%, transparent); }
+.dashboard-grupo h2::before { content: '▌'; color: var(--g); margin-right: 4px; }
 .dashboard-acao { transition: transform .12s, background .12s, box-shadow .12s; }
 .dashboard-acao:hover, .dashboard-acao:focus-visible {
     background: var(--neon); color: #001a09; text-shadow: none;
@@ -215,6 +220,83 @@ html, body { background: #000; }
 #boot .boot-ok { color: var(--ciano); }
 #boot .boot-no { color: var(--magenta); }
 #boot .boot-dica { position: absolute; right: 16px; bottom: 12px; color: var(--verde-apagado); font-size: 11px; }
+
+
+/* ============================================================================
+   SISTEMA DE CORES: cada cor quer dizer uma coisa, em qualquer tela.
+     verde    #39ff88  tudo certo, valores e dados comuns (o "fósforo" padrão)
+     ciano    #26f3ff  informação e estrutura: cabeçalhos, rótulos, comandos do sistema
+     magenta  #ff3df0  pessoas e poder: leitores, conta aberta, prompt de root
+     âmbar    #ffc247  economia e privilégios: créditos, pó, pacotes, conquistas, censura, avisos
+     laranja  #ff8a3d  rede e lugar: IPs, cidade/estado, operadora, acessos
+     violeta  #a78bff  tempo e conteúdo: datas, horas, ids, gibis e leitura
+     azul     #5aa8ff  jogos e placares: partidas, ranking, Flappy, Degustação
+     vermelho #ff5a4d  perigo: banir, derrubar, apagar, erros
+   Botões herdam a cor pelo comando que rodam (atributo title); texto solto é colorido
+   por js/admin-fx.js (datas, IPs e ids).
+   ============================================================================ */
+.cmd { --cor: var(--neon); color: var(--cor); }
+.cmd::before, .cmd::after { color: color-mix(in srgb, var(--cor) 70%, #000); }
+.cmd:hover, .cmd:focus-visible { background: var(--cor); color: #050505; box-shadow: 0 0 14px color-mix(in srgb, var(--cor) 80%, transparent); }
+.cmd:hover::before, .cmd:hover::after, .cmd:focus-visible::before, .cmd:focus-visible::after { color: #050505; }
+.cmd--link { text-decoration-color: color-mix(in srgb, var(--cor) 55%, transparent); }
+.cmd.cmd--perigo { --cor: var(--vermelho); color: var(--cor); }
+.cmd--armado { background: var(--vermelho); color: #050505; }
+
+/* sistema e ajuda */
+.cmd[title='status'], .cmd[title='help'], .cmd[title='whoami'], .cmd[title='log'], .cmd[title='clear'], .cmd[title='site'],
+.cmd[title='exit'], .cmd[title='achievements'], .cmd[title='ips'] { --cor: var(--ciano); }
+/* pessoas */
+.cmd[title^='open '], .cmd[title='users'], .cmd[title^='users '], .cmd[title='close'], .cmd[title^='fala'] { --cor: var(--magenta); }
+/* economia e privilégios */
+.cmd[title^='grant'], .cmd[title^='revoke'], .cmd[title^='credits'], .cmd[title^='dust'], .cmd[title^='pack'], .cmd[title^='censura'] { --cor: var(--ambar); }
+/* rede e lugar */
+.cmd[title^='ip '], .cmd[title^='onde'], .cmd[title='anonimos'] { --cor: var(--laranja); }
+/* gibis */
+.cmd[title^='reveal'] { --cor: var(--violeta); }
+/* jogos */
+.cmd[title^='scores'], .cmd[title^='show'], .cmd[title^='hide'], .cmd[title^='flappy'], .cmd[title^='degustacao'] { --cor: var(--azul); }
+.cmd[title^='ban'], .cmd[title^='unban'], .cmd[title^='kick'], .cmd[title^='rm '] { --cor: var(--vermelho); }
+
+/* módulos da central: um tema por grupo */
+.dashboard-grupo:nth-child(1) { --g: var(--ciano); }
+.dashboard-grupo:nth-child(2) { --g: var(--magenta); }
+.dashboard-grupo:nth-child(3) { --g: var(--violeta); }
+.dashboard-grupo:nth-child(4) { --g: var(--azul); }
+.dashboard-acao:hover, .dashboard-acao:focus-visible { background: var(--cor); box-shadow: 0 0 16px color-mix(in srgb, var(--cor) 75%, transparent); }
+
+/* cartões de números do painel */
+.numero { --n: var(--neon); border-left-color: var(--n); background: linear-gradient(90deg, color-mix(in srgb, var(--n) 12%, transparent), transparent 80%); }
+.numero-rotulo { color: var(--n); text-shadow: 0 0 8px color-mix(in srgb, var(--n) 60%, transparent); }
+.numero-valor { color: var(--n); text-shadow: 0 0 10px color-mix(in srgb, var(--n) 70%, transparent); }
+.numero-barra b { color: var(--n); text-shadow: 0 0 8px color-mix(in srgb, var(--n) 60%, transparent); }
+.numero:nth-child(1), .numero:nth-child(2) { --n: var(--magenta); }   /* contas, ativos */
+.numero:nth-child(3) { --n: var(--ciano); }                            /* sessões */
+.numero:nth-child(4) { --n: var(--azul); }                             /* partidas */
+.numero:nth-child(5) { --n: var(--ambar); }                            /* conquistas */
+.numero:nth-child(6) { --n: var(--violeta); }                          /* capítulos lidos */
+.numero:nth-child(7) { --n: var(--vermelho); }                         /* banidos */
+
+/* seções dobráveis da ficha da conta */
+.secao { --s: var(--ciano); }
+.secao > summary { color: var(--s); text-shadow: 0 0 8px color-mix(in srgb, var(--s) 55%, transparent); }
+.secao > summary::before { color: var(--s); }
+.secao-corpo { border-left-color: color-mix(in srgb, var(--s) 45%, transparent); }
+.secao[data-secao='conquistas'], .secao[data-secao='baralho'], .secao[data-secao='secretos'] { --s: var(--ambar); }
+.secao[data-secao='partidas'] { --s: var(--azul); }
+.secao[data-secao='leitura'] { --s: var(--violeta); }
+.secao[data-secao='acessos'] { --s: var(--laranja); }
+
+/* texto solto colorido por js/admin-fx.js */
+.sx-tempo { color: var(--violeta); text-shadow: 0 0 6px rgba(167, 139, 255, .45); }
+.sx-ip { color: var(--laranja); text-shadow: 0 0 6px rgba(255, 138, 61, .5); }
+.sx-id { color: #8b84c9; text-shadow: none; }
+
+/* estados e títulos */
+.l--titulo { border-left-color: var(--magenta); }
+.migalha-atual { color: var(--ciano); text-shadow: var(--brilho-ciano); }
+.aviso, .l--aviso { color: var(--ambar); }
+.erro, .l--erro { color: var(--vermelho); }
 
 /* ------------------------------------------------------------ celular */
 @media (max-width: 760px) {

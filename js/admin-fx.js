@@ -129,7 +129,54 @@
         tela.insertAdjacentHTML('beforeend', dica);
     }
 
+
+    // ---------------------------------------------------------------- realce de texto (datas, IPs, ids)
+    // Como um realçador de sintaxe: acha no texto da saída e pinta por significado (ver admin-hacker.css).
+    const PADROES = /(\d{2}\/\d{2}\/\d{4}(?:,? \d{2}:\d{2})?)|(\b(?:\d{1,3}\.){3}\d{1,3}\b)|(\b[0-9a-f]{8}\b)/g;
+    function realcar(raiz) {
+        if (!raiz || raiz.nodeType !== 1) return;
+        const andador = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT, {
+            acceptNode(no) {
+                const pai = no.parentElement;
+                if (!pai || pai.closest('button, input, textarea, .sx')) return NodeFilter.FILTER_REJECT;
+                PADROES.lastIndex = 0;
+                return PADROES.test(no.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+            },
+        });
+        const nos = [];
+        while (andador.nextNode()) nos.push(andador.currentNode);
+        for (const no of nos) {
+            const texto = no.nodeValue;
+            const frag = document.createDocumentFragment();
+            let fim = 0;
+            for (const m of texto.matchAll(PADROES)) {
+                if (m[3] && !(/[a-f]/.test(m[3]) && /\d/.test(m[3]))) continue; // id de verdade tem letra e número
+                if (m.index > fim) frag.append(texto.slice(fim, m.index));
+                const span = document.createElement('span');
+                span.className = `sx sx-${m[1] ? 'tempo' : m[2] ? 'ip' : 'id'}`;
+                span.textContent = m[0];
+                frag.append(span);
+                fim = m.index + m[0].length;
+            }
+            if (fim === 0) continue;
+            if (fim < texto.length) frag.append(texto.slice(fim));
+            no.replaceWith(frag);
+        }
+    }
+    function observarSaida() {
+        const saida = document.getElementById('saida');
+        if (!saida) return;
+        let agendado = false;
+        new MutationObserver(() => {
+            if (agendado) return;
+            agendado = true;
+            requestAnimationFrame(() => { agendado = false; realcar(saida); });
+        }).observe(saida, { childList: true, subtree: true });
+        realcar(saida);
+    }
+
     if (!calmo) chuva();
+    observarSaida();
     fita();
     boot();
 })();
