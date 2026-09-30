@@ -222,7 +222,9 @@
                 d.capa.forEach((id) => capa.appendChild(UI.carta(id)));
             }
             b.append(capa, el('strong', 'bt-deck-nome', d.nome), el('span', 'bt-deck-texto', d.texto));
-            decks.appendChild(b);
+            const item = el('div', 'bt-deck-item');
+            item.append(b, botao('bt-botao', '🃏 Ver cartas', () => mostrarCartasDoDeck(d)));
+            decks.appendChild(item);
         }
         caixa.appendChild(decks);
 
@@ -274,6 +276,43 @@
         caixa.appendChild(comoJogar);
         caixa.appendChild(botao('bt-link', '🏆 Placar', mostrarPlacar));
         raiz.appendChild(caixa);
+    }
+
+    /** "Ver cartas" do deck: as cartas dele (com a quantidade) e, ao tocar numa, o que ela faz. */
+    function mostrarCartasDoDeck(deck) {
+        const janela = el('dialog', 'bt-regras bt-cartas');
+        const quantas = new Map();
+        deck.cartas.forEach((id) => quantas.set(id, (quantas.get(id) || 0) + 1));
+        const ids = [...quantas.keys()];
+        const detalhe = el('div', 'bt-cartas-detalhe');
+        const grade = el('ul', 'bt-cartas-grade');
+        const escolher = (id) => {
+            const d = def(id);
+            const grande = el('div', 'bt-cartas-grande');
+            grande.appendChild(UI.carta(id));
+            const info = el('div', 'bt-cartas-info');
+            info.append(el('h3', '', nomeVisivel(id)), el('p', 'bt-painel-frase', `(${d.frase})`));
+            if (d.tcg) info.appendChild(el('p', 'bt-painel-tcg', d.tcg));
+            detalhe.replaceChildren(grande, info);
+            grade.querySelectorAll('.bt-cartas-item').forEach((x) => x.classList.toggle('bt-cartas-item--ativa', x.dataset.carta === id));
+        };
+        for (const id of ids) {
+            const li = el('li', 'bt-cartas-item');
+            li.dataset.carta = id;
+            const b = botao('bt-cartas-carta', null, () => escolher(id));
+            b.setAttribute('aria-label', `${nomeVisivel(id)}, ${quantas.get(id)} no deck. Ver o que faz`);
+            b.appendChild(UI.carta(id));
+            li.appendChild(b);
+            if (quantas.get(id) > 1) li.appendChild(el('span', 'bt-cartas-qtd', `×${quantas.get(id)}`));
+            grade.appendChild(li);
+        }
+        janela.append(el('h2', '', `${deck.nome}: ${deck.cartas.length} cartas`), detalhe,
+            el('p', 'bt-placar-nota', 'Toque numa carta para ver o que ela faz.'), grade,
+            botao('bt-botao', 'Fechar', () => janela.close()));
+        janela.addEventListener('close', () => janela.remove());
+        document.body.appendChild(janela);
+        janela.showModal();
+        escolher(ids[0]);
     }
 
     function mostrarRegras() {

@@ -68,6 +68,19 @@
 .bt-deck-leque .carta-tcg:nth-child(3) { transform: rotate(12deg) translate(-14px, 8px); }
 .bt-deck-nome { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 400; letter-spacing: 0.5px; }
 .bt-deck-texto { font-size: 0.9rem; font-weight: 700; }
+.bt-deck-item { display: grid; gap: 10px; align-content: start; }
+/* "Ver cartas" do deck: detalhe da carta escolhida em cima, grade das cartas embaixo. */
+dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); overflow-y: auto; }
+.bt-cartas-detalhe { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; align-items: start; }
+.bt-cartas-grande .carta-tcg { width: 150px; box-shadow: 4px 4px 0 var(--ink); }
+.bt-cartas-info h3 { margin: 0 0 4px; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 400; }
+.bt-cartas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 10px; margin: 6px 0 12px; padding: 0; list-style: none; }
+.bt-cartas-item { position: relative; }
+.bt-cartas-carta { display: block; width: 100%; padding: 0; background: none; border: 0; cursor: pointer; }
+.bt-cartas-carta .carta-tcg { width: 100%; pointer-events: none; }
+.bt-cartas-item--ativa .bt-cartas-carta { outline: 3px solid var(--orange); outline-offset: 2px; }
+.bt-cartas-qtd { position: absolute; top: -6px; right: -6px; padding: 1px 6px; font-family: var(--font-heading); color: var(--paper); background: var(--ink); border-radius: 10px; }
+@media (max-width: 480px) { .bt-cartas-detalhe { grid-template-columns: 1fr; justify-items: center; } .bt-cartas-info { justify-self: stretch; } }
 .bt-rival strong { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; }
 .bt-rival span:last-child { font-size: 0.85rem; font-weight: 700; }
 .bt-rival-rosto { font-size: 2.2rem; line-height: 1; }
