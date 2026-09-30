@@ -1912,10 +1912,7 @@
         const trocar = botao('bt-link', 'trocar deck', telaMenu);
         corpo.lastChild.append(' ', trocar);
 
-        const opcoes = el('div', 'bt-online-opcoes');
-        const bLista = botao('bt-botao bt-botao--forte', null, () => mostrarLista());
-        bLista.append(el('strong', '', 'Lista de salas'),
-            el('span', '', salasEsperando ? `${salasEsperando} sala${plu(salasEsperando)} esperando` : 'ver quem está esperando'));
+        const opcoes = el('div', 'bt-online-opcoes bt-online-opcoes--uma');
         const criar = botao('bt-botao', null, async () => {
             criar.disabled = true;
             try {
@@ -1927,43 +1924,16 @@
                 balao(criar, erro.message, 'erro');
             }
         });
+        criar.className = 'bt-botao bt-botao--forte';
         criar.append(el('strong', '', 'Criar sala'), el('span', '', 'fica na lista enquanto a tela estiver aberta'));
-        const bAssistir = botao('bt-botao', null, () => mostrarAoVivo());
-        bAssistir.append(el('strong', '', 'Assistir'), el('span', '', 'partidas ao vivo'));
-        opcoes.append(bLista, criar, bAssistir);
+        opcoes.appendChild(criar);
         corpo.appendChild(opcoes);
+        // A lista de salas esperando e de partidas ao vivo já aparece aqui embaixo, sem botão de entrar/assistir à parte.
         if (atual.sala) mostrarSala(atual.sala.codigo, atual.sala.expira);
+        else mostrarLista();
 
-        /** Partidas em andamento: escolha uma para assistir (só olhar e comentar). */
-        function mostrarAoVivo() {
-            corpo.replaceChildren();
-            corpo.appendChild(el('p', 'bt-online-deck', 'Partidas em andamento. Escolha uma para assistir:'));
-            const lista = el('div', 'bt-online-salas-lista');
-            corpo.append(lista, botao('bt-link', '← Voltar às opções', () => telaOnline()));
-            const primeiro = (nome) => String(nome || '').trim().split(/\s+/)[0] || '?';
-            const desenharLista = (partidas) => {
-                if (!partidas.length) { lista.replaceChildren(el('p', 'bt-online-vazio', 'Nenhuma partida acontecendo agora.')); return; }
-                lista.replaceChildren(...partidas.map((p) => {
-                    const linha = el('div', 'bt-sala-linha');
-                    const b = botao('bt-botao bt-botao--forte', 'Assistir', () => abrirAssistir(p.id, b));
-                    linha.append(el('span', 'bt-sala-nome', `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`),
-                        el('span', 'bt-sala-deck', `turno ${p.turno}`),
-                        el('span', 'bt-sala-placar', `❤ ${num(p.vida[0])} × ${num(p.vida[1])}`), b);
-                    return linha;
-                }));
-            };
-            const carregar = async () => {
-                if (!lista.isConnected) return;
-                if (!document.hidden) { try { desenharLista((await api('GET', '/api/tcg/ao-vivo')).partidas || []); } catch { /* tenta de novo */ } }
-                if (lista.isConnected) setTimeout(carregar, 4000);
-            };
-            carregar();
-        }
-
-        /** Lista de salas públicas: todo mundo que criou sala e está esperando. */
+        /** Lista única: salas esperando (Entrar) e partidas em andamento (Assistir). Renova sozinha. */
         function mostrarLista() {
-            corpo.replaceChildren();
-            corpo.appendChild(el('p', 'bt-online-deck', `Seu deck: ${deckEscolhido.nome}`));
             // Entrar numa sala da lista (1 clique).
             const entrarNaSala = async (codigo, alvo, b) => {
                 b.disabled = true;
@@ -1982,14 +1952,23 @@
             // Salas esperando: lista com 1 clique para entrar (renova a cada 3 s, só com a aba visível).
             const listaSalas = el('div', 'bt-online-salas');
             const corpoSalas = el('div', 'bt-online-salas-lista');
-            listaSalas.append(el('h3', 'bt-online-salas-titulo', 'Salas esperando'), corpoSalas);
+            listaSalas.append(el('h3', 'bt-online-salas-titulo', 'Salas e partidas ao vivo'), corpoSalas);
             corpo.appendChild(listaSalas);
-            const renderSalas = (salas) => {
+            const primeiro = (nome) => String(nome || '').trim().split(/\s+/)[0] || '?';
+            const renderSalas = (salas, partidas = []) => {
                 if (!corpoSalas.isConnected) return;
-                if (!salas.length) {
-                    corpoSalas.replaceChildren(el('p', 'bt-online-vazio', 'Ninguém esperando agora. Crie uma sala e ela aparece aqui para os outros.'));
+                if (!salas.length && !partidas.length) {
+                    corpoSalas.replaceChildren(el('p', 'bt-online-vazio', 'Nada por aqui agora. Crie uma sala e ela aparece para os outros.'));
                     return;
                 }
+                const aoVivo = partidas.map((p) => {
+                    const linha = el('div', 'bt-sala-linha bt-sala-linha--ao-vivo');
+                    const b = botao('bt-botao', 'Assistir', () => abrirAssistir(p.id, b));
+                    linha.append(el('span', 'bt-sala-nome', `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`),
+                        el('span', 'bt-sala-deck', `ao vivo · turno ${p.turno}`),
+                        el('span', 'bt-sala-placar', `❤ ${num(p.vida[0])} × ${num(p.vida[1])}`), b);
+                    return linha;
+                });
                 corpoSalas.replaceChildren(...salas.map((s) => {
                     const d = DECKS.find((x) => x.id === s.deck);
                     const linha = el('div', 'bt-sala-linha');
@@ -2000,12 +1979,14 @@
                     const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarNaSala(s.codigo, b, b));
                     linha.appendChild(b);
                     return linha;
-                }));
+                }), ...aoVivo);
             };
             const atualizarSalas = async () => {
                 if (!corpoSalas.isConnected || salasAbertas !== controleSalas) return;
-                try { const d = await api('GET', '/api/tcg/salas'); renderSalas(d.salas || []); }
-                catch { /* sem servidor agora: tenta de novo no próximo ciclo */ }
+                try {
+                    const [d, v] = await Promise.all([api('GET', '/api/tcg/salas'), api('GET', '/api/tcg/ao-vivo').catch(() => ({ partidas: [] }))]);
+                    renderSalas(d.salas || [], v.partidas || []);
+                } catch { /* sem servidor agora: tenta de novo no próximo ciclo */ }
             };
             let timerSalas = null;
             const checarSalas = async () => {
@@ -2027,7 +2008,6 @@
             salasAbertas = controleSalas;
             document.addEventListener('visibilitychange', visivelSalas);
             timerSalas = setTimeout(checarSalas, 0);
-            corpo.appendChild(botao('bt-link', '← Voltar às opções', () => telaOnline()));
         }
 
         function mostrarSala(codigo, expira) {

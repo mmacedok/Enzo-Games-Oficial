@@ -1201,3 +1201,6 @@ dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
 .bt-desc-cartas .bt-desc-linha { margin-bottom: 4px; }
 
 .bt-editor .bt-placar-nota { color: #3a2d18; opacity: 1; font-size: .9rem; }
+
+.bt-online-opcoes--uma { grid-template-columns: 1fr; }
+.bt-sala-linha--ao-vivo { background: #f2ecff; }
