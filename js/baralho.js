@@ -793,8 +793,35 @@
             const dica = el('p', 'abertura-dica', 'Clique no pacote para abrir!');
             palco.replaceChildren(embrulho, dica);
             embrulho.focus();
-            embrulho.addEventListener('click', async () => {
+
+            // Abrir de uma vez: o pacote brilha branco, explode num clarão e já mostra
+            // todas as cartas viradas (a mesa final), sem a pilha.
+            const deUmaVez = botao('baralho-botao', 'Abrir de uma vez ⚡');
+            deUmaVez.setAttribute('aria-label', 'Abrir de uma vez e ver todas as cartas');
+            rodape.replaceChildren(deUmaVez);
+            deUmaVez.addEventListener('click', async () => {
+                if (embrulho.disabled) return;
                 embrulho.disabled = true;
+                deUmaVez.disabled = true;
+                dica.remove();
+                molaPacote.tranco(0.05, 6);
+                embrulho.classList.add('abertura-pacote--brilhando');
+                await esperar(700);
+                const clarao = el('div', 'abertura-clarao');
+                clarao.setAttribute('aria-hidden', 'true');
+                tela.appendChild(clarao);
+                clarao.addEventListener('animationend', () => clarao.remove(), { once: true });
+                confete(palco, ['#ffffff', cores[1], '#fff5d1', cores[0]], 40);
+                tremer();
+                embrulho.classList.add('abertura-pacote--estourou');
+                await esperar(220);
+                mesaFinal(p);
+            }, { once: true });
+
+            embrulho.addEventListener('click', async () => {
+                if (embrulho.disabled) return;
+                embrulho.disabled = true;
+                deUmaVez.remove();
                 dica.remove();
                 // Aperta (estica e amassa, tremendo cada vez mais)...
                 molaPacote.tranco(0.06, 4);

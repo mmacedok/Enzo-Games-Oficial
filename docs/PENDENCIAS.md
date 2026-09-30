@@ -77,6 +77,8 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Baralho, "Abrir de uma vez ⚡"** na abertura: o pacote brilha branco, explode num clarão
+  e vai direto para a mesa final com todas as cartas (a pilha continua clicando no pacote).
 - 2026-09-30: **Baralho, presentes** (`api/baralho.js`, `js/baralho.js`, `BOAS_VINDAS`/`DIARIO`/`PRESENTES_UNICOS` em `js/baralho-dados.js`):
   - visitante sem login ganha e abre 3 pacotes (1 de cada) na chegada; depois, "Quer salvar suas cartas? Faça login".
     No login as mesmas cartas vão para a conta (só conta que nunca abriu pacote; código vale 7 dias);

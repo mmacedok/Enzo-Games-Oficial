@@ -3079,6 +3079,20 @@ dialog.baralho-senha::backdrop { background: transparent; }
     animation: abertura-clarao 0.7s ease-out both;
 }
 @keyframes abertura-clarao { from { opacity: 1; } to { opacity: 0; } }
+/* Abrir de uma vez: o pacote vai ficando branco e brilhando, e explode num clarão branco. */
+.abertura-pacote.abertura-pacote--brilhando { animation: abertura-brilha 0.7s ease-in both; }
+@keyframes abertura-brilha {
+    from { filter: brightness(1) saturate(1) drop-shadow(0 0 0 #fff) drop-shadow(0 0 0 #fff); }
+    to { filter: brightness(2.6) saturate(0.3) drop-shadow(0 0 28px #fff) drop-shadow(0 0 60px #fff); transform: scale(1.12); }
+}
+.abertura > .abertura-clarao {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: radial-gradient(circle, #fff, rgba(255, 255, 255, 0.92) 45%, rgba(255, 255, 255, 0.6));
+    pointer-events: none;
+    animation: abertura-clarao 0.9s ease-out both;
+}
 .abertura-topo { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; width: min(1100px, 100%); }
 .abertura-titulo {
     justify-self: center;
