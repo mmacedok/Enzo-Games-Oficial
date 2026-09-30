@@ -481,7 +481,7 @@ test('T14. Assistir: lista ao vivo, visão sem as mãos, e nenhuma jogada de que
     assert.equal((await c('GET', `/api/tcg/assistir/${id}?desde=-1`)).dados.status, 'fim');
 });
 
-test('T15. Comentários da partida: jogadores e espectadores, limites, e tudo some quando a partida termina', async (t) => {
+test('T15. Comentários da partida: jogadores e espectadores, sem limite de ritmo, e tudo some quando a partida termina', async (t) => {
     const m = montar();
     t.after(() => m.db.close());
     const a = await jogador(m, 'a', 'Ana Silva');
@@ -493,9 +493,13 @@ test('T15. Comentários da partida: jogadores e espectadores, limites, e tudo so
     assert.equal((await m.navegador()('GET', url)).status, 401);
     assert.equal((await a('POST', url, { texto: '   ' })).status, 400);
     assert.equal((await a('POST', url, { texto: 'Boa sorte!' })).status, 200);
-    assert.equal((await a('POST', url, { texto: 'de novo' })).status, 429, 'um por 2 s');
-    m.relogio.agora += 2500;
-    assert.equal((await c('POST', url, { texto: `torcendo\u0007 pela   Ana ${'x'.repeat(300)}` })).status, 200);
+    assert.equal((await a('POST', url, { texto: 'de novo' })).status, 200, 'sem limite de ritmo');
+    for (let i = 0; i < 350; i++) await b('POST', url, { texto: `spam ${i}` });   // nem de quantidade
+    const total = (await c('GET', `${url}?desde=0`)).dados.comentarios;
+    assert.equal(total.length, 100, 'a leitura entrega 100 por vez');
+    await m.db.query('DELETE FROM tcg_comentarios');
+    await a('POST', url, { texto: 'Boa sorte!' });
+    assert.equal((await c('POST', url, { texto: `torcendo\u0007 pela   Ana ${'x'.repeat(600)}` })).status, 200);
     m.relogio.agora += 2500;
     assert.equal((await b('POST', url, { texto: 'valeu' })).status, 200);
 
@@ -504,7 +508,7 @@ test('T15. Comentários da partida: jogadores e espectadores, limites, e tudo so
     assert.equal(lidos.ativa, true);
     assert.deepEqual(lidos.comentarios.map((x) => [x.nome, x.lado, x.meu]), [['Ana', 0, false], ['Caio', null, true], ['Beto', 1, false]]);
     assert.ok(lidos.comentarios[1].texto.startsWith('torcendo pela Ana x'));
-    assert.equal(lidos.comentarios[1].texto.length, 140);
+    assert.equal(lidos.comentarios[1].texto.length, 500, 'teto técnico de tamanho');
     // Incremental.
     assert.equal((await a('GET', `${url}?desde=${lidos.comentarios[1].n}`)).dados.comentarios.length, 1);
 

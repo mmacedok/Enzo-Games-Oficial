@@ -1842,14 +1842,18 @@
         const lista = el('ol', 'bt-chat-lista');
         const form = el('form', 'bt-chat-form');
         const campo = el('input', 'bt-chat-campo');
-        campo.maxLength = 140;
+        campo.maxLength = 500;
         campo.autocomplete = 'off';
         campo.placeholder = 'Comente a partida...';
         campo.setAttribute('aria-label', 'Comentário');
         const enviar = botao('bt-botao bt-chat-enviar', 'Enviar');
         enviar.type = 'submit';
         form.append(campo, enviar);
-        painel.append(el('p', 'bt-chat-aviso', 'Os comentários somem quando a partida terminar.'), lista, form);
+        const topo = el('div', 'bt-chat-topo');
+        const fechar = botao('bt-chat-fechar', '×', () => alternar());
+        fechar.setAttribute('aria-label', 'Fechar comentários');
+        topo.append(el('p', 'bt-chat-aviso', 'Os comentários somem quando a partida terminar.'), fechar);
+        painel.append(topo, lista, form);
         caixa.append(abrir, painel);
         mesa.raiz.appendChild(caixa);
 

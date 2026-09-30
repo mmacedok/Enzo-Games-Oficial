@@ -40,9 +40,8 @@ const REVANCHE_DURA = 2 * 60 * 1000;
  * Contra o NPC a partida roda no navegador e o servidor não confere, então o prêmio tem trava:
  * poucas partidas premiadas por dia e um intervalo mínimo entre elas.
  */
-const COMENTARIO_MAX = 140;
-const COMENTARIOS_POR_PARTIDA = 300;
-const COMENTARIO_INTERVALO = 2000;
+/** Comentários sem limite de quantidade nem de ritmo; só um teto técnico no tamanho de cada um. */
+const COMENTARIO_MAX = 500;
 /** Partida sem nenhuma jogada há mais que isso não aparece na lista "ao vivo". */
 const AO_VIVO_FRESCA = 10 * 60 * 1000;
 const AO_VIVO_NA_LISTA = 20;
@@ -580,11 +579,6 @@ const rotas = [
             const texto = limparComentario((await ctx.corpo()).texto);
             if (!texto) throw new HttpError(400, 'escreva alguma coisa');
             const agora = ctx.agora();
-            const [{ n, ultimo }] = await ctx.db.query(
-                `SELECT COUNT(*) AS n, MAX(CASE WHEN user_id = $2 THEN criado_em END) AS ultimo FROM tcg_comentarios WHERE partida_id = $1`,
-                [l.id, ctx.usuario.id]);
-            if (Number(n) >= COMENTARIOS_POR_PARTIDA) throw new HttpError(429, 'os comentários dessa partida lotaram');
-            if (ultimo !== null && agora - Number(ultimo) < COMENTARIO_INTERVALO) throw new HttpError(429, 'devagar: um comentário a cada 2 segundos');
             const lado = [l.jogador_a, l.jogador_b].indexOf(ctx.usuario.id);
             const nome = String(ctx.usuario.display_name || 'Leitor').trim().split(/\s+/)[0].slice(0, 20);
             const [c] = await ctx.db.query(
@@ -673,4 +667,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline, COMENTARIO_MAX, COMENTARIO_INTERVALO };
+module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline, COMENTARIO_MAX };

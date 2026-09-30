@@ -978,7 +978,13 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     color: var(--paper-ink, #222); background: var(--paper); border: 3px solid var(--ink); border-radius: 12px; box-shadow: 3px 3px 0 var(--ink);
 }
 .bt-chat-painel[hidden] { display: none; }
+.bt-chat-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .bt-chat-aviso { margin: 0; font-size: 0.72rem; opacity: 0.75; }
+.bt-chat-fechar { flex: none; width: 28px; height: 28px; font: 700 1.2rem/1 sans-serif; cursor: pointer; color: var(--ink); background: transparent; border: 2px solid var(--ink); border-radius: 50%; }
+@media (max-width: 600px) {
+    .bt-chat-painel { max-height: 34vh; width: min(300px, calc(100vw - 20px)); }
+    .bt-chat-lista { max-height: 16vh; }
+}
 .bt-chat-lista { list-style: none; margin: 0; padding: 0; min-height: 60px; overflow-y: auto; font-size: 0.85rem; display: grid; gap: 3px; align-content: start; }
 .bt-chat-item { overflow-wrap: anywhere; }
 .bt-chat-item--meu { background: rgba(255, 204, 0, 0.25); border-radius: 4px; }
@@ -1018,6 +1024,11 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-sala-deck, .bt-sala-placar, .bt-sala-espera { font-size: 0.85rem; }
 .bt-sala-espera { white-space: nowrap; opacity: 0.8; }
 .bt-sala-linha .bt-botao { padding: 4px 10px; font-size: 0.9rem; box-shadow: 2px 2px 0 var(--ink); }
+@media (max-width: 480px) {
+    .bt-sala-linha { flex-wrap: wrap; }
+    .bt-sala-nome { flex-basis: 100%; }
+    .bt-sala-linha .bt-botao { margin-left: auto; }
+}
 .bt-relogio {
     margin: 0;
     white-space: nowrap;
