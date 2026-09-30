@@ -53,8 +53,6 @@ const SALAS_NA_LISTA = 20;
 const PLACAR_TOP = 50;
 const TURNO = 60 * 1000;
 const ESTOUROS_PARA_PERDER = 3;
-const PARTIDAS_POR_DIA = 50;
-const PARTIDAS_POR_JOGADOR = 10;
 const GUARDAR_TERMINADAS = 7 * 24 * 3600 * 1000;
 const DIA = 24 * 3600 * 1000;
 /** Estouros resolvidos numa chamada só (se os dois sumiram há muito tempo). */
@@ -331,15 +329,6 @@ async function partidaEmAndamento(ctx, userId) {
     return l?.id || null;
 }
 
-async function conferirLimites(ctx, userId) {
-    const desde = ctx.agora() - DIA;
-    const [site] = await ctx.db.query('SELECT COUNT(*) AS n FROM tcg_partidas WHERE criado_em > $1', [desde]);
-    if (Number(site.n) >= PARTIDAS_POR_DIA) throw new HttpError(429, 'o limite de partidas online de hoje acabou; jogue contra o NPC');
-    const [meu] = await ctx.db.query(
-        'SELECT COUNT(*) AS n FROM tcg_partidas WHERE criado_em > $1 AND (jogador_a = $2 OR jogador_b = $2)', [desde, userId]);
-    if (Number(meu.n) >= PARTIDAS_POR_JOGADOR) throw new HttpError(429, `você já jogou ${PARTIDAS_POR_JOGADOR} partidas online hoje`);
-}
-
 async function semPartidaAberta(ctx) {
     const id = await partidaEmAndamento(ctx, ctx.usuario.id);
     if (id) throw new HttpError(409, 'você já está numa partida', { partida: id });
@@ -380,7 +369,6 @@ async function criarRevanche(ctx, l) {
     const [a, b] = [l.jogador_b, l.jogador_a];
     for (const j of [a, b]) {
         if (await partidaEmAndamento(ctx, j)) throw new HttpError(409, 'alguém já está em outra partida');
-        await conferirLimites(ctx, j);
     }
     const id = crypto.randomUUID();
     const agora = ctx.agora();
@@ -572,7 +560,6 @@ const rotas = [
             const { deck } = await ctx.corpo();
             const d = await lerDeck(ctx, deck);
             await semPartidaAberta(ctx);
-            await conferirLimites(ctx, ctx.usuario.id);
             await limpar(ctx);
             // Uma sala aberta por jogador: a nova substitui a antiga.
             await ctx.db.query('DELETE FROM tcg_salas WHERE criador = $1 AND partida_id IS NULL', [ctx.usuario.id]);
@@ -623,7 +610,6 @@ const rotas = [
             const [s] = await ctx.db.query('SELECT * FROM tcg_salas WHERE codigo = $1', [codigo]);
             if (!s || Number(s.expira_em) < ctx.agora() || s.partida_id) throw new HttpError(404, 'sala não encontrada ou expirada');
             if (s.criador === eu) throw new HttpError(400, 'essa sala é sua: espere alguém entrar');
-            await conferirLimites(ctx, eu);
             if (await partidaEmAndamento(ctx, s.criador)) throw new HttpError(409, 'quem criou a sala já está em outra partida');
 
             const id = crypto.randomUUID();
@@ -846,4 +832,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline, COMENTARIO_MAX };
+module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline, COMENTARIO_MAX };

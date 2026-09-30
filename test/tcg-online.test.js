@@ -240,23 +240,6 @@ test('T6. Relógio: estourou o turno passa a vez; 3 estouros seguidos = derrota 
     assert.deepEqual(d.visao.jogadores.map((x) => x.vida), [R.VIDA_INICIAL, R.VIDA_INICIAL], 'inatividade não tira vida');
 });
 
-test('T7. Limite de partidas por jogador por dia', async (t) => {
-    const m = montar();
-    t.after(() => m.db.close());
-    const a = await jogador(m, 'a', 'Ana');
-    const b = await jogador(m, 'b', 'Beto');
-    for (let i = 0; i < Tcg.PARTIDAS_POR_JOGADOR; i++) {
-        const { id } = await comecar(m, a, b);
-        const d = (await a('GET', `/api/tcg/partidas/${id}`)).dados;
-        assert.equal((await a('POST', `/api/tcg/partidas/${id}/jogada`, {
-            jogada: { tipo: 'desistir' }, versao: d.versao, regras: R.REGRAS_VERSAO })).status, 200);
-    }
-    const r = await a('POST', '/api/tcg/salas', { deck: 'turma' });
-    assert.equal(r.status, 429);
-    m.relogio.agora += 25 * 3600 * 1000;
-    assert.equal((await a('POST', '/api/tcg/salas', { deck: 'turma' })).status, 200);
-});
-
 test('T8. "Teve jogada?" sem novidade só lê a versão (1 consulta, sem a mesa); quem não joga não vê', async (t) => {
     const m = montar();
     t.after(() => m.db.close());

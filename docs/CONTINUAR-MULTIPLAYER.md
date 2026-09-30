@@ -31,7 +31,7 @@
   uma camada só (`conexao.buscar()`), para trocar o polling por WebSocket sem mexer no resto.
 - **As 5 perguntas do plano** (o Henrique mandou implementar sem responder; ficaram as recomendações):
   sala com código primeiro; login Google obrigatório para jogar online; turno de 60 s e 3 estouros
-  seguidos = derrota; só reações prontas, sem chat; limite de 50 partidas por dia no site e 10 por jogador.
+  seguidos = derrota; só reações prontas, sem chat; sem limite de partidas por dia (removido em 2026-09-30).
 - **Teste:** o `TCG` não vai para o ar (produção é o `main` e os previews estão desligados para o
   `TCG` não ganhar link público). Então o online se testa **no computador**: `npm start` e duas
   janelas (uma normal e uma anônima, cada uma com um login). Nos testes automáticos, PGlite.
@@ -69,7 +69,7 @@
   (`passar` ou a 1ª escolha válida); no 3º seguido, `desistir`. Evento novo `{tipo:'tempo', jogador,
   estouros}` (a tela precisa mostrar). O prazo só recomeça quando muda quem precisa agir, então o
   turno inteiro tem 60 s. Jogar zera os estouros de quem jogou.
-- **Freios feitos:** 50 partidas/dia no site, 10 por jogador (429), limpeza de salas e partidas velhas
+- **Freios feitos:** limpeza de salas e partidas velhas
   ao criar sala. **Falta:** limitar a 1 pergunta por segundo por jogador (fazer no M3 se precisar).
 - **Medido:** partida de robôs = ~42 jogadas e ~130 chamadas (sem contar as perguntas de espera);
   motor + JSON no servidor ≈ 0,3 ms por jogada (máx. 1 ms), bem abaixo dos 10 ms da Cloudflare;
