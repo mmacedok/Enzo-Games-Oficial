@@ -18,9 +18,10 @@ const admin = require('./admin.js');
 const comentarios = require('./comentarios.js');
 const baralho = require('./baralho.js');
 const tcg = require('./tcg.js');
+const acessos = require('./acessos.js');
 const SCHEMA = require('./schema.js');
 
-const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas];
+const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas, ...acessos.rotas];
 
 function acharRota(metodo, caminho) {
     let caminhoExiste = false;
@@ -93,7 +94,9 @@ function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, a
             if (rota.login && !ctx.usuario) throw new HttpError(401, 'faça login para continuar');
             // Rotas de admin não existem para quem não é admin.
             if (rota.admin && !admin.ehAdmin(config, ctx.usuario)) throw new HttpError(404, 'rota não encontrada');
-            return json(200, await rota.executar(ctx), ctx.headers);
+            const dados = await rota.executar(ctx);
+            await acessos.registrarAcesso(ctx);
+            return json(200, dados, ctx.headers);
         } catch (erro) {
             if (erro instanceof HttpError) return json(erro.status, { error: erro.message, ...erro.extra }, ctx.headers);
             console.error('[api]', request.method, url.pathname, erro);

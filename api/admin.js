@@ -14,6 +14,7 @@
 //   GET  /api/admin/scores?game=                  partidas recentes de todo mundo
 //   POST /api/admin/scores/:id/verify             { verified } (entra/sai do ranking)
 //   POST /api/admin/scores/:id/delete
+//   GET  /api/admin/acessos[/resumo]              IP, país, estado e cidade das ações (api/acessos.js)
 //   GET  /api/admin/log                           histórico das ações de admin
 //   POST /api/admin/reveal                        { id, revelar } mostra/esconde um gibi `hidden` do catálogo
 //   GET  /api/site/revelados                      (público) ids dos gibis escondidos que já foram revelados + a hora do servidor
@@ -157,6 +158,8 @@ const rotas = [
                   WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 300`, [id]);
             const [{ sessoes }] = await ctx.db.query(
                 'SELECT COUNT(*) AS sessoes FROM sessions WHERE user_id = $1 AND expires_at > $2', [id, ctx.agora()]);
+            const acessos = await ctx.db.query(
+                'SELECT * FROM acessos WHERE user_id = $1 ORDER BY created_at DESC, id LIMIT 50', [id]);
             // require aqui dentro: api/baralho.js também usa este arquivo.
             const baralho = await require('./baralho.js').estado(ctx.db, id);
             return {
@@ -167,6 +170,7 @@ const rotas = [
                 achievements: conquistas.map((c) => ({ id: c.achievement_id, em: Number(c.unlocked_at) })),
                 scores: partidas.map(partida),
                 baralho,
+                acessos: acessos.map(require('./acessos.js').linha),
                 reading: leitura.map((p) => ({
                     comicId: p.comic_id, chapterId: p.chapter_id, page: Number(p.last_page),
                     completed: Boolean(p.completed), em: Number(p.updated_at),

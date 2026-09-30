@@ -80,6 +80,20 @@ module.exports = [
         created_at BIGINT NOT NULL
     )`,
     'CREATE INDEX IF NOT EXISTS idx_admin_log_created ON admin_log(created_at)',
+    // De onde vieram as ações sensíveis (api/acessos.js). Some sozinho depois de 60 dias.
+    `CREATE TABLE IF NOT EXISTS acessos (
+        id TEXT PRIMARY KEY,
+        user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+        ip TEXT,
+        pais TEXT,
+        estado TEXT,
+        cidade TEXT,
+        evento TEXT NOT NULL,
+        created_at BIGINT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_acessos_user ON acessos(user_id, created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_acessos_ip ON acessos(ip, created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_acessos_created ON acessos(created_at)',
     // Gibis com `hidden: true` no catálogo que um admin já revelou (comando `reveal` do terminal).
     `CREATE TABLE IF NOT EXISTS gibis_revelados (
         comic_id TEXT PRIMARY KEY,

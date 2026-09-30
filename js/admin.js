@@ -436,6 +436,11 @@
             else apagado('nenhuma partida.');
         }, false);
 
+        secaoDobravel('acessos', `acessos ${(c.acessos || []).length}${(c.acessos || []).length === 50 ? '+' : ''}`, () => {
+            if (c.acessos?.length) listarAcessos(c.acessos, false);
+            else apagado('nenhum acesso guardado desta conta.');
+        }, false);
+
         const lidos = c.reading.filter((r) => r.completed).length;
         secaoDobravel('leitura', `leitura ${lidos}/${c.reading.length} capítulos completos`, () => {
             if (c.reading.length) {
@@ -497,6 +502,22 @@
         }
         const s = estado.partidas.find((p) => p.id === id);
         if (s && verified !== undefined) s.verified = verified;
+    }
+
+    /** "Belo Horizonte, MG · BR" (o que a Cloudflare souber; vazio = sem dado, como no PC local). */
+    function lugar(a) {
+        const partes = [a.cidade, a.estado].filter(Boolean).join(', ');
+        return [partes, a.pais].filter(Boolean).join(' · ') || span('apagado', 'sem localização');
+    }
+
+    function listarAcessos(acessos, comNome = true) {
+        tabela(['quando', ...(comNome ? ['leitor'] : []), 'ação', 'IP', 'lugar'], acessos.map((a) => [
+            data(a.em),
+            ...(comNome ? [a.userId ? botao(primeiroNome(a.nome), `open ${a.userId}`, { link: true }) : span('apagado', '—')] : []),
+            a.evento,
+            a.ip ? botao(a.ip, `ip ${a.ip}`, { link: true }) : span('apagado', '—'),
+            lugar(a),
+        ]));
     }
 
     // ---------------------------------------------------------------- comandos
@@ -869,6 +890,58 @@
                 };
                 if (args.includes('--sim')) await apagar();
                 else pedirConfirmacao(`apagar a partida ${args[0]} (${jogo(s.gameId)}, ${s.score} pts de ${primeiroNome(s.name)})?`, apagar);
+            },
+        },
+        ips: {
+            desc: 'de onde vieram os acessos: lugares, IPs repartidos entre contas e os mais recentes',
+            async fn() {
+                const [resumo, lista] = await Promise.all([pedir('/api/admin/acessos/resumo'), pedir('/api/admin/acessos')]);
+                novaTela('ips', [['acessos', null]]);
+                apagado(`guarda login, partidas, cartas, compras, salas e ações de admin; some depois de ${resumo.retencaoDias} dias.`);
+                secao(`lugares · últimos ${resumo.dias} dias`);
+                if (resumo.lugares.length) {
+                    tabela(['lugar', 'acessos', 'contas', 'IPs'], resumo.lugares.map((l) => [
+                        l.cidade || l.estado ? botao(lugar(l), `onde ${l.cidade || l.estado}`, { link: true }) : lugar(l),
+                        String(l.acessos), String(l.contas), String(l.ips),
+                    ]));
+                } else apagado('nenhum acesso guardado ainda (no PC local não há IP nem lugar; só no site publicado).');
+                if (resumo.repartidos.length) {
+                    secao('IPs usados por mais de uma conta');
+                    tabela(['IP', 'contas', 'acessos', 'último'], resumo.repartidos.map((r) => [
+                        botao(r.ip, `ip ${r.ip}`, { link: true }), String(r.contas), String(r.acessos), data(r.ultimo),
+                    ]));
+                }
+                secao('mais recentes');
+                if (lista.acessos.length) listarAcessos(lista.acessos); else apagado('nada ainda.');
+            },
+        },
+        ip: {
+            uso: 'ip <endereço>',
+            desc: 'tudo o que veio de um IP (e quais contas o usaram)',
+            async fn(args) {
+                const ip = args[0];
+                if (!ip) throw new Error('uso: ip <endereço>.');
+                const { acessos, maisPaginas } = await pedir(`/api/admin/acessos?ip=${encodeURIComponent(ip)}`);
+                novaTela(`ip ${ip}`, [['acessos', 'ips'], [ip, null]]);
+                if (!acessos.length) { apagado(`nenhum acesso guardado do IP ${ip}.`); return; }
+                const contas = new Map(acessos.filter((a) => a.userId).map((a) => [a.userId, a.nome]));
+                linha([`${contas.size} conta(s): `, ...[...contas].flatMap(([id, nome]) => [botao(primeiroNome(nome), `open ${id}`, { link: true }), ' '])]);
+                listarAcessos(acessos);
+                if (maisPaginas) apagado('mostrando os 50 mais recentes.');
+            },
+        },
+        onde: {
+            uso: 'onde <estado|cidade|país>',
+            desc: 'acessos de um lugar (MG, Belo Horizonte, BR…)',
+            async fn(args) {
+                const texto = args.join(' ').trim();
+                if (!texto) throw new Error('uso: onde <estado | cidade | país>.');
+                const param = /^[A-Za-z]{2}$/.test(texto) ? `pais=${texto}` : `lugar=${encodeURIComponent(texto)}`;
+                const { acessos, maisPaginas } = await pedir(`/api/admin/acessos?${param}`);
+                novaTela(`onde ${texto}`, [['acessos', 'ips'], [texto, null]]);
+                if (!acessos.length) { apagado(`nenhum acesso guardado de "${texto}".`); return; }
+                listarAcessos(acessos);
+                if (maisPaginas) apagado('mostrando os 50 mais recentes.');
             },
         },
         log: {

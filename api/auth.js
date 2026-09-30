@@ -118,6 +118,7 @@ const rotas = [
             // Login novo troca a sessão antiga (evita fixação de sessão).
             if (ctx.sessaoId) await ctx.db.query('DELETE FROM sessions WHERE id = $1', [ctx.sessaoId]);
             await criarSessao(ctx, usuario.id);
+            ctx.acessoUsuario = usuario.id; // para o registro de acessos (api/acessos.js)
             return { loggedIn: true, firstLogin: Number(usuario.created_at) === agora, user: usuarioPublico(usuario) };
         },
     },
