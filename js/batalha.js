@@ -2162,7 +2162,7 @@
         abrir.title = 'Comentários da partida';
         const painel = el('div', 'bt-chat-painel');
         // No PC o painel fica sempre aberto numa coluna ao lado da mesa (ver css); no celular abre e fecha pelo botão 💬.
-        const colunaFixa = window.matchMedia('(min-width: 1120px)');
+        const colunaFixa = window.matchMedia('(min-width: 1480px) and (min-aspect-ratio: 5 / 4), (min-width: 1280px) and (max-aspect-ratio: 1249 / 1000)');
         painel.hidden = !colunaFixa.matches;
         colunaFixa.addEventListener('change', () => { painel.hidden = !colunaFixa.matches; });
         const lista = el('ol', 'bt-chat-lista');

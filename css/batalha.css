@@ -1156,9 +1156,10 @@ dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
 .bt-aviso-flutuante { position: fixed; left: 50%; bottom: 24px; z-index: 10000; max-width: min(90vw, 460px); padding: 10px 16px; font-weight: 700; text-align: center; color: #fff; background: #b3261e; border: 3px solid var(--ink); border-radius: 10px; box-shadow: 3px 3px 0 var(--ink); transform: translateX(-50%); }
 
 /* Chat no PC: fica sempre aberto numa coluna ao lado da mesa (a mesa cede o espaço), nunca por cima das cartas. */
-@media (min-width: 1120px) {
+/* Só quando sobra espaço: a mesa mantém a largura inteira (980px, ou 1180px no desenho de tela larga) e o chat usa o que sobra. */
+@media (min-width: 1480px) and (min-aspect-ratio: 5 / 4), (min-width: 1280px) and (max-aspect-ratio: 1249 / 1000) {
     .bt-mesa:has(> .bt-chat) {
-        --bt-mw: min(980px, calc(100vw - 300px));
+        --bt-mw: 980px;
         --bt-ml: max(0px, calc((100vw - var(--bt-mw) - 300px) / 2));
         width: var(--bt-mw);
         margin-left: var(--bt-ml);
@@ -1169,6 +1170,7 @@ dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
     .bt-chat-painel { display: flex; flex: 1; width: 100%; max-height: none; min-height: 0; }
     .bt-chat-lista { flex: 1; max-height: none; }
 }
+@media (min-width: 1480px) and (min-aspect-ratio: 5 / 4) { .bt-mesa:has(> .bt-chat) { --bt-mw: 1180px; } }
 
 /* Descrição das cartas: cores por tipo de informação (texto escuro no fundo claro, partes importantes em destaque). */
 .bt-desc-linha { display: block; margin-bottom: 3px; }
