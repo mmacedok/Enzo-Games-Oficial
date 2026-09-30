@@ -46,7 +46,7 @@ const limpo = (v, max) => {
     return t || null;
 };
 
-/** IP e lugar de quem fez a requisição. Campos ausentes voltam null. */
+/** IP, lugar e operadora (cf.asOrganization) de quem fez a requisição. Campos ausentes voltam null. */
 function origemDe(request) {
     const h = request.headers;
     const cf = request.cf || {};
@@ -58,6 +58,7 @@ function origemDe(request) {
         pais: limpo(cf.country || h.get('cf-ipcountry'), 2),
         estado: limpo(cf.region || (h.get('cf-region') && decodificar(h.get('cf-region'))), 80),
         cidade: limpo(cf.city || (h.get('cf-ipcity') && decodificar(h.get('cf-ipcity'))), 80),
+        operadora: limpo(cf.asOrganization, 80),
     };
 }
 
@@ -73,8 +74,8 @@ async function gravar(ctx, evento, userId) {
     const o = origemDe(ctx.request);
     const agora = ctx.agora();
     await ctx.db.query(
-        `INSERT INTO acessos (id, user_id, ip, pais, estado, cidade, evento, pagina, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [crypto.randomUUID(), userId, o.ip, o.pais, o.estado, o.cidade, evento, ctx.acessoPagina ?? null, agora]);
+        `INSERT INTO acessos (id, user_id, ip, pais, estado, cidade, operadora, evento, pagina, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [crypto.randomUUID(), userId, o.ip, o.pais, o.estado, o.cidade, o.operadora, evento, ctx.acessoPagina ?? null, agora]);
     // Faxina barata: no máximo uma por hora por processo.
     if (agora - ultimaFaxina > 60 * 60 * 1000) {
         ultimaFaxina = agora;
@@ -116,7 +117,7 @@ async function registrarAcesso(ctx) {
 
 const linha = (l) => ({
     id: l.id, userId: l.user_id, nome: l.nome || null, email: l.email || null,
-    ip: l.ip, pais: l.pais, estado: l.estado, cidade: l.cidade, evento: l.evento, pagina: l.pagina || null, em: Number(l.created_at),
+    ip: l.ip, pais: l.pais, estado: l.estado, cidade: l.cidade, operadora: l.operadora || null, evento: l.evento, pagina: l.pagina || null, em: Number(l.created_at),
 });
 
 const rotas = [

@@ -511,12 +511,13 @@
     }
 
     function listarAcessos(acessos, comNome = true) {
-        tabela(['quando', ...(comNome ? ['leitor'] : []), 'ação', 'IP', 'lugar'], acessos.map((a) => [
+        tabela(['quando', ...(comNome ? ['leitor'] : []), 'ação', 'IP', 'lugar', 'operadora'], acessos.map((a) => [
             data(a.em),
             ...(comNome ? [a.userId ? botao(primeiroNome(a.nome), `open ${a.userId}`, { link: true }) : span('apagado', '—')] : []),
             a.evento,
             a.ip ? botao(a.ip, `ip ${a.ip}`, { link: true }) : span('apagado', '—'),
             lugar(a),
+            a.operadora || span('apagado', '—'),
         ]));
     }
 
@@ -937,8 +938,8 @@
                 const { acessos, maisPaginas } = await pedir('/api/admin/acessos?anonimo=1');
                 novaTela('anonimos', [['acessos', 'ips'], ['sem login', null]]);
                 if (!acessos.length) { apagado('nenhum visitante sem login guardado ainda (só aparece no site publicado).'); return; }
-                tabela(['quando', 'IP', 'lugar', 'página'], acessos.map((a) => [
-                    data(a.em), a.ip ? botao(a.ip, `ip ${a.ip}`, { link: true }) : span('apagado', '—'), lugar(a), a.pagina || span('apagado', '—'),
+                tabela(['quando', 'IP', 'lugar', 'operadora', 'página'], acessos.map((a) => [
+                    data(a.em), a.ip ? botao(a.ip, `ip ${a.ip}`, { link: true }) : span('apagado', '—'), lugar(a), a.operadora || span('apagado', '—'), a.pagina || span('apagado', '—'),
                 ]));
                 if (maisPaginas) apagado('mostrando os 50 mais recentes.');
             },

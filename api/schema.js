@@ -92,6 +92,8 @@ module.exports = [
         pagina TEXT,
         created_at BIGINT NOT NULL
     )`,
+    // Operadora do IP (ex.: Claro, Vivo); coluna acrescentada depois da tabela já estar no ar.
+    'ALTER TABLE acessos ADD COLUMN IF NOT EXISTS operadora TEXT',
     'CREATE INDEX IF NOT EXISTS idx_acessos_user ON acessos(user_id, created_at)',
     'CREATE INDEX IF NOT EXISTS idx_acessos_ip ON acessos(ip, created_at)',
     'CREATE INDEX IF NOT EXISTS idx_acessos_created ON acessos(created_at)',

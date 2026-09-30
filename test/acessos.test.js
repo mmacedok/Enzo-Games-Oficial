@@ -37,8 +37,12 @@ const SP = { 'cf-connecting-ip': '200.9.9.9', 'cf-ipcountry': 'BR', 'cf-region':
 
 test('A1: origemDe lê IP e lugar dos cabeçalhos da Cloudflare (e decodifica)', () => {
     const o = origemDe(new Request('http://x/', { headers: SP }));
-    assert.deepEqual(o, { ip: '200.9.9.9', pais: 'BR', estado: 'São Paulo', cidade: 'São Paulo' });
-    assert.deepEqual(origemDe(new Request('http://x/')), { ip: null, pais: null, estado: null, cidade: null });
+    assert.deepEqual(o, { ip: '200.9.9.9', pais: 'BR', estado: 'São Paulo', cidade: 'São Paulo', operadora: null });
+    assert.deepEqual(origemDe(new Request('http://x/')), { ip: null, pais: null, estado: null, cidade: null, operadora: null });
+    const comCf = new Request('http://x/', { headers: SP });
+    comCf.cf = { asOrganization: 'Claro S.A.', city: 'Fortaleza' };
+    assert.equal(origemDe(comCf).operadora, 'Claro S.A.');
+    assert.equal(origemDe(comCf).cidade, 'Fortaleza');
 });
 
 test('A2: login e ações sensíveis gravam IP e lugar; leitura comum não', async () => {
