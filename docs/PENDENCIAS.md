@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-09-30 · Sem golpe extra (REGRAS_VERSAO 8) e tela online com a arte:** derrubar uma carta não fere mais o jogador com o dano cheio; o dono perde só a vida da raridade. **Efeito no equilíbrio (robô normal, 2000 partidas):** turnos em média 24,4 (meta 16–22), 19% das partidas chegam ao limite de 30 turnos (meta <3%), quem começa vence 45,4% (meta 48–55%). Simulei compensar subindo a vida do nocaute: ×1,5 (1.125/1.690/2.250/3.375) dá 18,8 turnos, 2,7% no limite e 47,3%; ×2 dá 15,3 turnos, 1,0% e 48,8%. **Decisão do Henrique:** qual compensação (ou nenhuma). As imagens da tela online (`sala-*.png`, que o Henrique trouxe em `comic-reader/assets/Batalha`) foram copiadas, registradas (`node atualizar.js`) e conferidas: o botão Entrar usa `sala-icone-lista.png`.
+
 - **2026-09-30 · Tela online pronta para as imagens (tarefa 02 do Codex):** o código já usa `assets/Batalha/sala-{fundo,cabecalho,caixa,icone-criar,icone-entrar,icone-assistir,espera,vazia,vs}.png` quando existirem (sem o arquivo, tudo fica como antes). Falta o Henrique rodar o Codex em `E:AI WorkshopCodexBridge` ("faça a próxima tarefa"); depois: `node conferir.cjs tarefas/02-sala-online.md`, `node atualizar.js` (registra em `js/images.generated.js`), olhar a tela, commit e push.
 
 - **2026-09-30 · Tela "Outro jogador" simplificada:** só o botão **Criar sala**; logo abaixo uma lista única (renova a cada 3 s) com as salas esperando (Entrar) e as partidas ao vivo (Assistir). Saíram os botões "Lista de salas" e "Assistir" e as telas separadas. Plano de assets (fundo, cabeçalho, moldura, ícones) só no chat; falta o Henrique mandar as imagens.

@@ -1,6 +1,6 @@
 # Batalha dos Torados — regras, cartas, efeitos e danos
 
-O TCG do site Enzo Games (`batalha.html`). Este documento vale para a versão de regras **7** (`REGRAS_VERSAO` em `js/tcg-regras.js`).
+O TCG do site Enzo Games (`batalha.html`). Este documento vale para a versão de regras **8** (`REGRAS_VERSAO` em `js/tcg-regras.js`).
 Os números das cartas vêm de `js/tcg-cartas.js` (multiplicados por 20) e os textos de `js/baralho-dados.js`. Se uma regra mudar, o motor (`js/tcg-regras.js`) manda; este arquivo deve ser regenerado.
 
 ## 1. Objetivo
@@ -45,7 +45,7 @@ Compra 1 carta. Depois, em qualquer ordem:
 | Épico | 1.500 |
 | Lendário | 2.250 |
 
-- **Golpe extra:** quem derrubou acerta o jogador de graça, com o mesmo dano cheio (sem os 35%). Veneno, contra-ataque e dano em si mesmo não dão golpe extra.
+- **Sem golpe extra:** derrubar a carta só tira do dono a vida da raridade (tabela acima).
 - **Nocaute de um golpe só** (o alvo estava com o dano em 0): o atacante fica virado (recarga).
 - **Recarga (carta virada):** Macarronada a 300%, Vírgula-rangue, Bala Dourada e Ban de 7 Dias deixam a carta virada até o próximo turno do dono. Virada, ela não ataca, não usa poder e não recua, mas leva golpe.
 

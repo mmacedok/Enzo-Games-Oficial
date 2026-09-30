@@ -25,7 +25,7 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 7;
+    const REGRAS_VERSAO = 8;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
@@ -607,13 +607,7 @@
                     break;
             }
         }
-        // Derrubou a carta: golpe extra de graça, com o mesmo dano, só no jogador. A carta caída
-        // já não protege ninguém, então entra inteiro (sem os 35%, sem escudo nem efeitos).
-        if (derrubou) {
-            const extra = calcularDano(estado, j, ataque, null, { resultadoMoeda });
-            eventos.push({ tipo: 'golpeExtra', jogador: j, uid: atacante.uid, valor: extra });
-            ferirJogador(estado, outro(j), extra, eventos, 'golpeExtra');
-        }
+        // (Sem golpe extra: derrubar a carta só tira do dono a vida da raridade, em verificarNocautes.)
         // Derrubou de um golpe só (a carta estava com a vida cheia): o atacante vira (recarga).
         // Ataque com recargaSeDerrubar (Aura de 67 Segundos do Superkid): derrubou qualquer carta, o atacante vira.
         if ((deUmGolpe || (ataque.recargaSeDerrubar && derrubou)) && !virada(estado, atacante)) {

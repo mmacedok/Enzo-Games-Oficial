@@ -45,8 +45,8 @@
         let nota = dano / R.ESCALA;
         if (letal) nota += 1000;
         if (nocaute) {
-            // Derrubar dá o golpe extra no jogador (dano cheio); derrubar de um golpe vira a carta.
-            nota += 100 + R.danoNocaute(alvo.id) / R.ESCALA + R.calcularDano(estado, j, ataque, null, { resultadoMoeda: true }) / R.ESCALA;
+            // Derrubar tira do dono a vida da raridade; derrubar de um golpe vira a carta.
+            nota += 100 + R.danoNocaute(alvo.id) / R.ESCALA;
             if (alvo.dano === 0) nota -= 20;
         }
         for (const ef of ataque.efeitos || []) {

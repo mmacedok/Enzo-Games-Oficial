@@ -58,7 +58,7 @@
             rivais: { facil: A('icone-npc-facil'), normal: A('icone-npc-normal'), pvp: A('icone-outro-jogador') },
         },
         // Tela "Outro jogador" (tarefa 02 do Codex). Cada peça é opcional: sem o arquivo, a tela usa o visual de antes.
-        online: Object.fromEntries(['fundo', 'cabecalho', 'caixa', 'icone-criar', 'icone-entrar', 'icone-assistir', 'espera', 'vazia', 'vs']
+        online: Object.fromEntries(['fundo', 'cabecalho', 'caixa', 'icone-criar', 'icone-lista', 'icone-assistir', 'espera', 'vazia', 'vs']
             .map((n) => [n, A(`sala-${n}`)])),
         campos: Object.fromEntries(['piscina-de-macarronada', 'toradolandia', 'mansao-do-inominavel', 'estacionamento-noturno',
             'casa-do-enzo-games', 'sao-joao-do-butico'].map((id) => [id, A(`mesa-${id}`)])),
@@ -1378,11 +1378,7 @@
                 const previsto = ele.ativo ? R.calcularDano(estado, EU, a, ele.ativo, { resultadoMoeda: true }) : 0;
                 // No jogador o ativo dele segura 65% do golpe (só entra 35%).
                 const previstoJogador = R.calcularDano(estado, EU, a, R.JOGADOR, { resultadoMoeda: true });
-                // Se este golpe derruba o ativo dele, vem o golpe extra de graça no jogador (dano inteiro).
-                const vidaAtivo = ele.ativo ? R.hpMax(estado, ele.ativo) - ele.ativo.dano : 0;
-                const derrubaAtivo = !!ele.ativo && previsto >= vidaAtivo;
-                const previstoExtra = derrubaAtivo ? R.calcularDano(estado, EU, a, null, { resultadoMoeda: true }) : 0;
-                add(a.nome, jogada, { ataque: a, alvos, previsto, previstoJogador, previstoExtra });
+                add(a.nome, jogada, { ataque: a, alvos, previsto, previstoJogador });
             });
         }
         return acoes;
@@ -1459,7 +1455,6 @@
                 if (botoes.children.length) box.appendChild(botoes);
                 else box.appendChild(el('span', 'bt-motivo', acao ? (acao.motivo || 'nenhum alvo agora') : 'não é a sua vez'));
                 // O golpe que derruba o ativo ainda acerta o jogador de graça, com o dano inteiro.
-                if (acao && acao.previstoExtra > 0) box.appendChild(el('span', 'bt-extra', `+ golpe extra de ${num(acao.previstoExtra)} no jogador`));
                 lista.appendChild(box);
             });
             info.appendChild(lista);
@@ -2006,7 +2001,7 @@
                     // "Nome × alguém": quem criou a sala e a vaga esperando
                     linha.append(el('span', 'bt-sala-nome', `${primeiro(s.criador)} × alguém`));
                     const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarNaSala(s.codigo, b, b));
-                    const icEntrar = imgOnline('icone-entrar', 'bt-online-icone-botao');
+                    const icEntrar = imgOnline('icone-lista', 'bt-online-icone-botao');
                     if (icEntrar) b.prepend(icEntrar);
                     linha.appendChild(b);
                     return linha;
@@ -2428,13 +2423,11 @@
             case 'campoSai': registrar(`O campo ${nomeVisivel(ev.id)} saiu da mesa.`); break;
             case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${ev.alvo === R.JOGADOR ? quem(1 - ev.jogador) : n(ev.alvo)}.`); break;
             case 'dano': registrar(`${n(ev.uid)} levou ${num(ev.valor)}${ev.fonte === 'notificado' ? ' (Notificado)' : ''}.`); break;
-            // o golpe extra já tem a própria linha ("derrubou e ainda acertou o jogador"): não repete o número
-            case 'danoJogador': if (ev.fonte === 'golpeExtra') break; registrar(ev.fonte === 'nocaute'
+            case 'danoJogador': registrar(ev.fonte === 'nocaute'
                 ? `${quem(ev.jogador)} perdeu ${num(ev.valor)} de vida pela carta derrubada.`
                 : `${quem(ev.jogador)} levou ${num(ev.valor)}.`); break;
             case 'cura': registrar(`${n(ev.uid)} curou ${num(ev.valor)}.`); break;
             case 'nocaute': registrar([icone(A('nocaute'), '💥'), ` ${nomeVisivel(ev.id)} caiu!`]); break;
-            case 'golpeExtra': registrar(`${n(ev.uid)} derrubou e ainda acertou o jogador: ${num(ev.valor)}.`); break;
             case 'virada': registrar(ev.motivo === 'umGolpe'
                 ? `${n(ev.uid)} derrubou de um golpe só e virou (recarga).`
                 : ev.motivo === 'derrubou' ? `${n(ev.uid)} derrubou a carta e virou (recarga).`
@@ -3104,11 +3097,6 @@
                 if (ev.valor >= 90) tremer(mesa.raiz, 10);
                 break;
             }
-            case 'golpeExtra':
-                // Derrubou a carta: acerta o jogador de graça. O danoJogador logo abaixo já desce a
-                // barra e mostra o número, então aqui só entra o aviso (nada de número duplicado).
-                await banner('GOLPE EXTRA!');
-                break;
             case 'danoJogador': {
                 // Golpe direto na vida: a barra desce e um "-1.200" sobe perto do rosto.
                 const lado = ev.jogador === EU ? mesa.eu : mesa.npc;
