@@ -10,6 +10,8 @@ function createNeonDb(url) {
     const sql = neon(url);
     return {
         query: (texto, params = []) => sql.query(texto, params),
+        // Uma viagem HTTP para o esquema inteiro; DDL do Postgres é transacional.
+        migrate: (comandos) => sql.transaction(comandos.map((texto) => sql.query(texto))),
         close: async () => {},
     };
 }

@@ -46,6 +46,7 @@ function lerConfig(env) {
 }
 
 async function migrar(db) {
+    if (typeof db.migrate === 'function') return db.migrate(SCHEMA);
     for (const comando of SCHEMA) await db.query(comando);
 }
 
@@ -79,6 +80,12 @@ function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, a
         };
         try {
             if (request.method !== 'GET' && request.method !== 'HEAD') checarMesmaOrigem(request);
+            // Configuração pública e visitante sem sessão não precisam esperar o banco.
+            const sid = ctx.cookies.sid;
+            if (url.pathname === '/api/auth/config' ||
+                (url.pathname === '/api/auth/me' && (!sid || sid.length > 128 || !config.loginAtivo))) {
+                return json(200, await rota.executar(ctx), ctx.headers);
+            }
             // Esquema criado uma vez por processo; se falhar, a próxima requisição tenta de novo.
             pronto ??= migrar(db).catch((erro) => { pronto = null; throw erro; });
             await pronto;

@@ -36,6 +36,7 @@
         posHistorico: 0,
         confirmar: null,    // ação esperando "s"
         numeros: null,
+        apiFalhou: false,
     };
 
     // ---------------------------------------------------------------- servidor
@@ -183,7 +184,7 @@
         $('dashboard-mobile-pulse').textContent = '[' + '#'.repeat((quadro % 5) + 1).padEnd(5, '.') + ']';
         const progresso = '#'.repeat((quadro % 13) + 3).padEnd(15, '.');
         const n = estado.numeros;
-        $('dashboard-sinal').textContent = `+-- ENZO / TELEMETRIA ----------------+\n| LINK     ${n ? 'ONLINE ' : 'AUTH...'}   ${String(quadro % 100).padStart(2, '0')}            |\n| CONTAS   ${String(n?.contas ?? '--').padStart(5)}                   |\n| PULSO    [${progresso}]   |\n+------------------------------------+`;
+        $('dashboard-sinal').textContent = `+-- ENZO / TELEMETRIA ----------------+\n| LINK     ${estado.apiFalhou ? 'OFFLINE' : n ? 'ONLINE ' : 'AUTH...'}   ${String(quadro % 100).padStart(2, '0')}            |\n| CONTAS   ${String(n?.contas ?? '--').padStart(5)}                   |\n| PULSO    [${progresso}]   |\n+------------------------------------+`;
         quadro++;
     }
     desenharAscii();
@@ -787,7 +788,21 @@
     document.addEventListener('visibilitychange', andarRelogio);
 
     // ---------------------------------------------------------------- boot
+    async function pedirBoot(caminho) {
+        const controle = new AbortController();
+        const tempo = setTimeout(() => controle.abort(), 10000);
+        try {
+            return await pedir(caminho, undefined, { signal: controle.signal });
+        } catch (e) {
+            if (controle.signal.aborted) throw new Error('a API não respondeu em 10 segundos.');
+            throw e;
+        } finally {
+            clearTimeout(tempo);
+        }
+    }
+
     async function boot() {
+        estado.apiFalhou = false;
         entrada.disabled = true;
         for (const [texto, classe] of [
             ['ENZO-OS 1.0 (degustação noturna) tty1', 'l--apagado'],
@@ -798,11 +813,21 @@
 
         let eu;
         try {
-            const config = await pedir('/api/auth/config');
+            const config = await pedirBoot('/api/auth/config');
             if (!config.enabled) throw Object.assign(new Error('login desligado neste servidor.'), { fim: true });
-            eu = await pedir('/api/auth/me');
+            eu = await pedirBoot('/api/auth/me');
         } catch (e) {
-            erro(e.fim ? e.message : 'api fora do ar.');
+            if (e.fim) {
+                aviso(e.message);
+                return;
+            }
+            estado.apiFalhou = true;
+            desenharAscii();
+            erro(`não foi possível verificar sua sessão: ${e.message}`);
+            const tentar = el('button', 'cmd', 'tentar novamente');
+            tentar.type = 'button';
+            tentar.addEventListener('click', () => { saida.replaceChildren(); boot(); });
+            linha(['a API está indisponível. ', tentar, ' ou volte mais tarde.'], 'l--aviso');
             return;
         }
         if (!eu.loggedIn) {

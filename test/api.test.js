@@ -3,7 +3,7 @@
 // ============================================================================
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createApi } = require('../api/handler.js');
+const { createApi, migrar } = require('../api/handler.js');
 const { createLocalDb } = require('../api/db-local.js');
 
 const ENV = { GOOGLE_CLIENT_ID: 'teste.apps.googleusercontent.com', SESSION_SECRET: 'x'.repeat(40) };
@@ -55,6 +55,28 @@ test('1. config e deslogado', async (t) => {
     const me = await chamar('GET', '/api/auth/me');
     assert.equal(me.status, 200);
     assert.deepEqual(me.dados, { loggedIn: false });
+});
+
+test('config e sessão ausente respondem mesmo quando o banco está indisponível', async () => {
+    let consultas = 0;
+    const db = { query() { consultas++; throw new Error('banco indisponível'); } };
+    const api = createApi({ db, env: ENV, verificarGoogle: async () => null });
+    const config = await api(new Request('https://enzo.test/api/auth/config', { headers: { cookie: 'sid=antigo' } }));
+    assert.equal(config.status, 200);
+    assert.equal((await config.json()).enabled, true);
+    const me = await api(new Request('https://enzo.test/api/auth/me'));
+    assert.deepEqual(await me.json(), { loggedIn: false });
+    assert.equal(consultas, 0);
+});
+
+test('migração usa uma transação quando o banco oferece lote', async () => {
+    let lote = null;
+    await migrar({
+        migrate(comandos) { lote = comandos; return Promise.resolve(); },
+        query() { throw new Error('consultas separadas não deveriam rodar'); },
+    });
+    assert.ok(Array.isArray(lote) && lote.length > 40);
+    assert.ok(lote.some((sql) => sql.includes('CREATE TABLE IF NOT EXISTS users')));
 });
 
 test('2. login cria sessão com cookie seguro', async (t) => {
