@@ -1969,8 +1969,8 @@
                 });
                 corpoSalas.replaceChildren(...salas.map((s) => {
                     const linha = el('div', 'bt-sala-linha');
-                    // só o nome de quem criou a sala
-                    linha.append(el('span', 'bt-sala-nome', s.criador));
+                    // "Nome × alguém": quem criou a sala e a vaga esperando
+                    linha.append(el('span', 'bt-sala-nome', `${primeiro(s.criador)} × alguém`));
                     const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarNaSala(s.codigo, b, b));
                     linha.appendChild(b);
                     return linha;
