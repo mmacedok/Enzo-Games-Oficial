@@ -3365,3 +3365,69 @@ dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
     box-shadow: 3px 3px 0 var(--ink);
 }
 .baralho-batalha:hover { transform: translate(-1px, -1px) rotate(-0.5deg); box-shadow: 5px 5px 0 var(--ink); }
+
+/* Fliperama integrado à home, logo após o mapa. */
+.arcade-section { text-align: center; }
+.arcade-intro {
+    margin: 0 auto 18px;
+    color: var(--paper);
+    font-weight: 700;
+}
+.arcade-machine {
+    position: relative;
+    display: block;
+    width: min(100%, 900px);
+    height: clamp(350px, 48vw, 540px);
+    margin: 0 auto;
+    overflow: hidden;
+    cursor: pointer;
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    background: var(--halftone), radial-gradient(ellipse at 50% 42%, #99400e 0%, #451b14 48%, #1b1215 100%);
+    box-shadow: var(--pop-lg);
+    isolation: isolate;
+}
+.arcade-machine:hover { box-shadow: 8px 8px 0 var(--ink); }
+.arcade-machine:focus-visible { outline-offset: 6px; }
+.arcade-machine__scene {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+}
+.arcade-machine__scene canvas { display: block; width: 100%; height: 100%; }
+.arcade-machine__floor {
+    position: absolute;
+    left: 50%;
+    bottom: 10%;
+    width: min(56%, 360px);
+    height: 35px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    filter: blur(14px);
+    transform: translateX(-50%);
+}
+.arcade-machine__prompt {
+    position: absolute;
+    z-index: 2;
+    bottom: 14px;
+    left: 50%;
+    width: max-content;
+    max-width: calc(100% - 24px);
+    padding: 7px 15px;
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    background: var(--caption);
+    box-shadow: var(--pop-sm);
+    font-family: var(--font-heading);
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    transform: translateX(-50%);
+}
+.arcade-machine--error .arcade-machine__prompt { background: var(--danger-light); }
+@media (max-width: 600px) {
+    .arcade-machine { height: clamp(350px, 110vw, 460px); }
+    .arcade-machine__prompt { bottom: 10px; }
+}
