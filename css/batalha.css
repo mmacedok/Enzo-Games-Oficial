@@ -36,9 +36,10 @@
 .bt-logo-cima { font-size: clamp(1.4rem, 5vw, 2.4rem); transform: rotate(-3deg); }
 .bt-logo-baixo { font-size: clamp(3rem, 14vw, 6.5rem); color: var(--orange-light) !important; transform: rotate(-3deg); }
 .bt-menu-sub { margin: 10px 0 0; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 400; letter-spacing: 1px; color: var(--caption); }
+.bt-rivais { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bt-decks { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .bt-decks, .bt-rivais {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
     width: 100%;
 }
@@ -1093,3 +1094,22 @@ dialog.bt-cartilha::backdrop { background: rgba(0, 0, 0, 0.75); }
 .bt-cartilha-controles { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
 .bt-cartilha-contador { font-family: var(--font-heading); font-size: 1.2rem; }
 .bt-cartilha-fechar { position: absolute; top: 6px; right: 6px; width: 34px; height: 34px; padding: 0; font-size: 1.3rem; color: var(--paper); background: rgba(0, 0, 0, 0.7); border: 2px solid var(--ink); border-radius: 50%; cursor: pointer; }
+
+/* ---- deck customizado: 4º deck do menu e o editor ---- */
+.bt-deck-vazio { display: grid; place-items: center; width: 100%; height: 108px; margin-bottom: 4px; font: 3rem/1 var(--font-heading); color: var(--caption); border: 3px dashed var(--ink); border-radius: 8px; }
+dialog.bt-regras.bt-editor { width: min(860px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); overflow-y: auto; }
+.bt-editor-resumo { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; position: sticky; top: -18px; z-index: 2; padding: 6px 0; background: var(--paper); }
+.bt-editor-chip { padding: 3px 12px; font-family: var(--font-heading); font-size: 1.2rem; background: var(--paper); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 2px 2px 0 var(--ink); }
+.bt-editor-chip--ok { background: #b9f5b1; }
+.bt-editor-chip--erro { background: #ffb3a8; }
+.bt-editor-erro { min-height: 1.3em; margin: 2px 0 6px; color: #b3261e; font-weight: 700; }
+.bt-editor-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; margin: 6px 0 12px; padding: 0; list-style: none; }
+.bt-editor-item { display: grid; justify-items: center; gap: 4px; padding: 6px 4px; border: 3px solid transparent; border-radius: 10px; }
+.bt-editor-item--no { background: #fff3c4; border-color: var(--orange); }
+.bt-editor-carta .carta-tcg { width: 96px; }
+.bt-editor-controle { display: flex; align-items: center; gap: 8px; }
+.bt-editor-mm { width: 40px; height: 40px; padding: 0; font: 1.6rem/1 var(--font-heading); color: var(--paper-ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 50%; box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
+.bt-editor-mm:disabled { opacity: .35; cursor: default; }
+.bt-editor-qtd { min-width: 1.6ch; text-align: center; font: 1.6rem/1 var(--font-heading); }
+.bt-editor-tem { font-size: .8rem; opacity: .75; }
+.bt-editor-acoes { display: flex; flex-wrap: wrap; gap: 8px; position: sticky; bottom: -18px; padding: 8px 0 0; background: var(--paper); }

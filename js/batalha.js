@@ -116,6 +116,8 @@
     let estado = null;
     let nivel = 'normal';
     let deckEscolhido = DECKS[0];
+    // Deck customizado (4º deck): montado com a coleção da conta, guardado no servidor (GET/POST /api/tcg/deck).
+    const custom = { estado: 'nada', cartas: null, colecao: {}, erros: [], limites: null, obj: null };
     let ocupado = false;
     let modo = null;            // { tipo: 'alvo', jogada, alvos, texto } | { tipo: 'aura' } | { tipo: 'preparar', ativo, banco }
     let partida = 0;            // muda a cada batalha: a vez do NPC antiga para sozinha
@@ -227,6 +229,40 @@
             item.append(b, botao('bt-botao', '🃏 Ver cartas', () => mostrarCartasDoDeck(d)));
             decks.appendChild(item);
         }
+        const itemCustom = el('div', 'bt-deck-item');
+        decks.appendChild(itemCustom);
+        const desenharCustom = () => {
+            if (!itemCustom.isConnected) return;
+            itemCustom.replaceChildren();
+            const d = custom.obj;
+            const b = botao(`bt-deck bt-deck--custom${d && d === deckEscolhido ? ' bt-deck--ativo' : ''}`, null, () => {
+                if (custom.estado === 'login') { window.EnzoConta?.pedirLogin?.(); return; }
+                if (!d) { abrirEditorDeck(); return; }
+                deckEscolhido = d;
+                decks.querySelectorAll('.bt-deck').forEach((x) => x.classList.toggle('bt-deck--ativo', x === b));
+            });
+            b.setAttribute('aria-pressed', String(!!d && d === deckEscolhido));
+            let capa;
+            if (d) {
+                capa = el('div', 'bt-deck-leque');
+                d.capa.forEach((id) => capa.appendChild(UI.carta(id)));
+            } else {
+                capa = el('div', 'bt-deck-vazio', custom.estado === 'nada' ? '…' : '＋');
+            }
+            const texto = custom.estado === 'login' ? 'Entre com o Google para montar o seu'
+                : custom.estado === 'fora' ? 'Só no site'
+                : custom.estado === 'nada' ? 'Carregando a sua coleção...'
+                : custom.erros.length ? `Precisa de ajuste: ${custom.erros[0]}`
+                : d ? d.texto : 'Monte com as cartas que você tem';
+            b.append(capa, el('strong', 'bt-deck-nome', 'Seu deck'), el('span', 'bt-deck-texto', texto));
+            itemCustom.appendChild(b);
+            if (custom.estado === 'ok') {
+                if (d) itemCustom.appendChild(botao('bt-botao', '🃏 Ver cartas', () => mostrarCartasDoDeck(d)));
+                itemCustom.appendChild(botao('bt-botao', d || custom.cartas ? '✏️ Editar deck' : '🛠️ Montar deck', abrirEditorDeck));
+            }
+        };
+        desenharCustom();
+        carregarDeckCustom().then(desenharCustom);
         caixa.appendChild(decks);
 
         caixa.appendChild(el('h2', 'bt-menu-sub', 'Contra quem?'));
@@ -282,6 +318,122 @@
         voltarAoSite.setAttribute('aria-label', 'Voltar ao site');
         voltarAoSite.append(el('span', 'bt-voltar-seta', '←'), el('span', 'bt-voltar-txt', 'Voltar'));
         raiz.append(voltarAoSite, caixa);
+    }
+
+    // ---------------------------------------------------------------- deck customizado
+    const ORDEM_RARIDADE = { lendario: 0, epico: 1, raro: 2, comum: 3 };
+    const temCombate = (id) => Boolean(window.EnzoTcgCartas.COMBATE[id]);
+
+    /** Monta o objeto de deck (mesmo formato dos prontos) a partir do que o servidor guardou. */
+    function objetoDoDeckCustom() {
+        if (!custom.cartas || custom.erros.length) return null;
+        const lendarias = custom.cartas.filter((id) => def(id).raridade === 'lendario').length;
+        const capa = [...new Set(custom.cartas)].sort((a, b) => ORDEM_RARIDADE[def(a).raridade] - ORDEM_RARIDADE[def(b).raridade]).slice(0, 3);
+        return {
+            id: 'custom', nome: 'Deck customizado', capa, cartas: custom.cartas,
+            texto: `${custom.cartas.length} cartas, ${lendarias} lendária${plu(lendarias)}`,
+        };
+    }
+
+    async function carregarDeckCustom() {
+        try {
+            const d = await api('GET', '/api/tcg/deck');
+            Object.assign(custom, { estado: 'ok', cartas: d.cartas, colecao: d.colecao || {}, erros: d.erros || [], limites: d.limites });
+        } catch (erro) {
+            custom.estado = erro.status === 401 ? 'login' : 'fora';
+            custom.cartas = null;
+        }
+        custom.obj = objetoDoDeckCustom();
+        if (deckEscolhido.id === 'custom') deckEscolhido = custom.obj || DECKS[0];
+    }
+
+    /** Montar o deck: só as cartas que a conta tem; 15 cartas, 2 lendárias e a repetição limitada. */
+    function abrirEditorDeck() {
+        if (custom.estado !== 'ok') return;
+        const lim = custom.limites || { tamanho: R.TAMANHO_DECK, copias: R.MAX_COPIAS, copiasLendaria: R.MAX_COPIAS_LENDARIO, lendarias: R.MAX_LENDARIAS_CUSTOM };
+        const donas = B.CARTAS.filter((c) => (custom.colecao[c.id] || 0) > 0 && temCombate(c.id))
+            .sort((a, b) => ORDEM_RARIDADE[a.raridade] - ORDEM_RARIDADE[b.raridade] || a.numero - b.numero);
+        const sel = new Map();
+        for (const id of custom.cartas || []) if (donas.some((c) => c.id === id)) sel.set(id, (sel.get(id) || 0) + 1);
+        const total = () => [...sel.values()].reduce((s, n) => s + n, 0);
+        const lendarias = () => [...sel].reduce((s, [id, n]) => s + (def(id).raridade === 'lendario' ? n : 0), 0);
+        const limiteDe = (c) => Math.min(custom.colecao[c.id] || 0, c.raridade === 'lendario' ? lim.copiasLendaria : lim.copias);
+        const lista = () => [...sel].flatMap(([id, n]) => Array(n).fill(id));
+
+        const janela = el('dialog', 'bt-regras bt-editor');
+        const resumo = el('div', 'bt-editor-resumo');
+        const erro = el('p', 'bt-editor-erro');
+        const salvar = botao('bt-botao bt-botao--forte', 'Salvar deck', null);
+        const grade = el('ul', 'bt-editor-grade');
+        const linhas = new Map();
+
+        const atualizar = () => {
+            const t = total();
+            const l = lendarias();
+            resumo.replaceChildren(
+                el('span', `bt-editor-chip${t === lim.tamanho ? ' bt-editor-chip--ok' : ''}`, `Cartas ${t}/${lim.tamanho}`),
+                el('span', `bt-editor-chip${l > lim.lendarias ? ' bt-editor-chip--erro' : l === lim.lendarias ? ' bt-editor-chip--ok' : ''}`, `Lendárias ${l}/${lim.lendarias}`));
+            const erros = R.validarDeck(lista(), { colecao: custom.colecao, maxLendarias: lim.lendarias });
+            // enquanto faltam cartas, o contador já diz tudo; só mostra erro de verdade quando chega nas 15
+            erro.textContent = t === lim.tamanho && erros.length ? erros[0] : '';
+            salvar.disabled = erros.length > 0;
+            for (const c of donas) {
+                const { menos, mais, qtd, li } = linhas.get(c.id);
+                const n = sel.get(c.id) || 0;
+                qtd.textContent = String(n);
+                li.classList.toggle('bt-editor-item--no', n > 0);
+                menos.disabled = n === 0;
+                mais.disabled = n >= limiteDe(c) || t >= lim.tamanho || (c.raridade === 'lendario' && l >= lim.lendarias);
+            }
+        };
+        const mexer = (c, delta) => {
+            const n = (sel.get(c.id) || 0) + delta;
+            if (n <= 0) sel.delete(c.id); else sel.set(c.id, n);
+            atualizar();
+        };
+        for (const c of donas) {
+            const li = el('li', 'bt-editor-item');
+            const carta = el('div', 'bt-editor-carta');
+            carta.appendChild(UI.carta(c.id));
+            const menos = botao('bt-editor-mm', '−', () => mexer(c, -1));
+            const mais = botao('bt-editor-mm', '+', () => mexer(c, 1));
+            menos.setAttribute('aria-label', `Tirar ${nomeVisivel(c.id)}`);
+            mais.setAttribute('aria-label', `Pôr ${nomeVisivel(c.id)}`);
+            const qtd = el('b', 'bt-editor-qtd', '0');
+            const controle = el('div', 'bt-editor-controle');
+            controle.append(menos, qtd, mais);
+            li.append(carta, controle, el('span', 'bt-editor-tem', `tem ${custom.colecao[c.id]}${c.raridade === 'lendario' ? ' · lendária' : ''}`));
+            grade.appendChild(li);
+            linhas.set(c.id, { menos, mais, qtd, li });
+        }
+
+        salvar.addEventListener('click', async () => {
+            salvar.disabled = true;
+            erro.textContent = '';
+            try {
+                const d = await api('POST', '/api/tcg/deck', { cartas: lista() });
+                Object.assign(custom, { estado: 'ok', cartas: d.cartas, colecao: d.colecao || custom.colecao, erros: d.erros || [], limites: d.limites || custom.limites });
+                custom.obj = objetoDoDeckCustom();
+                if (custom.obj) deckEscolhido = custom.obj;
+                janela.close();
+                if (raiz.classList.contains('batalha--menu')) telaMenu();
+            } catch (e) {
+                erro.textContent = e.message;
+                atualizar();
+            }
+        });
+        const limpar = botao('bt-botao', 'Limpar', () => { sel.clear(); atualizar(); });
+        const fechar = botao('bt-botao', 'Cancelar', () => janela.close());
+        const acoes = el('div', 'bt-editor-acoes');
+        acoes.append(salvar, limpar, fechar);
+        janela.append(
+            el('h2', '', 'Seu deck customizado'),
+            el('p', 'bt-placar-nota', `Só com as cartas que você tem. ${lim.tamanho} cartas, no máximo ${lim.lendarias} lendárias (1 cópia de cada) e até ${lim.copias} cópias das outras.`),
+            resumo, erro, grade, acoes);
+        janela.addEventListener('close', () => janela.remove());
+        document.body.appendChild(janela);
+        janela.showModal();
+        atualizar();
     }
 
     /** "Ver cartas" do deck: as cartas dele (com a quantidade) e, ao tocar numa, o que ela faz. */
@@ -1661,7 +1813,7 @@
                     const d = DECKS.find((x) => x.id === s.deck);
                     const linha = el('div', 'bt-sala-linha');
                     linha.append(el('span', 'bt-sala-nome', s.criador),
-                        el('span', 'bt-sala-deck', d ? d.nome : s.deck),
+                        el('span', 'bt-sala-deck', d ? d.nome : (s.deck === 'custom' ? 'Deck customizado' : s.deck)),
                         el('span', 'bt-sala-placar', `V ${s.vitorias} · D ${s.derrotas}`),
                         el('span', 'bt-sala-espera', haQuanto(s.desde)));
                     const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarNaSala(s.codigo, b, b));

@@ -1,0 +1,115 @@
+// ============================================================================
+// Testes do deck customizado (Batalha): montar com a coleção da conta, 15 cartas,
+// no máximo 2 lendárias, repetição limitada, e usar em sala/partida/revanche.
+// ============================================================================
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { createApi } = require('../api/handler.js');
+const { createLocalDb } = require('../api/db-local.js');
+const R = require('../js/tcg-regras.js');
+const Baralho = require('../js/baralho-dados.js');
+
+const ENV = { GOOGLE_CLIENT_ID: 'teste.apps.googleusercontent.com', SESSION_SECRET: 'x'.repeat(40) };
+const LENDARIAS = Baralho.CARTAS.filter((c) => c.raridade === 'lendario' && c.tipo !== 'campo').map((c) => c.id);
+const COMUNS = Baralho.CARTAS.filter((c) => c.raridade !== 'lendario').map((c) => c.id);
+
+// 2 lendárias + 13 outras (até 2 cópias de cada)
+const DECK = [LENDARIAS[0], LENDARIAS[1], ...COMUNS.slice(0, 7).flatMap((id) => [id, id])].slice(0, 15);
+
+function montar() {
+    const db = createLocalDb(null);
+    const verificarGoogle = async (c) => { const [, sub, nome] = c.split(':'); return { sub, name: nome, email: `${sub}@exemplo.com` }; };
+    const api = createApi({ db, env: ENV, verificarGoogle, agora: () => 1_700_000_000_000, aleatorio: (max) => 3 % max });
+    const navegador = () => {
+        let cookie = '';
+        return async (metodo, caminho, corpo) => {
+            const h = {};
+            if (cookie) h.cookie = cookie;
+            if (corpo !== undefined) { h['content-type'] = 'application/json'; h.origin = 'http://localhost'; }
+            const r = await api(new Request(`http://localhost${caminho}`, { method: metodo, headers: h, body: corpo === undefined ? undefined : JSON.stringify(corpo) }));
+            const sc = r.headers.getSetCookie();
+            if (sc.length) cookie = sc[0].split(';')[0];
+            return { status: r.status, dados: await r.json() };
+        };
+    };
+    return { db, navegador };
+}
+async function entrar(m, sub) {
+    const c = m.navegador();
+    const r = await c('POST', '/api/auth/google', { credential: `google:${sub}:${sub}-nome-completo-xxxxxxxx` });
+    return { c, id: r.dados.user.id };
+}
+const darTudo = async (m, id, qtd = 2) => {
+    for (const carta of Baralho.CARTAS) await m.db.query('INSERT INTO colecao (user_id, card_id, qtd, primeira_em) VALUES ($1, $2, $3, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET qtd = EXCLUDED.qtd', [id, carta.id, qtd]);
+};
+
+test('D1: validarDeck com maxLendarias; o deck de teste é válido', () => {
+    assert.equal(DECK.length, 15);
+    assert.deepEqual(R.validarDeck(DECK, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }), []);
+    const tres = [LENDARIAS[0], LENDARIAS[1], LENDARIAS[2], ...DECK.slice(2, 14)];
+    assert.match(R.validarDeck(tres, { maxLendarias: 2 }).join(' '), /No máximo 2 lendárias/);
+    assert.deepEqual(R.validarDeck(tres), []); // sem a opção, os decks prontos (3 lendárias) continuam valendo
+});
+
+test('D2: salvar: só com cartas que a conta tem; 15 cartas, 2 lendárias, repetição limitada', async () => {
+    const m = montar();
+    const { c, id } = await entrar(m, 'ana');
+    const vazio = (await c('GET', '/api/tcg/deck')).dados;
+    assert.equal(vazio.cartas, null);
+    assert.deepEqual(vazio.limites, { tamanho: 15, copias: 2, copiasLendaria: 1, lendarias: 2 });
+    assert.equal((await c('POST', '/api/tcg/deck', { cartas: DECK })).status, 400); // não tem as cartas
+
+    await darTudo(m, id);
+    const ok = await c('POST', '/api/tcg/deck', { cartas: DECK });
+    assert.equal(ok.status, 200);
+    assert.deepEqual((await c('GET', '/api/tcg/deck')).dados.cartas, DECK);
+
+    const falha = async (cartas) => (await c('POST', '/api/tcg/deck', { cartas })).status;
+    assert.equal(await falha(DECK.slice(0, 14)), 400);                       // 14 cartas
+    assert.equal(await falha([...DECK.slice(0, 14), DECK[14], DECK[14]]), 400); // 16 cartas
+    assert.equal(await falha([LENDARIAS[0], LENDARIAS[1], LENDARIAS[2], ...DECK.slice(2, 14)]), 400); // 3 lendárias
+    assert.equal(await falha([LENDARIAS[0], LENDARIAS[0], ...DECK.slice(2)]), 400); // lendária repetida
+    assert.equal(await falha([COMUNS[0], COMUNS[0], COMUNS[0], ...DECK.slice(3)]), 400); // 3 cópias
+    assert.equal(await falha([...DECK.slice(0, 14), 'nao-existe']), 400);
+    assert.equal(await falha('texto'), 400);
+    // tem só 1 cópia: não dá para usar 2
+    await m.db.query('UPDATE colecao SET qtd = 1 WHERE user_id = $1 AND card_id = $2', [id, COMUNS[0]]);
+    assert.equal(await falha(DECK), 400);
+});
+
+test('D3: sala e partida com o deck customizado; revanche mantém; coleção que encolhe invalida', async () => {
+    const m = montar();
+    const a = await entrar(m, 'ana');
+    const b = await entrar(m, 'beto');
+    await darTudo(m, a.id);
+    assert.equal((await a.c('POST', '/api/tcg/salas', { deck: 'custom' })).status, 400); // ainda não montou
+    await a.c('POST', '/api/tcg/deck', { cartas: DECK });
+
+    const sala = (await a.c('POST', '/api/tcg/salas', { deck: 'custom' })).dados;
+    assert.equal(sala.deck, 'custom');
+    assert.equal((await b.c('POST', '/api/tcg/salas/' + sala.codigo + '/entrar', { deck: 'custom' })).status, 400); // beto não tem deck
+    const p = (await b.c('POST', `/api/tcg/salas/${sala.codigo}/entrar`, { deck: 'turma' })).dados;
+    assert.ok(p.id);
+    const minha = (await a.c('GET', `/api/tcg/partidas/${p.id}`)).dados;
+    assert.deepEqual(minha.decks, ['custom', 'turma']);
+    const cartasDaAna = [...minha.visao.jogadores[0].mao, ...(minha.visao.jogadores[0].ativo ? [minha.visao.jogadores[0].ativo] : [])].map((x) => x.id);
+    assert.ok(cartasDaAna.every((id) => DECK.includes(id)));
+
+    // revanche: lados trocados e o deck customizado vai junto
+    const v = minha.versao;
+    await b.c('POST', `/api/tcg/partidas/${p.id}/jogada`, { jogada: { tipo: 'desistir' }, versao: (await b.c('GET', `/api/tcg/partidas/${p.id}`)).dados.versao, regras: R.REGRAS_VERSAO });
+    assert.ok(v >= 0);
+    await a.c('POST', `/api/tcg/partidas/${p.id}/revanche`, {});
+    await b.c('POST', `/api/tcg/partidas/${p.id}/revanche`, {});
+    const nova = (await a.c('GET', '/api/tcg/atual')).dados.partida;
+    assert.ok(nova && nova !== p.id);
+    const r2 = (await a.c('GET', `/api/tcg/partidas/${nova}`)).dados;
+    assert.deepEqual(r2.decks, ['turma', 'custom']); // trocou de lado
+
+    // coleção encolheu depois de salvo: o deck customizado deixa de valer
+    await a.c('POST', `/api/tcg/partidas/${nova}/jogada`, { jogada: { tipo: 'desistir' }, versao: r2.versao, regras: R.REGRAS_VERSAO });
+    await m.db.query('DELETE FROM colecao WHERE user_id = $1 AND card_id = $2', [a.id, DECK[5]]);
+    const g = (await a.c('GET', '/api/tcg/deck')).dados;
+    assert.ok(g.erros.length > 0);
+    assert.equal((await a.c('POST', '/api/tcg/salas', { deck: 'custom' })).status, 400);
+});

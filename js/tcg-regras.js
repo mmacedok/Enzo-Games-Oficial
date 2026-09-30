@@ -29,6 +29,8 @@
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
+    /** Deck customizado (montado com a coleção da conta): no máximo 2 cartas lendárias no total. */
+    const MAX_LENDARIAS_CUSTOM = 2;
     const MAO_INICIAL = 5;
     const VAGAS_BANCO = 3;
     const LIMITE_TURNOS = 30;
@@ -99,7 +101,7 @@
      * Lista de erros do deck (vazia = deck válido). `colecao` ({ id: qtd }) é opcional:
      * por enquanto todo mundo tem todas as cartas liberadas.
      */
-    function validarDeck(ids, { colecao } = {}) {
+    function validarDeck(ids, { colecao, maxLendarias } = {}) {
         const erros = [];
         if (!Array.isArray(ids)) return ['O deck precisa ser uma lista de cartas.'];
         if (ids.length !== TAMANHO_DECK) erros.push(`O deck precisa de ${TAMANHO_DECK} cartas (tem ${ids.length}).`);
@@ -113,6 +115,10 @@
             if (colecao && (colecao[id] || 0) < qtd) erros.push(`${carta.nome}: você tem ${colecao[id] || 0}.`);
         }
         if (!ids.some(ehLutador)) erros.push('O deck precisa de pelo menos 1 personagem ou goon.');
+        if (maxLendarias !== undefined) {
+            const lendarias = ids.filter((id) => Baralho.carta(id)?.raridade === 'lendario').length;
+            if (lendarias > maxLendarias) erros.push(`No máximo ${maxLendarias} lendárias no deck (tem ${lendarias}).`);
+        }
         return erros;
     }
 
@@ -881,7 +887,7 @@
     }
 
     return {
-        TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAO_INICIAL, VAGAS_BANCO, LIMITE_TURNOS,
+        TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAX_LENDARIAS_CUSTOM, MAO_INICIAL, VAGAS_BANCO, LIMITE_TURNOS,
         ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR, PROTECAO_ATIVO, DEVOLVER_MAO_POR_TURNO, DEVOLVER_MESA_POR_TURNO,
         REGRAS_VERSAO, JogadaInvalida,
         validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, quemDeve, repetir,

@@ -216,6 +216,16 @@ module.exports = [
         criado_em BIGINT NOT NULL,
         atualizado_em BIGINT NOT NULL
     )`,
+    // Deck customizado de cada jogador (montado com a coleção; api/tcg.js, /api/tcg/deck).
+    `CREATE TABLE IF NOT EXISTS tcg_deck_custom (
+        user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        cartas TEXT NOT NULL,
+        atualizado_em BIGINT NOT NULL
+    )`,
+    // Quando o deck da sala/partida é o customizado (deck = 'custom'), a lista de cartas vai junto (foto do momento).
+    'ALTER TABLE tcg_salas ADD COLUMN IF NOT EXISTS lista TEXT',
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS lista_a TEXT',
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS lista_b TEXT',
     // Revanche: cada jogador marca que quer; com os dois, nasce outra partida (lados trocados) em revanche_id.
     'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_a BOOLEAN NOT NULL DEFAULT FALSE',
     'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_b BOOLEAN NOT NULL DEFAULT FALSE',
