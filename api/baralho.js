@@ -495,6 +495,61 @@ const rotas = [
             return estado(ctx.db, alvo.id);
         },
     },
+    {
+        // Admin: mexe na coleção de uma conta. { carta, delta } soma/tira; { carta, qtd } define (0 tira a carta);
+        // { todas: true } dá 1 de cada carta que falta; { limpar: true } esvazia a coleção.
+        metodo: 'POST', caminho: /^\/api\/admin\/users\/([^/]{1,64})\/cartas$/, admin: true,
+        async executar(ctx) {
+            const alvo = await admin.exigirUsuario(ctx, ctx.params[0]);
+            const { carta, delta, qtd, todas, limpar } = await ctx.corpo();
+            const agora = ctx.agora();
+            let detalhe;
+            if (limpar === true) {
+                const tiradas = await ctx.db.query('DELETE FROM colecao WHERE user_id = $1 RETURNING card_id', [alvo.id]);
+                detalhe = `coleção esvaziada (${tiradas.length} carta(s) diferentes)`;
+            } else if (todas === true) {
+                const ids = Baralho.CARTAS.map((c) => c.id);
+                const novas = await ctx.db.query(
+                    `INSERT INTO colecao (user_id, card_id, qtd, primeira_em) SELECT $1, x, 1, $3 FROM unnest($2::text[]) AS x
+                     ON CONFLICT (user_id, card_id) DO NOTHING RETURNING card_id`, [alvo.id, ids, agora]);
+                detalhe = `+1 de cada carta que faltava (${novas.length})`;
+            } else {
+                if (!Baralho.carta(carta)) throw new HttpError(400, 'carta desconhecida');
+                const temDelta = delta !== undefined;
+                if (temDelta === (qtd !== undefined)) throw new HttpError(400, 'informe delta ou qtd');
+                const [atual] = await ctx.db.query('SELECT qtd FROM colecao WHERE user_id = $1 AND card_id = $2', [alvo.id, carta]);
+                const antes = Number(atual?.qtd ?? 0);
+                const valor = temDelta ? delta : qtd;
+                if (!Number.isInteger(valor) || Math.abs(valor) > 999 || (temDelta && valor === 0)) throw new HttpError(400, 'quantidade inválida');
+                const depois = Math.max(0, Math.min(999, temDelta ? antes + valor : valor));
+                if (depois === antes) return estado(ctx.db, alvo.id);
+                if (depois === 0) await ctx.db.query('DELETE FROM colecao WHERE user_id = $1 AND card_id = $2', [alvo.id, carta]);
+                else {
+                    await ctx.db.query(
+                        `INSERT INTO colecao (user_id, card_id, qtd, primeira_em) VALUES ($1, $2, $3, $4)
+                         ON CONFLICT (user_id, card_id) DO UPDATE SET qtd = EXCLUDED.qtd`, [alvo.id, carta, depois, agora]);
+                }
+                detalhe = `${carta} ${antes}→${depois}`;
+            }
+            await admin.registrar(ctx, 'carta', alvo.id, detalhe);
+            return estado(ctx.db, alvo.id);
+        },
+    },
+    {
+        // Admin: tira pacotes fechados de uma conta. { id } um pacote; { todos: true } todos.
+        metodo: 'POST', caminho: /^\/api\/admin\/users\/([^/]{1,64})\/pacotes\/remover$/, admin: true,
+        async executar(ctx) {
+            const alvo = await admin.exigirUsuario(ctx, ctx.params[0]);
+            const { id, todos } = await ctx.corpo();
+            if (todos !== true && typeof id !== 'string') throw new HttpError(400, 'informe id ou todos');
+            const tirados = todos === true
+                ? await ctx.db.query('DELETE FROM pacotes WHERE user_id = $1 AND aberto_em IS NULL RETURNING tipo', [alvo.id])
+                : await ctx.db.query('DELETE FROM pacotes WHERE id = $1 AND user_id = $2 AND aberto_em IS NULL RETURNING tipo', [id.slice(0, 64), alvo.id]);
+            if (!tirados.length) throw new HttpError(404, 'pacote não encontrado');
+            await admin.registrar(ctx, 'pacote-rm', alvo.id, tirados.map((p) => p.tipo).join(', ').slice(0, 200));
+            return estado(ctx.db, alvo.id);
+        },
+    },
 ];
 
 module.exports = {

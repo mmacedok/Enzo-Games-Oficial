@@ -377,6 +377,7 @@
 
         const tem = new Map(c.achievements.map((a) => [a.id, a.em]));
         secaoDobravel('conquistas', `conquistas ${C.LISTA.filter((d) => tem.has(d.id)).length}/${C.LISTA.length}`, () => {
+            acaoLinha('em lote', '', [botao('dar todas', 'grant conquistas'), botaoSeguro('tirar todas', 'revoke conquistas --sim')]);
             tabela(['', 'id', 'nome', 'desde'], C.LISTA.map((d) => {
                 const ligada = tem.has(d.id);
                 const caixa = el('button', 'caixa', ligada ? '[x]' : '[ ]');
@@ -406,20 +407,30 @@
             acaoLinha('pó', bInfo.carteira?.po ?? 0, passos('dust'));
             acaoLinha('pacotes', pacotesTexto, tiposPacote.map(([id, nome]) => botao(`+ ${nome}`, `pack ${id}`)));
 
-            tabela(['#', 'carta', 'raridade', 'qtd'], (B?.CARTAS || []).map((carta) => {
+            if (bInfo.pacotes?.length) {
+                tabela(['pacote', 'origem', 'desde', ''], bInfo.pacotes.map((p) => [
+                    p.tipo, p.origem, data(p.criadoEm), botao('tirar', `unpack ${p.id}`),
+                ]));
+                acaoLinha('pacotes', '', [botaoSeguro('tirar todos os pacotes', 'unpack all --sim')]);
+            }
+
+            tabela(['#', 'carta', 'raridade', 'qtd', ''], (B?.CARTAS || []).map((carta) => {
                 const qtd = bInfo.colecao?.[carta.id];
                 return [
                     String(carta.numero),
                     carta.nome,
                     carta.raridade,
                     qtd ? String(qtd) : span('apagado', '·'),
+                    [botao('−', `card ${carta.id} -1`), ' ', botao('+', `card ${carta.id} +1`), ' ', botao('tirar', `card ${carta.id} =0`)],
                 ];
             }));
+            acaoLinha('coleção', '', [botao('dar as que faltam', 'cards all'), botaoSeguro('esvaziar coleção', 'cards clear --sim')]);
         });
 
         const secretos = c.achievements.filter((a) => C.numeroSecreto(a.id) !== null).length;
         secaoDobravel('secretos', `enzos secretos ${secretos}/${C.SECRETOS}`, () => {
             const grade = el('div', 'grade');
+            acaoLinha('em lote', '', [botao('dar todos', 'grant secretos'), botaoSeguro('tirar todos', 'revoke secretos --sim')]);
             grade.setAttribute('aria-label', 'Enzos secretos (clique para dar ou tirar)');
             for (let n = 1; n <= C.SECRETOS; n++) {
                 const id = C.idSecreto(n);
@@ -623,6 +634,47 @@
         atualizarPrompt();
     }
 
+    const GRUPOS_LOTE = { all: 'todos', todas: 'todos', todos: 'todos', conquistas: 'conquistas', secretos: 'secretos' };
+
+    /** grant/revoke all|conquistas|secretos: em lote. Tirar pede confirmação (ou --sim do botão de 2 cliques). */
+    async function trocarLote(ligar, grupoArg, args) {
+        const alvo = exigirAlvo();
+        const grupo = GRUPOS_LOTE[grupoArg];
+        const aplicar = async () => {
+            const r = await pedir(`/api/admin/users/${alvo.id}/achievements`, { grupo, unlocked: ligar });
+            ok(`${ligar ? '+' : '−'} ${r.changed} (${grupo}) ${ligar ? 'desbloqueadas para' : 'removidas de'} ${primeiroNome(alvo.name)}.`);
+            await recarregarConta();
+        };
+        if (!ligar && !args.includes('--sim')) pedirConfirmacao(`tirar ${grupo === 'todos' ? 'TODAS as conquistas e Enzos secretos' : grupo} de ${alvo.name}?`, aplicar);
+        else await aplicar();
+    }
+
+    /** "3" (número da carta), id ou pedaço do nome. */
+    function cartaDoArgumento(ref) {
+        if (!ref) throw new Error('uso: card <n|id|nome> [+n|-n|=n]. "cards" lista as cartas.');
+        const lista = B?.CARTAS || [];
+        const n = Number(ref.replace(/^#/, ''));
+        const porNumero = Number.isInteger(n) ? lista.find((c) => c.numero === n) : null;
+        const texto = ref.toLowerCase();
+        const achadas = porNumero ? [porNumero] : lista.filter((c) => c.id === texto || c.nome.toLowerCase().includes(texto) || c.id.includes(texto));
+        if (achadas.length !== 1) throw new Error(achadas.length ? `"${ref}" bate com ${achadas.length} cartas; use o número ou o id.` : `carta "${ref}" não existe. "cards" lista as cartas.`);
+        return achadas[0];
+    }
+
+    async function mexerCarta(args) {
+        const alvo = exigirAlvo();
+        const carta = cartaDoArgumento(args[0]);
+        const pedido = args[1] ?? '+1';
+        const m = /^([+=-]?)(\d{1,3})$/.exec(pedido.replace('−', '-'));
+        if (!m) throw new Error('quantidade: +n soma, -n tira, =n define (ex.: card 3 +2).');
+        const n = Number(m[2]);
+        const corpo = m[1] === '=' ? { carta: carta.id, qtd: n } : { carta: carta.id, delta: (m[1] === '-' ? -1 : 1) * n };
+        if (corpo.delta === 0) throw new Error('quantidade diferente de zero.');
+        const novo = await pedir(`/api/admin/users/${alvo.id}/cartas`, corpo);
+        ok(`${carta.nome}: ${novo.colecao[carta.id] ?? 0} com ${primeiroNome(alvo.name)}.`);
+        await recarregarConta();
+    }
+
     async function trocarConquista(ligar, arg) {
         const alvo = exigirAlvo();
         const conquista = conquistaDoArgumento(arg);
@@ -751,8 +803,52 @@
             desc: 'fecha a conta aberta e volta aos leitores',
             async fn() { estado.alvo = null; atualizarPrompt(); await telaLeitores(''); },
         },
-        grant: { uso: 'grant <id|#n>', desc: 'dá conquista (ou enzo secreto #n)', fn: (args) => trocarConquista(true, args[0]) },
-        revoke: { uso: 'revoke <id|#n>', desc: 'tira conquista (ou enzo secreto #n)', fn: (args) => trocarConquista(false, args[0]) },
+        grant: { uso: 'grant <id|#n|all|conquistas|secretos>', desc: 'dá conquista, enzo secreto #n ou um lote inteiro', fn: (args) => (GRUPOS_LOTE[args[0]] ? trocarLote(true, args[0], args) : trocarConquista(true, args[0])) },
+        revoke: { uso: 'revoke <id|#n|all|conquistas|secretos>', desc: 'tira conquista, enzo secreto #n ou um lote inteiro', fn: (args) => (GRUPOS_LOTE[args[0]] ? trocarLote(false, args[0], args) : trocarConquista(false, args[0])) },
+        card: { uso: 'card <n|id|nome> [+n|-n|=n]', desc: 'soma, tira ou define cartas na coleção da conta aberta', fn: mexerCarta },
+        cards: {
+            uso: 'cards [all|clear]',
+            desc: 'sem argumento lista as cartas; all dá as que faltam; clear esvazia a coleção',
+            async fn(args) {
+                const modo = (args[0] || '').toLowerCase();
+                if (!modo) {
+                    novaTela('cards', [['cartas', null]]);
+                    tabela(['#', 'id', 'nome', 'raridade', 'tipo'], (B?.CARTAS || []).map((c) => [String(c.numero), c.id, c.nome, c.raridade, c.tipo]));
+                    apagado('use "card <n> +1" na conta aberta para mexer numa carta.');
+                    return;
+                }
+                const alvo = exigirAlvo();
+                if (modo === 'all') {
+                    const novo = await pedir(`/api/admin/users/${alvo.id}/cartas`, { todas: true });
+                    ok(`${primeiroNome(alvo.name)} agora tem ${novo.diferentes}/${novo.total} cartas diferentes.`);
+                    await recarregarConta();
+                } else if (modo === 'clear') {
+                    const limpar = async () => {
+                        await pedir(`/api/admin/users/${alvo.id}/cartas`, { limpar: true });
+                        ok(`coleção de ${primeiroNome(alvo.name)} esvaziada.`);
+                        await recarregarConta();
+                    };
+                    if (args.includes('--sim')) await limpar();
+                    else pedirConfirmacao(`esvaziar a coleção de ${alvo.name}?`, limpar);
+                } else throw new Error('uso: cards [all|clear].');
+            },
+        },
+        unpack: {
+            uso: 'unpack <id|all>',
+            desc: 'tira pacotes fechados da conta aberta (um pelo id, ou todos)',
+            async fn(args) {
+                const alvo = exigirAlvo();
+                if (!args[0]) throw new Error('uso: unpack <id|all>. Os ids aparecem na seção baralho.');
+                const tirar = async () => {
+                    const corpo = args[0] === 'all' ? { todos: true } : { id: args[0] };
+                    const novo = await pedir(`/api/admin/users/${alvo.id}/pacotes/remover`, corpo);
+                    ok(`pacote(s) tirado(s) de ${primeiroNome(alvo.name)} (${novo.pacotes.length} fechado(s) restam).`);
+                    await recarregarConta();
+                };
+                if (args[0] === 'all' && !args.includes('--sim')) pedirConfirmacao(`tirar TODOS os pacotes fechados de ${alvo.name}?`, tirar);
+                else await tirar();
+            },
+        },
         achievements: {
             desc: 'ids das conquistas',
             fn() {

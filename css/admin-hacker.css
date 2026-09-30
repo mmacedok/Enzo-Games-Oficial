@@ -252,7 +252,8 @@ html, body { background: #000; }
 /* pessoas */
 .cmd[title^='open '], .cmd[title='users'], .cmd[title^='users '], .cmd[title='close'], .cmd[title^='fala'] { --cor: var(--magenta); }
 /* economia e privilégios */
-.cmd[title^='grant'], .cmd[title^='revoke'], .cmd[title^='credits'], .cmd[title^='dust'], .cmd[title^='pack'], .cmd[title^='censura'] { --cor: var(--ambar); }
+.cmd[title^='grant'], .cmd[title^='revoke'], .cmd[title^='credits'], .cmd[title^='dust'], .cmd[title^='pack'], .cmd[title^='censura'],
+.cmd[title^='card'], .cmd[title^='unpack'] { --cor: var(--ambar); }
 /* rede e lugar */
 .cmd[title^='ip '], .cmd[title^='onde'], .cmd[title='anonimos'] { --cor: var(--laranja); }
 /* gibis */

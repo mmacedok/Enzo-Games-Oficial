@@ -198,6 +198,26 @@ const rotas = [
         },
     },
     {
+        // Em lote: todas as conquistas, todos os Enzos secretos ou tudo. { grupo: 'conquistas'|'secretos'|'todos', unlocked }
+        metodo: 'POST', caminho: new RegExp(`^/api/admin/users/${SEGMENTO}/achievements$`), admin: true,
+        async executar(ctx) {
+            const alvo = await exigirUsuario(ctx, ctx.params[0]);
+            const { grupo, unlocked } = await ctx.corpo();
+            if (!['conquistas', 'secretos', 'todos'].includes(grupo)) throw new HttpError(400, 'grupo deve ser conquistas, secretos ou todos');
+            if (typeof unlocked !== 'boolean') throw new HttpError(400, 'unlocked deve ser true ou false');
+            const ids = [];
+            if (grupo !== 'secretos') ids.push(...Conquistas.LISTA.map((c) => c.id));
+            if (grupo !== 'conquistas') for (let n = 1; n <= Conquistas.SECRETOS; n++) ids.push(Conquistas.idSecreto(n));
+            const linhas = unlocked
+                ? await ctx.db.query(
+                    `INSERT INTO user_achievements (user_id, achievement_id, unlocked_at) SELECT $1, x, $3 FROM unnest($2::text[]) AS x
+                     ON CONFLICT (user_id, achievement_id) DO NOTHING RETURNING achievement_id`, [alvo.id, ids, ctx.agora()])
+                : await ctx.db.query('DELETE FROM user_achievements WHERE user_id = $1 AND achievement_id = ANY($2::text[]) RETURNING achievement_id', [alvo.id, ids]);
+            if (linhas.length) await registrar(ctx, unlocked ? 'grant-lote' : 'revoke-lote', alvo.id, `${grupo}: ${linhas.length}`);
+            return { grupo, unlocked, changed: linhas.length };
+        },
+    },
+    {
         metodo: 'POST', caminho: new RegExp(`^/api/admin/users/${SEGMENTO}/role$`), admin: true,
         async executar(ctx) {
             const alvo = await exigirUsuario(ctx, ctx.params[0]);
