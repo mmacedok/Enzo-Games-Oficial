@@ -235,6 +235,9 @@
     }
 
     function mostrarDashboard() {
+        // No celular a central começa fechada: senão ela come a tela e a saída do terminal some.
+        if (!estado.central && window.matchMedia('(max-width: 760px)').matches) $('dashboard').open = false;
+        estado.central = true;
         const grade = $('dashboard-grid');
         grade.replaceChildren();
         const grupos = [

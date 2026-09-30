@@ -422,3 +422,40 @@ button.numero:hover, button.numero:focus-visible { background: rgba(141, 255, 16
     .migalhas { margin: -12px -16px 8px; padding: 6px 16px; }
     .feedback { padding: 4px 16px; }
 }
+
+/* ------------------------------------------------------------ celular: terminal de verdade, com espaço para a saída */
+@media (max-width: 760px) {
+    /* sem isto a coluna cresce até o conteúdo mais largo e a tela corta a esquerda */
+    .corpo { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+    .painel, .terminal, .dashboard, .saida { min-width: 0; max-width: 100%; }
+    /* a faixa de cima vira uma linha de atalhos que rola de lado; os números ficam na tela "status" */
+    .painel { max-height: none; padding: 4px 12px; overflow: visible; }
+    .numeros { display: none; }
+    .atalhos { display: flex; flex-wrap: nowrap; gap: 2px 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+    .atalhos::-webkit-scrollbar { display: none; }
+    .atalhos .cmd { flex: none; padding: 7px 6px; }
+    /* central de comando aberta não passa de um terço da tela */
+    .dashboard { max-height: 36dvh; }
+    .dashboard summary { padding: 8px 12px; }
+    .dashboard-acao { padding: 7px 4px; }
+    /* a saída é a estrela: ocupa o que sobra */
+    .terminal { flex: 1; min-height: 0; }
+    .saida { min-height: 0; padding: 10px 12px 6px; }
+    .migalhas { margin: -10px -12px 8px; padding: 8px 12px; top: -10px; }
+    .feedback { padding: 4px 12px; }
+    .prompt { padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); gap: 8px; }
+    .prompt-entrada { font-size: 16px; } /* 16px: o iPhone não dá zoom ao tocar */
+    /* botões e links mais fáceis de tocar */
+    .cmd { padding: 5px 3px; }
+    .cmd--link { padding: 6px 2px; }
+    .acao-linha { gap: 6px 10px; margin: 8px 0; }
+    .acao-rotulo { min-width: 100%; }
+    .campo-texto { width: 100%; padding: 8px; font-size: 16px; }
+    .campo-busca { width: 100%; }
+    /* tabelas largas rolam de lado dentro de si mesmas, sem cortar com reticências */
+    .tabela { width: auto; max-width: 100%; overflow-x: auto; scrollbar-width: thin; padding-bottom: 4px; }
+    .tabela > * { max-width: none; overflow: visible; text-overflow: clip; padding: 4px 0; }
+    .tabela { gap: 0 14px; }
+    .tabela .cmd { padding: 0; }
+    .secao-corpo { padding-left: 8px; }
+}
