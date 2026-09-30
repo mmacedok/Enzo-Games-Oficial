@@ -624,6 +624,7 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 .bt-painel-poder, .bt-painel-campo { margin: 0 0 8px; padding: 6px 10px; background: #efe3ff; border: 2px solid var(--ink); border-radius: 6px; }
 .bt-painel-campo { background: #fff0c2; }
 .bt-painel-frase { margin: 10px 0 0; font-style: italic; opacity: 0.8; }
+.bt-painel-tcg { margin: 6px 0 0; font-size: 0.9rem; line-height: 1.35; white-space: pre-line; }
 .bt-ataques { display: grid; gap: 8px; }
 .bt-ataque {
     display: grid;

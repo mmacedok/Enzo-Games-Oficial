@@ -1054,7 +1054,8 @@
             outras.appendChild(b);
         }
         if (outras.children.length) info.appendChild(outras);
-        info.appendChild(el('p', 'bt-painel-frase', `“${d.frase}”`));
+        info.appendChild(el('p', 'bt-painel-frase', `(${d.frase})`));
+        if (d.tcg) info.appendChild(el('p', 'bt-painel-tcg', d.tcg));
         p.append(fechar, grande, info);
         animar(p, [{ transform: 'translateY(40px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220 });
         fechar.focus({ preventScroll: true });

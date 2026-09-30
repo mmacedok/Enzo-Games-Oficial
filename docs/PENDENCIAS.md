@@ -77,6 +77,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Descrição das 24 cartas:** a frase de cada carta agora aparece entre parênteses e, abaixo (carta grande do Baralho e painel da Batalha), o que a carta faz no TCG (campo `tcg` em `js/baralho-dados.js`; vida, custo e dano ×20 como no jogo). Um teste (`test/tcg-regras.test.js`) confere o texto contra `js/tcg-cartas.js`: mudou balanceamento, atualize o texto.
 - 2026-09-30: **Batalha, cara ou coroa no começo:** a moeda do Glitch (cara = Enzo, coroa = touro)
   gira antes de "VOCÊ COMEÇA!". O jogador 0 é **Games** e o jogador 1 é **Torado** (contra o robô,
   você é sempre Games); cai o lado de quem começa. Só tela: o motor já sorteava (`estado.primeiro`).

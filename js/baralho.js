@@ -172,7 +172,7 @@
 
         const moldura = el('div', 'carta-tcg-moldura');
         moldura.append(topo, arte, el('p', 'carta-tcg-faixa', `${ESTRELAS[def.raridade]} ${r.nome}${TIPOS[def.tipo] ? ` · ${TIPOS[def.tipo]}` : ''}`),
-            el('p', 'carta-tcg-frase', def.frase));
+            el('p', 'carta-tcg-frase', `(${def.frase})`));
         card.append(moldura, el('div', 'carta-tcg-foil'), el('div', 'carta-tcg-brilho'));
         if (def.raridade === 'epico' || def.raridade === 'lendario') seguirMouse(card);
         return card;
@@ -689,7 +689,10 @@
         const legenda = el('p', 'carta-zoom-legenda', `Você tem ${qtd} ${qtd === 1 ? 'cópia' : 'cópias'}`);
         // Carta grande "viva": inclina em 3D seguindo o mouse (ou o dedo) e dá um tranco ao abrir.
         const { raiz, mola: m } = vivo(carta(cardId), { forca: 20 });
-        janela.append(fechar, raiz, legenda);
+        const descricao = el('div', 'carta-zoom-descricao');
+        descricao.append(el('p', 'carta-zoom-frase', `(${def.frase})`));
+        if (def.tcg) descricao.append(el('p', 'carta-zoom-tcg', def.tcg));
+        janela.append(fechar, raiz, descricao, legenda);
         janela.addEventListener('click', (evento) => { if (evento.target === janela) janela.close(); });
         janela.addEventListener('close', () => janela.remove());
         document.body.appendChild(janela);
