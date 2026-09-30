@@ -11,6 +11,10 @@ const { HttpError, montarCookie } = require('./http.js');
 const COOKIE = 'sid';
 const DIA = 24 * 60 * 60 * 1000;
 const DURACAO_SESSAO = 30 * DIA;
+/** A chave do aparelho (localStorage) vale 90 dias e troca a cada uso. */
+const DURACAO_LEMBRAR = 90 * DIA;
+/** Depois de usada, a chave antiga ainda vale 2 min (duas abas abrindo juntas não se derrubam). */
+const CARENCIA_LEMBRAR = 2 * 60 * 1000;
 /** Sessão usada há mais de 1 dia desde a última renovação ganha 30 dias novos (o cookie sempre fica "fresco"). */
 const RENOVAR_ABAIXO_DE = DURACAO_SESSAO - DIA;
 
@@ -61,7 +65,7 @@ async function carregarSessao(ctx) {
     const [linha] = await ctx.db.query(
         `SELECT s.id AS sessao_id, s.expires_at, u.*
            FROM sessions s JOIN users u ON u.id = s.user_id
-          WHERE s.id = $1`, [id]);
+          WHERE s.id = $1 AND NOT s.lembrar`, [id]);
     if (!linha) return;
     if (Number(linha.expires_at) <= agora || linha.role === 'banned') {
         await ctx.db.query('DELETE FROM sessions WHERE id = $1', [id]);
@@ -83,6 +87,15 @@ async function criarSessao(ctx, usuarioId) {
     await ctx.db.query('INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES ($1, $2, $3, $4)',
         [hashDoToken(token, ctx.config.sessionSecret), usuarioId, agora + DURACAO_SESSAO, agora]);
     cookieDaSessao(ctx, token, DURACAO_SESSAO);
+}
+
+/** Cria a chave do aparelho (linha em sessions com lembrar = true) e devolve o token cru para o navegador guardar. */
+async function criarLembrete(ctx, usuarioId) {
+    const token = crypto.randomBytes(32).toString('base64url');
+    const agora = ctx.agora();
+    await ctx.db.query('INSERT INTO sessions (id, user_id, expires_at, created_at, lembrar) VALUES ($1, $2, $3, $4, TRUE)',
+        [hashDoToken(token, ctx.config.sessionSecret), usuarioId, agora + DURACAO_LEMBRAR, agora]);
+    return token;
 }
 
 // ------------------------------------------------------------------ rotas
@@ -119,7 +132,7 @@ const rotas = [
             if (ctx.sessaoId) await ctx.db.query('DELETE FROM sessions WHERE id = $1', [ctx.sessaoId]);
             await criarSessao(ctx, usuario.id);
             ctx.acessoUsuario = usuario.id; // para o registro de acessos (api/acessos.js)
-            return { loggedIn: true, firstLogin: Number(usuario.created_at) === agora, user: usuarioPublico(usuario) };
+            return { loggedIn: true, firstLogin: Number(usuario.created_at) === agora, user: usuarioPublico(usuario), lembrar: await criarLembrete(ctx, usuario.id) };
         },
     },
     {
@@ -130,8 +143,40 @@ const rotas = [
             : { loggedIn: false }),
     },
     {
+        // Cookie sumiu (Safari do iPhone, app embutido...) mas o aparelho ainda tem a chave: troca por uma sessão nova e uma chave nova.
+        metodo: 'POST', caminho: '/api/auth/restaurar',
+        async executar(ctx) {
+            if (!ctx.config.loginAtivo) throw new HttpError(503, 'login com Google não configurado');
+            const { token } = await ctx.corpo();
+            if (typeof token !== 'string' || token.length < 20 || token.length > 128) throw new HttpError(401, 'chave inválida');
+            const id = hashDoToken(token, ctx.config.sessionSecret);
+            const agora = ctx.agora();
+            const [linha] = await ctx.db.query(
+                `SELECT s.id AS sessao_id, s.expires_at, u.* FROM sessions s JOIN users u ON u.id = s.user_id
+                  WHERE s.id = $1 AND s.lembrar AND s.expires_at > $2`, [id, agora]);
+            if (!linha) throw new HttpError(401, 'chave vencida');
+            if (linha.role === 'banned') {
+                await ctx.db.query('DELETE FROM sessions WHERE id = $1', [id]);
+                throw new HttpError(403, 'conta bloqueada');
+            }
+            // a chave usada ainda serve por 2 min; depois some
+            await ctx.db.query('UPDATE sessions SET expires_at = LEAST(expires_at, $2) WHERE id = $1', [id, agora + CARENCIA_LEMBRAR]);
+            await criarSessao(ctx, linha.id);
+            ctx.acessoUsuario = linha.id;
+            return {
+                loggedIn: true, user: usuarioPublico(linha), lembrar: await criarLembrete(ctx, linha.id),
+                admin: ctx.config.admins.has(String(linha.email).toLowerCase()),
+            };
+        },
+    },
+    {
         metodo: 'POST', caminho: '/api/auth/logout',
         async executar(ctx) {
+            // sair neste aparelho também apaga a chave dele
+            const { token } = await ctx.corpo().catch(() => ({}));
+            if (typeof token === 'string' && token.length >= 20 && token.length <= 128) {
+                await ctx.db.query('DELETE FROM sessions WHERE id = $1 AND lembrar', [hashDoToken(token, ctx.config.sessionSecret)]);
+            }
             if (ctx.sessaoId) await ctx.db.query('DELETE FROM sessions WHERE id = $1', [ctx.sessaoId]);
             ctx.headers.append('Set-Cookie', montarCookie(COOKIE, '', { maxAge: 0, secure: ctx.cookieSeguro }));
             return { loggedIn: false };

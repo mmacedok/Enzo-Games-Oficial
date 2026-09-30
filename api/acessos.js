@@ -25,6 +25,7 @@ const POR_PAGINA = 50;
 const EVENTOS = [
     [/^\/api\/auth\/google$/, 'login'],
     [/^\/api\/auth\/logout$/, 'logout'],
+    [/^\/api\/auth\/restaurar$/, 'sessao-restaurada'],
     [/^\/api\/games\/session\/submit$/, 'partida'],
     [/^\/api\/comments$/, 'carta'],
     [/^\/api\/comments\/[^/]+\/delete$/, 'carta-apagar'],

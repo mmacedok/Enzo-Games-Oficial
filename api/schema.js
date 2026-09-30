@@ -28,6 +28,8 @@ module.exports = [
         expires_at BIGINT NOT NULL,
         created_at BIGINT NOT NULL
     )`,
+    // lembrar = "chave do aparelho": guardada no localStorage, só serve para pedir uma sessão nova quando o cookie some (api/auth.js, /api/auth/restaurar).
+    'ALTER TABLE sessions ADD COLUMN IF NOT EXISTS lembrar BOOLEAN NOT NULL DEFAULT FALSE',
     'CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)',
     'CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)',
     // verified = passou pelo anti-cheat. Recordes trazidos do localStorage

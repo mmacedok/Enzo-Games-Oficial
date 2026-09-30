@@ -100,7 +100,7 @@ const rotas = [
                 `SELECT (SELECT COUNT(*) FROM users) AS contas,
                         (SELECT COUNT(*) FROM users WHERE role = 'banned') AS banidos,
                         (SELECT COUNT(*) FROM users WHERE last_login_at > $1) AS ativos_7d,
-                        (SELECT COUNT(*) FROM sessions WHERE expires_at > $2) AS sessoes,
+                        (SELECT COUNT(*) FROM sessions WHERE expires_at > $2 AND NOT lembrar) AS sessoes,
                         (SELECT COUNT(*) FROM game_scores WHERE verified) AS partidas,
                         (SELECT COUNT(*) FROM game_scores WHERE NOT verified) AS partidas_fora,
                         (SELECT COUNT(*) FROM user_achievements) AS conquistas,
@@ -157,7 +157,7 @@ const rotas = [
                 `SELECT comic_id, chapter_id, last_page, completed, updated_at FROM reading_progress
                   WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 300`, [id]);
             const [{ sessoes }] = await ctx.db.query(
-                'SELECT COUNT(*) AS sessoes FROM sessions WHERE user_id = $1 AND expires_at > $2', [id, ctx.agora()]);
+                'SELECT COUNT(*) AS sessoes FROM sessions WHERE user_id = $1 AND expires_at > $2 AND NOT lembrar', [id, ctx.agora()]);
             const acessos = await ctx.db.query(
                 'SELECT * FROM acessos WHERE user_id = $1 ORDER BY created_at DESC, id LIMIT 50', [id]);
             // require aqui dentro: api/baralho.js também usa este arquivo.
@@ -259,7 +259,8 @@ const rotas = [
         async executar(ctx) {
             const alvo = await exigirUsuario(ctx, ctx.params[0]);
             if (alvo.id === ctx.usuario.id) throw new HttpError(400, 'use "Sair da conta" para derrubar a sua sessão');
-            const linhas = await ctx.db.query('DELETE FROM sessions WHERE user_id = $1 RETURNING id', [alvo.id]);
+            // derruba também as chaves de aparelho (lembrar), mas só conta as sessões de verdade
+            const linhas = (await ctx.db.query('DELETE FROM sessions WHERE user_id = $1 RETURNING id, lembrar', [alvo.id])).filter((l) => !l.lembrar);
             await registrar(ctx, 'kick', alvo.id, `${linhas.length} sessão(ões)`);
             return { sessoes: linhas.length };
         },

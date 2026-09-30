@@ -53,8 +53,27 @@
         pedir('/api/visita', { pagina: location.pathname }).catch(() => {});
     }
 
+    /** Cookie sumiu mas o aparelho guarda a chave: pede uma sessão nova (a chave também é trocada). */
+    async function restaurarSessao() {
+        const chave = lerLocal('enzoLembrar');
+        if (!chave) return null;
+        const r = await pedir('/api/auth/restaurar', { token: chave }).catch(() => null);
+        if (r?.ok && r.dados?.loggedIn) {
+            if (r.dados.lembrar) gravarLocal('enzoLembrar', r.dados.lembrar);
+            gravarLocal('enzoJaLogou', '1');
+            return r.dados;
+        }
+        // 401/403: chave vencida ou conta bloqueada. Só apaga se nenhuma outra aba trocou a chave nesse meio tempo.
+        if (r && (r.status === 401 || r.status === 403) && lerLocal('enzoLembrar') === chave) gravarLocal('enzoLembrar', '');
+        return null;
+    }
+
     async function carregarConta() {
-        const eu = await pedir('/api/auth/me');
+        let eu = await pedir('/api/auth/me');
+        if (!eu.dados?.loggedIn) {
+            const volta = await restaurarSessao();
+            if (volta) eu = { dados: { loggedIn: true, user: volta.user, admin: volta.admin } };
+        }
         if (!eu.dados?.loggedIn) { avisarVisita(); estado.usuario = null; estado.admin = false; estado.dados = null; return; }
         estado.usuario = eu.dados.user;
         estado.admin = eu.dados.admin === true;
@@ -105,6 +124,7 @@
         if (!login.ok) { mostrarErroLogin(login.dados?.error || 'Não deu para entrar agora. Tente de novo.'); return; }
         estado.usuario = login.dados.user;
         gravarLocal('enzoJaLogou', '1');
+        if (login.dados.lembrar) gravarLocal('enzoLembrar', login.dados.lembrar);
         const sync = await pedir('/api/user/sync-guest', dadosDoConvidado());
         estado.dados = sync.ok ? sync.dados : null;
         fecharConvite();
@@ -114,8 +134,9 @@
     }
 
     async function sairDaConta() {
-        await pedir('/api/auth/logout', {});
+        await pedir('/api/auth/logout', { token: lerLocal('enzoLembrar') || undefined });
         gravarLocal('enzoJaLogou', '0');
+        gravarLocal('enzoLembrar', '');
         window.google?.accounts.id.disableAutoSelect();
         estado.usuario = null;
         estado.admin = false;
