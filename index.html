@@ -16,7 +16,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=rev0930r">
+    <link rel="stylesheet" href="css/style.css?v=arcade1">
+    <script type="importmap">
+        {"imports":{"three":"/assets/fliperama-3d/vendor/three.module.js"}}
+    </script>
     <link rel="stylesheet" href="css/images.generated.css?v=1">
 </head>
 <body>
@@ -60,6 +63,16 @@
                      Bairro das Mansões 52.63/49.95/14.95/21.25 · Mansão do Inominável 64.59/25.50/17.34/18.07 -->
             </div>
         </section>
+
+        <section class="section arcade-section" id="arcade" aria-labelledby="arcade-title">
+            <h2 class="section-title section-title--center" id="arcade-title">Fliperama Enzo Games</h2>
+            <p class="arcade-intro">Uma máquina apareceu no mundo do Enzo...</p>
+            <button class="arcade-machine" id="arcade-machine" type="button" aria-label="Aproximar o fliperama" aria-pressed="false">
+                <span class="arcade-machine__scene" id="arcade-scene" aria-hidden="true"></span>
+                <span class="arcade-machine__floor" aria-hidden="true"></span>
+                <span class="arcade-machine__prompt" id="arcade-prompt">Toque no fliperama para chegar mais perto</span>
+            </button>
+        </section>
     </main>
 
     <footer class="site-footer" id="apoie">
@@ -87,5 +100,6 @@
     <script src="js/shelf.js?v=rev0926"></script>
     <script src="js/comic-open.js?v=rev0926"></script>
     <script src="js/main.js?v=rev0930x"></script>
+    <script type="module" src="js/arcade-home.js?v=arcade1"></script>
 </body>
 </html>
