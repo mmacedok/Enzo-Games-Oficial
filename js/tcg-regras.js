@@ -25,7 +25,7 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 5;
+    const REGRAS_VERSAO = 6;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
@@ -37,8 +37,11 @@
     // ESCALA aqui, então uma carta morre com o mesmo número de golpes de antes.
     const ESCALA = 20;
     const VIDA_INICIAL = 6000;
-    /** Vida que o dono perde quando uma carta dele cai (senão ninguém teria por que derrubar cartas). */
-    const DANO_NOCAUTE = { comum: 500, raro: 750, epico: 1000, lendario: 1500 };
+    /**
+     * Vida que o dono perde quando uma carta dele cai (senão ninguém teria por que derrubar cartas).
+     * ×1,5 da primeira tabela (500/750/1000/1500), pela calibragem de 2026-09-30 (16,7 turnos).
+     */
+    const DANO_NOCAUTE = { comum: 750, raro: 1125, epico: 1500, lendario: 2250 };
     const VENENO = 10 * ESCALA;
     const DANO_ILUDIDO = 20 * ESCALA;
     /**

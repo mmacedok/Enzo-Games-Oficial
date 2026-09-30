@@ -288,7 +288,8 @@
             ['Recuar', 'Arraste uma carta do banco para o ativo. Custa a Aura de recuo, que sai da Aura presa no ativo. Voltar para o banco tira os estados.'],
             ['Começo', 'Quem começa não ataca no 1º turno. Quem joga em segundo ganha +1 Aura de Reforço (só para o banco).'],
             ['Estados', '🔔 Notificado: leva 200 por turno. 🔇 Silenciado: não ataca nem recua no próximo turno (e não dá para silenciar a mesma carta dois turnos seguidos). 💘 Iludido: pode errar o ataque.'],
-            ['Carta derrubada', 'O dono perde vida: comum 500, raro 750, épico 1.000, lendário 1.500.'],
+            ['Carta derrubada', `O dono perde vida: ${[['comum', 'comum'], ['raro', 'raro'], ['epico', 'épico'], ['lendario', 'lendário']]
+                .map(([k, nome]) => `${nome} ${R.DANO_NOCAUTE[k].toLocaleString('pt-BR')}`).join(', ')}.`],
             ['Proteção', 'Com o ativo dele na mesa, o golpe no jogador entra só com 35% do dano.'],
             ['Golpe extra', 'Derrubou uma carta? Você acerta o jogador de graça com o mesmo dano (inteiro).'],
             ['De um golpe só', 'Derrubar uma carta de vida cheia num golpe só vira a sua carta até o seu próximo turno.'],

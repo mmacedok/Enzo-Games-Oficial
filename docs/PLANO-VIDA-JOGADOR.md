@@ -85,7 +85,7 @@ calibragem ajusta uma constante em vez de 60 números. As exceções da calibrag
   dele no placar).
 - Os ataques com alvo `qualquer` (Degustador e Inominável) seguem podendo acertar o banco.
 - **Nocaute também fere o dono** (substitui os pontos): quando uma carta cai, o dono perde vida
-  conforme a raridade. Sugestão: comum 500, raro 750, épico 1.000, lendário 1.500. Sem isso, ninguém
+  conforme a raridade. **Valendo (Henrique, 2026-09-30, pela calibragem):** comum 750, raro 1.125, épico 1.500, lendário 2.250 (×1,5 da sugestão inicial de 500/750/1.000/1.500). Sem isso, ninguém
   teria motivo para derrubar cartas: todo mundo iria só no rosto.
 - **Decidido (Henrique, 2026-09-30):** por enquanto dá para **acertar o jogador sempre**, mesmo com
   o ativo dele na mesa. **Depois**, algumas cartas vão poder **entrar no meio** (interceptar o golpe
