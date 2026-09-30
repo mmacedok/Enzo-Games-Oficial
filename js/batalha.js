@@ -280,7 +280,7 @@
         const janela = el('dialog', 'bt-regras');
         const texto = el('div', 'bt-regras-texto');
         const itens = [
-            ['Objetivo', 'Zere a vida do adversário (6.000). Ataque o ativo dele ou o jogador direto (arraste até o rosto dele).'],
+            ['Objetivo', 'Zere a vida do adversário (6.000). Ataque o ativo dele ou o rosto dele (arraste até o rosto) — mas o golpe no jogador é mais fraco enquanto ele tiver ativo (veja Proteção).'],
             ['Deck', '15 cartas. Você começa com 5 na mão e compra 1 por turno.'],
             ['Mesa', 'Um ATIVO (quem luta) e até 3 no BANCO (quem espera). O CAMPO é da mesa inteira e vale para os dois.'],
             ['Aura', 'Todo turno você ganha 1 Aura e arrasta para uma carta sua. A Aura fica presa naquela carta e vai acumulando de um turno para o outro (as bolinhas amarelas na carta). Para atacar, o ativo precisa ter a Aura do ataque presa nele (atacar não gasta).'],
@@ -289,6 +289,9 @@
             ['Começo', 'Quem começa não ataca no 1º turno. Quem joga em segundo ganha +1 Aura de Reforço (só para o banco).'],
             ['Estados', '🔔 Notificado: leva 200 por turno. 🔇 Silenciado: não ataca nem recua no próximo turno (e não dá para silenciar a mesma carta dois turnos seguidos). 💘 Iludido: pode errar o ataque.'],
             ['Carta derrubada', 'O dono perde vida: comum 500, raro 750, épico 1.000, lendário 1.500.'],
+            ['Proteção', 'Com o ativo dele na mesa, o golpe no jogador entra só com 35% do dano.'],
+            ['Golpe extra', 'Derrubou uma carta? Você acerta o jogador de graça com o mesmo dano (inteiro).'],
+            ['De um golpe só', 'Derrubar uma carta de vida cheia num golpe só vira a sua carta até o seu próximo turno.'],
             ['Recarga', 'Macarronada a 300%, Vírgula-rangue, Bala Dourada e Ban de 7 Dias viram a carta para baixo até o próximo turno do dono: ela não ataca, não usa poder e não recua, mas pode levar golpe.'],
             ['Mesa vazia', 'Sem ninguém na mesa você não perde: todo ataque vai em você até baixar alguém, que entra direto como ativo.'],
             ['Jogar', 'Arraste as cartas: da mão para o banco, o campo para o meio da mesa, a Aura para uma carta, e o seu ativo até o ativo ou o rosto do adversário para atacar.'],
@@ -950,7 +953,13 @@
                 }
                 const jogada = { tipo: 'atacar', ataque: i, ...(alvos ? { alvo: '?' } : {}) };
                 const previsto = ele.ativo ? R.calcularDano(estado, EU, a, ele.ativo, { resultadoMoeda: true }) : 0;
-                add(a.nome, jogada, { ataque: a, alvos, previsto });
+                // No jogador o ativo dele segura 65% do golpe (só entra 35%).
+                const previstoJogador = R.calcularDano(estado, EU, a, R.JOGADOR, { resultadoMoeda: true });
+                // Se este golpe derruba o ativo dele, vem o golpe extra de graça no jogador (dano inteiro).
+                const vidaAtivo = ele.ativo ? R.hpMax(estado, ele.ativo) - ele.ativo.dano : 0;
+                const derrubaAtivo = !!ele.ativo && previsto >= vidaAtivo;
+                const previstoExtra = derrubaAtivo ? R.calcularDano(estado, EU, a, null, { resultadoMoeda: true }) : 0;
+                add(a.nome, jogada, { ataque: a, alvos, previsto, previstoJogador, previstoExtra });
             });
         }
         return acoes;
@@ -1022,9 +1031,12 @@
                 const botoes = el('div', 'bt-ataque-botoes');
                 if (podeAtivo) botoes.appendChild(botao('bt-botao bt-botao--forte', 'No ativo', () => { fecharPainel(); executar(jogAtivo); }));
                 if (podeCartas) botoes.appendChild(botao('bt-botao bt-botao--forte', puxa ? 'Escolher quem vem' : 'Nas outras cartas', () => escolherAtaque(acao)));
-                if (podeJogador) botoes.appendChild(botao('bt-botao bt-botao--forte', 'No jogador', () => { fecharPainel(); executar(jogJogador); }));
+                // No jogador: o dano com o ativo dele na mesa já entra com a proteção (35%).
+                if (podeJogador) botoes.appendChild(botao('bt-botao bt-botao--forte', `No jogador${acao.previstoJogador > 0 ? ` (${num(acao.previstoJogador)})` : ''}`, () => { fecharPainel(); executar(jogJogador); }));
                 if (botoes.children.length) box.appendChild(botoes);
                 else box.appendChild(el('span', 'bt-motivo', acao ? (acao.motivo || 'nenhum alvo agora') : 'não é a sua vez'));
+                // O golpe que derruba o ativo ainda acerta o jogador de graça, com o dano inteiro.
+                if (acao && acao.previstoExtra > 0) box.appendChild(el('span', 'bt-extra', `+ golpe extra de ${num(acao.previstoExtra)} no jogador`));
                 lista.appendChild(box);
             });
             info.appendChild(lista);
@@ -1819,7 +1831,10 @@
                 : `${quem(ev.jogador)} levou ${num(ev.valor)}.`); break;
             case 'cura': registrar(`${n(ev.uid)} curou ${num(ev.valor)}.`); break;
             case 'nocaute': registrar([icone(A('nocaute'), '💥'), ` ${nomeVisivel(ev.id)} caiu!`]); break;
-            case 'virada': registrar(`${n(ev.uid)} virou: recarga até o próximo turno.`); break;
+            case 'golpeExtra': registrar(`${n(ev.uid)} derrubou e ainda acertou o jogador: ${num(ev.valor)}.`); break;
+            case 'virada': registrar(ev.motivo === 'umGolpe'
+                ? `${n(ev.uid)} derrubou de um golpe só e virou (recarga).`
+                : `${n(ev.uid)} virou: recarga até o próximo turno.`); break;
             case 'estado': registrar(`${n(ev.uid)} ficou ${ESTADOS[ev.estado].nome}.`); break;
             case 'imune': registrar(`${n(ev.uid)} acabou de ser ${ESTADOS[ev.estado].nome.toLowerCase()} e não pode ser de novo agora.`); break;
             case 'troca': registrar(`${n(ev.entra)} entrou no lugar de ${n(ev.sai)}.`); break;
@@ -2462,6 +2477,11 @@
                 if (ev.valor >= 90) tremer(mesa.raiz, 10);
                 break;
             }
+            case 'golpeExtra':
+                // Derrubou a carta: acerta o jogador de graça. O danoJogador logo abaixo já desce a
+                // barra e mostra o número, então aqui só entra o aviso (nada de número duplicado).
+                await banner('GOLPE EXTRA!');
+                break;
             case 'danoJogador': {
                 // Golpe direto na vida: a barra desce e um "-1.200" sobe perto do rosto.
                 const lado = ev.jogador === EU ? mesa.eu : mesa.npc;

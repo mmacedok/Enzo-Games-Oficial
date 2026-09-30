@@ -653,6 +653,8 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 .bt-ataque--box:not(:disabled):hover { transform: none; background: #fff; }
 .bt-ataque-botoes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .bt-ataque-botoes .bt-botao { padding: 5px 12px; font-size: 0.92rem; }
+/* Aviso do golpe extra (derruba a carta e ainda acerta o jogador de graça). */
+.bt-extra { grid-column: 1 / -1; margin-top: 6px; font-size: 0.8rem; font-weight: 700; color: #1b5e20; }
 .bt-painel-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 @media (max-width: 520px) {
     .bt-painel { grid-template-columns: 1fr; }

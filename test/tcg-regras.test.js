@@ -222,7 +222,8 @@ test('nocaute: carta vai para o descarte, o dono perde vida pela raridade, dono 
     });
     const r = atacar(e, 1);
     let s = r.estado;
-    assert.equal(s.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.comum);
+    // A carta caiu: além do nocaute (vida pela raridade), vem um golpe extra de graça no dono.
+    assert.equal(s.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.comum - 120 * R.ESCALA);
     assert.equal(s.jogadores[1].ativo, null);
     assert.equal(s.jogadores[1].descarte.length, 1);
     assert.deepEqual(s.pendentes, [{ jogador: 1, tipo: 'novoAtivo' }]);
@@ -235,7 +236,7 @@ test('nocaute: carta vai para o descarte, o dono perde vida pela raridade, dono 
 
     // A raridade muda a vida que o dono perde: o lendário dói mais que o comum.
     const lend = mesa({ eu: { ativo: { id: 'enzo-games', aura: 3 } }, ele: { ativo: { id: 'superkid', dano: 20 * R.ESCALA }, banco: ['bug-do-discord'] } });
-    assert.equal(atacar(lend, 1).estado.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.lendario);
+    assert.equal(atacar(lend, 1).estado.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.lendario - 120 * R.ESCALA);
 });
 
 test('vitória: vida zerada encerra a partida; mesa vazia não é mais derrota', () => {
@@ -396,7 +397,8 @@ test('Enzo Games: Almôndega 30 e Macarronada a 300% 120', () => {
     assert.equal(atacar(e, 0).estado.jogadores[1].ativo.dano, 30 * R.ESCALA);
     const s = atacar(e, 1).estado;
     assert.equal(s.jogadores[1].ativo, null, 'Chorão tem 2200 HP: caiu com 2400');
-    assert.equal(s.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.epico);
+    // O Chorão caiu: nocaute épico (1000) + golpe extra de graça (2400 cheio, sem os 35%).
+    assert.equal(s.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.epico - 120 * R.ESCALA);
 });
 
 test('Cabo Côco: no ativo impede o adversário de jogar campo; Arquivo Confidencial cura 20', () => {
@@ -559,7 +561,8 @@ test('atacar o jogador tira vida mesmo com o ativo dele na mesa e não mexe no a
     const e = mesa({ eu: { ativo: { id: 'italolol', aura: 1 } }, ele: { ativo: 'chorao' } });
     const danoAntes = ELE(e).ativo.dano;
     const r = atacar(e, 0, { alvo: R.JOGADOR });
-    assert.equal(r.estado.jogadores[1].vida, R.VIDA_INICIAL - 20 * R.ESCALA);
+    // Com o ativo do rival na mesa o golpe entra só com 35% (o ativo protege o dono).
+    assert.equal(r.estado.jogadores[1].vida, R.VIDA_INICIAL - Math.floor(20 * R.ESCALA * R.PROTECAO_ATIVO));
     assert.equal(r.estado.jogadores[1].ativo.dano, danoAntes, 'o ativo dele ficou intacto');
     assert.ok(r.eventos.some((ev) => ev.tipo === 'danoJogador' && ev.fonte === 'ataque' && ev.jogador === 1));
 });
@@ -587,15 +590,15 @@ test('nocaute tira do dono a vida da raridade (comum e lendário)', () => {
     assert.equal(R.danoNocaute('superkid'), R.DANO_NOCAUTE.lendario);
     const comum = mesa({ eu: { ativo: { id: 'enzo-games', aura: 3 } }, ele: { ativo: 'drone-vigia', banco: ['bug-do-discord'] } });
     const rc = atacar(comum, 1).estado;
-    assert.equal(rc.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.comum);
+    assert.equal(rc.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.comum - 120 * R.ESCALA);
     const lend = mesa({ eu: { ativo: { id: 'enzo-games', aura: 3 } }, ele: { ativo: { id: 'superkid', dano: 100 * R.ESCALA }, banco: ['bug-do-discord'] } });
     const rl = atacar(lend, 1).estado;
-    assert.equal(rl.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.lendario);
+    assert.equal(rl.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.lendario - 120 * R.ESCALA);
 });
 
 test('vida zerada por golpe direto: fim, motivo vida, vencedor certo', () => {
-    const e = mesa({ eu: { ativo: { id: 'marreteiro-do-coracao', aura: 3 } }, ele: { vida: 90 * R.ESCALA, ativo: 'chorao' } });
-    const r = atacar(e, 1, { alvo: R.JOGADOR });   // Marretada 1800 = 1800 de vida
+    const e = mesa({ eu: { ativo: { id: 'marreteiro-do-coracao', aura: 3 } }, ele: { vida: Math.floor(90 * R.ESCALA * R.PROTECAO_ATIVO), ativo: 'chorao' } });
+    const r = atacar(e, 1, { alvo: R.JOGADOR });   // Marretada 1800, mas o Chorão na mesa segura 65%: entra 630
     assert.equal(r.estado.fase, 'fim');
     assert.equal(r.estado.vencedor, 0);
     assert.equal(r.estado.motivo, 'vida');
@@ -706,6 +709,96 @@ test('estado no golpe no jogador (Notificado do Teemo) não pega em ninguém', (
     assert.ok(r.eventos.some((ev) => ev.tipo === 'danoJogador' && ev.fonte === 'ataque' && ev.jogador === 1));
     assert.ok(!r.eventos.some((ev) => ev.tipo === 'estado'), 'nenhum estado é aplicado no golpe no jogador');
     assert.equal(r.estado.jogadores[1].ativo.estados.notificado, false);
+});
+
+// ---- Proteção do ativo, golpe extra e virada por derrubar de um golpe -----------
+test('golpe no jogador: ativo na mesa segura 35% (floor); mesa vazia entra 100%', () => {
+    const comAtivo = mesa({ eu: { ativo: { id: 'italolol', aura: 1 } }, ele: { ativo: 'drone-vigia' } });
+    const r1 = atacar(comAtivo, 0, { alvo: R.JOGADOR });
+    assert.equal(r1.estado.jogadores[1].vida, R.VIDA_INICIAL - Math.floor(20 * R.ESCALA * R.PROTECAO_ATIVO));
+
+    const semAtivo = mesa({ eu: { ativo: { id: 'italolol', aura: 1 } }, ele: { ativo: null } });
+    const r2 = atacar(semAtivo, 0, { alvo: R.JOGADOR });
+    assert.equal(r2.estado.jogadores[1].vida, R.VIDA_INICIAL - 20 * R.ESCALA);
+});
+
+test('derrubar o ativo dá golpe extra com o dano cheio no jogador (mais o nocaute da raridade)', () => {
+    const e = mesa({ eu: { ativo: { id: 'enzo-games', aura: 3 } }, ele: { ativo: 'drone-vigia', banco: ['bug-do-discord'] } });
+    const r = atacar(e, 1);
+    assert.ok(r.eventos.some((ev) => ev.tipo === 'golpeExtra' && ev.jogador === 0 && ev.valor === 120 * R.ESCALA));
+    assert.ok(r.eventos.some((ev) => ev.tipo === 'danoJogador' && ev.fonte === 'golpeExtra' && ev.jogador === 1 && ev.valor === 120 * R.ESCALA));
+    assert.equal(r.estado.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.comum - 120 * R.ESCALA);
+});
+
+test('derrubar do banco (Vírgula-rangue e Bala Dourada) também dá golpe extra', () => {
+    const degustador = mesa({ eu: { ativo: { id: 'degustador-da-noite', aura: 3 } },
+        ele: { ativo: 'chorao', banco: [{ id: 'drone-vigia', dano: 40 * R.ESCALA }] } });
+    const rd = atacar(degustador, 0, { alvo: ELE(degustador).banco[0].uid });
+    assert.ok(rd.eventos.some((ev) => ev.tipo === 'golpeExtra' && ev.valor === 20 * R.ESCALA));
+    assert.equal(rd.estado.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.comum - 20 * R.ESCALA);
+
+    const inominavel = mesa({ eu: { ativo: { id: 'o-inominavel', aura: 3 } },
+        ele: { ativo: 'chorao', banco: ['notificacao-morcego'] } });
+    const ri = atacar(inominavel, 0, { alvo: ELE(inominavel).banco[0].uid });
+    assert.ok(ri.eventos.some((ev) => ev.tipo === 'golpeExtra' && ev.valor === 60 * R.ESCALA));
+    assert.equal(ri.estado.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.comum - 60 * R.ESCALA);
+});
+
+test('nocaute por veneno ou por contra-ataque do Chorão não dá golpe extra', () => {
+    const veneno = mesa({ eu: { ativo: { id: 'notificacao-morcego', dano: 30 * R.ESCALA, estados: { notificado: true } } } });
+    const rv = jogar(veneno, { tipo: 'passar' });
+    assert.ok(rv.eventos.some((ev) => ev.tipo === 'nocaute' && ev.jogador === 0));
+    assert.ok(!rv.eventos.some((ev) => ev.tipo === 'golpeExtra'), 'veneno não dá golpe extra');
+
+    const contra = mesa({ eu: { ativo: { id: 'notificacao-morcego', aura: 1, dano: 30 * R.ESCALA } }, ele: { ativo: 'chorao' } });
+    const rc = atacar(contra, 0);
+    assert.ok(rc.eventos.some((ev) => ev.tipo === 'nocaute' && ev.jogador === 0), 'o atacante caiu pelo contra-ataque');
+    assert.ok(!rc.eventos.some((ev) => ev.tipo === 'golpeExtra'), 'contra-ataque não dá golpe extra');
+});
+
+test('derrubar carta machucada não vira; derrubar de vida cheia vira (umGolpe) e prende o próximo turno', () => {
+    // Já machucada: cai, mas não conta como "de um golpe só".
+    const machucada = mesa({ eu: { ativo: { id: 'marreteiro-do-coracao', aura: 3 } },
+        ele: { ativo: { id: 'chorao', dano: 40 * R.ESCALA }, banco: ['bug-do-discord'] } });
+    const rm = atacar(machucada, 1);
+    assert.equal(rm.estado.jogadores[1].ativo, null);
+    assert.ok(!rm.eventos.some((ev) => ev.tipo === 'virada' && ev.motivo === 'umGolpe'));
+    assert.equal(rm.estado.jogadores[0].ativo.estados.virada || 0, 0);
+
+    // Vida cheia: cai de um golpe, vira até o segundo turno do dono.
+    const cheia = mesa({ turno: 5, vez: 0,
+        eu: { ativo: { id: 'marreteiro-do-coracao', aura: 3 }, banco: ['bug-do-discord'] },
+        ele: { ativo: 'drone-vigia', banco: ['bug-do-discord'] } });
+    const rch = atacar(cheia, 1);
+    assert.ok(rch.eventos.some((ev) => ev.tipo === 'virada' && ev.motivo === 'umGolpe' && ev.uid === rch.estado.jogadores[0].ativo.uid));
+    assert.equal(rch.estado.jogadores[0].ativo.estados.virada, 7);
+    let s = rch.estado;
+    s = R.aplicar(s, { tipo: 'novoAtivo', jogador: 1, uid: s.jogadores[1].banco[0].uid }).estado;
+    assert.equal(s.turno, 6);
+    s = R.aplicar(s, { tipo: 'passar', jogador: 1 }).estado;
+    assert.equal(s.turno, 7);
+    assert.equal(s.vez, 0);
+    invalida(() => R.aplicar(s, { tipo: 'atacar', jogador: 0, ataque: 1 }), 'virada');
+});
+
+test('derrubar de um golpe com Macarronada (que já tem recarga) gera só um evento virada', () => {
+    const e = mesa({ turno: 5, vez: 0, eu: { ativo: { id: 'enzo-games', aura: 3 } }, ele: { ativo: 'drone-vigia', banco: ['bug-do-discord'] } });
+    const r = atacar(e, 1);
+    const viradas = r.eventos.filter((ev) => ev.tipo === 'virada');
+    assert.equal(viradas.length, 1, 'a recarga já virou: não duplica o evento');
+    assert.ok(!viradas.some((ev) => ev.motivo === 'umGolpe'));
+    assert.equal(r.estado.jogadores[0].ativo.estados.virada, 7);
+});
+
+test('golpe extra que zera a vida encerra a partida com motivo vida', () => {
+    const e = mesa({ eu: { ativo: { id: 'enzo-games', aura: 3 } },
+        ele: { vida: 120 * R.ESCALA, ativo: 'drone-vigia', banco: ['bug-do-discord'] } });
+    const r = atacar(e, 1);
+    assert.ok(r.eventos.some((ev) => ev.tipo === 'danoJogador' && ev.fonte === 'golpeExtra' && ev.jogador === 1));
+    assert.equal(r.estado.fase, 'fim');
+    assert.equal(r.estado.motivo, 'vida');
+    assert.equal(r.estado.vencedor, 0);
+    assert.equal(r.estado.jogadores[1].vida, 0);
 });
 
 // ---- Visão, repetição e robô ---------------------------------------------------
