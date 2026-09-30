@@ -1217,6 +1217,125 @@
       }
     ]
   },
+  "assets/Batalha/sala-cabecalho.png": {
+    "width": 900,
+    "height": 160,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/3085798d599e887f-640.webp",
+        "bytes": 29268
+      },
+      {
+        "width": 900,
+        "src": "assets/web/3085798d599e887f-900.webp",
+        "bytes": 53958
+      }
+    ]
+  },
+  "assets/Batalha/sala-caixa.png": {
+    "width": 900,
+    "height": 900,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/fe5b8aeab6cd953c-640.webp",
+        "bytes": 104498
+      },
+      {
+        "width": 900,
+        "src": "assets/web/fe5b8aeab6cd953c-900.webp",
+        "bytes": 206248
+      }
+    ]
+  },
+  "assets/Batalha/sala-espera.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/34253059368d1b61-512.webp",
+        "bytes": 71672
+      }
+    ]
+  },
+  "assets/Batalha/sala-fundo.png": {
+    "width": 1920,
+    "height": 1080,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5fa24503a742d2ce-640.webp",
+        "bytes": 79060
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/5fa24503a742d2ce-1280.webp",
+        "bytes": 293410
+      },
+      {
+        "width": 1920,
+        "src": "assets/web/5fa24503a742d2ce-1920.webp",
+        "bytes": 513770
+      }
+    ]
+  },
+  "assets/Batalha/sala-icone-assistir.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/a52ad05f521031e5-256.webp",
+        "bytes": 19454
+      }
+    ]
+  },
+  "assets/Batalha/sala-icone-criar.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/97d1a53e8748869f-256.webp",
+        "bytes": 22614
+      }
+    ]
+  },
+  "assets/Batalha/sala-icone-lista.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/c6bb8976e4c4a66a-256.webp",
+        "bytes": 23082
+      }
+    ]
+  },
+  "assets/Batalha/sala-vazia.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/5353f09a475bf7b1-512.webp",
+        "bytes": 95710
+      }
+    ]
+  },
+  "assets/Batalha/sala-vs.png": {
+    "width": 256,
+    "height": 128,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/ad01dcfefd3c8d16-256.webp",
+        "bytes": 14878
+      }
+    ]
+  },
   "assets/Batalha/tag-recuo.png": {
     "width": 256,
     "height": 256,
@@ -3390,6 +3509,55 @@
         "width": 896,
         "src": "assets/web/4ae68f14c9baef08-896.webp",
         "bytes": 53380
+      }
+    ]
+  },
+  "assets/fliperama-3d/frente.jpg": {
+    "width": 512,
+    "height": 768,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/2c47d47699e3d392-512.webp",
+        "bytes": 69692
+      }
+    ]
+  },
+  "assets/fliperama-3d/lateral.jpg": {
+    "width": 512,
+    "height": 768,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/15200fe42f332e75-512.webp",
+        "bytes": 159518
+      }
+    ]
+  },
+  "assets/fliperama-3d/letreiro.jpg": {
+    "width": 1024,
+    "height": 256,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/65ed042dc38ebc02-640.webp",
+        "bytes": 16462
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/65ed042dc38ebc02-1024.webp",
+        "bytes": 29436
+      }
+    ]
+  },
+  "assets/fliperama-3d/tela.jpg": {
+    "width": 640,
+    "height": 480,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/391d7527e974c4f4-640.webp",
+        "bytes": 118878
       }
     ]
   },
