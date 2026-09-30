@@ -217,6 +217,9 @@ html, body { background: #000; }
 }
 #boot::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, .35) 2px 3px); pointer-events: none; }
 #boot.boot--sai { opacity: 0; pointer-events: none; }
+#boot { white-space: normal; }
+#boot .boot-linha { display: flex; align-items: baseline; gap: 8px; min-height: 1.55em; }
+#boot .boot-enche { flex: 1; min-width: 12px; border-bottom: 1px dotted var(--verde-apagado); transform: translateY(-3px); }
 #boot .boot-ok { color: var(--ciano); }
 #boot .boot-no { color: var(--magenta); }
 #boot .boot-dica { position: absolute; right: 16px; bottom: 12px; color: var(--verde-apagado); font-size: 11px; }
@@ -340,7 +343,7 @@ html, body { background: #000; }
 
 .feed { display: grid; gap: 1px; max-height: 250px; overflow-y: auto; scrollbar-width: none; }
 .feed-linha {
-    display: grid; grid-template-columns: 7ch 9ch 7ch minmax(0, 1fr); gap: 0 8px; align-items: baseline;
+    display: grid; grid-template-columns: 9ch 11ch minmax(0, 1fr); gap: 0 8px; align-items: baseline;
     font: inherit; font-size: 11px; text-align: left; color: var(--verde); background: none; border: 0; border-left: 2px solid transparent;
     padding: 2px 4px; cursor: pointer; white-space: nowrap; text-shadow: none;
 }
@@ -357,7 +360,7 @@ html, body { background: #000; }
 /* ------------------------------------------------------------ celular */
 @media (max-width: 760px) {
     #chuva { opacity: .26; }
-    .fita { font-size: 10px; }
+    .fita { display: none; } /* a tela do celular é curta: a fita de telemetria fica só no desktop */
     .barra-luzes { display: none; }
     .barra-titulo { letter-spacing: .08em; }
     .dashboard-grupo { background-size: 10px 2px, 2px 10px, 10px 2px, 2px 10px, 10px 2px, 2px 10px, 10px 2px, 2px 10px, auto; }
@@ -365,6 +368,19 @@ html, body { background: #000; }
     .l--titulo { padding-left: 8px; }
     .corpo::after { height: 90px; top: -90px; }
     #boot { font-size: 11px; padding: 16px 14px; }
+    /* alvos de toque de pelo menos ~36 px */
+    .caixa { padding: 9px 12px 9px 0; }
+    .secao > summary { padding: 10px 0; }
+    .grade { grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 4px; }
+    .grade button { min-height: 34px; font-size: 13px; }
+    .feed-linha { padding: 7px 4px; }
+    .dashboard-acao { min-height: 36px; }
+    .atalhos .cmd { min-height: 36px; }
+    .cmd--link { padding: 8px 2px; }
+    .tabela { align-items: center; }
+    .tabela .cmd { padding: 8px 4px; }
+    .tabela .cmd--link { padding: 6px 0; }
+    .jan-tit { padding: 6px 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

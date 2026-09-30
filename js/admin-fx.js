@@ -30,7 +30,7 @@
             canvas.width = largura * d;
             canvas.height = altura * d;
             ctx.setTransform(d, 0, 0, d, 0, 0);
-            tam = largura < 760 ? 14 : 16;
+            tam = largura < 760 ? 18 : 16; // celular: menos colunas
             ctx.font = `${tam}px monospace`;
             gotas = Array.from({ length: Math.ceil(largura / tam) }, () => -Math.random() * (altura / tam));
         }
@@ -40,7 +40,8 @@
         let ultimo = 0;
         function quadro(agora) {
             requestAnimationFrame(quadro);
-            if (agora - ultimo < 55) return; // ~18 quadros por segundo: visual de terminal, pouca CPU
+            // ~18 quadros por segundo (celular: ~11): visual de terminal, pouca CPU e bateria
+            if (agora - ultimo < (largura < 760 ? 90 : 55)) return;
             ultimo = agora;
             // apaga um pouco do que já está (deixa o rastro) sem pintar de preto
             ctx.globalCompositeOperation = 'destination-out';
@@ -90,12 +91,12 @@
         document.body.appendChild(tela);
         const roteiro = [
             ['ENZO-OS 3.1 // kernel 6.6.0-macarronada', 60],
-            ['montando /dev/torados ........................ ', 'OK'],
-            ['carregando módulos: degustador, superkid, torado . ', 'OK'],
-            ['handshake TLS 1.3 com enzo-net ............... ', 'OK'],
-            ['procurando IPs intrusos ....................... ', 'OK'],
-            ['censura do Cabo Côco .......................... ', 'NEGADO'],
-            ['elevando privilégios para ROOT ............... ', 'OK'],
+            ['montando /dev/torados', 'OK'],
+            ['carregando módulos da saga', 'OK'],
+            ['handshake TLS 1.3 com enzo-net', 'OK'],
+            ['procurando IPs intrusos', 'OK'],
+            ['censura do Cabo Côco', 'NEGADO'],
+            ['elevando privilégios para ROOT', 'OK'],
             ['', 120],
             ['>> ACESSO CONCEDIDO. BEM-VINDO, OPERADOR.', 200],
         ];
@@ -116,8 +117,15 @@
             if (i >= roteiro.length) { setTimeout(sair, 450); return; }
             const [texto, extra] = roteiro[i++];
             const linha = document.createElement('div');
-            linha.textContent = texto;
+            linha.className = 'boot-linha';
+            const rotulo = document.createElement('span');
+            rotulo.textContent = texto;
+            linha.append(rotulo);
             if (typeof extra === 'string') {
+                // pontilhado que enche o espaço até o [ OK ]: não quebra de linha em tela estreita
+                const enche = document.createElement('span');
+                enche.className = 'boot-enche';
+                linha.append(enche);
                 const marca = document.createElement('span');
                 marca.className = extra === 'OK' ? 'boot-ok' : 'boot-no';
                 marca.textContent = `[ ${extra} ]`;

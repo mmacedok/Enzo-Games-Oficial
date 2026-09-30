@@ -302,7 +302,7 @@
             if (parado) return;
             if (!raiz.isConnected) { parar(); return; }
             requestAnimationFrame(quadro);
-            if (document.hidden || t - ultimo < 40) return;
+            if (document.hidden || t - ultimo < (window.innerWidth < 760 ? 70 : 40)) return; // celular: menos quadros, menos bateria
             ultimo = t;
             desenharRadar(t);
             desenharTrafego(t);
