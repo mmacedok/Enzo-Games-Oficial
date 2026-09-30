@@ -77,6 +77,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Capítulo 6 refeito:** as 5 páginas novas (de `Enzo Games Shit/CAP6`) no lugar das antigas (apagadas, com os webp antigos) e a tarja de censura do capítulo 6 removida do `data/comics.manifest.json` (a do capítulo 5 continua).
 - 2026-09-30: **Descrição das 24 cartas:** a frase de cada carta agora aparece entre parênteses e, abaixo (carta grande do Baralho e painel da Batalha), o que a carta faz no TCG (campo `tcg` em `js/baralho-dados.js`; vida, custo e dano ×20 como no jogo). Um teste (`test/tcg-regras.test.js`) confere o texto contra `js/tcg-cartas.js`: mudou balanceamento, atualize o texto.
 - 2026-09-30: **Baralho, "Abrir de uma vez ⚡"** na abertura: o pacote brilha branco, explode num clarão
   e vai direto para a mesa final com todas as cartas (a pilha continua clicando no pacote).

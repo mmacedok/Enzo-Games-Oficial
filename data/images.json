@@ -1546,97 +1546,82 @@
     ]
   },
   "assets/Capitulo 6/Paginas/PAG1.png": {
-    "width": 768,
-    "height": 1376,
+    "width": 937,
+    "height": 1679,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/826a25cc11a3b3af-640.webp",
-        "bytes": 202522
+        "src": "assets/web/350f1cb1d525f616-640.webp",
+        "bytes": 225066
       },
       {
-        "width": 768,
-        "src": "assets/web/826a25cc11a3b3af-768.webp",
-        "bytes": 266496
+        "width": 937,
+        "src": "assets/web/350f1cb1d525f616-937.webp",
+        "bytes": 381618
       }
     ]
   },
   "assets/Capitulo 6/Paginas/PAG2.png": {
-    "width": 1080,
-    "height": 1920,
+    "width": 941,
+    "height": 1672,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/3fb247fb5bc6bacb-640.webp",
-        "bytes": 167464
+        "src": "assets/web/bbe8a6b6a2b4c4a0-640.webp",
+        "bytes": 209286
       },
       {
-        "width": 1080,
-        "src": "assets/web/3fb247fb5bc6bacb-1080.webp",
-        "bytes": 306248
+        "width": 941,
+        "src": "assets/web/bbe8a6b6a2b4c4a0-941.webp",
+        "bytes": 348792
       }
     ]
   },
   "assets/Capitulo 6/Paginas/PAG3.png": {
-    "width": 1750,
-    "height": 2432,
+    "width": 1064,
+    "height": 1478,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/08199e3d3e94e7ab-640.webp",
-        "bytes": 144236
+        "src": "assets/web/138a6365e4cb8c3f-640.webp",
+        "bytes": 163562
       },
       {
-        "width": 1280,
-        "src": "assets/web/08199e3d3e94e7ab-1280.webp",
-        "bytes": 361216
-      },
-      {
-        "width": 1750,
-        "src": "assets/web/08199e3d3e94e7ab-1750.webp",
-        "bytes": 528686
+        "width": 1064,
+        "src": "assets/web/138a6365e4cb8c3f-1064.webp",
+        "bytes": 338062
       }
     ]
   },
   "assets/Capitulo 6/Paginas/PAG4.png": {
-    "width": 1750,
-    "height": 2432,
+    "width": 1064,
+    "height": 1478,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/dd9e6d41b282f436-640.webp",
-        "bytes": 152042
+        "src": "assets/web/4650ccaead509469-640.webp",
+        "bytes": 176870
       },
       {
-        "width": 1280,
-        "src": "assets/web/dd9e6d41b282f436-1280.webp",
-        "bytes": 406800
-      },
-      {
-        "width": 1750,
-        "src": "assets/web/dd9e6d41b282f436-1750.webp",
-        "bytes": 606140
+        "width": 1064,
+        "src": "assets/web/4650ccaead509469-1064.webp",
+        "bytes": 368652
       }
     ]
   },
   "assets/Capitulo 6/Paginas/PAG5.png": {
-    "width": 1696,
-    "height": 2528,
+    "width": 1027,
+    "height": 1531,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/f535e7ba25b61751-640.webp",
-        "bytes": 157724
+        "src": "assets/web/ae4047ba5ed4674b-640.webp",
+        "bytes": 164712
       },
       {
-        "width": 1280,
-        "src": "assets/web/f535e7ba25b61751-1280.webp",
-        "bytes": 403716
-      },
-      {
-        "width": 1696,
-        "src": "assets/web/f535e7ba25b61751-1696.webp",
-        "bytes": 574934
+        "width": 1027,
+        "src": "assets/web/ae4047ba5ed4674b-1027.webp",
+        "bytes": 307898
       }
     ]
   },
