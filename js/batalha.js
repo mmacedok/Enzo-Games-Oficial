@@ -2428,7 +2428,8 @@
             case 'campoSai': registrar(`O campo ${nomeVisivel(ev.id)} saiu da mesa.`); break;
             case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${ev.alvo === R.JOGADOR ? quem(1 - ev.jogador) : n(ev.alvo)}.`); break;
             case 'dano': registrar(`${n(ev.uid)} levou ${num(ev.valor)}${ev.fonte === 'notificado' ? ' (Notificado)' : ''}.`); break;
-            case 'danoJogador': registrar(ev.fonte === 'nocaute'
+            // o golpe extra já tem a própria linha ("derrubou e ainda acertou o jogador"): não repete o número
+            case 'danoJogador': if (ev.fonte === 'golpeExtra') break; registrar(ev.fonte === 'nocaute'
                 ? `${quem(ev.jogador)} perdeu ${num(ev.valor)} de vida pela carta derrubada.`
                 : `${quem(ev.jogador)} levou ${num(ev.valor)}.`); break;
             case 'cura': registrar(`${n(ev.uid)} curou ${num(ev.valor)}.`); break;
@@ -2436,6 +2437,7 @@
             case 'golpeExtra': registrar(`${n(ev.uid)} derrubou e ainda acertou o jogador: ${num(ev.valor)}.`); break;
             case 'virada': registrar(ev.motivo === 'umGolpe'
                 ? `${n(ev.uid)} derrubou de um golpe só e virou (recarga).`
+                : ev.motivo === 'derrubou' ? `${n(ev.uid)} derrubou a carta e virou (recarga).`
                 : `${n(ev.uid)} virou: recarga até o próximo turno.`); break;
             case 'estado': registrar(`${n(ev.uid)} ficou ${ESTADOS[ev.estado].nome}.`); break;
             case 'imune': registrar(`${n(ev.uid)} acabou de ser ${ESTADOS[ev.estado].nome.toLowerCase()} e não pode ser de novo agora.`); break;
