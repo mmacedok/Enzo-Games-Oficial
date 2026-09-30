@@ -298,6 +298,62 @@ html, body { background: #000; }
 .aviso, .l--aviso { color: var(--ambar); }
 .erro, .l--erro { color: var(--vermelho); }
 
+
+/* ------------------------------------------------------------ painel de guerra (js/admin-deck.js) */
+.deck { display: none; min-width: 0; }
+@media (min-width: 1180px) {
+    .corpo { grid-template-columns: 240px minmax(0, 1fr) 380px; }
+    .deck { display: flex; flex-direction: column; gap: 10px; padding: 10px; overflow-y: auto; background: var(--vidro); border-left: 1px solid rgba(255, 138, 61, .25); scrollbar-width: none; }
+}
+.deck--tela { display: flex; flex-direction: column; gap: 10px; margin: 8px 0; max-width: 560px; }
+.jan {
+    --j: var(--ciano);
+    position: relative; flex: none;
+    border: 1px solid color-mix(in srgb, var(--j) 20%, transparent);
+    background:
+        linear-gradient(var(--j), var(--j)) top left / 12px 2px no-repeat,
+        linear-gradient(var(--j), var(--j)) top left / 2px 12px no-repeat,
+        linear-gradient(var(--j), var(--j)) top right / 12px 2px no-repeat,
+        linear-gradient(var(--j), var(--j)) top right / 2px 12px no-repeat,
+        linear-gradient(var(--j), var(--j)) bottom left / 12px 2px no-repeat,
+        linear-gradient(var(--j), var(--j)) bottom left / 2px 12px no-repeat,
+        linear-gradient(var(--j), var(--j)) bottom right / 12px 2px no-repeat,
+        linear-gradient(var(--j), var(--j)) bottom right / 2px 12px no-repeat,
+        rgba(0, 10, 7, .8);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--j) 12%, transparent);
+}
+.jan-tit {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 4px 10px; font-size: 10px; letter-spacing: .2em; font-weight: 600;
+    color: var(--j); text-shadow: 0 0 8px color-mix(in srgb, var(--j) 60%, transparent);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--j) 20%, transparent), transparent 80%);
+    border-bottom: 1px solid color-mix(in srgb, var(--j) 35%, transparent);
+}
+.jan-nome::before { content: '▌'; margin-right: 6px; }
+.jan-luz { width: 7px; height: 7px; border-radius: 50%; background: var(--j); box-shadow: 0 0 8px var(--j); animation: pisca 1.3s infinite; }
+.jan-corpo { padding: 6px; }
+.jan-canvas { display: block; width: 100%; height: 170px; }
+.jan-canvas--baixo { height: 130px; }
+.jan-chips { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 4px 4px 0; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--verde-apagado); }
+.chip b { color: var(--c); font: 18px/1 var(--retro); text-shadow: 0 0 8px var(--c); margin-right: 2px; }
+.jan-vazio { margin: 6px; color: var(--verde-apagado); font-size: 11px; }
+
+.feed { display: grid; gap: 1px; max-height: 250px; overflow-y: auto; scrollbar-width: none; }
+.feed-linha {
+    display: grid; grid-template-columns: 7ch 9ch 7ch minmax(0, 1fr); gap: 0 8px; align-items: baseline;
+    font: inherit; font-size: 11px; text-align: left; color: var(--verde); background: none; border: 0; border-left: 2px solid transparent;
+    padding: 2px 4px; cursor: pointer; white-space: nowrap; text-shadow: none;
+}
+.feed-linha:hover { background: rgba(255, 138, 61, .12); border-left-color: var(--laranja); }
+.feed-linha--novo { animation: novo 2.4s ease-out; }
+@keyframes novo { 0% { background: rgba(255, 138, 61, .55); border-left-color: var(--laranja); } 100% { background: transparent; } }
+.f-hora { color: var(--violeta); }
+.f-quem { color: var(--magenta); overflow: hidden; text-overflow: ellipsis; }
+.f-anon { color: var(--verde-apagado); }
+.f-ip { grid-column: 1 / 3; color: var(--laranja); }
+.f-onde { grid-column: 3 / -1; color: var(--ciano); overflow: hidden; text-overflow: ellipsis; opacity: .85; }
+.hexdump { margin: 0; font: 10px/1.35 var(--mono); color: var(--azul); text-shadow: 0 0 6px rgba(90, 168, 255, .4); white-space: pre; overflow: hidden; }
+
 /* ------------------------------------------------------------ celular */
 @media (max-width: 760px) {
     #chuva { opacity: .26; }

@@ -37,12 +37,14 @@ const SP = { 'cf-connecting-ip': '200.9.9.9', 'cf-ipcountry': 'BR', 'cf-region':
 
 test('A1: origemDe lê IP e lugar dos cabeçalhos da Cloudflare (e decodifica)', () => {
     const o = origemDe(new Request('http://x/', { headers: SP }));
-    assert.deepEqual(o, { ip: '200.9.9.9', pais: 'BR', estado: 'São Paulo', cidade: 'São Paulo', operadora: null });
-    assert.deepEqual(origemDe(new Request('http://x/')), { ip: null, pais: null, estado: null, cidade: null, operadora: null });
+    assert.deepEqual(o, { ip: '200.9.9.9', pais: 'BR', estado: 'São Paulo', cidade: 'São Paulo', operadora: null, lat: null, lon: null });
+    assert.deepEqual(origemDe(new Request('http://x/')), { ip: null, pais: null, estado: null, cidade: null, operadora: null, lat: null, lon: null });
     const comCf = new Request('http://x/', { headers: SP });
-    comCf.cf = { asOrganization: 'Claro S.A.', city: 'Fortaleza' };
+    comCf.cf = { asOrganization: 'Claro S.A.', city: 'Fortaleza', latitude: '-3.7319', longitude: '-38.5267' };
     assert.equal(origemDe(comCf).operadora, 'Claro S.A.');
     assert.equal(origemDe(comCf).cidade, 'Fortaleza');
+    assert.equal(origemDe(comCf).lat, -3.73);
+    assert.equal(origemDe(comCf).lon, -38.53);
 });
 
 test('A2: login e ações sensíveis gravam IP e lugar; leitura comum não', async () => {
@@ -139,4 +141,21 @@ test('A6: visitante sem login é registrado (1 por IP a cada 30 min) e o admin f
     relogio.agora += 31 * 60 * 1000;
     await v1('POST', '/api/visita', { pagina: '/index.html' });
     assert.equal((await chefe('GET', '/api/admin/acessos?anonimo=1')).dados.acessos.length, 3);
+});
+
+test('A7: radar devolve tráfego por hora, pontos do mapa e eventos recentes (só admin)', async () => {
+    const { db, navegador } = montar();
+    const chefe = navegador(SP);
+    await login(chefe, 'chefe', 'Chefe');
+    await navegador(BH)('POST', '/api/visita', { pagina: '/' });
+    await db.query("UPDATE acessos SET lat = -19.92, lon = -43.94 WHERE evento = 'visitante'");
+    assert.equal((await navegador(BH)('GET', '/api/admin/acessos/radar')).status, 404);
+    const r = (await chefe('GET', '/api/admin/acessos/radar')).dados;
+    assert.equal(r.horas.length, 24);
+    assert.equal(r.horas.reduce((s, h) => s + h.total, 0), 2);
+    assert.equal(r.horas.reduce((s, h) => s + h.semLogin, 0), 1);
+    assert.equal(r.pontos.length, 1);
+    assert.deepEqual([r.pontos[0].lat, r.pontos[0].lon, r.pontos[0].n], [-19.92, -43.94, 1]);
+    assert.equal(r.recentes.length, 2);
+    assert.deepEqual(r.totais, { acessos: 2, ips: 2, semLogin: 1 });
 });

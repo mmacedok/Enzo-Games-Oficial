@@ -94,6 +94,9 @@ module.exports = [
     )`,
     // Operadora do IP (ex.: Claro, Vivo); coluna acrescentada depois da tabela já estar no ar.
     'ALTER TABLE acessos ADD COLUMN IF NOT EXISTS operadora TEXT',
+    // Coordenadas aproximadas do IP (mapa-radar do terminal admin).
+    'ALTER TABLE acessos ADD COLUMN IF NOT EXISTS lat REAL',
+    'ALTER TABLE acessos ADD COLUMN IF NOT EXISTS lon REAL',
     'CREATE INDEX IF NOT EXISTS idx_acessos_user ON acessos(user_id, created_at)',
     'CREATE INDEX IF NOT EXISTS idx_acessos_ip ON acessos(ip, created_at)',
     'CREATE INDEX IF NOT EXISTS idx_acessos_created ON acessos(created_at)',

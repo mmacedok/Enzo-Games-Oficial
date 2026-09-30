@@ -897,6 +897,17 @@
                 else pedirConfirmacao(`apagar a partida ${args[0]} (${jogo(s.gameId)}, ${s.score} pts de ${primeiroNome(s.name)})?`, apagar);
             },
         },
+        radar: {
+            desc: 'painel ao vivo: mapa dos acessos, tráfego 24h, feed e memória',
+            fn() {
+                novaTela('radar', [['radar', null]]);
+                const caixa = el('div', 'deck deck--tela');
+                imprimir(caixa);
+                if (window.EnzoDeck) window.EnzoDeck.montar(caixa, { compacto: true });
+                else apagado('painel indisponível (js/admin-deck.js não carregou).');
+                apagado('atualiza sozinho a cada 15 s · clique numa linha do feed para investigar o IP.');
+            },
+        },
         ips: {
             desc: 'de onde vieram os acessos: lugares, IPs repartidos entre contas e os mais recentes',
             async fn() {
@@ -982,6 +993,8 @@
         clear: { desc: 'volta ao início', fn: () => COMANDOS.status.fn() },
         exit: { desc: 'volta para o site', fn() { location.href = 'index.html'; } },
     };
+    // o painel ao vivo (js/admin-deck.js) roda comandos por aqui
+    window.EnzoAdmin = { rodar: (comando) => rodar(comando) };
     const APELIDOS = { ls: 'users', cd: 'open', '?': 'help', cls: 'clear', quit: 'exit', sair: 'exit', ajuda: 'help' };
 
     function mostrarLog(log) {

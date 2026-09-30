@@ -46,6 +46,12 @@ const limpo = (v, max) => {
     return t || null;
 };
 
+/** Coordenada com 2 casas (~1 km) ou null se não for número dentro do limite. */
+function coordenada(valor, max) {
+    const n = Number.parseFloat(valor);
+    return Number.isFinite(n) && Math.abs(n) <= max ? Math.round(n * 100) / 100 : null;
+}
+
 /** IP, lugar e operadora (cf.asOrganization) de quem fez a requisição. Campos ausentes voltam null. */
 function origemDe(request) {
     const h = request.headers;
@@ -59,6 +65,8 @@ function origemDe(request) {
         estado: limpo(cf.region || (h.get('cf-region') && decodificar(h.get('cf-region'))), 80),
         cidade: limpo(cf.city || (h.get('cf-ipcity') && decodificar(h.get('cf-ipcity'))), 80),
         operadora: limpo(cf.asOrganization, 80),
+        lat: coordenada(cf.latitude ?? h.get('cf-iplatitude'), 90),
+        lon: coordenada(cf.longitude ?? h.get('cf-iplongitude'), 180),
     };
 }
 
@@ -74,8 +82,8 @@ async function gravar(ctx, evento, userId) {
     const o = origemDe(ctx.request);
     const agora = ctx.agora();
     await ctx.db.query(
-        `INSERT INTO acessos (id, user_id, ip, pais, estado, cidade, operadora, evento, pagina, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-        [crypto.randomUUID(), userId, o.ip, o.pais, o.estado, o.cidade, o.operadora, evento, ctx.acessoPagina ?? null, agora]);
+        `INSERT INTO acessos (id, user_id, ip, pais, estado, cidade, operadora, lat, lon, evento, pagina, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+        [crypto.randomUUID(), userId, o.ip, o.pais, o.estado, o.cidade, o.operadora, o.lat, o.lon, evento, ctx.acessoPagina ?? null, agora]);
     // Faxina barata: no máximo uma por hora por processo.
     if (agora - ultimaFaxina > 60 * 60 * 1000) {
         ultimaFaxina = agora;
@@ -149,6 +157,39 @@ const rotas = [
                   ORDER BY a.created_at DESC, a.id LIMIT $5 OFFSET $6`,
                 [conta, ip, pais, filtroLugar, POR_PAGINA + 1, pagina * POR_PAGINA, anonimo]);
             return { acessos: linhas.slice(0, POR_PAGINA).map(linha), pagina, maisPaginas: linhas.length > POR_PAGINA, retencaoDias: RETENCAO_DIAS };
+        },
+    },
+    {
+        // Dados do painel ao vivo: tráfego por hora (24 h), pontos no mapa (30 dias) e os eventos mais recentes.
+        metodo: 'GET', caminho: '/api/admin/acessos/radar', admin: true,
+        async executar(ctx) {
+            const agora = ctx.agora();
+            const HORA = 60 * 60 * 1000;
+            const horaAtual = Math.floor(agora / HORA);
+            const porHora = await ctx.db.query(
+                `SELECT (created_at / 3600000) AS h, COUNT(*) AS n, COUNT(*) FILTER (WHERE user_id IS NULL) AS anon
+                   FROM acessos WHERE created_at > $1 GROUP BY (created_at / 3600000)`, [agora - 24 * HORA]);
+            const horas = Array.from({ length: 24 }, (_, i) => ({ h: horaAtual - 23 + i, total: 0, semLogin: 0 }));
+            for (const l of porHora) {
+                const b = horas[Number(l.h) - (horaAtual - 23)];
+                if (b) { b.total = Number(l.n); b.semLogin = Number(l.anon); }
+            }
+            const pontos = await ctx.db.query(
+                `SELECT lat, lon, MAX(cidade) AS cidade, MAX(estado) AS estado, MAX(pais) AS pais, COUNT(*) AS n, MAX(created_at) AS ultimo
+                   FROM acessos WHERE lat IS NOT NULL AND lon IS NOT NULL AND created_at > $1
+                  GROUP BY lat, lon ORDER BY COUNT(*) DESC LIMIT 200`, [agora - 30 * DIA]);
+            const recentes = await ctx.db.query(
+                `SELECT a.*, u.display_name AS nome, u.email FROM acessos a LEFT JOIN users u ON u.id = a.user_id
+                  ORDER BY a.created_at DESC, a.id LIMIT 14`);
+            const [t] = await ctx.db.query(
+                `SELECT COUNT(*) AS acessos, COUNT(DISTINCT ip) AS ips, COUNT(*) FILTER (WHERE user_id IS NULL) AS anon
+                   FROM acessos WHERE created_at > $1`, [agora - 24 * HORA]);
+            return {
+                agora, horas,
+                pontos: pontos.map((p) => ({ lat: Number(p.lat), lon: Number(p.lon), cidade: p.cidade, estado: p.estado, pais: p.pais, n: Number(p.n), ultimo: Number(p.ultimo) })),
+                recentes: recentes.map(linha),
+                totais: { acessos: Number(t.acessos), ips: Number(t.ips), semLogin: Number(t.anon) },
+            };
         },
     },
     {
