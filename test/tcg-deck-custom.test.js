@@ -1,5 +1,5 @@
 // ============================================================================
-// Testes do deck customizado (Batalha): montar com a coleção da conta, 15 cartas,
+// Testes do deck customizado (Batalha): cartas infinitas (não depende da coleção), 15 cartas,
 // no máximo 2 lendárias, repetição limitada, e usar em sala/partida/revanche.
 // ============================================================================
 const test = require('node:test');
@@ -39,9 +39,6 @@ async function entrar(m, sub) {
     const r = await c('POST', '/api/auth/google', { credential: `google:${sub}:${sub}-nome-completo-xxxxxxxx` });
     return { c, id: r.dados.user.id };
 }
-const darTudo = async (m, id, qtd = 2) => {
-    for (const carta of Baralho.CARTAS) await m.db.query('INSERT INTO colecao (user_id, card_id, qtd, primeira_em) VALUES ($1, $2, $3, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET qtd = EXCLUDED.qtd', [id, carta.id, qtd]);
-};
 
 test('D1: validarDeck com maxLendarias; o deck de teste é válido', () => {
     assert.equal(DECK.length, 15);
@@ -51,15 +48,13 @@ test('D1: validarDeck com maxLendarias; o deck de teste é válido', () => {
     assert.deepEqual(R.validarDeck(tres), []); // sem a opção, os decks prontos (3 lendárias) continuam valendo
 });
 
-test('D2: salvar: só com cartas que a conta tem; 15 cartas, 2 lendárias, repetição limitada', async () => {
+test('D2: salvar sem ter as cartas (infinitas); 15 cartas, 2 lendárias, repetição limitada', async () => {
     const m = montar();
-    const { c, id } = await entrar(m, 'ana');
+    const { c } = await entrar(m, 'ana');
     const vazio = (await c('GET', '/api/tcg/deck')).dados;
     assert.equal(vazio.cartas, null);
     assert.deepEqual(vazio.limites, { tamanho: 15, copias: 2, copiasLendaria: 1, lendarias: 2 });
-    assert.equal((await c('POST', '/api/tcg/deck', { cartas: DECK })).status, 400); // não tem as cartas
-
-    await darTudo(m, id);
+    // a conta não tem nenhuma carta na coleção e mesmo assim monta o deck
     const ok = await c('POST', '/api/tcg/deck', { cartas: DECK });
     assert.equal(ok.status, 200);
     assert.deepEqual((await c('GET', '/api/tcg/deck')).dados.cartas, DECK);
@@ -72,16 +67,12 @@ test('D2: salvar: só com cartas que a conta tem; 15 cartas, 2 lendárias, repet
     assert.equal(await falha([COMUNS[0], COMUNS[0], COMUNS[0], ...DECK.slice(3)]), 400); // 3 cópias
     assert.equal(await falha([...DECK.slice(0, 14), 'nao-existe']), 400);
     assert.equal(await falha('texto'), 400);
-    // tem só 1 cópia: não dá para usar 2
-    await m.db.query('UPDATE colecao SET qtd = 1 WHERE user_id = $1 AND card_id = $2', [id, COMUNS[0]]);
-    assert.equal(await falha(DECK), 400);
 });
 
-test('D3: sala e partida com o deck customizado; revanche mantém; coleção que encolhe invalida', async () => {
+test('D3: sala e partida com o deck customizado; revanche mantém os decks', async () => {
     const m = montar();
     const a = await entrar(m, 'ana');
     const b = await entrar(m, 'beto');
-    await darTudo(m, a.id);
     assert.equal((await a.c('POST', '/api/tcg/salas', { deck: 'custom' })).status, 400); // ainda não montou
     await a.c('POST', '/api/tcg/deck', { cartas: DECK });
 
@@ -106,10 +97,9 @@ test('D3: sala e partida com o deck customizado; revanche mantém; coleção que
     const r2 = (await a.c('GET', `/api/tcg/partidas/${nova}`)).dados;
     assert.deepEqual(r2.decks, ['turma', 'custom']); // trocou de lado
 
-    // coleção encolheu depois de salvo: o deck customizado deixa de valer
+    // lista salva que deixou de ser válida (ex.: limite mudou) não entra em sala
     await a.c('POST', `/api/tcg/partidas/${nova}/jogada`, { jogada: { tipo: 'desistir' }, versao: r2.versao, regras: R.REGRAS_VERSAO });
-    await m.db.query('DELETE FROM colecao WHERE user_id = $1 AND card_id = $2', [a.id, DECK[5]]);
-    const g = (await a.c('GET', '/api/tcg/deck')).dados;
-    assert.ok(g.erros.length > 0);
+    await m.db.query('UPDATE tcg_deck_custom SET cartas = $2 WHERE user_id = $1', [a.id, JSON.stringify(DECK.slice(0, 10))]);
+    assert.ok((await a.c('GET', '/api/tcg/deck')).dados.erros.length > 0);
     assert.equal((await a.c('POST', '/api/tcg/salas', { deck: 'custom' })).status, 400);
 });

@@ -116,8 +116,8 @@
     let estado = null;
     let nivel = 'normal';
     let deckEscolhido = DECKS[0];
-    // Deck customizado (4º deck): montado com a coleção da conta, guardado no servidor (GET/POST /api/tcg/deck).
-    const custom = { estado: 'nada', cartas: null, colecao: {}, erros: [], limites: null, obj: null };
+    // Deck customizado (4º deck): qualquer carta do jogo (cartas infinitas), guardado na conta (GET/POST /api/tcg/deck).
+    const custom = { estado: 'nada', cartas: null, erros: [], limites: null, obj: null };
     let ocupado = false;
     let modo = null;            // { tipo: 'alvo', jogada, alvos, texto } | { tipo: 'aura' } | { tipo: 'preparar', ativo, banco }
     let partida = 0;            // muda a cada batalha: a vez do NPC antiga para sozinha
@@ -251,9 +251,9 @@
             }
             const texto = custom.estado === 'login' ? 'Entre com o Google para montar o seu'
                 : custom.estado === 'fora' ? 'Só no site'
-                : custom.estado === 'nada' ? 'Carregando a sua coleção...'
+                : custom.estado === 'nada' ? 'Carregando o seu deck...'
                 : custom.erros.length ? `Precisa de ajuste: ${custom.erros[0]}`
-                : d ? d.texto : 'Monte com as cartas que você tem';
+                : d ? d.texto : 'Monte com as cartas que quiser';
             b.append(capa, el('strong', 'bt-deck-nome', 'Seu deck'), el('span', 'bt-deck-texto', texto));
             itemCustom.appendChild(b);
             if (custom.estado === 'ok') {
@@ -338,7 +338,7 @@
     async function carregarDeckCustom() {
         try {
             const d = await api('GET', '/api/tcg/deck');
-            Object.assign(custom, { estado: 'ok', cartas: d.cartas, colecao: d.colecao || {}, erros: d.erros || [], limites: d.limites });
+            Object.assign(custom, { estado: 'ok', cartas: d.cartas, erros: d.erros || [], limites: d.limites });
         } catch (erro) {
             custom.estado = erro.status === 401 ? 'login' : 'fora';
             custom.cartas = null;
@@ -347,17 +347,17 @@
         if (deckEscolhido.id === 'custom') deckEscolhido = custom.obj || DECKS[0];
     }
 
-    /** Montar o deck: só as cartas que a conta tem; 15 cartas, 2 lendárias e a repetição limitada. */
+    /** Montar o deck: qualquer carta do jogo; 15 cartas, 2 lendárias e a repetição limitada. */
     function abrirEditorDeck() {
         if (custom.estado !== 'ok') return;
         const lim = custom.limites || { tamanho: R.TAMANHO_DECK, copias: R.MAX_COPIAS, copiasLendaria: R.MAX_COPIAS_LENDARIO, lendarias: R.MAX_LENDARIAS_CUSTOM };
-        const donas = B.CARTAS.filter((c) => (custom.colecao[c.id] || 0) > 0 && temCombate(c.id))
+        const donas = B.CARTAS.filter((c) => temCombate(c.id))
             .sort((a, b) => ORDEM_RARIDADE[a.raridade] - ORDEM_RARIDADE[b.raridade] || a.numero - b.numero);
         const sel = new Map();
         for (const id of custom.cartas || []) if (donas.some((c) => c.id === id)) sel.set(id, (sel.get(id) || 0) + 1);
         const total = () => [...sel.values()].reduce((s, n) => s + n, 0);
         const lendarias = () => [...sel].reduce((s, [id, n]) => s + (def(id).raridade === 'lendario' ? n : 0), 0);
-        const limiteDe = (c) => Math.min(custom.colecao[c.id] || 0, c.raridade === 'lendario' ? lim.copiasLendaria : lim.copias);
+        const limiteDe = (c) => (c.raridade === 'lendario' ? lim.copiasLendaria : lim.copias);
         const lista = () => [...sel].flatMap(([id, n]) => Array(n).fill(id));
 
         const janela = el('dialog', 'bt-regras bt-editor');
@@ -373,7 +373,7 @@
             resumo.replaceChildren(
                 el('span', `bt-editor-chip${t === lim.tamanho ? ' bt-editor-chip--ok' : ''}`, `Cartas ${t}/${lim.tamanho}`),
                 el('span', `bt-editor-chip${l > lim.lendarias ? ' bt-editor-chip--erro' : l === lim.lendarias ? ' bt-editor-chip--ok' : ''}`, `Lendárias ${l}/${lim.lendarias}`));
-            const erros = R.validarDeck(lista(), { colecao: custom.colecao, maxLendarias: lim.lendarias });
+            const erros = R.validarDeck(lista(), { maxLendarias: lim.lendarias });
             // enquanto faltam cartas, o contador já diz tudo; só mostra erro de verdade quando chega nas 15
             erro.textContent = t === lim.tamanho && erros.length ? erros[0] : '';
             salvar.disabled = erros.length > 0;
@@ -402,7 +402,7 @@
             const qtd = el('b', 'bt-editor-qtd', '0');
             const controle = el('div', 'bt-editor-controle');
             controle.append(menos, qtd, mais);
-            li.append(carta, controle, el('span', 'bt-editor-tem', `tem ${custom.colecao[c.id]}${c.raridade === 'lendario' ? ' · lendária' : ''}`));
+            li.append(carta, controle, el('span', 'bt-editor-tem', `até ${limiteDe(c)}${c.raridade === 'lendario' ? ' · lendária' : ''}`));
             grade.appendChild(li);
             linhas.set(c.id, { menos, mais, qtd, li });
         }
@@ -412,7 +412,7 @@
             erro.textContent = '';
             try {
                 const d = await api('POST', '/api/tcg/deck', { cartas: lista() });
-                Object.assign(custom, { estado: 'ok', cartas: d.cartas, colecao: d.colecao || custom.colecao, erros: d.erros || [], limites: d.limites || custom.limites });
+                Object.assign(custom, { estado: 'ok', cartas: d.cartas, erros: d.erros || [], limites: d.limites || custom.limites });
                 custom.obj = objetoDoDeckCustom();
                 if (custom.obj) deckEscolhido = custom.obj;
                 janela.close();
@@ -428,7 +428,7 @@
         acoes.append(salvar, limpar, fechar);
         janela.append(
             el('h2', '', 'Seu deck customizado'),
-            el('p', 'bt-placar-nota', `Só com as cartas que você tem. ${lim.tamanho} cartas, no máximo ${lim.lendarias} lendárias (1 cópia de cada) e até ${lim.copias} cópias das outras.`),
+            el('p', 'bt-placar-nota', `Escolha qualquer carta. ${lim.tamanho} cartas, no máximo ${lim.lendarias} lendárias (1 cópia de cada) e até ${lim.copias} cópias das outras.`),
             resumo, erro, grade, acoes);
         janela.addEventListener('close', () => janela.remove());
         document.body.appendChild(janela);

@@ -63,21 +63,19 @@ const ID = /^[0-9a-f-]{36}$/;
 
 const deckPronto = (id) => DECKS_PRONTOS.find((d) => d.id === id) || null;
 
-/** Deck customizado da conta: lista salva e a coleção atual (validar de novo: a pessoa pode ter trocado cartas por pó). */
+/** Deck customizado da conta: lista salva e se ainda é válida. Cartas infinitas: não depende da coleção, só dos limites do deck. */
 async function deckCustomDaConta(ctx, userId) {
     const [salvo] = await ctx.db.query('SELECT cartas FROM tcg_deck_custom WHERE user_id = $1', [userId]);
-    const colecao = Object.fromEntries((await ctx.db.query('SELECT card_id, qtd FROM colecao WHERE user_id = $1', [userId]))
-        .map((l) => [l.card_id, Number(l.qtd)]));
     let cartas = null;
     try { cartas = salvo ? JSON.parse(salvo.cartas) : null; } catch { cartas = null; }
-    const erros = cartas ? R.validarDeck(cartas, { colecao, maxLendarias: R.MAX_LENDARIAS_CUSTOM }) : [];
-    return { cartas, colecao, erros };
+    const erros = cartas ? R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }) : [];
+    return { cartas, erros };
 }
 
 const CUSTOM = { id: 'custom', nome: 'Deck customizado' };
 const limitesDoDeck = () => ({ tamanho: R.TAMANHO_DECK, copias: R.MAX_COPIAS, copiasLendaria: R.MAX_COPIAS_LENDARIO, lendarias: R.MAX_LENDARIAS_CUSTOM });
 
-/** Deck do pedido: pronto ('turma'...) ou 'custom' (o salvo na conta, conferido de novo com a coleção). */
+/** Deck do pedido: pronto ('turma'...) ou 'custom' (o salvo na conta, conferido de novo). */
 async function lerDeck(ctx, id) {
     if (id === 'custom') {
         const { cartas, erros } = await deckCustomDaConta(ctx, ctx.usuario.id);
@@ -412,28 +410,26 @@ const rotas = [
         },
     },
     {
-        // Deck customizado: a lista salva, a coleção da conta (para montar) e os limites.
+        // Deck customizado: a lista salva e os limites (qualquer carta vale, não precisa tê-la).
         metodo: 'GET', caminho: '/api/tcg/deck', login: true,
         async executar(ctx) {
-            const { cartas, colecao, erros } = await deckCustomDaConta(ctx, ctx.usuario.id);
-            return { cartas, colecao, erros, limites: limitesDoDeck() };
+            const { cartas, erros } = await deckCustomDaConta(ctx, ctx.usuario.id);
+            return { cartas, erros, limites: limitesDoDeck() };
         },
     },
     {
-        // Salva o deck customizado (só com cartas que a conta tem, 15 cartas, 2 lendárias no máximo).
+        // Salva o deck customizado (15 cartas, 2 lendárias no máximo, repetição limitada; qualquer carta do jogo).
         metodo: 'POST', caminho: '/api/tcg/deck', login: true,
         async executar(ctx) {
             const { cartas } = await ctx.corpo();
             if (!Array.isArray(cartas) || cartas.length > 40 || cartas.some((c) => typeof c !== 'string' || c.length > 64)) throw new HttpError(400, 'cartas inválidas');
-            const colecao = Object.fromEntries((await ctx.db.query('SELECT card_id, qtd FROM colecao WHERE user_id = $1', [ctx.usuario.id]))
-                .map((l) => [l.card_id, Number(l.qtd)]));
-            const erros = R.validarDeck(cartas, { colecao, maxLendarias: R.MAX_LENDARIAS_CUSTOM });
+            const erros = R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM });
             if (erros.length) throw new HttpError(400, erros[0], { erros });
             await ctx.db.query(
                 `INSERT INTO tcg_deck_custom (user_id, cartas, atualizado_em) VALUES ($1, $2, $3)
                  ON CONFLICT (user_id) DO UPDATE SET cartas = EXCLUDED.cartas, atualizado_em = EXCLUDED.atualizado_em`,
                 [ctx.usuario.id, JSON.stringify(cartas), ctx.agora()]);
-            return { cartas, colecao, erros: [], limites: limitesDoDeck() };
+            return { cartas, erros: [], limites: limitesDoDeck() };
         },
     },
     {
