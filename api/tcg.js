@@ -145,8 +145,8 @@ async function registrarResultado(ctx, p) {
  * Placar permanente: vitórias, derrotas e empates das partidas online (só as do servidor:
  * contra o NPC roda no navegador e não dá para conferir). Top 50 + a linha de quem pede.
  */
-async function placar(ctx) {
-    const linhas = await ctx.db.query(
+async function classificacao(db) {
+    return db.query(
         `WITH r AS (
              SELECT vencedor AS id, 1 AS v, 0 AS d, 0 AS e FROM tcg_resultados WHERE vencedor IS NOT NULL
              UNION ALL SELECT perdedor, 0, 1, 0 FROM tcg_resultados WHERE perdedor IS NOT NULL
@@ -160,6 +160,10 @@ async function placar(ctx) {
          )
          SELECT *, RANK() OVER (ORDER BY vitorias DESC, derrotas ASC) AS posicao FROM t
           ORDER BY posicao, display_name`);
+}
+
+async function placar(ctx) {
+    const linhas = await classificacao(ctx.db);
     const linha = (l) => ({
         nome: l.display_name, vitorias: Number(l.vitorias), derrotas: Number(l.derrotas),
         empates: Number(l.empates), posicao: Number(l.posicao),
@@ -443,4 +447,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_VIVA };
+module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_VIVA };

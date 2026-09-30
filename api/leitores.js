@@ -8,6 +8,7 @@
 // ============================================================================
 const Baralho = require('../js/baralho-dados.js');
 const { HttpError } = require('./http.js');
+const { classificacao } = require('./tcg.js');
 const { nomePublico } = require('./auth.js');
 const { CONTROLE, LINK, exigirUuid } = require('./validacao.js');
 
@@ -80,6 +81,11 @@ const rotas = [
                   WHERE user_id = $1 AND verified GROUP BY game_id`, [id]);
             // Baralho Enzo: só quais cartas tem (a quantidade e a carteira são privadas).
             const colecao = await ctx.db.query('SELECT card_id FROM colecao WHERE user_id = $1', [id]);
+            // Batalha dos Torados: placar permanente (só partidas online), mesma conta do /api/tcg/placar.
+            const linhaBatalha = (await classificacao(ctx.db)).find((l) => l.id === id);
+            const batalha = linhaBatalha
+                ? { vitorias: Number(linhaBatalha.vitorias), derrotas: Number(linhaBatalha.derrotas), empates: Number(linhaBatalha.empates), posicao: Number(linhaBatalha.posicao) }
+                : { vitorias: 0, derrotas: 0, empates: 0, posicao: null };
             return {
                 id: leitor.id,
                 name: nomePublico(leitor.display_name),
@@ -90,6 +96,7 @@ const rotas = [
                 achievements: conquistas.map((c) => c.achievement_id),
                 records: Object.fromEntries(recordes.map((r) => [r.game_id, Number(r.melhor)])),
                 cartas: colecao.map((c) => c.card_id).filter((cardId) => Baralho.carta(cardId)),
+                batalha,
                 isMe: leitor.id === ctx.usuario?.id,
             };
         },

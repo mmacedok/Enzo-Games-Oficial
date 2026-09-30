@@ -1961,7 +1961,8 @@ img.conta-chave { padding: 6px; object-fit: contain; }
 }
 .quadro-texto { margin-bottom: 8px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
 .quadro--conquistas,
-.quadro--secretos { grid-column: 1 / -1; }
+.quadro--secretos,
+.quadro--batalha { grid-column: 1 / -1; }
 
 /* Quadro do leitor: retrato + balão de fala + faixa com o nome, em fundo de ação */
 .quadro--leitor {

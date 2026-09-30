@@ -330,6 +330,11 @@ test('T10. Placar permanente: vitória, derrota e empate por conta; visitante v�
     const visitante = (await m.navegador()('GET', '/api/tcg/placar')).dados;
     assert.equal(visitante.meu, null);
     assert.equal(visitante.top.length, 2);
+    // O perfil público de cada leitor traz o mesmo placar (a ficha do site mostra).
+    const perfilAna = (await m.navegador()('GET', `/api/readers/${ua.id}`)).dados;
+    assert.deepEqual(perfilAna.batalha, { vitorias: 2, derrotas: 0, empates: 1, posicao: 1 });
+    const perfilBeto = (await m.navegador()('GET', `/api/readers/${ub.id}`)).dados;
+    assert.deepEqual(perfilBeto.batalha, { vitorias: 0, derrotas: 2, empates: 1, posicao: 2 });
     // A sala de quem tem placar mostra as vitórias dele na lista.
     await a('POST', '/api/tcg/salas', { deck: 'turma' });
     const [s] = (await b('GET', '/api/tcg/salas')).dados.salas;

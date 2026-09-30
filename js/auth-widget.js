@@ -236,10 +236,12 @@
             achievements: estado.dados?.achievements || [],
             records: Object.fromEntries(Object.keys(JOGOS).map((jogo) => [jogo, melhorRecorde(jogo)])),
             progress: estado.dados?.progress,
+            batalha: batalhaProprio,
             proprio: true,
         };
     }
     let numeroProprio = null;
+    let batalhaProprio = null;   // placar da Batalha dos Torados (vem do perfil público)
 
     /** Balão de fala do leitor; na própria ficha vira um campo para editar e salvar. */
     function balaoDaFala(perfil) {
@@ -382,10 +384,27 @@
         return quadro('quadro--cartas', `Baralho Enzo · ${tem.size}/${B.CARTAS.length}`, fileira);
     }
 
+    /** Placar da Batalha dos Torados (só partidas online). Na própria ficha carrega junto com o número de leitor. */
+    function quadroDaBatalha(perfil) {
+        const b = perfil.batalha;
+        const lista = el('div', 'ficha-recordes');
+        for (const [chave, titulo] of [['vitorias', 'Vitórias'], ['derrotas', 'Derrotas'], ['empates', 'Empates']]) {
+            const item = el('div', 'ficha-recorde');
+            item.append(el('span', 'ficha-recorde-jogo', titulo), el('strong', 'ficha-estouro', b ? String(b[chave]) : '...'));
+            lista.appendChild(item);
+        }
+        const jogou = b && b.vitorias + b.derrotas + b.empates > 0;
+        const nota = !b ? 'Carregando o placar...'
+            : jogou ? `${b.posicao}º lugar no placar. Só partidas online contam.`
+                : (perfil.proprio ? 'Você ainda não jogou online. Só partidas online contam.' : 'Ainda não jogou online.');
+        return quadro('quadro--batalha', 'Batalha dos Torados', lista, el('p', 'quadro-texto', nota));
+    }
+
     function gradeDoPerfil(perfil) {
         const grade = el('div', 'ficha-grade');
         grade.append(quadroDoLeitor(perfil), quadroDeRecordes(perfil));
         if (window.EnzoConquistas) grade.append(quadroDeConquistas(perfil), quadroDeSecretos(perfil));
+        grade.appendChild(quadroDaBatalha(perfil));
         if (!perfil.proprio && Array.isArray(perfil.cartas) && window.EnzoBaralhoUI) grade.appendChild(quadroDeCartas(perfil));
         return grade;
     }
@@ -484,12 +503,14 @@
                 terminal.href = 'admin.html';
                 rodape.appendChild(terminal);
             }
-            // Número de leitor vem do perfil público (ordem de chegada ao site).
-            if (!numeroProprio) {
-                pedir(`/api/readers/${estado.usuario.id}`).then(({ ok, dados }) => {
-                    if (ok) { numeroProprio = dados.numero; if (vistaAtual === 'minha') setSelo(numeroProprio); }
-                }).catch(() => {});
-            }
+            // Número de leitor e placar da Batalha vêm do perfil público (o placar muda a cada partida: busca sempre).
+            pedir(`/api/readers/${estado.usuario.id}`).then(({ ok, dados }) => {
+                if (!ok || vistaAtual !== 'minha') return;
+                numeroProprio = dados.numero;
+                batalhaProprio = dados.batalha || null;
+                setSelo(numeroProprio);
+                corpo.querySelector('.quadro--batalha')?.replaceWith(quadroDaBatalha(perfilProprio()));
+            }).catch(() => {});
         } else if (vista === 'baralho') {
             // Aba do Baralho Enzo (js/baralho.js): carteira, pacotes, fichário.
             corpo.appendChild(window.EnzoBaralhoUI.aba());
