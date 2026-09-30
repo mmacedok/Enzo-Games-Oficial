@@ -2402,7 +2402,16 @@
     }
 
     function balao(perto, texto, tipo = '') {
-        if (!mesa) return Promise.resolve();
+        if (!mesa) {
+            // Fora da mesa (menus, salas online) não há onde o balão subir: o erro aparece como aviso flutuante.
+            if (tipo === 'erro') {
+                const aviso = el('div', 'bt-aviso-flutuante', texto);
+                aviso.setAttribute('role', 'alert');
+                document.body.appendChild(aviso);
+                setTimeout(() => aviso.remove(), 5000);
+            }
+            return Promise.resolve();
+        }
         const b = el('div', `bt-balao ${tipo ? `bt-balao--${tipo}` : ''}`);
         b.append(...[].concat(texto));
         const c = centro(perto);

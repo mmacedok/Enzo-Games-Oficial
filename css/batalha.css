@@ -1135,3 +1135,5 @@ dialog.bt-regras.bt-players-janela { width: min(760px, calc(100vw - 20px)); max-
 dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
 
 .bt-editor-ok { color: #1d7a1d; }
+
+.bt-aviso-flutuante { position: fixed; left: 50%; bottom: 24px; z-index: 10000; max-width: min(90vw, 460px); padding: 10px 16px; font-weight: 700; text-align: center; color: #fff; background: #b3261e; border: 3px solid var(--ink); border-radius: 10px; box-shadow: 3px 3px 0 var(--ink); transform: translateX(-50%); }
