@@ -46,7 +46,7 @@
             ] },
         'superkid': { hp: 130, recuo: 2, ataques: [
             { nome: 'Farmar Aura', custo: 1, dano: 0, efeitos: [{ tipo: 'auraSi', valor: 1 }] },
-            { nome: 'Aura de 67 Segundos', custo: 2, dano: 20, efeitos: [{ tipo: 'bonusPorAura', valor: 20 }] },
+            { nome: 'Aura de 67 Segundos', custo: 2, dano: 20, efeitos: [{ tipo: 'bonusPorAura', valor: 20 }], recargaSeDerrubar: true },
         ] },
 
         // ---- Épicos ----------------------------------------------------------
@@ -74,8 +74,10 @@
             poder: { nome: 'Num Tem Eu', tipo: 'bonusDoBanco', ativavel: false, valor: 10,
                 texto: 'No banco: +10 de dano nos ataques do seu ativo (não soma com outro Stand).' },
             ataques: [{ nome: 'Joinha', custo: 1, dano: 20 }] },
-        'encantadora': { hp: 70, recuo: 1, ataques: [
-            { nome: 'Vem Cá, Meu Gadinho', custo: 1, dano: 0, efeitos: [{ tipo: 'puxar' }] },
+        'encantadora': { hp: 70, recuo: 1,
+            poder: { nome: 'Vem Cá, Meu Gadinho', tipo: 'puxar', ativavel: true,
+                texto: '1 vez por turno, de qualquer lugar da mesa: escolhe uma carta do banco do adversário e ela vira o ativo. Depois a Encantadora fica virada por 1 turno.' },
+            ataques: [
             { nome: 'Chama Rosa', custo: 2, dano: 30, efeitos: [{ tipo: 'estado', estado: 'iludido' }] },
         ] },
         'marreteiro-do-coracao': { hp: 100, recuo: 2, ataques: [

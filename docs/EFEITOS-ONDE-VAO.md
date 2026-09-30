@@ -66,7 +66,7 @@ Tipo: **peça** = uma imagem parada (512×512, ou 256×256 onde diz); **folha** 
 | `fx-au.png` | peça | ItaloLOL, Au! Aura! | saindo da boca do ItaloLOL |
 | `fx-kda.png` | peça | ItaloLOL, 0/14/2 | em cima do ItaloLOL |
 | `fx-joinha.png` | peça | Stand do Joinha, Joinha (grande) e poder Num Tem Eu (pequeno) | grande: desce do alto e esmaga o alvo; pequeno: sai do banco e gruda no ativo |
-| `fx-laco.png` | peça | Encantadora, Vem Cá, Meu Gadinho | sai da Encantadora, pega a carta do banco do adversário e puxa para o ativo |
+| `fx-laco.png` | peça | Encantadora, poder Vem Cá, Meu Gadinho | sai da Encantadora, pega a carta do banco do adversário e puxa para o ativo |
 | `fx-chama-rosa.png` | folha | Encantadora, Chama Rosa | subindo em cima do alvo |
 | `fx-marreta.png` | peça | Marreteiro do Coração, Quebrar Tudo e Marretada | Quebrar Tudo: no campo do meio da mesa; Marretada: no alvo |
 | `fx-rachadura.png` | folha | Marreteiro do Coração, Quebrar Tudo e Marretada | no chão embaixo de onde a marreta bateu |

@@ -1,6 +1,6 @@
 # Batalha dos Torados — regras, cartas, efeitos e danos
 
-O TCG do site Enzo Games (`batalha.html`). Este documento vale para a versão de regras **6** (`REGRAS_VERSAO` em `js/tcg-regras.js`).
+O TCG do site Enzo Games (`batalha.html`). Este documento vale para a versão de regras **7** (`REGRAS_VERSAO` em `js/tcg-regras.js`).
 Os números das cartas vêm de `js/tcg-cartas.js` (multiplicados por 20) e os textos de `js/baralho-dados.js`. Se uma regra mudar, o motor (`js/tcg-regras.js`) manda; este arquivo deve ser regenerado.
 
 ## 1. Objetivo
@@ -104,7 +104,7 @@ Vida, recuo, poder e ataques (custo de Aura entre parênteses; dano já na escal
 | Hatsune Neves | Raro | 1.600 | 1 Aura | Poder: Invoco uma Carta de Magic · Porta do Quarto (2): 600 |
 | ItaloLOL | Raro | 1.800 | 1 Aura | Au! Aura! (1): 400 · 0/14/2 (2): 1.400 |
 | Stand do Joinha | Raro | 1.400 | 1 Aura | Poder: Num Tem Eu · Joinha (1): 400 |
-| Encantadora | Raro (goon) | 1.400 | 1 Aura | Vem Cá, Meu Gadinho (1): só efeito · Chama Rosa (2): 600 |
+| Encantadora | Raro (goon) | 1.400 | 1 Aura | Poder: Vem Cá, Meu Gadinho · Chama Rosa (2): 600 |
 | Marreteiro do Coração | Raro (goon) | 2.000 | 2 Aura | Quebrar Tudo (1): só efeito · Marretada (3): 1.800 |
 | Moderador do Discord | Raro (goon) | 1.800 | 2 Aura | Ban de 7 Dias (2): 600 |
 | Cara de Coração | Comum (goon) | 1.400 | 1 Aura | Soco Iludido (1): 400 |
@@ -154,7 +154,7 @@ _(Quanto mais besteira ao redor, mais aura.)_
 
 - Vida 2.600 · Recuo 2 Aura
 - Farmar Aura (1 Aura): sem dano, ganha +1 Aura.
-- Aura de 67 Segundos (2 Aura): 400 de dano, mais 400 por Aura que ele tem.
+- Aura de 67 Segundos (2 Aura): 400 de dano, mais 400 por Aura que ele tem; se derrubar a carta, ele fica virado por 1 turno.
 - Se for nocauteada, o dono perde **2.250** de vida.
 
 #### Chorão — Épico · personagem
@@ -201,7 +201,7 @@ _(Num tem eu, num tem 👍)_
 _(Vem cá, meu gadinho.)_
 
 - Vida 1.400 · Recuo 1 Aura
-- Vem Cá, Meu Gadinho (1 Aura): sem dano; você escolhe uma carta do banco do adversário e ela vira o ativo.
+- Poder Vem Cá, Meu Gadinho (1 vez por turno, de qualquer lugar da mesa): você escolhe uma carta do banco do adversário e ela vira o ativo; depois a Encantadora fica virada por 1 turno.
 - Chama Rosa (2 Aura): 600 de dano e deixa o alvo Iludido (no ataque dele, joga moeda: se der coroa, ele erra e leva 400).
 - Se for nocauteada, o dono perde **1.125** de vida.
 

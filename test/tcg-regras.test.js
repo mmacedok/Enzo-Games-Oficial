@@ -566,8 +566,8 @@ test('Superkid: Farmar Aura prende +1; Aura de 67 Segundos = 20 + 20 por Aura', 
 test('Chorão: quem causa dano nele leva 20; ataque sem dano não ativa', () => {
     const e = mesa({ eu: { ativo: { id: 'italolol', aura: 1 } }, ele: { ativo: 'chorao' } });
     assert.equal(atacar(e, 0).estado.jogadores[0].ativo.dano, 20 * R.ESCALA);
-    const encantadora = mesa({ eu: { ativo: { id: 'encantadora', aura: 1 } }, ele: { ativo: 'chorao' } });
-    assert.equal(atacar(encantadora, 0).estado.jogadores[0].ativo.dano, 0);
+    const farmar = mesa({ eu: { ativo: { id: 'superkid', aura: 1 } }, ele: { ativo: 'chorao' } });
+    assert.equal(atacar(farmar, 0).estado.jogadores[0].ativo.dano, 0);
 });
 
 test('Sombra do Degustador: Teemo no Top deixa Notificado; recua de graça', () => {
@@ -607,17 +607,29 @@ test('Stand do Joinha: no banco dá +10 ao ativo (dois Stands não somam)', () =
     assert.equal(atacar(ativo, 0).estado.jogadores[1].ativo.dano, 20 * R.ESCALA, 'no ativo o poder não conta');
 });
 
-test('Encantadora: Vem Cá troca o ativo dele por quem você escolher do banco; Chama Rosa deixa Iludido', () => {
-    const e = mesa({ eu: { ativo: { id: 'encantadora', aura: 2 } }, ele: { ativo: { id: 'chorao', estados: { notificado: true } }, banco: ['bug-do-discord', 'notificacao-morcego'] } });
-    invalida(() => atacar(e, 0), 'escolha quem vem do banco');
+test('Encantadora: poder Vem Cá (do banco ou do ativo) puxa quem você escolher e ela fica virada 1 turno; Chama Rosa deixa Iludido', () => {
+    const e = mesa({ eu: { ativo: 'italolol', banco: ['encantadora'] }, ele: { ativo: { id: 'chorao', estados: { notificado: true } }, banco: ['bug-do-discord', 'notificacao-morcego'] } });
+    const enc = EU(e).banco[0];
+    invalida(() => jogar(e, { tipo: 'poder', uid: enc.uid }), 'escolha quem vem do banco');
+    invalida(() => jogar(e, { tipo: 'poder', uid: enc.uid, alvo: ELE(e).ativo.uid }), 'escolha quem vem do banco');
     const alvo = ELE(e).banco[1].uid;
-    const s = atacar(e, 0, { alvo }).estado;
+    const r = jogar(e, { tipo: 'poder', uid: enc.uid, alvo });
+    const s = r.estado;
     assert.equal(s.jogadores[1].ativo.id, 'notificacao-morcego');
     const chorao = s.jogadores[1].banco.find((c) => c.id === 'chorao');
     assert.equal(chorao.estados.notificado, false, 'quem vai para o banco perde os estados');
-    const semBanco = mesa({ eu: { ativo: { id: 'encantadora', aura: 1 } } });
-    assert.doesNotThrow(() => atacar(semBanco, 0));
-    assert.equal(atacar(e, 1).estado.jogadores[1].ativo.estados.iludido, true);
+    assert.ok(r.eventos.some((ev) => ev.tipo === 'virada' && ev.uid === enc.uid && ev.motivo === 'poder'));
+    // fica virada até o próximo turno dela: não usa o poder de novo nem recua
+    const encDepois = s.jogadores[0].banco[0];
+    assert.equal(R.virada(s, encDepois), true);
+    invalida(() => jogar(s, { tipo: 'poder', uid: enc.uid, alvo: s.jogadores[1].banco[0].uid }), 'já foi usado');
+    // sem banco do outro lado o poder não vale
+    const semBanco = mesa({ eu: { ativo: 'italolol', banco: ['encantadora'] }, ele: { ativo: 'chorao' } });
+    invalida(() => jogar(semBanco, { tipo: 'poder', uid: EU(semBanco).banco[0].uid, alvo: ELE(semBanco).ativo.uid }), 'ninguém no banco');
+    // Chama Rosa agora é o único ataque dela
+    const rosa = mesa({ eu: { ativo: { id: 'encantadora', aura: 2 } }, ele: { ativo: 'chorao' } });
+    assert.equal(R.combate('encantadora').ataques.length, 1);
+    assert.equal(atacar(rosa, 0).estado.jogadores[1].ativo.estados.iludido, true);
 });
 
 test('Marreteiro: Quebrar Tudo descarta o campo; Marretada 90', () => {
@@ -690,9 +702,20 @@ test('atacar o jogador tira vida mesmo com o ativo dele na mesa e não mexe no a
     assert.ok(r.eventos.some((ev) => ev.tipo === 'danoJogador' && ev.fonte === 'ataque' && ev.jogador === 1));
 });
 
-test('Vem Cá (puxar) no jogador é inválido', () => {
+test('Vem Cá (puxar) não vale no jogador nem com a Encantadora virada', () => {
     const e = mesa({ eu: { ativo: { id: 'encantadora', aura: 2 } }, ele: { ativo: 'chorao', banco: ['bug-do-discord'] } });
-    invalida(() => atacar(e, 0, { alvo: R.JOGADOR }), 'não acerta o jogador');
+    invalida(() => jogar(e, { tipo: 'poder', uid: EU(e).ativo.uid, alvo: R.JOGADOR }), 'escolha quem vem do banco');
+    const virada = mesa({ eu: { ativo: { id: 'encantadora', aura: 2, estados: { virada: 99 } } }, ele: { ativo: 'chorao', banco: ['bug-do-discord'] } });
+    invalida(() => jogar(virada, { tipo: 'poder', uid: EU(virada).ativo.uid, alvo: ELE(virada).banco[0].uid }), 'virada');
+});
+
+test('Superkid: a Aura de 67 Segundos que derruba uma carta deixa ele virado (mesmo sem ser de um golpe só)', () => {
+    const derruba = mesa({ eu: { ativo: { id: 'superkid', aura: 5 } }, ele: { ativo: { id: 'chorao', dano: 100 } } });
+    const s = atacar(derruba, 1).estado;
+    assert.equal(R.virada(s, s.jogadores[0].ativo), true, 'derrubou: fica virado');
+    const naoDerruba = mesa({ eu: { ativo: { id: 'superkid', aura: 2 } }, ele: { ativo: 'chorao' } });
+    const n = atacar(naoDerruba, 1).estado;
+    assert.equal(R.virada(n, n.jogadores[0].ativo), false, 'não derrubou: continua desvirado');
 });
 
 test('jogadasValidas inclui alvo JOGADOR em cada ataque sem puxar', () => {
@@ -701,11 +724,11 @@ test('jogadasValidas inclui alvo JOGADOR em cada ataque sem puxar', () => {
     for (let i = 0; i < R.combate('enzo-games').ataques.length; i++) {
         assert.ok(validas.some((v) => v.tipo === 'atacar' && v.ataque === i && v.alvo === R.JOGADOR), `ataque ${i} sem alvo JOGADOR`);
     }
-    // O Vem Cá (puxar) só mira o banco, nunca o jogador.
-    const enc = mesa({ eu: { ativo: { id: 'encantadora', aura: 2 } }, ele: { ativo: 'chorao', banco: ['bug-do-discord'] } });
+    // O poder Vem Cá só mira o banco do rival, nunca o jogador.
+    const enc = mesa({ eu: { ativo: 'italolol', banco: ['encantadora'] }, ele: { ativo: 'chorao', banco: ['bug-do-discord'] } });
     const venc = R.jogadasValidas(enc, 0);
-    assert.ok(venc.every((v) => !(v.tipo === 'atacar' && v.ataque === 0 && v.alvo === R.JOGADOR)), 'Vem Cá não vai no jogador');
-    assert.ok(venc.some((v) => v.tipo === 'atacar' && v.ataque === 0 && v.alvo === ELE(enc).banco[0].uid), 'Vem Cá mira o banco');
+    assert.ok(venc.some((v) => v.tipo === 'poder' && v.alvo === ELE(enc).banco[0].uid), 'Vem Cá mira o banco');
+    assert.ok(venc.every((v) => !(v.tipo === 'poder' && (v.alvo === undefined || v.alvo === R.JOGADOR))), 'Vem Cá nunca sem alvo nem no jogador');
 });
 
 test('nocaute tira do dono a vida da raridade (comum e lendário)', () => {

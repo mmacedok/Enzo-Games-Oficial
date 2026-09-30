@@ -1338,7 +1338,17 @@
         if (!minha) return acoes;
         add('Prender a Aura aqui', { tipo: 'aura', alvo: uid });
         const poder = R.combate(minha.id).poder;
-        if (poder?.ativavel) add(`Usar poder: ${poder.nome}`, { tipo: 'poder', uid });
+        if (poder?.ativavel && poder.tipo === 'puxar') {
+            // Vem Cá: escolhe no banco do rival quem vira o ativo (ela pode estar em qualquer lugar da mesa)
+            const alvos = ele.banco.map((c) => c.uid);
+            add(`Usar poder: ${poder.nome}`, { tipo: 'poder', uid, alvo: '?' }, {
+                alvos,
+                fazer: () => {
+                    modo = { tipo: 'alvo', jogada: { tipo: 'poder', uid }, alvos, texto: `${poder.nome}: escolha quem vem do banco dele.` };
+                    desenhar();
+                },
+            });
+        } else if (poder?.ativavel) add(`Usar poder: ${poder.nome}`, { tipo: 'poder', uid });
         if (eu.banco.some((c) => c.uid === uid) && eu.ativo) {
             add(`Recuar: esta vira o ativo (gasta ${R.custoRecuo(estado, eu.ativo)} da Aura presa no ativo, que tem ${eu.ativo.aura})`, { tipo: 'recuar', para: uid });
         }
@@ -2910,13 +2920,6 @@
             },
         },
         'encantadora': {
-            'Vem Cá, Meu Gadinho': async (at, alvo, ev) => {
-                await vooImg('fx-laco', at, alvo, { tam: .7, arco: 140, dur: 460 });
-                // A carta puxada vai para a vaga do ativo: o laço a arrasta até lá.
-                const vaga = ladoDe(ev.uid) === EU ? mesa.npc.ativo : mesa.eu.ativo;
-                const antigo = vaga.firstElementChild;
-                if (antigo?.classList.contains('bt-carta')) await vooImg('fx-laco', alvo, antigo, { tam: .7, arco: 140, dur: 420 });
-            },
             'Chama Rosa': async (at, alvo) => {
                 await folha('fx-chama-rosa', alvo, { tam: 1.3 });
             },
@@ -2987,6 +2990,13 @@
         'chorao': {
             'Vou te Processar!': async (at, alvo) => {
                 await vooImg('fx-processo', at, alvo, { tam: .65, girar: 1, dur: 520 });
+            },
+        },
+        'encantadora': {
+            // Poder: o laço sai dela, pega a carta do banco do adversário (a troca com o ativo vem no evento seguinte)
+            'Vem Cá, Meu Gadinho': async (at, _ativo, ev) => {
+                const puxado = ev.alvo && elDe(ev.alvo);
+                if (puxado) await vooImg('fx-laco', at, puxado, { tam: .7, arco: 140, dur: 460 });
             },
         },
         'hatsune-neves': {

@@ -25,7 +25,7 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 6;
+    const REGRAS_VERSAO = 7;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
@@ -305,6 +305,11 @@
                 if (virada(estado, c)) return 'carta virada (recarga) não usa poder';
                 if (poder.tipo === 'notificarAtivo' && !ele.ativo) return 'o adversário não tem ativo';
                 if (poder.tipo === 'comprar' && !qtd(eu.deck)) return 'seu deck acabou';
+                if (poder.tipo === 'puxar') {
+                    if (!ele.ativo) return 'o adversário não tem ativo';
+                    if (!ele.banco.length) return 'o adversário não tem ninguém no banco';
+                    if (!ele.banco.some((x) => x.uid === jogada.alvo)) return 'escolha quem vem do banco dele';
+                }
                 if (poder.tipo === 'espiarMao' && !qtd(ele.mao)) return 'a mão do adversário está vazia';
                 return null;
             }
@@ -610,9 +615,10 @@
             ferirJogador(estado, outro(j), extra, eventos, 'golpeExtra');
         }
         // Derrubou de um golpe só (a carta estava com a vida cheia): o atacante vira (recarga).
-        if (deUmGolpe && !virada(estado, atacante)) {
+        // Ataque com recargaSeDerrubar (Aura de 67 Segundos do Superkid): derrubou qualquer carta, o atacante vira.
+        if ((deUmGolpe || (ataque.recargaSeDerrubar && derrubou)) && !virada(estado, atacante)) {
             atacante.estados.virada = estado.turno + 2;
-            eventos.push({ tipo: 'virada', uid: atacante.uid, ate: atacante.estados.virada, motivo: 'umGolpe' });
+            eventos.push({ tipo: 'virada', uid: atacante.uid, ate: atacante.estados.virada, motivo: deUmGolpe ? 'umGolpe' : 'derrubou' });
         }
         verificarNocautes(estado, eventos);
         seguir(estado, 'fimTurno', eventos);
@@ -715,6 +721,17 @@
                 if (poder.tipo === 'notificarAtivo') {
                     ele.ativo.estados.notificado = true;
                     eventos.push({ tipo: 'estado', uid: ele.ativo.uid, estado: 'notificado' });
+                } else if (poder.tipo === 'puxar') {
+                    // Vem Cá (Encantadora): o escolhido do banco dele vira o ativo; ela fica virada por 1 turno.
+                    const puxado = ele.banco.find((c) => c.uid === jogada.alvo);
+                    const antigo = ele.ativo;
+                    ele.banco[ele.banco.indexOf(puxado)] = antigo;
+                    limparEstados(antigo);
+                    ele.ativo = puxado;
+                    eventos[eventos.length - 1].alvo = puxado.uid;
+                    eventos.push({ tipo: 'troca', jogador: outro(j), sai: antigo.uid, entra: puxado.uid, motivo: 'puxar' });
+                    inst.estados.virada = estado.turno + 2;
+                    eventos.push({ tipo: 'virada', uid: inst.uid, ate: inst.estados.virada, motivo: 'poder' });
                 } else if (poder.tipo === 'comprar') {
                     for (let n = 0; n < poder.valor; n++) comprar(estado, j, eventos, 'poder');
                 } else if (poder.tipo === 'espiarMao') {
@@ -811,7 +828,11 @@
             }
             for (const c of naMesa(eu)) {
                 candidatas.push({ tipo: 'aura', jogador: j, alvo: c.uid });
-                candidatas.push({ tipo: 'poder', jogador: j, uid: c.uid });
+                if (combate(c.id).poder?.tipo === 'puxar') {
+                    for (const alvo of ele.banco) candidatas.push({ tipo: 'poder', jogador: j, uid: c.uid, alvo: alvo.uid });
+                } else {
+                    candidatas.push({ tipo: 'poder', jogador: j, uid: c.uid });
+                }
                 candidatas.push({ tipo: 'devolverMesa', jogador: j, uid: c.uid });
             }
             for (const c of eu.banco) candidatas.push({ tipo: 'recuar', jogador: j, para: c.uid });

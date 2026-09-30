@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-09-30 · Superkid e Encantadora (REGRAS_VERSAO 7):** a Aura de 67 Segundos do Superkid deixa ele virado quando derruba qualquer carta (antes só de um golpe só; flag `recargaSeDerrubar`). O Vem Cá da Encantadora virou **poder** (1x por turno, de qualquer lugar da mesa, como o da Hatsune): escolhe quem vem do banco do rival e ela fica virada por 1 turno; o único ataque dela é a Chama Rosa. Testes e simulação (2000 partidas, Encantadora 47,6%) ok. Interpretei "enfasada" como **virada** (não ataca, não usa poder, não recua por 1 turno): confirmar com o Henrique. Animação do laço agora no poder (`EFEITOS_PODER`).
+
 - **2026-09-30 · Montador de decks e chat:** o montador agora tem painel fixo à esquerda (contadores, nome, erro e botões, sem barra por cima das cartas) e a lista de cartas rolando ao lado, cada carta com nome, frase e descrição (`tcg`). O chat da partida, em telas de 1120px ou mais, fica sempre aberto numa coluna ao lado da mesa (a mesa cede a largura, `:has(> .bt-chat)`); abaixo disso continua o botão 💬. Conferido só em emulação (1024 e 1366): falta ver numa partida online de verdade.
 
 - **2026-09-30 · Sem limite de partidas online:** saíram os limites de 50 partidas/dia no site e 10 por jogador (`conferirLimites` em `api/tcg.js`; teste T7 removido). O limite de créditos contra o NPC (10 premiadas/dia) continua. Se o custo do servidor preocupar, o freio pode voltar.

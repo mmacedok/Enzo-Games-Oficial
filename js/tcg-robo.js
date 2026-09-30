@@ -86,7 +86,12 @@
         if (melhor && (melhor.letal || melhor.nocaute)) return ataques[0].v;
 
         // Poderes primeiro (comprar carta pode trazer mais opções).
-        if (por('poder').length) return por('poder')[0];
+        // (o Vem Cá da Encantadora deixa ela virada: só vale a pena com o ativo dele forte e um banco fraco para puxar)
+        const poderes = por('poder').filter((v) => !v.alvo);
+        if (poderes.length) return poderes[0];
+        const puxar = por('poder').filter((v) => v.alvo !== undefined)
+            .sort((a, b) => vida(estado, acharNaMesa(estado.jogadores[1 - j], a.alvo)) - vida(estado, acharNaMesa(estado.jogadores[1 - j], b.alvo)))[0];
+        if (puxar && estado.jogadores[1 - j].ativo && vida(estado, estado.jogadores[1 - j].ativo) > vida(estado, acharNaMesa(estado.jogadores[1 - j], puxar.alvo)) * 1.5) return puxar;
 
         // Ativo vai cair no próximo turno e tem alguém melhor no banco: recua.
         if (por('recuar').length && eu.ativo && ameaca(estado, j) >= vida(estado, eu.ativo)) {
