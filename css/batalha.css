@@ -4,7 +4,15 @@
    em CSS até existir a arte (js/batalha.js, ARTE; docs/BATALHA-ASSETS.md).
    ========================================================================== */
 
+/* Komika Axis (Apostrophic Labs, freeware; licença em assets/fonts/Komika-LEIA-ME.txt) */
+@font-face {
+    font-family: 'Komika Axis';
+    src: url('../assets/fonts/KomikaAxis.ttf') format('truetype');
+    font-weight: 400 800;
+    font-display: swap;
+}
 .pagina-batalha {
+    --font-sans: 'Komika Axis', 'Comic Neue', 'Trebuchet MS', sans-serif;
     min-height: 100dvh;
     background: #121212;
     overflow-x: hidden;
