@@ -6,7 +6,7 @@
 > item (ex.: `> Henrique: deixa para depois`); o Claude segue isso na próxima atualização.
 > Testes que faltam rodar ficam em [`TESTES-PENDENTES.md`](TESTES-PENDENTES.md) (não repetidos aqui).
 >
-> Última atualização: **2026-09-28**.
+> Última atualização: **2026-09-30**.
 
 **Legenda:**
 - **Quem:**
@@ -77,6 +77,9 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Capítulo 8 ("A rotina impossível!") no site**: capa e 12 páginas (1080×1920) em
+  `assets/Capitulo 8/`, PNGs recomprimidos sem perda (64 MB → 44 MB, pixels idênticos) e entrada no
+  `data/comics.manifest.json`. Aparece como destaque da home e no leitor.
 - 2026-09-30: **Batalha, regra nova** (`docs/PLANO-VIDA-JOGADOR.md`):
   - **Vitória por vida:**
     - 6.000 de vida; HP e dano das cartas ×20;
