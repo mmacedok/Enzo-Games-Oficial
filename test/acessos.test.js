@@ -5,7 +5,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createApi } = require('../api/handler.js');
 const { createLocalDb } = require('../api/db-local.js');
-const { origemDe } = require('../api/acessos.js');
+const { origemDe, aparelhoDe } = require('../api/acessos.js');
 
 const ENV = { GOOGLE_CLIENT_ID: 'teste.apps.googleusercontent.com', SESSION_SECRET: 'x'.repeat(40), ADMIN_EMAILS: 'chefe@exemplo.com' };
 
@@ -37,8 +37,8 @@ const SP = { 'cf-connecting-ip': '200.9.9.9', 'cf-ipcountry': 'BR', 'cf-region':
 
 test('A1: origemDe lê IP e lugar dos cabeçalhos da Cloudflare (e decodifica)', () => {
     const o = origemDe(new Request('http://x/', { headers: SP }));
-    assert.deepEqual(o, { ip: '200.9.9.9', pais: 'BR', estado: 'São Paulo', cidade: 'São Paulo', operadora: null, lat: null, lon: null });
-    assert.deepEqual(origemDe(new Request('http://x/')), { ip: null, pais: null, estado: null, cidade: null, operadora: null, lat: null, lon: null });
+    assert.deepEqual(o, { ip: '200.9.9.9', pais: 'BR', estado: 'São Paulo', cidade: 'São Paulo', operadora: null, aparelho: null, lat: null, lon: null });
+    assert.deepEqual(origemDe(new Request('http://x/')), { ip: null, pais: null, estado: null, cidade: null, operadora: null, aparelho: null, lat: null, lon: null });
     const comCf = new Request('http://x/', { headers: SP });
     comCf.cf = { asOrganization: 'Claro S.A.', city: 'Fortaleza', latitude: '-3.7319', longitude: '-38.5267' };
     assert.equal(origemDe(comCf).operadora, 'Claro S.A.');
@@ -158,4 +158,35 @@ test('A7: radar devolve tráfego por hora, pontos do mapa e eventos recentes (s�
     assert.deepEqual([r.pontos[0].lat, r.pontos[0].lon, r.pontos[0].n], [-19.92, -43.94, 1]);
     assert.equal(r.recentes.length, 2);
     assert.deepEqual(r.totais, { acessos: 2, ips: 2, semLogin: 1 });
+});
+
+test('A8: aparelhoDe resume o User-Agent (iPhone Safari, app embutido, Android, PC)', () => {
+    const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+    assert.equal(aparelhoDe(iphone), 'iPhone 17 · Safari');
+    assert.equal(aparelhoDe(iphone + ' Instagram 330.0.0'), 'iPhone 17 · Instagram (app)');
+    assert.equal(aparelhoDe('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'), 'iPhone 17 · WebView (app)');
+    assert.equal(aparelhoDe('Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36'), 'Android · Chrome');
+    assert.equal(aparelhoDe('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36 Edg/126.0'), 'Windows · Edge');
+    assert.equal(aparelhoDe(''), null);
+});
+
+test('A9: sessão perdida (o navegador lembrava o login) é registrada com o aparelho; cookie de sessão leva Expires', async () => {
+    const { navegador } = montar();
+    const chefe = navegador(SP);
+    await login(chefe, 'chefe', 'Chefe');
+    const iphone = navegador({ ...BH, 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1' });
+    await iphone('POST', '/api/visita', { pagina: '/index.html', perdida: true });
+    await iphone('POST', '/api/visita', { pagina: '/index.html', perdida: true }); // mesmo IP: não duplica
+    const { acessos } = (await chefe('GET', '/api/admin/acessos?anonimo=1')).dados;
+    assert.equal(acessos.length, 1);
+    assert.equal(acessos[0].evento, 'sessao-perdida');
+    assert.equal(acessos[0].aparelho, 'iPhone 17 · Safari');
+    // cookie do login: Max-Age e Expires juntos
+    const { createApi: criar } = require('../api/handler.js');
+    const api = criar({ db: createLocalDb(null), env: ENV, verificarGoogle: async () => ({ sub: 'x', name: 'X', email: 'x@exemplo.com' }), agora: Date.now });
+    const r = await api(new Request('http://localhost/api/auth/google', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'http://localhost' }, body: JSON.stringify({ credential: 'google:x:X:xxxxxxxxxxxxxxxxxxxx' }) }));
+    const cookie = r.headers.getSetCookie()[0];
+    assert.match(cookie, /Max-Age=2592000/);
+    assert.match(cookie, /Expires=\w{3}, \d{2} \w{3} \d{4}/);
+    assert.match(cookie, /HttpOnly/);
 });

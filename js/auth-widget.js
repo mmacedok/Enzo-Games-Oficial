@@ -41,6 +41,13 @@
     /** Visitante sem login: avisa o servidor (no máximo 1x a cada 30 min por navegador) para o registro de acessos do admin. */
     function avisarVisita() {
         const agora = Date.now();
+        // Já tinha entrado neste aparelho mas a sessão não voltou: conta ao servidor (1x por dia) para o admin ver o aparelho.
+        const perdida = lerLocal('enzoJaLogou') === '1';
+        if (perdida && agora - (Number.parseInt(lerLocal('enzoPerdida'), 10) || 0) > 24 * 60 * 60 * 1000) {
+            gravarLocal('enzoPerdida', String(agora));
+            pedir('/api/visita', { pagina: location.pathname, perdida: true }).catch(() => {});
+            return;
+        }
         if (agora - (Number.parseInt(lerLocal('enzoVisita'), 10) || 0) < 30 * 60 * 1000) return;
         gravarLocal('enzoVisita', String(agora));
         pedir('/api/visita', { pagina: location.pathname }).catch(() => {});
@@ -51,6 +58,7 @@
         if (!eu.dados?.loggedIn) { avisarVisita(); estado.usuario = null; estado.admin = false; estado.dados = null; return; }
         estado.usuario = eu.dados.user;
         estado.admin = eu.dados.admin === true;
+        gravarLocal('enzoJaLogou', '1');
         const sync = await pedir('/api/user/sync');
         estado.dados = sync.ok ? sync.dados : null;
     }
@@ -96,6 +104,7 @@
         const login = await pedir('/api/auth/google', { credential });
         if (!login.ok) { mostrarErroLogin(login.dados?.error || 'Não deu para entrar agora. Tente de novo.'); return; }
         estado.usuario = login.dados.user;
+        gravarLocal('enzoJaLogou', '1');
         const sync = await pedir('/api/user/sync-guest', dadosDoConvidado());
         estado.dados = sync.ok ? sync.dados : null;
         fecharConvite();
@@ -106,6 +115,7 @@
 
     async function sairDaConta() {
         await pedir('/api/auth/logout', {});
+        gravarLocal('enzoJaLogou', '0');
         window.google?.accounts.id.disableAutoSelect();
         estado.usuario = null;
         estado.admin = false;

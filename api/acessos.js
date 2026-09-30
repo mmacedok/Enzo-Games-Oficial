@@ -46,6 +46,17 @@ const limpo = (v, max) => {
     return t || null;
 };
 
+/** Resume o User-Agent: "iPhone · Safari", "Android · Chrome", "iPhone · Instagram (app)"... (só para o admin entender o aparelho). */
+function aparelhoDe(ua) {
+    const u = String(ua || '');
+    if (!u) return null;
+    const sistema = /iPhone|iPod/.test(u) ? 'iPhone' : /iPad/.test(u) ? 'iPad' : /Android/.test(u) ? 'Android' : /Windows/.test(u) ? 'Windows' : /Mac OS X|Macintosh/.test(u) ? 'Mac' : /Linux/.test(u) ? 'Linux' : '?';
+    const app = /Instagram/.test(u) ? 'Instagram (app)' : /FBAN|FBAV/.test(u) ? 'Facebook (app)' : /Discord/i.test(u) ? 'Discord (app)' : /Line\//.test(u) ? 'Line (app)' : /TikTok|musical_ly/.test(u) ? 'TikTok (app)' : /Telegram/i.test(u) ? 'Telegram (app)' : null;
+    const navegador = app || (/CriOS|Chrome\//.test(u) && !/Edg/.test(u) ? 'Chrome' : /FxiOS|Firefox/.test(u) ? 'Firefox' : /EdgiOS|Edg\//.test(u) ? 'Edge' : /Safari\//.test(u) ? 'Safari' : /iPhone|iPad/.test(u) ? 'WebView (app)' : '?');
+    const ios = u.match(/OS (\d+)[_.]/)?.[1];
+    return limpo(`${sistema}${ios && sistema !== 'Android' ? ` ${ios}` : ''} · ${navegador}`, 60);
+}
+
 /** Coordenada com 2 casas (~1 km) ou null se não for número dentro do limite. */
 function coordenada(valor, max) {
     const n = Number.parseFloat(valor);
@@ -65,6 +76,7 @@ function origemDe(request) {
         estado: limpo(cf.region || (h.get('cf-region') && decodificar(h.get('cf-region'))), 80),
         cidade: limpo(cf.city || (h.get('cf-ipcity') && decodificar(h.get('cf-ipcity'))), 80),
         operadora: limpo(cf.asOrganization, 80),
+        aparelho: aparelhoDe(h.get('user-agent')),
         lat: coordenada(cf.latitude ?? h.get('cf-iplatitude'), 90),
         lon: coordenada(cf.longitude ?? h.get('cf-iplongitude'), 180),
     };
@@ -82,8 +94,8 @@ async function gravar(ctx, evento, userId) {
     const o = origemDe(ctx.request);
     const agora = ctx.agora();
     await ctx.db.query(
-        `INSERT INTO acessos (id, user_id, ip, pais, estado, cidade, operadora, lat, lon, evento, pagina, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-        [crypto.randomUUID(), userId, o.ip, o.pais, o.estado, o.cidade, o.operadora, o.lat, o.lon, evento, ctx.acessoPagina ?? null, agora]);
+        `INSERT INTO acessos (id, user_id, ip, pais, estado, cidade, operadora, aparelho, lat, lon, evento, pagina, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+        [crypto.randomUUID(), userId, o.ip, o.pais, o.estado, o.cidade, o.operadora, o.aparelho, o.lat, o.lon, evento, ctx.acessoPagina ?? null, agora]);
     // Faxina barata: no máximo uma por hora por processo.
     if (agora - ultimaFaxina > 60 * 60 * 1000) {
         ultimaFaxina = agora;
@@ -99,7 +111,7 @@ async function registrarAcesso(ctx) {
     try {
         const { request, url } = ctx;
         const userId = ctx.usuario?.id ?? ctx.acessoUsuario ?? null;
-        let evento = nomeDoEvento(request, url);
+        let evento = ctx.acessoEvento ?? nomeDoEvento(request, url);
         if (!evento && request.method === 'GET' && url.pathname === '/api/auth/me' && userId) {
             // Visita: uma por conta e IP a cada 30 minutos (assim dá para ver o IP mudar sem gravar toda página).
             const { ip } = origemDe(request);
@@ -109,12 +121,12 @@ async function registrarAcesso(ctx) {
             if (recente) return;
             evento = 'visita';
         }
-        if (evento === 'visitante') {
+        if (evento === 'visitante' || evento === 'sessao-perdida') {
             // Sem login: um registro por IP a cada 30 minutos (quem recarrega a página não enche o banco).
             const { ip } = origemDe(request);
             const [recente] = await ctx.db.query(
-                `SELECT 1 AS x FROM acessos WHERE evento = 'visitante' AND ip IS NOT DISTINCT FROM $1 AND created_at > $2 LIMIT 1`,
-                [ip, ctx.agora() - VISITA_INTERVALO]);
+                `SELECT 1 AS x FROM acessos WHERE evento = $3 AND ip IS NOT DISTINCT FROM $1 AND created_at > $2 LIMIT 1`,
+                [ip, ctx.agora() - VISITA_INTERVALO, evento]);
             if (recente) return;
         }
         if (evento) await gravar(ctx, evento, userId);
@@ -125,7 +137,7 @@ async function registrarAcesso(ctx) {
 
 const linha = (l) => ({
     id: l.id, userId: l.user_id, nome: l.nome || null, email: l.email || null,
-    ip: l.ip, pais: l.pais, estado: l.estado, cidade: l.cidade, operadora: l.operadora || null, evento: l.evento, pagina: l.pagina || null, em: Number(l.created_at),
+    ip: l.ip, pais: l.pais, estado: l.estado, cidade: l.cidade, operadora: l.operadora || null, aparelho: l.aparelho || null, evento: l.evento, pagina: l.pagina || null, em: Number(l.created_at),
 });
 
 const rotas = [
@@ -133,7 +145,9 @@ const rotas = [
         // Visitante sem login (o site chama uma vez a cada 30 min). O registro é feito por registrarAcesso.
         metodo: 'POST', caminho: '/api/visita',
         async executar(ctx) {
-            const { pagina } = await ctx.corpo();
+            const { pagina, perdida } = await ctx.corpo();
+            // perdida: o navegador tinha login (lembrado no aparelho) e o servidor não recebeu o cookie
+            if (perdida === true) ctx.acessoEvento = 'sessao-perdida';
             ctx.acessoPagina = typeof pagina === 'string' && pagina.startsWith('/') ? limpo(pagina, 80) : null;
             return { ok: true };
         },
@@ -216,4 +230,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, registrarAcesso, origemDe, nomeDoEvento, linha, RETENCAO_DIAS, VISITA_INTERVALO };
+module.exports = { rotas, registrarAcesso, origemDe, aparelhoDe, nomeDoEvento, linha, RETENCAO_DIAS, VISITA_INTERVALO };

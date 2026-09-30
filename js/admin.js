@@ -526,13 +526,14 @@
     }
 
     function listarAcessos(acessos, comNome = true) {
-        tabela(['quando', ...(comNome ? ['leitor'] : []), 'ação', 'IP', 'lugar', 'operadora'], acessos.map((a) => [
+        tabela(['quando', ...(comNome ? ['leitor'] : []), 'ação', 'IP', 'lugar', 'operadora', 'aparelho'], acessos.map((a) => [
             data(a.em),
             ...(comNome ? [a.userId ? botao(primeiroNome(a.nome), `open ${a.userId}`, { link: true }) : span('apagado', '—')] : []),
             a.evento,
             a.ip ? botao(a.ip, `ip ${a.ip}`, { link: true }) : span('apagado', '—'),
             lugar(a),
             a.operadora || span('apagado', '—'),
+            a.aparelho || span('apagado', '—'),
         ]));
     }
 

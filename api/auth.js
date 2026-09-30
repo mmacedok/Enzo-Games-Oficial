@@ -11,8 +11,8 @@ const { HttpError, montarCookie } = require('./http.js');
 const COOKIE = 'sid';
 const DIA = 24 * 60 * 60 * 1000;
 const DURACAO_SESSAO = 30 * DIA;
-/** Sessão usada com menos da metade do prazo restante ganha 30 dias novos. */
-const RENOVAR_ABAIXO_DE = DURACAO_SESSAO / 2;
+/** Sessão usada há mais de 1 dia desde a última renovação ganha 30 dias novos (o cookie sempre fica "fresco"). */
+const RENOVAR_ABAIXO_DE = DURACAO_SESSAO - DIA;
 
 const hashDoToken = (token, segredo) => crypto.createHmac('sha256', segredo).update(token).digest('hex');
 
