@@ -1968,8 +1968,9 @@
         return fim;
     }
 
-    function moeda(resultado) {
+    function moeda(resultado, { rotulo, chamada } = {}) {
         const caixa = el('div', 'bt-moeda');
+        if (chamada) caixa.appendChild(el('div', 'bt-moeda-chamada', chamada));
         const face = (lado) => {
             const f = el('div', `bt-moeda-face bt-moeda-face--${lado}`);
             if (arte(ARTE.moeda[lado])) f.style.backgroundImage = `url('${arte(ARTE.moeda[lado])}')`;
@@ -1978,7 +1979,7 @@
         };
         const disco = el('div', 'bt-moeda-disco');
         disco.append(face('cara'), face('coroa'));
-        caixa.append(disco, el('div', 'bt-moeda-rotulo', resultado === 'cara' ? 'CARA!' : 'COROA!'));
+        caixa.append(disco, el('div', 'bt-moeda-rotulo', rotulo || (resultado === 'cara' ? 'CARA!' : 'COROA!')));
         mesa.efeitos.appendChild(caixa);
         const voltas = 5 * 360 + (resultado === 'cara' ? 0 : 180);
         disco.style.transform = `rotateY(${voltas}deg)`;
@@ -2436,9 +2437,17 @@
     async function tocar(ev, antes) {
         if (!mesa) return;
         switch (ev.tipo) {
-            case 'inicio':
+            case 'inicio': {
+                // Cara ou coroa para ver quem começa: o jogador 0 é Games (cara, o Enzo) e o
+                // jogador 1 é Torado (coroa, o touro). O motor já sorteou; a moeda só mostra.
+                const lado = ev.primeiro === 0 ? 'cara' : 'coroa';
+                await moeda(lado, {
+                    chamada: `Você é ${EU === 0 ? 'GAMES' : 'TORADO'}`,
+                    rotulo: lado === 'cara' ? 'GAMES!' : 'TORADO!',
+                });
                 await banner(ev.primeiro === EU ? 'VOCÊ COMEÇA!' : `${Dele().toUpperCase()} COMEÇA!`);
                 break;
+            }
             case 'turno':
                 desenhar();
                 if (ev.jogador === EU) await banner('SUA VEZ!', 'eu');

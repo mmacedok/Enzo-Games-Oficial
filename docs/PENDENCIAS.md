@@ -77,6 +77,9 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-09-30: **Batalha, cara ou coroa no começo:** a moeda do Glitch (cara = Enzo, coroa = touro)
+  gira antes de "VOCÊ COMEÇA!". O jogador 0 é **Games** e o jogador 1 é **Torado** (contra o robô,
+  você é sempre Games); cai o lado de quem começa. Só tela: o motor já sorteava (`estado.primeiro`).
 - 2026-09-30: **Batalha, regra nova** (`docs/PLANO-VIDA-JOGADOR.md`):
   - **Vitória por vida:**
     - 6.000 de vida; HP e dano das cartas ×20;
