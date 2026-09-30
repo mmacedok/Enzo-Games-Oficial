@@ -461,11 +461,6 @@
             desc: 'revela um gibi escondido (sem id: lista os escondidos)',
             async fn(args) { await trocarGibi(true, args[0]); },
         },
-        hide: {
-            uso: 'hide <id>',
-            desc: 'esconde de novo um gibi que tem hidden no catálogo',
-            async fn(args) { await trocarGibi(false, args[0]); },
-        },
         close: { desc: 'fecha a conta aberta', fn() { estado.alvo = null; atualizarPrompt(); apagado('conta fechada.'); } },
         grant: { uso: 'grant <id|#n>', desc: 'dá conquista (ou enzo secreto #n)', fn: (args) => trocarConquista(true, args[0]) },
         revoke: { uso: 'revoke <id|#n>', desc: 'tira conquista (ou enzo secreto #n)', fn: (args) => trocarConquista(false, args[0]) },
@@ -592,8 +587,9 @@
             },
         },
         hide: {
-            uso: 'hide <n>', desc: 'tira a partida do ranking',
+            uso: 'hide <n|id>', desc: 'tira uma partida do ranking ou esconde um gibi',
             async fn(args) {
+                if (!/^\d+$/.test(args[0] || '')) return trocarGibi(false, args[0]);
                 const s = partidaDoArgumento(args[0]);
                 await pedir(`/api/admin/scores/${s.id}/verify`, { verified: false });
                 marcarPartida(s.id, { verified: false });

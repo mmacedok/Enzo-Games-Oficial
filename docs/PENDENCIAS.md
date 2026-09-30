@@ -77,7 +77,7 @@
 ---
 
 ## ✅ Feito recentemente
-- 2026-09-30: **Capítulo 8 escondido temporariamente** (`"hidden": true` em `capitulo-8` no `data/comics.manifest.json`; suporte novo em `atualizar.js`). Para publicar de novo: tirar essa linha e rodar `npm run build`. Enquanto estiver escondido, o "Leitor da Saga" exige só os capítulos 1 a 7.
+- 2026-09-30: **Capítulo 8 escondido temporariamente** (`"hidden": true` em `capitulo-8` no `data/comics.manifest.json`; suporte novo em `atualizar.js`). Para publicar de novo, usar `reveal capitulo-8` no terminal admin; `hide capitulo-8` esconde novamente. O manifesto continua com `hidden: true`. Enquanto estiver escondido, o "Leitor da Saga" exige só os capítulos 1 a 7.
 - 2026-09-30: **"Como jogar" da Batalha agora são as 2 cartilhas ilustradas** (`assets/Batalha/como-jogar-1.png` e `-2.png`): abrem sozinhas na primeira visita (marca `enzo-batalha-cartilha-vista` no navegador) e pelo botão Como jogar do menu e da mesa. O texto antigo das regras foi apagado do `js/batalha.js`. Quem mudar regra precisa refazer a cartilha.
 - 2026-09-30: **Botão Voltar na mesa da Batalha:** canto superior esquerdo (no celular só a seta), com a mesma confirmação do 🏠 (o 🏠 do canto direito ficava atrás da conta).
 - 2026-09-30: **"Ver cartas" na escolha de deck da Batalha:** cada deck ganhou o botão; abre as cartas do deck (com ×quantidade) e, ao tocar numa, mostra a carta grande com a frase e o que ela faz no TCG (`mostrarCartasDoDeck` em `js/batalha.js`).
