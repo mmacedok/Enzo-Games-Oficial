@@ -4021,6 +4021,166 @@
       }
     ]
   },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Capa/capa-provisoria.png": {
+    "width": 720,
+    "height": 1280,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e94703eeb47e5405-640.webp",
+        "bytes": 190496
+      },
+      {
+        "width": 720,
+        "src": "assets/web/e94703eeb47e5405-720.webp",
+        "bytes": 226716
+      }
+    ]
+  },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Paginas/PAG1.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0361fda5e8d2dc2b-640.webp",
+        "bytes": 252374
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/0361fda5e8d2dc2b-1080.webp",
+        "bytes": 515578
+      }
+    ]
+  },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Paginas/PAG2.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c321e68a63c76ff9-640.webp",
+        "bytes": 234142
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/c321e68a63c76ff9-1080.webp",
+        "bytes": 468268
+      }
+    ]
+  },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Paginas/PAG3.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0812655716aded9b-640.webp",
+        "bytes": 182608
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/0812655716aded9b-1080.webp",
+        "bytes": 334556
+      }
+    ]
+  },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Paginas/PAG4.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ecce5a0a73a39f9d-640.webp",
+        "bytes": 207562
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/ecce5a0a73a39f9d-1080.webp",
+        "bytes": 387794
+      }
+    ]
+  },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Paginas/PAG5.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5b363be46b873f49-640.webp",
+        "bytes": 283158
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/5b363be46b873f49-1080.webp",
+        "bytes": 582616
+      }
+    ]
+  },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Paginas/PAG6.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ef8506e326edba35-640.webp",
+        "bytes": 232626
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/ef8506e326edba35-1080.webp",
+        "bytes": 438010
+      }
+    ]
+  },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Paginas/PAG7.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/67e65ab0ed644062-640.webp",
+        "bytes": 268434
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/67e65ab0ed644062-1080.webp",
+        "bytes": 550642
+      }
+    ]
+  },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Paginas/PAG8.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0174d6ee1e5ff10e-640.webp",
+        "bytes": 238448
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/0174d6ee1e5ff10e-1080.webp",
+        "bytes": 451022
+      }
+    ]
+  },
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Paginas/PAG9.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/047267869712c63e-640.webp",
+        "bytes": 218606
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/047267869712c63e-1080.webp",
+        "bytes": 425838
+      }
+    ]
+  },
   "assets/Spin Offs/Hatsune Neves/Capitulo 1/Capa/capa.png": {
     "width": 1080,
     "height": 1920,
@@ -4706,6 +4866,22 @@
       }
     ]
   },
+  "assets/fliperama-3d/jogos/italos-surfer-v2.png": {
+    "width": 800,
+    "height": 600,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c1a3de2b391e6f76-640.webp",
+        "bytes": 132362
+      },
+      {
+        "width": 800,
+        "src": "assets/web/c1a3de2b391e6f76-800.webp",
+        "bytes": 192066
+      }
+    ]
+  },
   "assets/italo-face-t.png": {
     "width": 470,
     "height": 364,
@@ -4714,6 +4890,43 @@
         "width": 470,
         "src": "assets/web/db6944977fba8928-470.webp",
         "bytes": 17176
+      }
+    ]
+  },
+  "assets/italos-surfer/capa-site.png": {
+    "width": 1448,
+    "height": 1086,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d43369b69467ba9e-640.webp",
+        "bytes": 133486
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/d43369b69467ba9e-1280.webp",
+        "bytes": 385552
+      },
+      {
+        "width": 1448,
+        "src": "assets/web/d43369b69467ba9e-1448.webp",
+        "bytes": 451746
+      }
+    ]
+  },
+  "assets/italos-surfer/cover.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d0b6ca7b995cd959-640.webp",
+        "bytes": 269092
+      },
+      {
+        "width": 941,
+        "src": "assets/web/d0b6ca7b995cd959-941.webp",
+        "bytes": 470940
       }
     ]
   },

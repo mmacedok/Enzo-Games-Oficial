@@ -83,6 +83,18 @@
           "title": "O poder do Magic"
         }
       }
+    },
+    "felipe-robozao": {
+      "id": "felipe-robozao",
+      "title": "Felipe Robozão",
+      "description": "A origem de Felipe Robozão",
+      "order": 140,
+      "featured": false,
+      "chapters": {
+        "1": {
+          "title": "Origem"
+        }
+      }
     }
   },
   "censorship": {

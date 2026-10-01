@@ -7,7 +7,7 @@
     const qs = (id) => document.getElementById(id);
 
     /** Botão de casa: volta para a página da coleção do gibi aberto. */
-    const CASA = { degustador: 'degustador.html', torado: 'zezoverso.html#zezoverso', superkid: 'zezoverso.html#zezoverso', 'hatsune-neves': 'zezoverso.html#zezoverso' };
+    const CASA = { degustador: 'degustador.html', torado: 'zezoverso.html#zezoverso', superkid: 'zezoverso.html#zezoverso', 'hatsune-neves': 'zezoverso.html#zezoverso', 'felipe-robozao': 'zezoverso.html#zezoverso' };
     const casaDo = (comic) => CASA[comic?.id] || (comic?.featured === false ? 'zezoverso.html' : 'index.html');
     const ZOOM_MIN = 0.5;
     const ZOOM_MAX = 3;

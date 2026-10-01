@@ -7,7 +7,20 @@ const ROOT = path.join(__dirname, '..');
 const SPIN_OFFS_DIR = path.join(ROOT, 'assets/Spin Offs');
 const IMAGE_RE = /\.(jpe?g|png|webp|avif)$/i;
 
-function buildSvgOverlay(chapterNumber) {
+// Título em duas linhas de cada spin-off (a pasta não tem acento); sem entrada, usa o nome da pasta em maiúsculas.
+const TITULOS = {
+    'Degustador da noite': ['DEGUSTADOR', 'DA NOITE'],
+    'Felipe Robozao': ['FELIPE', 'ROBOZÃO'],
+};
+
+function tituloDe(spinOffName) {
+    if (TITULOS[spinOffName]) return TITULOS[spinOffName];
+    const palavras = spinOffName.toUpperCase().split(/\s+/);
+    const meio = Math.ceil(palavras.length / 2);
+    return [palavras.slice(0, meio).join(' '), palavras.slice(meio).join(' ')];
+}
+
+function buildSvgOverlay(chapterNumber, titulo) {
     const numStr = String(chapterNumber).padStart(2, '0');
     return `
     <svg width="720" height="1280" viewBox="0 0 720 1280" xmlns="http://www.w3.org/2000/svg">
@@ -21,8 +34,8 @@ function buildSvgOverlay(chapterNumber) {
         </defs>
         <rect width="720" height="1280" fill="url(#overlay-grad)" />
         <rect x="18" y="18" width="684" height="1244" fill="none" stroke="#8a2be2" stroke-width="14" />
-        <text x="360" y="150" text-anchor="middle" font-family="Impact, 'Arial Black', sans-serif" font-size="110" fill="#ffffff" stroke="#111111" stroke-width="8" paint-order="stroke">DEGUSTADOR</text>
-        <text x="360" y="240" text-anchor="middle" font-family="Impact, 'Arial Black', sans-serif" font-size="90" fill="#ffffff" stroke="#111111" stroke-width="8" paint-order="stroke">DA NOITE</text>
+        <text x="360" y="150" text-anchor="middle" font-family="Impact, 'Arial Black', sans-serif" font-size="110" fill="#ffffff" stroke="#111111" stroke-width="8" paint-order="stroke">${titulo[0]}</text>
+        <text x="360" y="240" text-anchor="middle" font-family="Impact, 'Arial Black', sans-serif" font-size="90" fill="#ffffff" stroke="#111111" stroke-width="8" paint-order="stroke">${titulo[1]}</text>
         <text x="360" y="1180" text-anchor="middle" font-family="Impact, 'Arial Black', sans-serif" font-size="96" fill="#ff6600" stroke="#111111" stroke-width="8" paint-order="stroke">Nº ${numStr}</text>
     </svg>
     `.trim();
@@ -55,7 +68,7 @@ async function processChapter(spinOffName, chapterName, chapterNum) {
         .png()
         .toBuffer();
 
-    const svg = buildSvgOverlay(chapterNum);
+    const svg = buildSvgOverlay(chapterNum, tituloDe(spinOffName));
 
     await sharp(background)
         .composite([{ input: Buffer.from(svg, 'utf8') }])
