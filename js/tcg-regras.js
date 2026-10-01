@@ -25,7 +25,7 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 9;
+    const REGRAS_VERSAO = 10;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     const MAX_COPIAS_LENDARIO = 1;
@@ -134,6 +134,8 @@
     /** Cartas que um deck pode ter banidas pelo adversário: só as que não são lendárias. */
     const banivel = (inst) => Baralho.carta(inst.id)?.raridade !== 'lendario';
     const BANIDAS_POR_JOGADOR = 2;
+    /** Quantas cartas o jogador bane: até 2, e nunca as duas cópias de uma mesma carta (cartas diferentes). */
+    const quantasBanir = (deckAdv) => Math.min(BANIDAS_POR_JOGADOR, new Set(deckAdv.filter(banivel).map((c) => c.id)).size);
 
     /** Mão inicial de cada um: embaralha e compra; mão sem ninguém para lutar volta e compra de novo (sem castigo). */
     function distribuirMaos(estado) {
@@ -150,8 +152,7 @@
 
     /** Erro de um banimento (vazio = ok): `uids` são cartas do deck do adversário (`deckAdv`). */
     function erroDoBanimento(deckAdv, uids) {
-        const possiveis = deckAdv.filter(banivel);
-        const esperado = Math.min(BANIDAS_POR_JOGADOR, possiveis.length);
+        const esperado = quantasBanir(deckAdv);
         if (!Array.isArray(uids) || uids.length !== esperado) return `escolha ${esperado} carta${esperado === 1 ? '' : 's'} para banir`;
         if (new Set(uids).size !== uids.length) return 'carta repetida na escolha';
         for (const uid of uids) {
@@ -159,6 +160,7 @@
             if (!c) return 'essa carta não está no deck dele';
             if (!banivel(c)) return 'lendária não pode ser banida';
         }
+        if (new Set(uids.map((u) => deckAdv.find((x) => x.uid === u)?.id)).size !== uids.length) return 'não dá para banir as duas cópias da mesma carta';
         if (!deckAdv.some((c) => !uids.includes(c.uid) && ehLutador(c.id))) return 'banir essas cartas deixaria o deck dele sem ninguém para lutar';
         return null;
     }
@@ -872,10 +874,11 @@
         if (estado.fase === 'banimento') {
             if (estado.banimento.feitos[j]) return [];
             const possiveis = ele.deck.filter(banivel).map((c) => c.uid);
-            const n = Math.min(BANIDAS_POR_JOGADOR, possiveis.length);
+            const n = quantasBanir(ele.deck);
+            const mesmaCarta = (a, b) => ele.deck.find((c) => c.uid === a).id === ele.deck.find((c) => c.uid === b).id;
             if (n === 0) candidatas.push({ tipo: 'banir', jogador: j, cartas: [] });
             else if (n === 1) for (const a of possiveis) candidatas.push({ tipo: 'banir', jogador: j, cartas: [a] });
-            else for (let a = 0; a < possiveis.length; a++) for (let b = a + 1; b < possiveis.length; b++) candidatas.push({ tipo: 'banir', jogador: j, cartas: [possiveis[a], possiveis[b]] });
+            else for (let a = 0; a < possiveis.length; a++) for (let b = a + 1; b < possiveis.length; b++) if (!mesmaCarta(possiveis[a], possiveis[b])) candidatas.push({ tipo: 'banir', jogador: j, cartas: [possiveis[a], possiveis[b]] });
         } else if (estado.fase === 'preparacao') {
             if (eu.preparado) return [];
             const lutadores = eu.mao.filter((c) => ehLutador(c.id)).map((c) => c.uid);
@@ -982,7 +985,7 @@
     return {
         TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAX_LENDARIAS_CUSTOM, MAO_INICIAL, VAGAS_BANCO, LIMITE_TURNOS,
         ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR, PROTECAO_ATIVO, DEVOLVER_MAO_POR_TURNO, DEVOLVER_MESA_POR_TURNO,
-        REGRAS_VERSAO, JogadaInvalida, BANIDAS_POR_JOGADOR, banivel,
+        REGRAS_VERSAO, JogadaInvalida, BANIDAS_POR_JOGADOR, banivel, quantasBanir,
         validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, quemDeve, repetir,
         rodadaDe, RODADAS_MAX, hpMax, custoRecuo, calcularDano, danoNocaute, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado, virada,
     };

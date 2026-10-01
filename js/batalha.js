@@ -1254,7 +1254,7 @@
     }
 
     // ---------------------------------------------------------------- banimento de cartas
-    /** Janela de banimento: escolhe 2 cartas não lendárias do deck do adversário (vale para local e online). */
+    /** Janela de banimento: escolhe 2 cartas diferentes não lendárias do deck do adversário (vale para local e online). */
     function sincronizarBanimento() {
         const aberta = mesa.raiz.querySelector('.bt-banir');
         if (estado.fase !== 'banimento') { aberta?.remove(); return; }
@@ -1275,10 +1275,10 @@
             mesa.raiz.appendChild(caixa);
             return;
         }
-        const possiveis = deckDele.filter((c) => R.banivel(c));
-        const n = Math.min(R.BANIDAS_POR_JOGADOR, possiveis.length);
+        const n = R.quantasBanir(deckDele);
+        const idDe = (uid) => deckDele.find((c) => c.uid === uid)?.id;
         miolo.append(el('h2', '', `Banimento: escolha ${n} carta${n === 1 ? '' : 's'} do deck de ${online ? dele() : 'NPC'}`),
-            el('p', 'bt-placar-nota', 'As cartas banidas saem do deck dele antes de qualquer carta ir para a mesa. Lendárias não podem ser banidas. Vocês dois escolhem ao mesmo tempo, sem ver a escolha do outro.'));
+            el('p', 'bt-placar-nota', 'As cartas banidas saem do deck dele antes de qualquer carta ir para a mesa. Lendárias não podem ser banidas e as duas cópias da mesma carta não podem ser banidas juntas. Vocês dois escolhem ao mesmo tempo, sem ver a escolha do outro.'));
         const contador = el('p', 'bt-banir-contador', '');
         const erro = el('p', 'bt-editor-erro', '');
         const grade = el('ul', 'bt-banir-grade');
@@ -1295,7 +1295,8 @@
             confirmar.disabled = banirSel.size !== n;
             for (const [uid, b] of botoes) {
                 b.classList.toggle('bt-banir-item--marcada', banirSel.has(uid));
-                b.disabled = !banirSel.has(uid) && banirSel.size >= n;
+                const copiaJaBanida = [...banirSel].some((s) => s !== uid && idDe(s) === idDe(uid));
+                b.disabled = !banirSel.has(uid) && (banirSel.size >= n || copiaJaBanida);
             }
             erro.textContent = '';
         };

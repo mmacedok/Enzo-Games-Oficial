@@ -1095,7 +1095,8 @@ test('texto do TCG de cada carta: existe e cita todos os ataques e o poder (não
 // ---- Banimento de cartas (antes de qualquer carta ir à mesa) ----------------------
 const comBanimento = () => R.criarPartida({ semente: 7, decks: [DECK, DECK], banimento: true });
 const banir = (e, j, cartas) => R.aplicar(e, { tipo: 'banir', jogador: j, cartas });
-const naoLendarias = (e, j) => e.jogadores[j].deck.filter((c) => R.banivel(c));
+// uma cópia de cada carta (não dá para banir as duas cópias juntas)
+const naoLendarias = (e, j) => e.jogadores[j].deck.filter((c, i, todas) => R.banivel(c) && todas.findIndex((x) => x.id === c.id) === i);
 
 test('banimento: a partida começa sem mãos, com os decks inteiros, e os dois precisam banir', () => {
     const e = comBanimento();
@@ -1122,6 +1123,12 @@ test('banimento: 2 cartas não lendárias do deck do adversário, sem repetir e 
     // cartas do PRÓPRIO deck não valem (o uid é do deck do outro lado)
     invalida(() => banir(e, 0, [e.jogadores[0].deck[0].uid, e.jogadores[0].deck[1].uid]), 'não está no deck');
     assert.doesNotThrow(() => banir(e, 0, [a.uid, b.uid]));
+    // as duas cópias da mesma carta não podem ser banidas juntas
+    const copias = comBanimento();
+    const mk2 = (id, n) => ({ uid: `1-c${n}`, id, dano: 0, aura: 0, estados: {}, escudo: null });
+    copias.jogadores[1].deck = [mk2('cara-de-coracao', 0), mk2('cara-de-coracao', 1), mk2('chorao', 2), mk2('toradolandia', 3)];
+    invalida(() => banir(copias, 0, ['1-c0', '1-c1']), 'duas cópias');
+    assert.doesNotThrow(() => banir(copias, 0, ['1-c0', '1-c2']));
     // deck com 1 só lutador: banir esse lutador deixaria o deck sem ninguém para lutar
     const fino = comBanimento();
     const mk = (id, n) => ({ uid: `1-f${n}`, id, dano: 0, aura: 0, estados: {}, escudo: null });
