@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-09-30 · Animações sempre ligadas (pedido do Henrique):** o padrão agora ignora o pedido do navegador/sistema (`prefers-reduced-motion`); só desliga se a pessoa tocar em "🎞️ Animações" no menu da Batalha (fica em `localStorage enzo-movimento = nao`). Os blocos CSS antigos de reduced-motion foram neutralizados (o global `html[data-movimento=nao]` cobre o modo desligado).
+
 - **2026-09-30 · Opera GX "tudo estático":** causa mais provável (não consegui testar no Opera GX): o navegador/sistema informa `prefers-reduced-motion: reduce` e o site, de propósito, desliga todas as animações (`css/style.css` e os `matchMedia` dos scripts). Agora existe `js/movimento.js` (em todas as páginas): a pessoa escolhe **ligar** ou desligar as animações, e a escolha vale para o CSS e para os scripts. No menu da Batalha tem o botão "🎞️ Animações" (avisa quando o navegador está pedindo menos animação). Falta confirmar no Opera GX do Henrique; se continuar parado com as animações ligadas, o problema é outro (me mandar o que aparece no console).
 
 - **2026-09-30 · Fliperama 3D removido da home:** no lugar da máquina ficam só os cartões dos jogos (Flappy Enzo, Caçada ao Inominável, Batalha dos Torados, Degustação Noturna em breve) em `js/jogos-home.js` + `.jogo-cartao` no `css/style.css`. Saíram `js/arcade-home.js`, `js/fliperama-arcade.js`, o three.js (`assets/fliperama-3d/vendor`) e as 4 fotos da máquina; as capas dos jogos continuam em `assets/fliperama-3d/jogos/`.

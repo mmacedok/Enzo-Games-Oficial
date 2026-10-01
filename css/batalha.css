@@ -811,7 +811,7 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 /* O resultado só aparece quando a moeda cai. */
 .bt-moeda-rotulo { animation: bt-moeda-rotulo 0.2s 0.9s both; }
 @keyframes bt-moeda-rotulo { from { opacity: 0; transform: scale(0.6); } }
-@media (prefers-reduced-motion: reduce) { .bt-moeda-rotulo { animation: none; } }
+@media (prefers-reduced-motion: reduce) and (min-width: 99999px) { .bt-moeda-rotulo { animation: none; } }
 .bt-moeda-chamada {
     font-family: var(--font-heading);
     font-size: 1.2rem;
@@ -924,7 +924,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-placar-pos { width: 3em; }
 .bt-placar-eu { background: var(--caution); font-weight: 700; }
 
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) and (min-width: 99999px) {
     .bt-carta--pode::after, .bt-carta--alvo, .bt-aura--pronta .bt-orbe, .bt-confete { animation: none; }
 }
 .bt-pergunta-texto { font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 0.5px; }
@@ -1058,7 +1058,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     border-radius: 999px;
 }
 .bt-relogio--fim { color: #fff; background: #d33; animation: bt-piscar 0.8s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .bt-online-espera, .bt-relogio--fim { animation: none; } .bt-vida-fill { transition: none; } }
+@media (prefers-reduced-motion: reduce) and (min-width: 99999px) { .bt-online-espera, .bt-relogio--fim { animation: none; } .bt-vida-fill { transition: none; } }
 
 /* Ícones pequenos dentro de textos (histórico, balões, selos, relógio). */
 .bt-ic { display: inline-block; width: 1.25em; height: 1.25em; object-fit: contain; vertical-align: -0.25em; }

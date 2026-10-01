@@ -2538,7 +2538,7 @@ button.ranking-nome:focus-visible { outline: 3px solid var(--focus); outline-off
 .carta-palavra[aria-pressed='true'] { color: var(--text); background: var(--ink); }
 .carta-censura-acoes { display: flex; gap: 6px; margin-top: 6px; }
 
-@media (prefers-reduced-motion: reduce) { .carta-acao--certeza { animation: none; } }
+@media (prefers-reduced-motion: reduce) and (min-width: 99999px) { .carta-acao--certeza { animation: none; } }
 
 /* ==========================================================================
    Baralho Enzo (js/baralho.js): cartas colecionáveis, pacotes e a abertura.
@@ -3261,7 +3261,7 @@ dialog.baralho-senha::backdrop { background: transparent; }
     .abertura-mesa { --carta-largura: min(calc((100vw - 64px) / 3), calc((100dvh - 250px) / 2 * 0.72)); gap: 10px; }
     .abertura-selo--nova { width: 50px; font-size: 0.8rem; top: -10px; right: -10px; }
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) and (min-width: 99999px) {
     .carta-tcg--epico .carta-tcg-foil,
     .carta-tcg--lendario .carta-tcg-brilho,
     .abertura-dica,
