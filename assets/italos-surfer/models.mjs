@@ -54,14 +54,28 @@ export function character(kind='italo'){
   root.userData.kind=kind;
   return {root,body,head,arms,legs,tail,shield};
 }
-export function animateCharacter(c,phase,y=0,sliding=false){
+export function animateCharacter(c,phase,y=0,sliding=false,airborne=false,boarding=false){
   c.body.scale.y=sliding?.47:1;c.body.rotation.x=sliding?.3:0;c.body.position.y=Math.abs(Math.sin(phase))*.045;
   c.root.position.y=y;c.legs[0].rotation.x=Math.sin(phase)*.65;c.legs[1].rotation.x=-Math.sin(phase)*.65;
   c.arms[0].rotation.x=-Math.sin(phase)*.65;c.arms[1].rotation.x=Math.sin(phase)*.65;c.tail.rotation.z=Math.sin(phase*.6)*.22;
+  if(airborne){c.legs[0].rotation.x=-.75;c.legs[1].rotation.x=.4;c.arms[0].rotation.z=-.65;c.arms[1].rotation.z=.65;c.body.rotation.x=-.12;}
+  else{c.arms[0].rotation.z=boarding?-.6:0;c.arms[1].rotation.z=boarding?.6:0;}
+  if(boarding){c.legs[0].rotation.x=.18;c.legs[1].rotation.x=-.18;}
 }
 export function obstacle(type){
   const g=new T.Group();g.name=type==='dodge'?'Trem industrial':type==='jump'?'Barreira de obra':'Tubulação baixa';
-  if(type==='dodge'){
+  if(type==='ramp'){
+    const shape=new T.Shape();shape.moveTo(-3,0);shape.lineTo(3,0);shape.lineTo(-3,2.65);shape.closePath();
+    const geo=new T.ExtrudeGeometry(shape,{depth:1.72,bevelEnabled:false});geo.rotateY(-Math.PI/2);geo.translate(.86,0,0);put(g,geo,colors.gold,[0,0,0]);
+    for(let i=0;i<7;i++){const strip=box(g,[1.6,.045,.12],[0,.18+i*.35,2.55-i*.79],colors.ink);strip.rotation.x=.416;}
+  }else if(type==='train'){
+    box(g,[1.72,2.65,12],[0,1.325,0],colors.teal,true);
+    box(g,[1.76,.12,12.1],[0,2.59,0],colors.ink);
+    for(const z of [-6.02,6.02]){box(g,[1.24,.65,.04],[0,1.9,z],0xa7e5eb);box(g,[1.55,.22,.04],[0,.6,z],colors.gold);for(const x of [-.56,.56])ball(g,[.12,.12,.03],[x,1.1,z],colors.cream,false);}
+    for(const x of [-.87,.87])for(const z of [-4.6,-3.8,3.8,4.6]){const wheel=cylinder(g,.24,.12,[x,.24,z],colors.ink);wheel.rotation.z=Math.PI/2;}
+    for(const x of [-.875,.875])for(let z=-4;z<=4;z+=2)box(g,[.025,.65,1.25],[x,1.9,z],0xa7e5eb);
+    box(g,[1.6,.04,11.6],[0,2.68,0],0x82999e);
+  }else if(type==='dodge'){
     box(g,[1.72,2.65,2.65],[0,1.325,0],colors.teal,true);box(g,[1.75,.15,2.7],[0,2.55,0],colors.ink);
     for(const z of [-1.34,1.34]){box(g,[1.24,.65,.035],[0,1.9,z],0xa7e5eb);box(g,[1.55,.24,.04],[0,.55,z],colors.gold);for(const x of [-.55,.55])ball(g,[.1,.1,.025],[x,1.1,z],colors.cream,false);}
     for(const x of [-.87,.87])for(const z of [-.7,.7]){const wheel=cylinder(g,.24,.1,[x,.24,z],colors.ink);wheel.rotation.z=Math.PI/2;}
@@ -81,9 +95,14 @@ export function pasta(){const g=new T.Group();g.name='Macarronada com almôndega
 }
 export function powerup(type){const g=new T.Group();g.name=type==='shield'?'Escudo de aura':'Ímã de macarronada';
   if(type==='shield')put(g,geom('shield',()=>new T.OctahedronGeometry(.42)),0x6bffdc,[0,0,0]);
+  else if(type==='jetpack'){for(const x of [-.22,.22]){cylinder(g,.16,.7,[x,0,0],colors.steel);ball(g,[.13,.25,.13],[x,-.48,0],colors.gold);}box(g,[.4,.32,.25],[0,0,0],colors.red);}
+  else if(type==='sneakers'){for(const x of [-.22,.22]){box(g,[.3,.3,.58],[x,0,0],colors.pink,true);box(g,[.32,.08,.62],[x,-.16,0],colors.cream);}}
+  else if(type==='double'){put(g,geom('star',()=>new T.OctahedronGeometry(.5)),colors.gold,[0,0,0]);box(g,[.1,.6,.12],[0,0,.43],colors.cream);box(g,[.6,.1,.12],[0,0,.43],colors.cream);}
   else {const m=put(g,geom('magnet',()=>new T.TorusGeometry(.3,.1,6,14,Math.PI*1.45)),colors.pink,[0,0,0]);m.rotation.z=.85;}
   return g;
 }
+export function hoverboard(){const g=new T.Group();g.name='Prancha Aura';ball(g,[.52,.1,.9],[0,.1,0],colors.pink);box(g,[.7,.08,1],[0,.18,0],colors.ink);for(const z of [-.55,.55])box(g,[.7,.025,.18],[0,.23,z],0x6bffdc);for(const x of [-.3,.3])ball(g,[.12,.08,.65],[x,-.03,0],0x6bffdc,false);return g;}
+export function crane(){const g=new T.Group();g.name='Guindaste Operator';box(g,[.7,17,.7],[0,8.5,0],colors.gold);box(g,[12,.6,.6],[3,16,0],colors.gold);for(let i=0;i<8;i++){const brace=box(g,[.13,2.1,.13],[0,1+i*2,0],colors.ink);brace.rotation.z=i%2?.25:-.25;}box(g,[1.4,1.5,1.2],[1,15.6,0],colors.teal);box(g,[.055,6,.055],[8,12.7,0],colors.ink);torus(g,.35,.09,[8,9.5,0],colors.ink);return g;}
 export function factory(index=0){
   const g=new T.Group();g.name='Fábrica Operator Village';const h=5+index%4*2,c=[0xa96046,0x477b83,0x6b697d,0xc18a56][index%4];
   box(g,[5,h,8],[0,h/2,0],c,true);box(g,[5.3,.3,8.3],[0,h,0],colors.ink);

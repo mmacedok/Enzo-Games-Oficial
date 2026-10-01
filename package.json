@@ -8,7 +8,7 @@
     "serve": "node server.js",
     "build": "node atualizar.js && node tools/cacada-artes.js",
     "build:deploy": "node atualizar.js && node tools/cacada-artes.js && node tools/dist.js && node tools/build-function.mjs",
-    "test": "node --test \"test/*.test.js\"",
+    "test": "node --test \"test/*.test.js\" \"test/*.test.mjs\"",
     "qa": "node tools/qa.mjs",
     "test:surfer": "node --test test/italos-surfer-core.test.mjs test/italos-surfer-assets.test.mjs",
     "build:surfer": "node tools/build-italos-assets.mjs",

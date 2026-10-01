@@ -1,11 +1,11 @@
 import * as T from './vendor/three.mjs';
-import {createInitialState,createScenario,queueAction,step,scoreFor,snapshot,laneToX,clamp} from './core.mjs';
-import {character,animateCharacter,box,factory,gantry,tank,crate,obstacle,pasta,powerup,mat} from './models.mjs';
+import {createInitialState,createScenario,queueAction,step,scoreFor,snapshot,laneToX,clamp,MISSIONS} from './core.mjs';
+import {character,animateCharacter,box,factory,gantry,tank,crate,obstacle,pasta,powerup,mat,hoverboard,crane} from './models.mjs';
 
 const $=id=>document.getElementById(id),qa=new URLSearchParams(location.search).has('qa');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let settings={best:0,muted:false};
-try{const saved=JSON.parse(localStorage.getItem('italos-surfer-v1')||'{}');settings.best=Number.isFinite(saved.best)?Math.max(0,saved.best):0;settings.muted=saved.muted===true;}catch{}
+let settings={best:0,muted:false,total:0,runs:0};
+try{const saved=JSON.parse(localStorage.getItem('italos-surfer-v1')||'{}');settings.best=Number.isFinite(saved.best)?Math.max(0,saved.best):0;settings.muted=saved.muted===true;settings.total=Math.max(0,Number(saved.total)||0);settings.runs=Math.max(0,Number(saved.runs)||0);}catch{}
 const save=()=>{try{localStorage.setItem('italos-surfer-v1',JSON.stringify(settings));}catch{}};
 let audio,beat=0;
 function tone(frequency=440,length=.1,type='square',volume=.03){
@@ -19,6 +19,7 @@ let state=createInitialState(),mode='menu',renderer,scene,camera,player,chaser,l
 const segments=[],views=new Map(),pools=new Map(),particles=[];
 const particleGeo=new T.IcosahedronGeometry(.06,0);
 const counts={frames:0,totalTime:0};
+let board,jet,shadow,impact=0,landSquash=0,tutorial=false,tutorialStep=0,hudTick=0,chaseTrail=[];
 
 // Merge repeating industrial scenery by material to avoid hundreds of draw calls.
 function batch(group){
@@ -40,79 +41,116 @@ function buildWorld(){
       if(index%2===0){const t=tank();t.position.set(side*6.9,0,6);raw.add(t);}else{const c=crate();c.position.set(side*7,0,5);raw.add(c);}
       box(raw,[.15,6,.15],[side*5.9,3,8],0x2a3039);box(raw,[1.1,.2,.6],[side*5.6,6,8],0xffd478);
     }
-    if(index%2===0)raw.add(gantry());const merged=batch(raw);merged.position.z=12-index*24;scene.add(merged);segments.push(merged);
+    if(index%2===0)raw.add(gantry());if(index%3===0){const c=crane();c.position.set(index%2?-13:13,0,2);c.rotation.y=index%2?0:Math.PI;raw.add(c);}const merged=batch(raw);if(index%2===1){const board=sign(['AURA ENERGY','OPERATOR WORKS','MACARRONADA EXPRESS','ENZO INDUSTRIES'][index%4],4,.8);board.position.set(-6.2,3.5,2);merged.add(board);}merged.position.z=12-index*24;scene.add(merged);segments.push(merged);
   }
   const banner=sign('OPERATOR VILLAGE',7,1.5);banner.position.set(0,7.5,-34);scene.add(banner);
   const skyline=new T.Group();for(let i=0;i<20;i++){const h=12+(i*7)%23;box(skyline,[4,h,7],[(i-10)*7,h/2,-145-i%3*8],0x576172);}scene.add(batch(skyline));
   const sun=new T.Mesh(new T.SphereGeometry(7,16,12),new T.MeshBasicMaterial({color:0xffd693}));sun.position.set(-32,38,-135);scene.add(sun);
 }
-function make(kind,type){return kind==='obstacle'?obstacle(type):kind==='coin'?pasta():powerup(type);}
+function make(kind,type){return batch(kind==='obstacle'?obstacle(type):kind==='coin'?pasta():powerup(type));}
 function obtain(kind,type){const key=kind+':'+(type||'pasta');let pool=pools.get(key);if(!pool)pools.set(key,pool=[]);const mesh=pool.pop()||make(kind,type);mesh.visible=true;scene.add(mesh);return {mesh,key,kind,type};}
 function release(id){const v=views.get(id);if(!v)return;v.mesh.visible=false;scene.remove(v.mesh);pools.get(v.key).push(v.mesh);views.delete(id);}
-function sync(){const alive=new Set();for(const [kind,items] of [['obstacle',state.obstacles],['coin',state.collectibles],['powerup',state.powerups]])for(const item of items){alive.add(item.id);let view=views.get(item.id);if(!view){view=obtain(kind,item.type);views.set(item.id,view);}view.mesh.position.set(laneToX(item.lane),kind==='obstacle'?0:1.04,item.z);if(kind!=='obstacle')view.mesh.rotation.y=state.elapsed*2;}
+function sync(){const alive=new Set();for(const [kind,items] of [['obstacle',state.obstacles],['coin',state.collectibles],['powerup',state.powerups]])for(const item of items){alive.add(item.id);let view=views.get(item.id);if(!view){view=obtain(kind,item.type);views.set(item.id,view);}view.mesh.position.set(laneToX(item.lane),kind==='obstacle'?0:(item.y??1.1),item.z);if(kind!=='obstacle')view.mesh.rotation.y=state.elapsed*2;if(item.moving)view.mesh.rotation.z=Math.sin(state.elapsed*14)*.009;}
   for(const id of views.keys())if(!alive.has(id))release(id);
 }
 function toast(text){$('toast').textContent=text;$('toast').classList.add('show');toastUntil=performance.now()+1500;}
-function burst(x,color){for(let i=0;i<10;i++){let p=particles.find(p=>p.life<=0);if(!p){if(particles.length>=30)break;p={mesh:new T.Mesh(particleGeo,mat(color)),velocity:new T.Vector3(),life:0};scene.add(p.mesh);particles.push(p);}p.mesh.material=mat(color);p.mesh.visible=true;p.mesh.position.set(x,1.1,0);p.velocity.set((Math.random()-.5)*4,Math.random()*4+1,(Math.random()-.5)*3);p.life=.5;}}
+function burst(x,color){for(let i=0;i<10;i++){let p=particles.find(p=>p.life<=0);if(!p){if(particles.length>=30)break;p={mesh:new T.Mesh(particleGeo,mat(color)),velocity:new T.Vector3(),life:0};scene.add(p.mesh);particles.push(p);}p.mesh.material=mat(color);p.mesh.visible=true;p.mesh.position.set(x,state.y+1.1,0);p.velocity.set((Math.random()-.5)*4,Math.random()*4+1,(Math.random()-.5)*3);p.life=.5;}}
 function show(next){mode=next;for(const id of ['menu','paused','over'])$(id).hidden=id!==next;$('hud').hidden=next==='menu'||next==='over';$('touch').hidden=next!=='playing'||!(qa||innerWidth<650||matchMedia('(pointer: coarse)').matches);}
+const powerLabels={shield:'◆ AURA',magnet:'∩ ÍMÃ',sneakers:'↟ SUPER TÊNIS',jetpack:'↑ JETPACK',double:'×2 PONTOS',board:'▰ PRANCHA'};
 function updateHud(){
   $('score').textContent=scoreFor(state).toLocaleString('pt-BR');$('distance').textContent=Math.floor(state.distance);$('coins').textContent=state.coins;
   $('chase-meter').style.width=(15+(3-state.lives)*35)+'%';$('chase-text').textContent=['Enzo te pegou!','Última chance!','Ele está chegando!','Mantenha distância!'][state.lives];
-  $('powers').textContent=[state.shieldTime>0?'◆ AURA '+Math.ceil(state.shieldTime)+' s':'',state.magnetTime>0?'U ÍMÃ '+Math.ceil(state.magnetTime)+' s':''].filter(Boolean).join(' · ');
+  $('powers').replaceChildren(...Object.entries(powerLabels).filter(([k])=>state[k+'Time']>0).map(([k,label])=>{const el=document.createElement('div');el.className='power-chip';el.textContent=label+' '+Math.ceil(state[k+'Time'])+'s';const bar=document.createElement('i');bar.style.width=(state[k+'Time']/(k==='board'?25:k==='jetpack'?9:12)*100)+'%';el.append(bar);return el;}));
+  $('board-count').textContent=state.boards;$('board-btn').disabled=state.boards===0||state.boardTime>0||state.jetpackTime>0;
+  $('multiplier').textContent='×'+state.multiplier*(state.doubleTime>0?2:1);$('combo').textContent=state.combo>=3?'COMBO '+state.combo+' 🍝':'';
+  const mission=MISSIONS.find(m=>!state.completed.includes(m.key));$('mission').textContent=mission?mission.label+' · '+Math.min(mission.goal,Math.floor(state[mission.key]))+'/'+mission.goal:'TODAS AS MISSÕES CONCLUÍDAS!';
+  $('district').textContent=['PÁTIO DAS FÁBRICAS','CENTRAL DE ENERGIA','DISTRITO DAS CALDEIRAS'][Math.floor(state.distance/500)%3];
 }
-function begin(scenario){state=scenario?createScenario(scenario):createInitialState();if(!state)return;state.status='playing';accumulator=0;for(const id of [...views.keys()])release(id);for(const p of particles){p.life=0;p.mesh.visible=false;}for(let i=0;i<segments.length;i++)segments[i].position.z=12-i*24;
-  player.root.rotation.y=0;chaser.root.rotation.y=0;chaser.root.position.set(laneToX(state.lane),0,4.1);show('playing');sync();updateHud();tone(330);toast('CORRE, ITALOLOL!');last=performance.now();}
+function begin(scenario){
+  tutorial=false;$('tutorial-hint').hidden=true;state=scenario?createScenario(scenario):createInitialState();if(!state)return;
+  state.status='playing';accumulator=0;impact=0;chaseTrail=[];for(const id of [...views.keys()])release(id);for(const p of particles){p.life=0;p.mesh.visible=false;}for(let i=0;i<segments.length;i++)segments[i].position.z=12-i*24;
+  player.root.rotation.y=0;chaser.root.rotation.y=0;chaser.root.position.set(-1.8,0,5.6);show('playing');sync();updateHud();tone(330);toast('CORRE, ITALOLOL!');last=performance.now();renderer.domElement.focus({preventScroll:true});
+}
 function pause(){if(mode==='playing')show('paused');}
-function resume(){if(mode==='paused'){show('playing');last=performance.now();accumulator=0;}}
-function finish(){show('over');const score=scoreFor(state),record=score>settings.best;if(record){settings.best=score;save();}$('best').textContent=settings.best.toLocaleString('pt-BR');$('result-score').textContent=score.toLocaleString('pt-BR');$('result-message').textContent=record?'NOVO RECORDE! Você farmou muita aura.':'AURA... Enzo alcançou a macarronada.';$('result-details').textContent=Math.floor(state.distance)+' metros · '+state.coins+' macarronadas · Recorde '+settings.best;tone(90,.45,'sawtooth');}
-function action(a){if(mode!=='playing')return;queueAction(state,a);if(a==='jump')tone(570,.12,'triangle');if(a==='slide')tone(140,.1,'triangle');}
+function resume(){if(mode==='paused'){show('playing');last=performance.now();accumulator=0;renderer.domElement.focus({preventScroll:true});}}
+function finish(){
+  show('over');const score=scoreFor(state),record=score>settings.best;
+  if(!state.scenario){if(record)settings.best=score;settings.total+=state.coins;settings.runs++;save();}
+  $('best').textContent=settings.best.toLocaleString('pt-BR');$('career').textContent=settings.total+' macarronadas · '+settings.runs+' corridas';
+  $('result-score').textContent=score.toLocaleString('pt-BR');$('result-message').textContent=record?'NOVO RECORDE! Você farmou muita aura.':'AURA... Enzo alcançou a macarronada.';
+  $('result-details').textContent=Math.floor(state.distance)+' metros · '+state.coins+' macarronadas · '+state.nearMisses+' obstáculos superados · '+state.completed.length+'/3 missões';tone(90,.45,'sawtooth');
+}
+const lessons=[['left','← TROQUE DE PISTA','Seta esquerda ou A. No celular, deslize para a esquerda.'],['right','→ VOLTE PARA O MEIO','Seta direita ou D. Você também pode mudar de pista no ar.'],['jump','↑ AGORA PULE!','Espaço, W ou seta para cima. Toque no botão ↑ no celular.'],['slide','↓ DESLIZE!','Seta para baixo ou S. No ar, esse comando faz uma descida rápida.'],['board','▰ ATIVE A PRANCHA','B ou duplo toque na pista. Ela protege de uma batida por 25 segundos.']];
+function lesson(){const l=lessons[tutorialStep];if(!l){tutorial=false;state.scenario=null;state.spawnTimer=2;$('tutorial-hint').hidden=true;toast('MANDOU BEM! AGORA É PRA VALER.');return;}$('tutorial-hint').hidden=false;$('tutorial-title').textContent=l[1];$('tutorial-text').textContent=l[2];}
+function action(a){if(mode!=='playing')return;queueAction(state,a);if(tutorial&&a===lessons[tutorialStep]?.[0]){tutorialStep++;lesson();}}
+function startTutorial(){begin();state.scenario='tutorial';tutorial=true;tutorialStep=0;lesson();}
 function input(){
-  $('play').onclick=()=>begin();$('retry').onclick=()=>begin();$('restart').onclick=()=>begin();$('resume').onclick=resume;$('pause-btn').onclick=pause;$('home-menu').onclick=()=>{show('menu');};
+  $('play').onclick=()=>begin();$('practice').onclick=startTutorial;$('retry').onclick=()=>begin();$('restart').onclick=()=>begin();$('resume').onclick=resume;$('pause-btn').onclick=pause;$('home-menu').onclick=()=>{show('menu');};
   $('menu-sound').onclick=toggleSound;$('sound').onclick=toggleSound;$('help-btn').onclick=()=>{$('help').hidden=false;};$('help-close').onclick=()=>{$('help').hidden=true;};
-  const keys={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'jump',KeyW:'jump',Space:'jump',ArrowDown:'slide',KeyS:'slide'};
-  window.addEventListener('keydown',e=>{if(e.code==='Escape'&&!$('help').hidden){$('help').hidden=true;return;}if(keys[e.code]||e.code==='KeyP'||e.code==='Escape')e.preventDefault();if(e.repeat)return;if(e.code==='KeyP'||e.code==='Escape'){mode==='playing'?pause():resume();return;}if(keys[e.code])action(keys[e.code]);});
-  document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();action(b.dataset.action);}));
-  let gesture;const canvas=renderer.domElement;canvas.addEventListener('pointerdown',e=>{if(mode!=='playing')return;gesture={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointerup',e=>{if(!gesture||gesture.id!==e.pointerId)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;gesture=null;if(Math.hypot(dx,dy)<25)return;action(Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'slide':'jump');});canvas.addEventListener('pointercancel',()=>gesture=null);
+  const keys={ArrowLeft:'left',KeyA:'left',a:'left',ArrowRight:'right',KeyD:'right',d:'right',ArrowUp:'jump',KeyW:'jump',w:'jump',Space:'jump',' ':'jump',ArrowDown:'slide',KeyS:'slide',s:'slide',KeyB:'board',b:'board'};
+  window.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&!$('help').hidden){$('help').hidden=true;return;}
+    if(mode==='menu'||mode==='over')return;
+    const key=keys[e.code]||keys[e.key]||keys[e.key?.toLowerCase()];
+    if(key||['KeyP','Escape'].includes(e.code)){e.preventDefault();if(e.repeat)return;}
+    if(['KeyP','Escape'].includes(e.code)||e.key==='Escape'){mode==='playing'?pause():resume();return;}if(key)action(key);
+  });
+  document.querySelectorAll('[data-action]').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();action(b.dataset.action);});b.addEventListener('click',e=>{if(e.detail===0)action(b.dataset.action);});});
+  let gesture,lastTap=0;const canvas=renderer.domElement;canvas.tabIndex=0;canvas.setAttribute('aria-label','Pista 3D. Setas ou WASD para jogar; espaço pula; B ativa a prancha.');
+  canvas.addEventListener('pointerdown',e=>{if(mode!=='playing')return;canvas.focus({preventScroll:true});gesture={id:e.pointerId,x:e.clientX,y:e.clientY,used:false};canvas.setPointerCapture(e.pointerId);});
+  function swipe(e){if(!gesture||gesture.id!==e.pointerId||gesture.used)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(Math.hypot(dx,dy)<22)return;gesture.used=true;action(Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'slide':'jump');}
+  canvas.addEventListener('pointermove',swipe);canvas.addEventListener('pointerup',e=>{swipe(e);if(gesture&&!gesture.used){const now=performance.now();if(now-lastTap<300){action('board');lastTap=0;}else lastTap=now;}gesture=null;});canvas.addEventListener('pointercancel',()=>gesture=null);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('blur',pause);
 }
-function resize(){if(!renderer)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<650?65:55;camera.updateProjectionMatrix();show(mode);}
-function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-(last||now))/1000,.05);last=now;
-  if(document.hidden)return;
+function resize(){if(!renderer)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<650?64:56;camera.updateProjectionMatrix();show(mode);}
+function handleEvents(){for(const e of state.events){
+  if(e.type==='coin'){tone(790+(state.combo%5)*90,.065,'triangle',.018);burst(e.x,0xffce5c);}
+  else if(e.type==='jump')tone(570,.12,'triangle');
+  else if(e.type==='slide')tone(140,.1,'triangle');
+  else if(e.type==='land'){landSquash=.12;tone(90,.06,'triangle',.018);}
+  else if(e.type==='dodge'){if(state.nearMisses%3===0)toast('BOA! +50 PONTOS');}
+  else if(e.type==='life'){impact=.35;tone(110,.2,'sawtooth');burst(e.x,0xe6524a);toast(state.lives===1?'ENZO ESTÁ NA SUA COLA!':'TUM! ENZO SE APROXIMOU!');}
+  else{tone(650,.2,'triangle');toast(e.type==='mission'?'MISSÃO! +500 · +1 PRANCHA · MULTIPLICADOR ↑':e.type==='board-break'?'PRANCHA SALVOU SUA FUGA!':e.type==='shield-break'?'AURA ABSORVEU O IMPACTO!':(powerLabels[e.type]||e.type)+'!' );}
+}state.events.length=0;}
+function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-(last||now))/1000,.05);last=now;if(document.hidden)return;
   if(mode==='playing'){
-    accumulator+=dt;while(accumulator>=1/60&&state.status==='playing'){step(state,{},1/60);accumulator-=1/60;}
-    sync();for(const e of state.events){if(e.type==='coin'){tone(790,.065,'triangle',.025);burst(e.x,0xffce5c);}else if(e.type==='life'){tone(110,.2,'sawtooth');burst(e.x,0xe6524a);toast(state.lives===1?'ENZO ESTÁ NA SUA COLA!':'TUM! ENZO SE APROXIMOU!');}else{tone(650,.2,'triangle');toast(e.type==='magnet'?'ÍMÃ DE MACARRONADA!':state.shieldTime>0?'ESCUDO DE AURA!':'ESCUDO ABSORVEU O IMPACTO!');}}state.events.length=0;
-    updateHud();for(const g of segments){g.position.z+=state.speed*dt;if(g.position.z>36)g.position.z-=192;}
-    beat+=dt;if(beat>.22){beat=0;tone([110,165,146,220][Math.floor(state.elapsed*2)%4],.1,'triangle',.007);}
+    accumulator+=dt;while(accumulator>=1/60&&state.status==='playing'){step(state,{},1/60);chaseTrail.push({distance:state.distance,lane:state.lane,y:state.y,sliding:state.sliding,grounded:state.grounded});if(chaseTrail.length>50)chaseTrail.shift();accumulator-=1/60;}
+    sync();handleEvents();hudTick+=dt;if(hudTick>.1){updateHud();hudTick=0;}for(const g of segments){g.position.z+=state.speed*dt;if(g.position.z>36)g.position.z-=192;}
+    beat+=dt;if(beat>.22){beat=0;tone([110,165,146,220][Math.floor(state.elapsed*2)%4],.1,'triangle',.005);}
     if(state.status==='gameover')finish();
   }
   const running=mode==='playing',phase=mode==='menu'?now*.001:state.distance*.65;
-  animateCharacter(player,phase,running?state.y:0,running&&state.sliding);animateCharacter(chaser,phase+.8);
+  animateCharacter(player,phase,mode==='menu'?0:state.y,mode!=='menu'&&state.sliding,!state.grounded&&mode!=='menu',state.boardTime>0);
+  const chasePose=[...chaseTrail].reverse().find(p=>p.distance<=state.distance-2.9)||chaseTrail[0]||{lane:1,y:0,sliding:false,grounded:true};
+  animateCharacter(chaser,phase+.8,mode==='menu'?0:chasePose.y,mode!=='menu'&&chasePose.sliding,mode!=='menu'&&!chasePose.grounded);
+  if(running){impact=Math.max(0,impact-dt);landSquash=Math.max(0,landSquash-dt);}
+  if(landSquash>0&&!state.sliding)player.body.scale.y=1-landSquash;
   if(mode==='menu'){
     player.root.position.set(innerWidth<650?1:2.4,0,0);chaser.root.position.set(innerWidth<650?1.8:4.4,0,innerWidth<650?-2:1);player.root.rotation.y=Math.PI-.35;chaser.root.rotation.y=Math.PI-.55;
     camera.position.set(0,3.1,9);camera.lookAt(0,1.1,-1);
   }else{
-    player.root.position.x=laneToX(state.lane);const targetZ=state.status==='gameover'?.55:4.1-(3-state.lives)*.85;
-    chaser.root.position.x=T.MathUtils.lerp(chaser.root.position.x,player.root.position.x,1-Math.exp(-5*dt));chaser.root.position.z=T.MathUtils.lerp(chaser.root.position.z,targetZ,1-Math.exp(-3*dt));
-    const mobileView=innerWidth<650,playerX=laneToX(state.lane);
-    camera.position.set(playerX*(mobileView?1:.12),4.2,9.8);camera.lookAt(mobileView?playerX*.65:0,1,-10);
+    player.root.position.x=laneToX(state.lane);player.body.rotation.z=(state.targetLane-state.lane)*-.18;
+    const targetZ=state.status==='gameover'?1.3:2.9-(3-state.lives)*.55;
+    chaser.root.position.x=T.MathUtils.lerp(chaser.root.position.x,laneToX(chasePose.lane)-(chasePose.y>.5?.18:innerWidth<650?.95:1.6),1-Math.exp(-4*dt));chaser.root.position.z=T.MathUtils.lerp(chaser.root.position.z,targetZ,1-Math.exp(-3*dt));
+    const mobile=innerWidth<650,x=laneToX(state.lane),height=state.y*.4;
+    camera.position.set(x*(mobile?.65:.25)+(reduced?0:Math.sin(now*.07)*impact*.18),5.8+height,10.8);camera.lookAt(x*(mobile?.45:.15),1.2+height,-12);
   }
-  player.shield.visible=state.shieldTime>0&&mode==='playing';player.body.visible=!(running&&state.invulnerable>0&&Math.floor(now/90)%2===0);
+  board.visible=state.boardTime>0&&mode!=='menu';board.position.set(player.root.position.x,state.y+.04,0);board.rotation.z=Math.sin(phase*.25)*.06;
+  jet.visible=state.jetpackTime>0&&mode!=='menu';jet.position.set(player.root.position.x,state.y+1.2,.5);jet.scale.setScalar(1.2);
+  shadow.visible=mode!=='menu';shadow.position.set(player.root.position.x,state.surface+.015,0);shadow.scale.setScalar(Math.max(.4,1-state.y*.045));
+  chaser.root.visible=state.jetpackTime<=0||mode==='menu';player.shield.visible=mode!=='menu'&&(state.shieldTime>0||(state.invulnerable>0&&Math.floor(now/90)%2===0));player.body.visible=true;
+  $('game').classList.toggle('impact',impact>.15);$('game').classList.toggle('flying',state.jetpackTime>0&&mode==='playing');
   for(const p of particles)if(p.life>0){if(running){p.life-=dt;p.velocity.y-=9*dt;p.mesh.position.addScaledVector(p.velocity,dt);p.mesh.scale.setScalar(Math.max(.01,p.life*2));}p.mesh.visible=p.life>0;}
   if(now>toastUntil)$('toast').classList.remove('show');renderer.render(scene,camera);counts.frames++;counts.totalTime+=dt;
 }
 function init(){
-  try{renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setClearColor(0xb7ac9d);renderer.outputColorSpace=T.SRGBColorSpace;$('scene').appendChild(renderer.domElement);}catch{$('error').hidden=false;return;}
-  scene=new T.Scene();scene.fog=new T.Fog(0xb7ac9d,55,160);camera=new T.PerspectiveCamera(55,innerWidth/innerHeight,.1,240);scene.add(new T.HemisphereLight(0xffefce,0x565169,2.5));const sun=new T.DirectionalLight(0xffdcb0,2.4);sun.position.set(-12,22,8);scene.add(sun);
-  buildWorld();player=character('italo');chaser=character('enzo');scene.add(player.root,chaser.root);input();resize();window.addEventListener('resize',resize);
+  try{renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setClearColor(0xd6b693);renderer.outputColorSpace=T.SRGBColorSpace;$('scene').appendChild(renderer.domElement);}catch{$('error').hidden=false;return;}
+  scene=new T.Scene();scene.fog=new T.Fog(0xd6b693,65,180);camera=new T.PerspectiveCamera(56,innerWidth/innerHeight,.1,240);scene.add(new T.HemisphereLight(0xffefce,0x565169,2.5));const sun=new T.DirectionalLight(0xffdcb0,2.4);sun.position.set(-12,22,8);scene.add(sun);
+  buildWorld();player=character('italo');chaser=character('enzo');chaser.root.scale.setScalar(.88);board=hoverboard();jet=powerup('jetpack');shadow=new T.Mesh(new T.CircleGeometry(.72,24),new T.MeshBasicMaterial({color:0x242631,transparent:true,opacity:.3,depthWrite:false}));shadow.rotation.x=-Math.PI/2;scene.add(player.root,chaser.root,board,jet,shadow);
+  $('career').textContent=settings.total+' macarronadas · '+settings.runs+' corridas';input();resize();window.addEventListener('resize',resize);
   renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();$('error').hidden=false;});
   window.italosSurfer={snapshot:()=>({...snapshot(state),mode,map:'Operator Village',characters:['Italolol','Enzo Games'],drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,objects:views.size,pool:[...pools.values()].reduce((n,a)=>n+a.length,0),fps:Math.round(counts.frames/Math.max(1,counts.totalTime))}),pause,resume};
-  if(qa){
-    const toolbar=document.createElement('aside');toolbar.className='qa';
-    for(const type of ['jump','slide','dodge','coin','shield','magnet']){const b=document.createElement('button');b.textContent=type;b.onclick=()=>begin(type);toolbar.append(b);}
-    const output=document.createElement('output');output.id='qa-status';toolbar.append(output);$('game').append(toolbar);
-    setInterval(()=>output.textContent=JSON.stringify(window.italosSurfer.snapshot()),200);
-  }
-  if(new URLSearchParams(location.search).has('preview')){show('playing');state.status='playing';state.scenario='preview';state.obstacles=[{id:'preview-train',type:'dodge',lane:0,z:-22},{id:'preview-barrier',type:'jump',lane:2,z:-14},{id:'preview-pipe',type:'slide',lane:1,z:-45}];for(let i=0;i<8;i++)state.collectibles.push({id:'preview-pasta'+i,lane:1,z:-6-i*2.5,value:1});}
+  if(qa){const toolbar=document.createElement('aside');toolbar.className='qa';for(const type of ['jump','slide','dodge','coin','ramp','board','shield','magnet','sneakers','jetpack','double']){const b=document.createElement('button');b.textContent=type;b.onclick=()=>begin(type);toolbar.append(b);}const hide=document.createElement('button');hide.textContent='Ocultar QA';hide.onclick=()=>toolbar.hidden=true;toolbar.append(hide);const output=document.createElement('output');output.id='qa-status';toolbar.append(output);$('game').append(toolbar);setInterval(()=>output.textContent=JSON.stringify(window.italosSurfer.snapshot()),50);}
   requestAnimationFrame(frame);
 }
 init();

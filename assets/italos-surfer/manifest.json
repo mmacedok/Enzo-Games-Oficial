@@ -47,6 +47,38 @@
       }
     },
     {
+      "id": "train",
+      "path": "models/train.json",
+      "triangles": 1528,
+      "collision": {
+        "width": 1.72,
+        "depth": 12,
+        "action": "train"
+      }
+    },
+    {
+      "id": "ramp",
+      "path": "models/ramp.json",
+      "triangles": 100,
+      "collision": {
+        "width": 1.72,
+        "depth": 6,
+        "action": "ramp"
+      }
+    },
+    {
+      "id": "prancha",
+      "path": "models/prancha.json",
+      "triangles": 708,
+      "collision": null
+    },
+    {
+      "id": "guindaste",
+      "path": "models/guindaste.json",
+      "triangles": 304,
+      "collision": null
+    },
+    {
       "id": "macarronada",
       "path": "models/macarronada.json",
       "triangles": 1036,
@@ -62,6 +94,24 @@
       "id": "magnet",
       "path": "models/magnet.json",
       "triangles": 336,
+      "collision": null
+    },
+    {
+      "id": "jetpack",
+      "path": "models/jetpack.json",
+      "triangles": 844,
+      "collision": null
+    },
+    {
+      "id": "sneakers",
+      "path": "models/sneakers.json",
+      "triangles": 72,
+      "collision": null
+    },
+    {
+      "id": "double",
+      "path": "models/double.json",
+      "triangles": 40,
       "collision": null
     },
     {
