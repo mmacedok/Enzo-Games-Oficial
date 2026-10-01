@@ -1479,9 +1479,11 @@ body :is(button, select, input):disabled { cursor: not-allowed; }
     .webtoon-image { border-width: 2px; }
 }
 
+/* O navegador pede menos animação: tudo para (a não ser que a pessoa tenha ligado as animações em js/movimento.js). */
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    html:not([data-movimento="sim"]) *, html:not([data-movimento="sim"]) *::before, html:not([data-movimento="sim"]) *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+html[data-movimento="nao"] *, html[data-movimento="nao"] *::before, html[data-movimento="nao"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 
 /* ============================================ animação "entrar no gibi"
    js/comic-open.js: gibi voa da estante, a capa abre e a câmera mergulha. */

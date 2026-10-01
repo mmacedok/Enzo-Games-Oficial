@@ -365,6 +365,13 @@
         }
         caixa.appendChild(comoJogar);
         caixa.appendChild(botao('bt-link', '🏆 Placar', mostrarPlacar));
+        // Animações: segue o navegador, mas em alguns (Opera GX, Windows sem efeitos) isso deixa o jogo parado; aqui dá para escolher.
+        if (window.EnzoMovimento) {
+            const M = window.EnzoMovimento;
+            const rotulo = { sim: '🎞️ Animações: ligadas', nao: '🎞️ Animações: desligadas', auto: M.osPedeReduzir ? '🎞️ Animações: desligadas pelo seu navegador (tocar para ligar)' : '🎞️ Animações: automático' };
+            const proximo = { auto: M.osPedeReduzir ? 'sim' : 'nao', sim: 'nao', nao: 'auto' };
+            caixa.appendChild(botao('bt-link', rotulo[M.escolha], () => M.definir(proximo[M.escolha])));
+        }
         // Voltar ao site, no canto superior esquerdo (o cabeçalho da página fica escondido atrás da arte do menu).
         const voltarAoSite = el('a', 'bt-voltar');
         voltarAoSite.href = 'index.html';
