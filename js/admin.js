@@ -231,7 +231,7 @@
     function mostrarAtalhos() {
         const nav = $('atalhos');
         nav.replaceChildren(el('p', 'atalhos-titulo', 'atalhos rápidos'));
-        for (const comando of ['status', 'users', 'launch', 'scores', 'log', 'help', 'exit']) nav.appendChild(botao(comando, comando));
+        for (const comando of ['status', 'users', 'launch', 'scores', 'tcg', 'log', 'help', 'exit']) nav.appendChild(botao(comando, comando));
     }
 
     function mostrarDashboard() {
@@ -244,7 +244,7 @@
             ['SISTEMA', 'Estado e acesso', [['status', 'status'], ['quem sou', 'whoami'], ['histórico', 'log']]],
             ['LEITORES', 'Contas e conquistas', [['listar leitores', 'users'], ['ajuda', 'help']]],
             ['GIBIS', 'Publicar capítulos', [['lançamentos', 'launch']]],
-            ['PARTIDAS', 'Ranking e placares', [['todas', 'scores'], ['Flappy', 'scores flappy'], ['Degustação', 'scores degustacao']]],
+            ['PARTIDAS', 'Ranking e placares', [['todas', 'scores'], ['Flappy', 'scores flappy'], ['Degustação', 'scores degustacao'], ['Batalha online', 'tcg']]],
         ];
         for (const [titulo, descricao, acoes] of grupos) {
             const grupo = el('section', 'dashboard-grupo');
@@ -937,6 +937,73 @@
         desenhar();
     }
 
+    // ---------------------------------------------------------------- histórico da Batalha
+    const MOTIVOS_TCG = {
+        vida: 'zerou a vida', empate: 'empate', limiteTurnos: 'limite de turnos',
+        desistencia: 'desistência', inatividade: 'inatividade (3 estouros de tempo)',
+    };
+
+    /** Histórico das partidas online da Batalha dos Torados (api: GET /api/admin/tcg/partidas). Busca opcional por jogador. */
+    async function telaTcg(busca = '') {
+        const consulta = (pagina) => `/api/admin/tcg/partidas?pagina=${pagina}${busca ? `&q=${encodeURIComponent(busca)}` : ''}`;
+        const primeira = await pedir(consulta(0));
+        novaTela(`tcg${busca ? ` ${busca}` : ''}`, [['batalha online', null]]);
+        const nomeCarta = (id) => window.EnzoBaralho?.carta?.(id)?.nome || id;
+        const nome = (p) => (p ? p.name : '—');
+
+        if (primeira.aoVivo.length) {
+            secao('rolando agora');
+            for (const v of primeira.aoVivo) {
+                linha([span('ok', '● '), `${nome(v.a)} × ${nome(v.b)}`, span('l--apagado', ` · começou ${data(v.desde)}${v.turnos ? ` · turno ${v.turnos}` : ''}`)]);
+            }
+        }
+        secao(busca ? `partidas de "${busca}"` : 'partidas que terminaram');
+        const lista = el('div', 'tcg-lista');
+        imprimir(lista);
+        const rodape = el('div', 'tcg-rodape');
+        imprimir(rodape);
+
+        const cartao = (p) => {
+            const c = el('div', 'tcg-partida');
+            const resultado = p.empate ? span('aviso', 'empate') : span('ok', `🏆 ${nome(p.vencedor)}`);
+            const topo = el('div', 'tcg-topo');
+            topo.append(span('l--apagado', data(p.fimEm)), ' ', el('strong', '', `${nome(p.a)} × ${nome(p.b)}`), ' · ', resultado,
+                span('l--apagado', ` · ${MOTIVOS_TCG[p.motivo] || p.motivo || '?'} · ${p.rodadas} rodada${p.rodadas === 1 ? '' : 's'}`));
+            const detalhe = el('div', 'tcg-decks');
+            detalhe.hidden = true;
+            if (p.decks.length === 2) {
+                [p.a, p.b].forEach((jogador, i) => {
+                    detalhe.appendChild(el('p', 'l', `deck de ${nome(jogador)}: ${(p.decks[i] || []).map(nomeCarta).join(', ') || '—'}`));
+                });
+            } else detalhe.appendChild(el('p', 'l l--apagado', 'decks não guardados nessa partida.'));
+            const ver = el('button', 'cmd cmd--link', 'decks');
+            ver.type = 'button';
+            ver.addEventListener('click', () => { detalhe.hidden = !detalhe.hidden; ver.textContent = detalhe.hidden ? 'decks' : 'esconder decks'; });
+            topo.append(' ', ver);
+            c.append(topo, detalhe);
+            return c;
+        };
+
+        let pagina = 0;
+        const desenhar = (r) => {
+            if (!r.partidas.length && pagina === 0) lista.appendChild(el('p', 'l l--apagado', busca ? 'nenhuma partida desse jogador.' : 'nenhuma partida online terminou ainda.'));
+            for (const p of r.partidas) lista.appendChild(cartao(p));
+            rodape.replaceChildren();
+            if (r.temMais) {
+                const mais = el('button', 'cmd', 'mais antigas');
+                mais.type = 'button';
+                mais.addEventListener('click', async () => {
+                    mais.disabled = true;
+                    pagina += 1;
+                    try { desenhar(await pedir(consulta(pagina))); } catch (e) { erro(e.message); pagina -= 1; mais.disabled = false; }
+                });
+                rodape.appendChild(mais);
+            }
+        };
+        desenhar(primeira);
+        apagado('só partidas online (contra outra pessoa); as contra o NPC não ficam guardadas. "tcg <nome>" filtra por jogador.');
+    }
+
     /** Valor numérico de credits/dust: inteiro diferente de zero. */
     function valorNumerico(args, nome) {
         if (!args[0]) throw new Error(`uso: ${nome} <n> (número inteiro).`);
@@ -1011,6 +1078,11 @@
                 atualizarPrompt();
                 desenharConta();
             },
+        },
+        tcg: {
+            uso: 'tcg [jogador]',
+            desc: 'histórico das partidas online da Batalha dos Torados (filtra por jogador)',
+            async fn(args) { await telaTcg(args.join(' ').trim()); },
         },
         launch: {
             uso: 'launch',

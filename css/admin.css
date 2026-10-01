@@ -489,3 +489,10 @@ a.cmd { text-decoration: none; display: inline-block; }
 .lanc-acesso { color: var(--ambar); font-size: .9em; }
 .lanc-acesso:empty { display: none; }
 .lanc-painel input[type=search] { max-width: 100%; width: 22em; }
+
+/* ---------------------------------------------------------------- histórico da Batalha (comando tcg) */
+.tcg-lista { display: grid; gap: 6px; max-width: 900px; }
+.tcg-partida { border-left: 2px solid var(--verde-linha); padding: 4px 10px; }
+.tcg-decks { margin: 4px 0 2px; color: var(--verde-medio); }
+.tcg-decks p { margin: 2px 0; }
+.tcg-rodape { margin: 8px 0; }

@@ -14,6 +14,7 @@
 //   GET  /api/admin/scores?game=                  partidas recentes de todo mundo
 //   POST /api/admin/scores/:id/verify             { verified } (entra/sai do ranking)
 //   POST /api/admin/scores/:id/delete
+//   GET  /api/admin/tcg/partidas?q=&pagina=      histórico das partidas online da Batalha dos Torados (e as que estão rolando)
 //   GET  /api/admin/acessos[/resumo]              IP, país, estado e cidade das ações (api/acessos.js)
 //   GET  /api/admin/log                           histórico das ações de admin
 //   POST /api/admin/reveal                        { id, revelar } mostra/esconde um gibi `hidden` do catálogo
@@ -281,6 +282,54 @@ const rotas = [
             const linhas = (await ctx.db.query('DELETE FROM sessions WHERE user_id = $1 RETURNING id, lembrar', [alvo.id])).filter((l) => !l.lembrar);
             await registrar(ctx, 'kick', alvo.id, `${linhas.length} sessão(ões)`);
             return { sessoes: linhas.length };
+        },
+    },
+    {
+        // Histórico da Batalha dos Torados online: as partidas que acabaram (tcg_resultados, fica para sempre) e as em andamento.
+        metodo: 'GET', caminho: '/api/admin/tcg/partidas', admin: true,
+        async executar(ctx) {
+            const pagina = Math.max(0, Math.min(1000, Number.parseInt(ctx.url.searchParams.get('pagina'), 10) || 0));
+            const busca = String(ctx.url.searchParams.get('q') || '').trim().slice(0, 80);
+            const filtro = busca ? `%${busca.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
+            const quem = (id, nome) => (id ? { id, name: nome || '(conta apagada)' } : null);
+            const linhas = await ctx.db.query(
+                `SELECT r.partida_id, r.vencedor, r.decks, r.turnos, r.motivo, r.fim_em,
+                        COALESCE(r.jogador_a, r.vencedor) AS ja, COALESCE(r.jogador_b, r.perdedor) AS jb,
+                        ua.display_name AS na, ub.display_name AS nb
+                   FROM tcg_resultados r
+                   LEFT JOIN users ua ON ua.id = COALESCE(r.jogador_a, r.vencedor)
+                   LEFT JOIN users ub ON ub.id = COALESCE(r.jogador_b, r.perdedor)
+                  WHERE $1::text IS NULL OR ua.display_name ILIKE $1 OR ub.display_name ILIKE $1 OR ua.email ILIKE $1 OR ub.email ILIKE $1
+                        OR r.jogador_a = $4 OR r.jogador_b = $4
+                  ORDER BY r.fim_em DESC, r.partida_id
+                  LIMIT $2 OFFSET $3`,
+                [filtro, POR_PAGINA + 1, pagina * POR_PAGINA, busca]);
+            const partidas = linhas.slice(0, POR_PAGINA).map((l) => {
+                let decks = [];
+                try { decks = JSON.parse(l.decks); } catch { /* sem decks guardados */ }
+                const turnos = Number(l.turnos);
+                return {
+                    id: l.partida_id, fimEm: Number(l.fim_em), turnos, rodadas: Math.max(1, Math.ceil(turnos / 2)),
+                    motivo: l.motivo || null, empate: !l.vencedor,
+                    vencedor: l.vencedor ? quem(l.vencedor, l.vencedor === l.ja ? l.na : l.nb) : null,
+                    a: quem(l.ja, l.na), b: quem(l.jb, l.nb), decks: Array.isArray(decks) ? decks : [],
+                };
+            });
+            let aoVivo = [];
+            if (pagina === 0) {
+                const vivas = await ctx.db.query(
+                    `SELECT p.id, p.jogador_a, p.jogador_b, p.estado, p.criado_em, p.atualizado_em, ua.display_name AS na, ub.display_name AS nb
+                       FROM tcg_partidas p JOIN users ua ON ua.id = p.jogador_a JOIN users ub ON ub.id = p.jogador_b
+                      WHERE p.status = 'jogando'
+                        AND ($1::text IS NULL OR ua.display_name ILIKE $1 OR ub.display_name ILIKE $1 OR p.jogador_a = $2 OR p.jogador_b = $2)
+                      ORDER BY p.criado_em DESC LIMIT 20`, [filtro, busca]);
+                aoVivo = vivas.map((p) => {
+                    let turno = null;
+                    try { turno = JSON.parse(p.estado).turno; } catch { /* estado ilegível */ }
+                    return { id: p.id, a: quem(p.jogador_a, p.na), b: quem(p.jogador_b, p.nb), desde: Number(p.criado_em), turnos: turno };
+                });
+            }
+            return { partidas, aoVivo, temMais: linhas.length > POR_PAGINA, agora: ctx.agora() };
         },
     },
     {
