@@ -16,10 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=arcade3">
-    <script type="importmap">
-        {"imports":{"three":"/assets/fliperama-3d/vendor/three.module.js"}}
-    </script>
+    <link rel="stylesheet" href="css/style.css?v=rev0932a">
     <link rel="stylesheet" href="css/images.generated.css?v=1">
 </head>
 <body>
@@ -64,15 +61,9 @@
             </div>
         </section>
 
-        <section class="section arcade-section" id="arcade" aria-labelledby="arcade-title">
-            <h2 class="section-title section-title--center" id="arcade-title">Fliperama Enzo Games</h2>
-            <p class="arcade-intro">Uma máquina apareceu no mundo do Enzo...</p>
-            <div class="arcade-machine" id="arcade-machine">
-                <span class="arcade-machine__scene" id="arcade-scene" aria-hidden="true"></span>
-                <span class="arcade-machine__floor" aria-hidden="true"></span>
-                <div class="arcade-menu" id="arcade-menu" role="group" aria-label="Escolha o jogo" hidden></div>
-                <button class="arcade-machine__prompt" id="arcade-prompt" type="button" aria-pressed="false">Toque no fliperama para chegar mais perto</button>
-            </div>
+        <section class="section jogos-section" id="jogos" aria-labelledby="jogos-title">
+            <h2 class="section-title section-title--center" id="jogos-title">Jogos do Enzo Games</h2>
+            <div class="jogos-grade" id="jogos-grade" role="group" aria-label="Escolha o jogo"></div>
         </section>
     </main>
 
@@ -100,6 +91,6 @@
     <script src="js/shelf.js?v=rev0926"></script>
     <script src="js/comic-open.js?v=rev0926"></script>
     <script src="js/main.js?v=rev0930x"></script>
-    <script type="module" src="js/arcade-home.js?v=arcade2"></script>
+    <script src="js/jogos-home.js?v=rev0932a"></script>
 </body>
 </html>

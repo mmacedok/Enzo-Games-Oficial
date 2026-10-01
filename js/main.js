@@ -295,7 +295,7 @@
             .catch((error) => { console.error('[jogo]', error); carregando[nome] = null; });
     }
 
-    // Os jogos só abrem pelo fliperama da home (js/arcade-home.js): 'flappy' e 'ronda' (Caçada ao Inominável).
+    // Os jogos abrem pelos cartões da home (js/jogos-home.js): 'flappy' e 'ronda' (Caçada ao Inominável).
     window.EnzoJogos = { abrir: abrirJogo };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

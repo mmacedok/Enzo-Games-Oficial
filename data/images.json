@@ -3512,55 +3512,6 @@
       }
     ]
   },
-  "assets/fliperama-3d/frente.jpg": {
-    "width": 512,
-    "height": 768,
-    "variants": [
-      {
-        "width": 512,
-        "src": "assets/web/2c47d47699e3d392-512.webp",
-        "bytes": 69692
-      }
-    ]
-  },
-  "assets/fliperama-3d/lateral.jpg": {
-    "width": 512,
-    "height": 768,
-    "variants": [
-      {
-        "width": 512,
-        "src": "assets/web/15200fe42f332e75-512.webp",
-        "bytes": 159518
-      }
-    ]
-  },
-  "assets/fliperama-3d/letreiro.jpg": {
-    "width": 1024,
-    "height": 256,
-    "variants": [
-      {
-        "width": 640,
-        "src": "assets/web/65ed042dc38ebc02-640.webp",
-        "bytes": 16462
-      },
-      {
-        "width": 1024,
-        "src": "assets/web/65ed042dc38ebc02-1024.webp",
-        "bytes": 29436
-      }
-    ]
-  },
-  "assets/fliperama-3d/tela.jpg": {
-    "width": 640,
-    "height": 480,
-    "variants": [
-      {
-        "width": 640,
-        "src": "assets/web/391d7527e974c4f4-640.webp",
-        "bytes": 118878
-      }
-    ]
-  },
   "assets/italo-face-t.png": {
     "width": 470,
     "height": 364,
