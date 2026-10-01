@@ -289,14 +289,16 @@
         const lastPage = pages[pages.length - 1];
         const nextCard = buildNextChapterCard();
         const letters = window.EnzoComentarios?.criar({ comicId: state.comic.id, chapterId: chapter.id });
+        const disco = window.EnzoMusicas?.criarDiscografia(state.comic.id);   // músicas do gibi, completas
         if (!lastPage || !letters) {
             if (nextCard) ui.imageContainer.appendChild(nextCard);
+            if (disco) ui.imageContainer.appendChild(disco);
             return;
         }
         const end = document.createElement('div');
         end.className = 'fim-capitulo';
         lastPage.replaceWith(end);
-        end.append(lastPage, ...(nextCard ? [nextCard] : []), letters);
+        end.append(lastPage, ...(nextCard ? [nextCard] : []), ...(disco ? [disco] : []), letters);
     }
 
     /** Cartas ao lado da página quando cabem (empurra as páginas um pouco para a esquerda se precisar). */
@@ -315,6 +317,7 @@
 
     function renderChapter() {
         const chapter = state.comic.chapters[state.chapterIndex];
+        window.EnzoMusicas?.parar();
         ui.imageContainer.innerHTML = '';
 
         if (!chapter || !chapter.pages?.length) {
@@ -356,6 +359,9 @@
                 else if (egg.kind === 'enzo-secreto') wrapper.appendChild(buildEnzoSecreto(egg));
                 else wrapper.appendChild(buildEasterEgg(egg));
             }
+
+            // Botão da página ou balões de fala que tocam um trecho da música (js/musicas.js).
+            for (const area of window.EnzoMusicas?.areasDaPagina(state.comic.id, chapter.id, index) || []) wrapper.appendChild(area);
 
             ui.imageContainer.appendChild(wrapper);
         });
@@ -656,6 +662,7 @@
         try {
             state.db = await window.carregarCatalogo();
             if (!Array.isArray(state.db?.comics)) throw new Error('database.json sem a lista "comics"');
+            await window.EnzoMusicas?.carregar();   // botões e balões que tocam música (data/musicas.json); sem ele, nada muda
             loadComic(comicId, chapterId);
             if (enteringFromComic) {
                 const pagina = ui.imageContainer.querySelector('.page-wrapper:not(.cover-wrapper)');

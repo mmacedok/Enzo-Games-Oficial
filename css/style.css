@@ -3560,3 +3560,32 @@ dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
 .aviso-lancamento a { flex: 1; color: inherit; text-decoration: none; }
 .aviso-lancamento a:hover { text-decoration: underline; }
 .aviso-lancamento-fechar { font: inherit; padding: 2px 8px; color: var(--ink); background: transparent; border: 2px solid var(--ink); border-radius: 6px; cursor: pointer; }
+
+/* ================================================================ músicas dos gibis (js/musicas.js) */
+/* Botão da página e balões de fala que tocam um trecho: invisíveis até passar o mouse ou tocar. */
+.musica-area {
+    position: absolute;
+    z-index: 11;
+    padding: 0;
+    background: transparent;
+    border: 3px solid transparent;
+    border-radius: 22px;
+    cursor: pointer;
+}
+.musica-area:hover, .musica-area:focus-visible { border-color: rgba(255, 214, 0, 0.95); box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.55), 0 0 18px rgba(255, 214, 0, 0.8); outline: none; }
+.musica-area .musica-estado { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.musica-area.musica-tocando { border-color: #ffd600; box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.55), 0 0 22px rgba(255, 214, 0, 0.9); animation: musica-pulso 0.9s ease-in-out infinite alternate; }
+@keyframes musica-pulso { from { box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.55), 0 0 10px rgba(255, 214, 0, 0.5); } to { box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.55), 0 0 28px rgba(255, 214, 0, 1); } }
+
+/* Discografia (fim do capítulo e abaixo das fichas do ZeZoVerso) */
+.discografia { width: 100%; max-width: 760px; margin: 8px auto 40px; padding: 16px; color: var(--ink); text-align: center; background: var(--halftone), var(--paper); border: var(--stroke-thick); border-radius: var(--radius); box-shadow: var(--pop); }
+.theme-zezoverso .discografia { background: rgba(10, 6, 30, 0.82); color: #fff; border-color: #ff4fd8; box-shadow: 6px 6px 0 #00e5ff; }
+.discografia-titulo { margin: 0 0 14px; font-family: var(--font-heading); letter-spacing: 1px; }
+.discografia-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.disco-faixa { position: relative; display: grid; gap: 8px; justify-items: center; padding: 10px; border: 2px solid var(--ink); border-radius: 10px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.disco-capa { width: 100%; max-width: 180px; aspect-ratio: 1; object-fit: cover; border: 2px solid var(--ink); border-radius: 8px; box-shadow: 3px 3px 0 var(--ink); }
+.disco-nome { margin: 0; font-family: var(--font-heading); font-size: 1.05rem; letter-spacing: 0.5px; line-height: 1.15; }
+.disco-tocar { font-family: var(--font-heading); letter-spacing: 1px; padding: 6px 16px; color: var(--ink); background: var(--caution); border: 3px solid var(--ink); border-radius: 999px; box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
+.disco-tocar:hover, .disco-tocar:focus-visible { filter: brightness(1.08); outline: none; transform: translateY(-1px); }
+.disco-tocar.musica-tocando { background: #ff4fd8; }
+.disco-progresso { --progresso: 0%; position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: linear-gradient(90deg, #ff4fd8 var(--progresso), transparent var(--progresso)); }

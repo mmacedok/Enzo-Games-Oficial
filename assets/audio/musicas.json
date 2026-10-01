@@ -1,0 +1,58 @@
+{
+  "felipe-robozao": {
+    "faixas": [
+      {
+        "id": "bateu-o-carro",
+        "titulo": "Robozão Bateu o Carro",
+        "capa": "assets/audio/felipe-robozao/bateu-o-carro.webp",
+        "completa": "assets/audio/felipe-robozao/bateu-o-carro.mp3"
+      },
+      {
+        "id": "no-poste",
+        "titulo": "Robozão no Poste",
+        "capa": "assets/audio/felipe-robozao/no-poste.webp",
+        "completa": "assets/audio/felipe-robozao/no-poste.mp3"
+      },
+      {
+        "id": "no-asfalto",
+        "titulo": "Robozão no Asfalto",
+        "capa": "assets/audio/felipe-robozao/no-asfalto.webp",
+        "completa": "assets/audio/felipe-robozao/no-asfalto.mp3"
+      }
+    ],
+    "trechos": [
+      {
+        "capitulo": "1",
+        "pagina": 2,
+        "faixa": "bateu-o-carro",
+        "clipe": "assets/audio/felipe-robozao/bateu-o-carro-trecho.mp3",
+        "letra": "Bateu o carro, o Robozão bateu o carro / Foi pro ferro velho, o Robozão tá sem conserto",
+        "areas": [
+          { "left": "71%", "top": "79.5%", "width": "27%", "height": "16.5%" }
+        ]
+      },
+      {
+        "capitulo": "1",
+        "pagina": 5,
+        "faixa": "no-poste",
+        "clipe": "assets/audio/felipe-robozao/no-poste-trecho.mp3",
+        "letra": "O Robozão quebrou! / E a vizinhança sorrindo do desespero / Agora virou meme em toda lista",
+        "areas": [
+          { "left": "71.3%", "top": "82.3%", "width": "27%", "height": "16.9%" }
+        ]
+      },
+      {
+        "capitulo": "1",
+        "pagina": 7,
+        "faixa": "no-asfalto",
+        "clipe": "assets/audio/felipe-robozao/no-asfalto-trecho.mp3",
+        "letra": "Felipe Robozão, Felipe Robozão / Robozão no asfalto / Felipe Robozão!",
+        "areas": [
+          { "left": "53%", "top": "17.4%", "width": "44%", "height": "9.2%" },
+          { "left": "56.5%", "top": "40.9%", "width": "41.7%", "height": "6.8%" },
+          { "left": "66.2%", "top": "47.9%", "width": "17.6%", "height": "5.7%" }
+        ]
+      }
+    ]
+  }
+}
