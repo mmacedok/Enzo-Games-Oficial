@@ -19,5 +19,6 @@ function wav(name,frequencies,duration,volume=.18){const rate=22050,n=Math.floor
   fs.writeFileSync(path.join(root,'audio',name+'.wav'),buffer);assets.push({id:name,path:'audio/'+name+'.wav',duration});}
 wav('coleta',[790,990],.15);wav('pulo',[430,570,680],.18);wav('deslize',[190,140],.15);wav('impacto',[110,80,65],.25);wav('poder',[330,440,650],.3);wav('capturado',[170,130,90],.5);wav('operator-loop',[110,165,146,220,110,165,196,146],1.76,.1);
 if(fs.existsSync(path.join(root,'cover.png')))assets.push({id:'cover',path:'cover.png',type:'comic cover'});
+if(fs.existsSync(path.join(root,'capa-site.png')))assets.push({id:'cover-site',path:'capa-site.png',type:'landscape game cover',format:'png',aspectRatio:'4:3'});
 fs.writeFileSync(path.join(root,'manifest.json'),JSON.stringify({title:"Italo's Surfer",map:'Operator Village',format:'Three.js ObjectLoader JSON + PCM WAV',reference:'Fichas Italolol.png e Enzo games ficha.png; cabelo preto e rosa conforme ficha atual',assets},null,2));
 console.log('Assets exportados: '+assets.length);

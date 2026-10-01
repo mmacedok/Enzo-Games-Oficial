@@ -8,7 +8,7 @@
         { nome: 'Flappy Enzo', capa: 'flappy', abrir: () => window.EnzoJogos?.abrir('flappy') },
         { nome: 'Caçada ao Inominável', capa: 'cacada', abrir: () => window.EnzoJogos?.abrir('ronda') },
         { nome: 'Batalha dos Torados', capa: 'batalha', abrir: () => { location.href = 'batalha.html'; } },
-        { nome: "Italo's Surfer", capa: 'italos-surfer', abrir: () => { location.href = 'italos-surfer.html'; } },
+        { nome: "Italo's Surfer", capa: 'italos-surfer', capaSrc: '/assets/fliperama-3d/jogos/italos-surfer-v2.png', abrir: () => { location.href = 'italos-surfer.html'; } },
         { nome: 'Degustação Noturna', capa: 'degustacao', breve: true },
     ];
 
@@ -18,7 +18,7 @@
         botao.className = 'jogo-cartao';
         botao.setAttribute('aria-label', jogo.breve ? `${jogo.nome} (em breve)` : jogo.nome);
         const img = document.createElement('img');
-        img.src = `/assets/fliperama-3d/jogos/${jogo.capa}.webp`;
+        img.src = jogo.capaSrc || `/assets/fliperama-3d/jogos/${jogo.capa}.webp`;
         img.alt = '';
         img.loading = 'lazy';
         img.decoding = 'async';

@@ -195,6 +195,13 @@
       "id": "cover",
       "path": "cover.png",
       "type": "comic cover"
+    },
+    {
+      "id": "cover-site",
+      "path": "capa-site.png",
+      "type": "landscape game cover",
+      "format": "png",
+      "aspectRatio": "4:3"
     }
   ]
 }
