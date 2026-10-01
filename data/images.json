@@ -1162,6 +1162,38 @@
       }
     ]
   },
+  "assets/Batalha/novidades-1.png": {
+    "width": 1024,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8c76407fab8fb48a-640.webp",
+        "bytes": 247056
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/8c76407fab8fb48a-1024.webp",
+        "bytes": 535922
+      }
+    ]
+  },
+  "assets/Batalha/novidades-2.png": {
+    "width": 1024,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/50b20a6664331bd0-640.webp",
+        "bytes": 239862
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/50b20a6664331bd0-1024.webp",
+        "bytes": 508082
+      }
+    ]
+  },
   "assets/Batalha/npc-torado.png": {
     "width": 512,
     "height": 512,
