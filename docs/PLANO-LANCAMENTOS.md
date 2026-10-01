@@ -1,6 +1,6 @@
 # Plano: aba "Lançamentos" no terminal (publicar capítulos em um clique)
 
-Status: **plano de 2026-10-01, nada implementado.** Pedido do Henrique: uma aba dedicada no terminal admin (`admin.html`)
+Status: **fases 1 a 3 feitas em 2026-10-01** (banco, API, filtro do site, aba "launch" no terminal, faixa "Novo capítulo!" na home, `test/lancamentos.test.js`). Decisões do Henrique: capítulo novo nasce escondido; agendar em horário de Fortaleza; upload pelo navegador fica para fase futura; aviso na home só quando ele publica. Faltam: preencher `publicado_em` dos capítulos antigos (hoje aparecem "NO AR" sem data) e QA de telas pelo Gemini. Pedido do Henrique: uma aba dedicada no terminal admin (`admin.html`)
 para deixar os capítulos já no site e torná-los visíveis aos leitores em um clique, valendo para os capítulos que já
 existem (retroativo) e para os próximos quadrinhos.
 

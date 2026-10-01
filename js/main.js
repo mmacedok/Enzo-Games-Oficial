@@ -255,11 +255,48 @@
         grid.replaceChildren(box);
     }
 
+    /**
+     * Faixa "Novo capítulo!" no alto da home: só aparece quando o admin publicou o capítulo marcando "avisar os leitores"
+     * (aba lançamentos do terminal), por 7 dias, e some de vez para quem fechar.
+     */
+    function mostrarAvisoLancamento() {
+        if (document.getElementById('comic-shelf')?.dataset.colecao !== 'serie') return;
+        const aviso = [...(window.EnzoAvisosLancamento || [])].sort((a, b) => b.em - a.em).find((a) => {
+            const [comicId, capId] = a.c.split('/');
+            return state.comics.some((c) => c.id === comicId && (c.chapters || []).some((cap) => cap.id === capId));
+        });
+        if (!aviso) return;
+        const chave = `enzo-aviso-lancamento:${aviso.c}:${aviso.em}`;
+        try { if (localStorage.getItem(chave)) return; } catch (e) { /* sem armazenamento: mostra */ }
+        const [comicId, capId] = aviso.c.split('/');
+        const comic = state.comics.find((c) => c.id === comicId);
+        const cap = comic.chapters.find((c) => c.id === capId);
+        const faixa = document.createElement('div');
+        faixa.className = 'aviso-lancamento';
+        faixa.setAttribute('role', 'status');
+        const link = document.createElement('a');
+        link.href = `reader.html?comic=${encodeURIComponent(comicId)}${comic.chapters.length > 1 ? `&chapter=${encodeURIComponent(capId)}` : ''}`;
+        const nome = comic.featured === false ? `${comic.title}: ${cap.title || `Capítulo ${cap.id}`}` : (comic.description || comic.title);
+        link.textContent = `🎉 Novo capítulo: ${nome} — ler agora`;
+        const fechar = document.createElement('button');
+        fechar.type = 'button';
+        fechar.className = 'aviso-lancamento-fechar';
+        fechar.setAttribute('aria-label', 'Fechar aviso');
+        fechar.textContent = '✕';
+        fechar.addEventListener('click', () => {
+            try { localStorage.setItem(chave, '1'); } catch (e) { /* ignora */ }
+            faixa.remove();
+        });
+        faixa.append(link, fechar);
+        document.querySelector('main')?.prepend(faixa);
+    }
+
     async function init() {
         if (estantes().length === 0) return;
         try {
             state.comics = validate(await window.carregarCatalogo());
             render();
+            mostrarAvisoLancamento();
         } catch (error) {
             console.error('Erro ao carregar banco de dados:', error);
             renderError(error);

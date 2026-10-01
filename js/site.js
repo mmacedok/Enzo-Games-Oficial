@@ -9,24 +9,24 @@
         img.src = info.variants[0].src;
     };
     /**
-     * Catálogo (data/database.json) já sem os gibis `hidden` que ainda não foram revelados.
-     * Quem revela é um admin, pelo comando `reveal <id>` do terminal (admin.html), ou o próprio horário
-     * `revealAt` do gibi (comparado com o relógio do servidor, não o do aparelho).
-     * Se a API não responder, ficam escondidos.
+     * Catálogo (data/database.json) só com o que os leitores podem ver (regras em js/lancamentos.js): capítulos
+     * escondidos ou agendados não aparecem. Quem publica é o admin, na aba "lançamentos" do terminal (admin.html).
+     * Se a API não responder, o que tem `hidden` fica escondido. Um admin vê tudo com `?previa=1` no leitor.
      */
     window.carregarCatalogo = async () => {
-        const resposta = await fetch('data/database.json');
+        const [resposta, dados] = await Promise.all([
+            fetch('data/database.json'),
+            fetch('/api/site/revelados', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        ]);
         if (!resposta.ok) throw new Error(`Erro HTTP: ${resposta.status}`);
         const db = await resposta.json();
-        if (!Array.isArray(db?.comics) || !db.comics.some((c) => c && c.hidden === true)) return db;
-        let revelados = [];
-        let agora = 0;
-        try {
-            const r = await fetch('/api/site/revelados', { cache: 'no-store' });
-            if (r.ok) { const dados = await r.json(); revelados = dados.ids || []; agora = Number(dados.agora) || 0; }
-        } catch (erro) { /* sem API: continua escondido */ }
-        const liberado = (c) => c?.hidden !== true || revelados.includes(c.id) || (agora > 0 && Number(c.revealAt) <= agora);
-        return { ...db, comics: db.comics.filter(liberado) };
+        if (!Array.isArray(db?.comics)) return db;
+        window.EnzoAvisosLancamento = dados?.avisos || [];
+        if (new URLSearchParams(location.search).get('previa') === '1') {
+            const eu = await fetch('/api/auth/me', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+            if (eu?.admin) return db;
+        }
+        return window.Lancamentos ? window.Lancamentos.filtrar(db, dados || {}) : db;
     };
     window.siteImageUrl = source => window.SiteImages?.[source]?.variants[0].src || source;
     /**

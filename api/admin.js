@@ -17,7 +17,8 @@
 //   GET  /api/admin/acessos[/resumo]              IP, país, estado e cidade das ações (api/acessos.js)
 //   GET  /api/admin/log                           histórico das ações de admin
 //   POST /api/admin/reveal                        { id, revelar } mostra/esconde um gibi `hidden` do catálogo
-//   GET  /api/site/revelados                      (público) ids dos gibis escondidos que já foram revelados + a hora do servidor
+//   GET  /api/site/revelados                      (público) ids dos gibis escondidos que já foram revelados, estado dos capítulos (lançamentos), avisos de capítulo novo + a hora do servidor
+//   POST /api/admin/lancamentos                   (api/lancamentos.js) { comic, capitulo, acao, em?, avisar? }
 // Toda mudança fica registrada em admin_log.
 // ============================================================================
 const crypto = require('node:crypto');
@@ -74,7 +75,18 @@ const rotas = [
         async executar(ctx) {
             const linhas = await ctx.db.query('SELECT comic_id FROM gibis_revelados ORDER BY created_at');
             // `agora` (relógio do servidor) deixa o site liberar sozinho os gibis com `revealAt` (data/comics.manifest.json).
-            return { ids: linhas.map((l) => l.comic_id), agora: ctx.agora() };
+            const agora = ctx.agora();
+            // Capítulos com estado próprio (aba "lançamentos"): `em` = quando abre/abriu; o aviso "Novo capítulo!" vale 7 dias.
+            const estados = await ctx.db.query('SELECT comic_id, chapter_id, estado, publicar_em, publicado_em, aviso FROM lancamentos');
+            const capitulos = estados.map((l) => ({
+                c: `${l.comic_id}/${l.chapter_id}`, estado: l.estado,
+                em: Number(l.estado === 'agendado' ? l.publicar_em : l.publicado_em) || null,
+            }));
+            const avisos = estados
+                .filter((l) => l.aviso && (l.estado === 'no-ar' || (l.estado === 'agendado' && Number(l.publicar_em) <= agora)))
+                .map((l) => ({ c: `${l.comic_id}/${l.chapter_id}`, em: Number(l.estado === 'agendado' ? l.publicar_em : l.publicado_em) }))
+                .filter((a) => agora - a.em < 7 * 24 * 60 * 60 * 1000);
+            return { ids: linhas.map((l) => l.comic_id), capitulos, avisos, agora };
         },
     },
     {

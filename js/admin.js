@@ -231,7 +231,7 @@
     function mostrarAtalhos() {
         const nav = $('atalhos');
         nav.replaceChildren(el('p', 'atalhos-titulo', 'atalhos rápidos'));
-        for (const comando of ['status', 'users', 'reveal', 'scores', 'log', 'help', 'exit']) nav.appendChild(botao(comando, comando));
+        for (const comando of ['status', 'users', 'launch', 'scores', 'log', 'help', 'exit']) nav.appendChild(botao(comando, comando));
     }
 
     function mostrarDashboard() {
@@ -243,7 +243,7 @@
         const grupos = [
             ['SISTEMA', 'Estado e acesso', [['status', 'status'], ['quem sou', 'whoami'], ['histórico', 'log']]],
             ['LEITORES', 'Contas e conquistas', [['listar leitores', 'users'], ['ajuda', 'help']]],
-            ['GIBIS', 'Capítulos escondidos', [['ver escondidos', 'reveal'], ['esconder gibi', 'hide']]],
+            ['GIBIS', 'Publicar capítulos', [['lançamentos', 'launch']]],
             ['PARTIDAS', 'Ranking e placares', [['todas', 'scores'], ['Flappy', 'scores flappy'], ['Degustação', 'scores degustacao']]],
         ];
         for (const [titulo, descricao, acoes] of grupos) {
@@ -724,6 +724,159 @@
         await telaGibis();
     }
 
+    // ---------------------------------------------------------------- lançamentos
+    /**
+     * Aba "lançamentos": todos os capítulos do catálogo com o estado que os leitores veem e botões para publicar,
+     * agendar (horário de Fortaleza) ou esconder, sem digitar comando. Regras em js/lancamentos.js; API em api/lancamentos.js.
+     */
+    async function telaLancamentos() {
+        const L = window.Lancamentos;
+        const [catalogo, dados] = await Promise.all([
+            fetch('data/database.json', { cache: 'no-store' }).then((r) => r.json()),
+            fetch('/api/site/revelados', { cache: 'no-store' }).then((r) => r.json()),
+        ]);
+        const idx = L.indexar(dados);
+        const itens = [];
+        for (const comic of catalogo.comics) {
+            for (const cap of comic.chapters || []) {
+                itens.push({ comic, cap, ...L.situacao(comic, cap, idx), ordem: Number(comic.order) || 0 });
+            }
+        }
+        const peso = { escondido: 0, agendado: 1, 'no-ar': 2 };
+        itens.sort((a, b) => (peso[a.estado] - peso[b.estado]) || (b.ordem - a.ordem) || (Number(b.cap.id) || 0) - (Number(a.cap.id) || 0));
+
+        novaTela('launch', [['lançamentos', null]]);
+        const conta = (e) => itens.filter((i) => i.estado === e).length;
+        linha([span('l--secao', `${conta('escondido')} escondidos · ${conta('agendado')} agendados · ${conta('no-ar')} no ar`)]);
+        apagado('horário sempre de Fortaleza. Publicar muda o site na hora, sem deploy.');
+
+        const filtros = el('div', 'lanc-filtros');
+        const lista = el('div', 'lanc-lista');
+        imprimir(filtros);
+        imprimir(lista);
+        let filtro = estado.filtroLanc || 'todos';
+
+        const recarregar = () => { estado.tela = null; return rodar('launch'); };
+        const aplicar = async (item, corpo, texto) => {
+            await pedir('/api/admin/lancamentos', { comic: item.comic.id, capitulo: item.cap.id, ...corpo });
+            ok(texto);
+            await recarregar();
+        };
+        const nome = (item) => `${item.comic.title}${item.comic.featured === false ? ` · capítulo ${item.cap.id}` : ''}`;
+        const miniatura = (item) => {
+            const origem = item.cap.cover || item.comic.cover;
+            const img = el('img', 'lanc-capa');
+            img.alt = '';
+            img.loading = 'lazy';
+            img.src = window.SiteImages?.[origem]?.variants?.[0]?.src || origem;
+            return img;
+        };
+        const painel = (cartao, item, tipo) => {
+            cartao.querySelector('.lanc-painel')?.remove();
+            const p = el('div', 'lanc-painel');
+            const aviso = el('input');
+            aviso.type = 'checkbox';
+            aviso.checked = tipo === 'publicar' || tipo === 'agendar';
+            const rotuloAviso = el('label', 'lanc-check');
+            rotuloAviso.append(aviso, ' avisar os leitores na home ("Novo capítulo!" por 7 dias)');
+            const acoes = el('div', 'lanc-acoes');
+            const cancelar = el('button', 'cmd cmd--link', 'cancelar');
+            cancelar.type = 'button';
+            cancelar.addEventListener('click', () => p.remove());
+            if (tipo === 'publicar') {
+                p.append(el('p', 'lanc-pergunta', `Publicar "${nome(item)}" agora? Os leitores passam a ver na hora.`), rotuloAviso);
+                const go = el('button', 'cmd lanc-go', '🚀 confirmar publicação');
+                go.type = 'button';
+                go.addEventListener('click', () => { go.disabled = true; aplicar(item, { acao: 'publicar', avisar: aviso.checked }, `${nome(item)} publicado: já aparece no site.`).catch((e) => { erro(e.message); go.disabled = false; }); });
+                acoes.append(go, cancelar);
+            } else {
+                const campo = el('input', 'lanc-data');
+                campo.type = 'datetime-local';
+                const amanha = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                campo.value = item.estado === 'agendado' && item.em ? L.paraCampo(item.em) : `${L.paraCampo(amanha.getTime()).slice(0, 10)}T10:00`;
+                const dica = el('span', 'lanc-dica', '');
+                const atualizarDica = () => { const ms = L.deFortaleza(campo.value); dica.textContent = Number.isFinite(ms) ? `abre em ${L.formatar(ms)}` : 'escolha a data e a hora'; };
+                campo.addEventListener('input', atualizarDica);
+                atualizarDica();
+                p.append(el('p', 'lanc-pergunta', `Quando "${nome(item)}" abre para os leitores? (horário de Fortaleza)`), campo, ' ', dica, rotuloAviso);
+                const go = el('button', 'cmd lanc-go', '🕒 agendar');
+                go.type = 'button';
+                go.addEventListener('click', () => {
+                    const ms = L.deFortaleza(campo.value);
+                    if (!Number.isFinite(ms)) { erro('escolha a data e a hora.'); return; }
+                    if (ms <= Date.now()) { erro('o horário tem que ser no futuro.'); return; }
+                    go.disabled = true;
+                    aplicar(item, { acao: 'agendar', em: ms, avisar: aviso.checked }, `${nome(item)} agendado para ${L.formatar(ms)}.`).catch((e) => { erro(e.message); go.disabled = false; });
+                });
+                acoes.append(go, cancelar);
+            }
+            p.appendChild(acoes);
+            cartao.appendChild(p);
+        };
+        const leitor = (item) => {
+            const b = el('a', 'cmd', '👁 ver como leitor');
+            b.href = `reader.html?comic=${encodeURIComponent(item.comic.id)}&chapter=${encodeURIComponent(item.cap.id)}&previa=1`;
+            b.target = '_blank';
+            b.rel = 'noopener';
+            return b;
+        };
+        const acaoBotao = (rotulo, fn, perigo = false) => {
+            const b = el('button', `cmd${perigo ? ' cmd--perigo' : ''}`, rotulo);
+            b.type = 'button';
+            b.addEventListener('click', fn);
+            return b;
+        };
+        const cartaoDe = (item) => {
+            const c = el('article', `lanc-cartao lanc-cartao--${item.estado}`);
+            const topo = el('div', 'lanc-topo');
+            const texto = el('div', 'lanc-texto');
+            const selo = { escondido: '🙈 ESCONDIDO', agendado: '🕒 AGENDADO', 'no-ar': '🟢 NO AR' }[item.estado];
+            const quando = item.estado === 'agendado' ? `abre ${L.formatar(item.em)}` : item.estado === 'no-ar' && item.em ? `desde ${L.formatar(item.em)}` : '';
+            texto.append(el('strong', 'lanc-nome', nome(item)),
+                el('span', 'lanc-sub', `${item.cap.title || `Capítulo ${item.cap.id}`} · ${(item.cap.pages || []).length} páginas`),
+                el('span', `lanc-selo lanc-selo--${item.estado}`, `${selo}${quando ? ` · ${quando}` : ''}`));
+            topo.append(miniatura(item), texto);
+            const botoes = el('div', 'lanc-acoes');
+            if (item.estado === 'no-ar') {
+                botoes.append(acaoBotao('🙈 esconder', () => painelEsconder(c, item), true), leitor(item));
+            } else {
+                botoes.append(acaoBotao('🚀 publicar agora', () => painel(c, item, 'publicar')),
+                    acaoBotao(item.estado === 'agendado' ? '🕒 mudar horário' : '🕒 agendar…', () => painel(c, item, 'agendar')));
+                if (item.estado === 'agendado') botoes.append(acaoBotao('✖ cancelar agendamento', () => aplicar(item, { acao: 'esconder' }, `${nome(item)}: agendamento cancelado, segue escondido.`).catch((e) => erro(e.message)), true));
+                botoes.append(leitor(item));
+            }
+            c.append(topo, botoes);
+            return c;
+        };
+        const painelEsconder = (cartao, item) => {
+            cartao.querySelector('.lanc-painel')?.remove();
+            const p = el('div', 'lanc-painel');
+            p.appendChild(el('p', 'lanc-pergunta', `Esconder "${nome(item)}" dos leitores? Quem estiver lendo continua até sair; depois não aparece mais.`));
+            const go = el('button', 'cmd cmd--perigo', '🙈 sim, esconder');
+            go.type = 'button';
+            go.addEventListener('click', () => { go.disabled = true; aplicar(item, { acao: 'esconder' }, `${nome(item)} escondido dos leitores.`).catch((e) => { erro(e.message); go.disabled = false; }); });
+            const cancelar = el('button', 'cmd cmd--link', 'cancelar');
+            cancelar.type = 'button';
+            cancelar.addEventListener('click', () => p.remove());
+            const acoes = el('div', 'lanc-acoes');
+            acoes.append(go, cancelar);
+            p.appendChild(acoes);
+            cartao.appendChild(p);
+        };
+        const desenhar = () => {
+            estado.filtroLanc = filtro;
+            filtros.replaceChildren(...[['todos', 'todos', itens.length], ['escondido', '🙈 escondidos', conta('escondido')], ['agendado', '🕒 agendados', conta('agendado')], ['no-ar', '🟢 no ar', conta('no-ar')]].map(([chave, rotulo, n]) => {
+                const b = el('button', `cmd lanc-filtro${filtro === chave ? ' lanc-filtro--ativo' : ''}`, `${rotulo} (${n})`);
+                b.type = 'button';
+                b.addEventListener('click', () => { filtro = chave; desenhar(); });
+                return b;
+            }));
+            const vistos = itens.filter((i) => filtro === 'todos' || i.estado === filtro);
+            lista.replaceChildren(...(vistos.length ? vistos.map(cartaoDe) : [el('p', 'l l--apagado', 'nenhum capítulo nesse filtro.')]));
+        };
+        desenhar();
+    }
+
     /** Valor numérico de credits/dust: inteiro diferente de zero. */
     function valorNumerico(args, nome) {
         if (!args[0]) throw new Error(`uso: ${nome} <n> (número inteiro).`);
@@ -798,6 +951,11 @@
                 atualizarPrompt();
                 desenharConta();
             },
+        },
+        launch: {
+            uso: 'launch',
+            desc: 'lançamentos: publica, agenda ou esconde capítulos com botões (horário de Fortaleza)',
+            async fn() { await telaLancamentos(); },
         },
         reveal: {
             uso: 'reveal [id]',

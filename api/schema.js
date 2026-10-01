@@ -108,6 +108,18 @@ module.exports = [
         comic_id TEXT PRIMARY KEY,
         created_at BIGINT NOT NULL
     )`,
+    // Estado de cada capítulo (api/lancamentos.js): publicar, agendar ou esconder sem deploy.
+    `CREATE TABLE IF NOT EXISTS lancamentos (
+        comic_id TEXT NOT NULL,
+        chapter_id TEXT NOT NULL,
+        estado TEXT NOT NULL,
+        publicar_em BIGINT,
+        publicado_em BIGINT,
+        aviso BOOLEAN NOT NULL DEFAULT FALSE,
+        atualizado_por TEXT,
+        atualizado_em BIGINT NOT NULL,
+        PRIMARY KEY (comic_id, chapter_id)
+    )`,
     // Cartas dos Leitores (api/comentarios.js). censuras = JSON [[inicio, fim], ...];
     // apagar é "soft delete" (apagado_em), para o histórico saber o que saiu.
     `CREATE TABLE IF NOT EXISTS comments (

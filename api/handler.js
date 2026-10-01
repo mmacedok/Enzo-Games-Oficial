@@ -15,13 +15,14 @@ const games = require('./games.js');
 const user = require('./user.js');
 const leitores = require('./leitores.js');
 const admin = require('./admin.js');
+const lancamentos = require('./lancamentos.js');
 const comentarios = require('./comentarios.js');
 const baralho = require('./baralho.js');
 const tcg = require('./tcg.js');
 const acessos = require('./acessos.js');
 const SCHEMA = require('./schema.js');
 
-const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas, ...acessos.rotas];
+const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...lancamentos.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas, ...acessos.rotas];
 
 function acharRota(metodo, caminho) {
     let caminhoExiste = false;

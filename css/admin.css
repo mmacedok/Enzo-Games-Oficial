@@ -459,3 +459,30 @@ button.numero:hover, button.numero:focus-visible { background: rgba(141, 255, 16
     .tabela .cmd { padding: 0; }
     .secao-corpo { padding-left: 8px; }
 }
+
+/* ---------------------------------------------------------------- lançamentos (comando launch) */
+.lanc-filtros { display: flex; flex-wrap: wrap; gap: 6px 10px; margin: 8px 0 12px; }
+.cmd.lanc-filtro--ativo { background: var(--verde); color: var(--fundo); text-shadow: none; }
+.cmd.lanc-filtro--ativo::before, .cmd.lanc-filtro--ativo::after { color: var(--fundo); }
+.lanc-lista { display: grid; gap: 12px; max-width: 760px; }
+.lanc-cartao { border: 1px solid var(--verde-linha); border-left-width: 4px; padding: 10px 12px; background: var(--fundo-2); }
+.lanc-cartao--escondido { border-left-color: var(--vermelho); }
+.lanc-cartao--agendado { border-left-color: var(--ambar); }
+.lanc-cartao--no-ar { border-left-color: var(--verde-medio); }
+.lanc-topo { display: flex; gap: 12px; align-items: center; }
+.lanc-capa { width: 54px; height: 96px; object-fit: cover; border: 1px solid var(--verde-apagado); flex: none; background: #000; }
+.lanc-texto { display: grid; gap: 3px; min-width: 0; }
+.lanc-nome { color: var(--verde-forte); font-size: 1.05em; }
+.lanc-sub { color: var(--verde-apagado); }
+.lanc-selo { font-size: .9em; }
+.lanc-selo--escondido { color: var(--vermelho); }
+.lanc-selo--agendado { color: var(--ambar); }
+.lanc-selo--no-ar { color: var(--verde-medio); }
+.lanc-acoes { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 10px; }
+a.cmd { text-decoration: none; display: inline-block; }
+.lanc-painel { margin-top: 10px; padding: 10px; border: 1px dashed var(--verde-apagado); display: grid; gap: 8px; }
+.lanc-pergunta { margin: 0; color: var(--verde-forte); }
+.lanc-check { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.lanc-data { font: inherit; color: var(--verde-forte); background: #000; border: 1px solid var(--verde-apagado); padding: 4px 6px; color-scheme: dark; }
+.lanc-dica { color: var(--ambar); }
+.lanc-go { font-weight: 700; }
