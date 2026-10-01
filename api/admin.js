@@ -323,10 +323,15 @@ const rotas = [
                       WHERE p.status = 'jogando'
                         AND ($1::text IS NULL OR ua.display_name ILIKE $1 OR ub.display_name ILIKE $1 OR p.jogador_a = $2 OR p.jogador_b = $2)
                       ORDER BY p.criado_em DESC LIMIT 20`, [filtro, busca]);
+                // Partida 'jogando' sem nenhuma jogada há 10 minutos foi abandonada (ninguém voltou para o relógio encerrar): não é "ao vivo".
                 aoVivo = vivas.map((p) => {
                     let turno = null;
                     try { turno = JSON.parse(p.estado).turno; } catch { /* estado ilegível */ }
-                    return { id: p.id, a: quem(p.jogador_a, p.na), b: quem(p.jogador_b, p.nb), desde: Number(p.criado_em), turnos: turno };
+                    const ultima = Number(p.atualizado_em);
+                    return {
+                        id: p.id, a: quem(p.jogador_a, p.na), b: quem(p.jogador_b, p.nb), desde: Number(p.criado_em), turnos: turno,
+                        ultimaJogada: ultima, abandonada: ctx.agora() - ultima > 10 * 60 * 1000,
+                    };
                 });
             }
             return { partidas, aoVivo, temMais: linhas.length > POR_PAGINA, agora: ctx.agora() };

@@ -77,10 +77,17 @@ test('histórico de partidas da Batalha: só admin vê; lista resultados, filtra
     // partida em andamento aparece em aoVivo
     await m.db.query(
         `INSERT INTO tcg_partidas (id, jogador_a, jogador_b, deck_a, deck_b, estado, versao, regras, prazo, status, criado_em, atualizado_em)
-         VALUES ('viva', $1, $2, 'custom', 'custom', $3, 1, 10, 9999, 'jogando', 5000, 5000)`,
-        [ze.id, b.id, JSON.stringify({ turno: 4 })]);
-    const viva = (await chefe('GET', '/api/admin/tcg/partidas')).dados.aoVivo;
-    assert.equal(viva.length, 1);
-    assert.equal(viva[0].turnos, 4);
-    assert.equal(viva[0].a.id, ze.id);
+         VALUES ($4, $1, $2, 'custom', 'custom', $3, 1, 10, 9999, 'jogando', $5, $5)`,
+        [ze.id, b.id, JSON.stringify({ turno: 4 }), 'viva', m.relogio.agora - 30_000]);
+    await m.db.query(
+        `INSERT INTO tcg_partidas (id, jogador_a, jogador_b, deck_a, deck_b, estado, versao, regras, prazo, status, criado_em, atualizado_em)
+         VALUES ($4, $1, $2, 'custom', 'custom', $3, 1, 10, 9999, 'jogando', $5, $5)`,
+        [ze.id, b.id, JSON.stringify({ turno: 7 }), 'parada', m.relogio.agora - 24 * 60 * 60 * 1000]);
+    const vivas = (await chefe('GET', '/api/admin/tcg/partidas')).dados.aoVivo;
+    assert.equal(vivas.length, 2);
+    const viva = vivas.find((v) => v.id === 'viva');
+    assert.equal(viva.turnos, 4);
+    assert.equal(viva.a.id, ze.id);
+    assert.equal(viva.abandonada, false, 'jogada há 30 s: está ao vivo');
+    assert.equal(vivas.find((v) => v.id === 'parada').abandonada, true, 'sem jogada há um dia: abandonada, não "ao vivo"');
 });
