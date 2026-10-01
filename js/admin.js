@@ -951,8 +951,8 @@
         const nomeCarta = (id) => window.EnzoBaralho?.carta?.(id)?.nome || id;
         const nome = (p) => (p ? p.name : '—');
 
-        const ativas = primeira.aoVivo.filter((v) => !v.abandonada);
-        const paradas = primeira.aoVivo.filter((v) => v.abandonada);
+        const ativas = primeira.aoVivo;
+        const paradas = primeira.abandonadas || [];
         if (ativas.length) {
             secao('rolando agora');
             for (const v of ativas) {
@@ -960,9 +960,9 @@
             }
         }
         if (paradas.length) {
-            secao('abandonadas (sem jogada há mais de 10 min)');
+            secao('encerradas por abandono (ninguém jogou por 10 min; sem resultado e fora do placar)');
             for (const v of paradas) {
-                linha([span('aviso', '○ '), `${nome(v.a)} × ${nome(v.b)}`, span('l--apagado', ` · começou ${data(v.desde)}${v.turnos ? ` · parou no turno ${v.turnos}` : ''} · última jogada ${data(v.ultimaJogada)}`)]);
+                linha([span('aviso', '○ '), `${nome(v.a)} × ${nome(v.b)}`, span('l--apagado', ` · começou ${data(v.desde)}${v.turnos ? ` · parou no turno ${v.turnos}` : ''} · encerrada ${data(v.encerradaEm)}`)]);
             }
         }
         secao(busca ? `partidas de "${busca}"` : 'partidas que terminaram');

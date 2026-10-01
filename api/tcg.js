@@ -55,6 +55,8 @@ const TURNO = 60 * 1000;
 const ESTOUROS_PARA_PERDER = 3;
 const GUARDAR_TERMINADAS = 7 * 24 * 3600 * 1000;
 const DIA = 24 * 3600 * 1000;
+// Partida 'jogando' sem nenhuma jogada há tanto tempo foi abandonada (os dois sumiram, o relógio só anda quando alguém consulta).
+const ABANDONO = 10 * 60 * 1000;
 /** Estouros resolvidos numa chamada só (se os dois sumiram há muito tempo). */
 const MAX_ESTOUROS_POR_VEZ = 12;
 const LETRAS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -300,7 +302,7 @@ const respostaBase = (ctx, p) => ({
     id: p.id, versao: p.versao, prazo: p.prazo, agora: ctx.agora(), eu: p.eu,
     estouros: p.estouros, status: p.status, regras: R.REGRAS_VERSAO,
     // Partida online acabada com resultado: quanto rendeu de créditos para este jogador.
-    ...(p.status === 'fim' && p.estado && p.estado.motivo !== 'atualizacao'
+    ...(p.status === 'fim' && p.estado && p.estado.fase === 'fim' && p.estado.motivo !== 'atualizacao'
         ? { creditos: recompensaOnline(p.estado.vencedor, p.eu) } : {}),
 });
 
@@ -326,9 +328,23 @@ async function limpar(ctx) {
     const agora = ctx.agora();
     await ctx.db.query('DELETE FROM tcg_salas WHERE expira_em < $1', [agora - DIA]);
     await ctx.db.query(`DELETE FROM tcg_partidas WHERE status = 'fim' AND atualizado_em < $1`, [agora - GUARDAR_TERMINADAS]);
+    await varrerAbandonadas(ctx);
+}
+
+/**
+ * Encerra as partidas abandonadas: sem resultado, sem placar e sem créditos (motivo 'abandonada'), para quem estava nelas
+ * poder jogar de novo. Roda sozinha quando alguém entra numa sala ou olha o histórico no terminal.
+ */
+async function varrerAbandonadas(ctx) {
+    const agora = ctx.agora();
+    const linhas = await ctx.db.query(
+        `UPDATE tcg_partidas SET status = 'fim', motivo = 'abandonada', atualizado_em = $1
+          WHERE status = 'jogando' AND atualizado_em < $2 RETURNING id`, [agora, agora - ABANDONO]);
+    return linhas.length;
 }
 
 async function partidaEmAndamento(ctx, userId) {
+    await varrerAbandonadas(ctx);
     const [l] = await ctx.db.query(
         `SELECT id FROM tcg_partidas WHERE status = 'jogando' AND (jogador_a = $1 OR jogador_b = $1) AND regras = $2
           ORDER BY criado_em DESC LIMIT 1`, [userId, R.REGRAS_VERSAO]);
@@ -792,7 +808,7 @@ const rotas = [
         async executar(ctx) {
             const id = ctx.params[0];
             let { l, eu } = await lerParaRevanche(ctx, id);
-            if (l.status !== 'fim' || l.motivo === 'atualizacao' || Number(l.regras) !== R.REGRAS_VERSAO) {
+            if (l.status !== 'fim' || l.motivo === 'atualizacao' || l.motivo === 'abandonada' || Number(l.regras) !== R.REGRAS_VERSAO) {
                 throw new HttpError(409, 'essa partida não aceita revanche');
             }
             if (!l.revanche_id) {
@@ -840,4 +856,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline, COMENTARIO_MAX };
+module.exports = { rotas, varrerAbandonadas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline, COMENTARIO_MAX };

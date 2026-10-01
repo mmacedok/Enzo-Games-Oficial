@@ -316,14 +316,15 @@ const rotas = [
                 };
             });
             let aoVivo = [];
+            let abandonadas = [];
             if (pagina === 0) {
+                await require('./tcg.js').varrerAbandonadas(ctx);   // as abandonadas (ninguém jogou há 10 min) são encerradas na hora
                 const vivas = await ctx.db.query(
                     `SELECT p.id, p.jogador_a, p.jogador_b, p.estado, p.criado_em, p.atualizado_em, ua.display_name AS na, ub.display_name AS nb
                        FROM tcg_partidas p JOIN users ua ON ua.id = p.jogador_a JOIN users ub ON ub.id = p.jogador_b
                       WHERE p.status = 'jogando'
                         AND ($1::text IS NULL OR ua.display_name ILIKE $1 OR ub.display_name ILIKE $1 OR p.jogador_a = $2 OR p.jogador_b = $2)
                       ORDER BY p.criado_em DESC LIMIT 20`, [filtro, busca]);
-                // Partida 'jogando' sem nenhuma jogada há 10 minutos foi abandonada (ninguém voltou para o relógio encerrar): não é "ao vivo".
                 aoVivo = vivas.map((p) => {
                     let turno = null;
                     try { turno = JSON.parse(p.estado).turno; } catch { /* estado ilegível */ }
@@ -333,8 +334,19 @@ const rotas = [
                         ultimaJogada: ultima, abandonada: ctx.agora() - ultima > 10 * 60 * 1000,
                     };
                 });
+                const mortas = await ctx.db.query(
+                    `SELECT p.id, p.jogador_a, p.jogador_b, p.estado, p.criado_em, p.atualizado_em, ua.display_name AS na, ub.display_name AS nb
+                       FROM tcg_partidas p JOIN users ua ON ua.id = p.jogador_a JOIN users ub ON ub.id = p.jogador_b
+                      WHERE p.status = 'fim' AND p.motivo = 'abandonada'
+                        AND ($1::text IS NULL OR ua.display_name ILIKE $1 OR ub.display_name ILIKE $1 OR p.jogador_a = $2 OR p.jogador_b = $2)
+                      ORDER BY p.atualizado_em DESC LIMIT 20`, [filtro, busca]);
+                abandonadas = mortas.map((p) => {
+                    let turno = null;
+                    try { turno = JSON.parse(p.estado).turno; } catch { /* estado ilegível */ }
+                    return { id: p.id, a: quem(p.jogador_a, p.na), b: quem(p.jogador_b, p.nb), desde: Number(p.criado_em), turnos: turno, encerradaEm: Number(p.atualizado_em) };
+                });
             }
-            return { partidas, aoVivo, temMais: linhas.length > POR_PAGINA, agora: ctx.agora() };
+            return { partidas, aoVivo, abandonadas, temMais: linhas.length > POR_PAGINA, agora: ctx.agora() };
         },
     },
     {

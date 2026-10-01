@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-10-01 · Partidas online abandonadas se encerram sozinhas:** partida "jogando" sem nenhuma jogada há 10 minutos vira `fim` com motivo `abandonada` (sem resultado, fora do placar, sem créditos) — `varrerAbandonadas` em `api/tcg.js`, chamada quando alguém pergunta se já está numa partida (`/api/tcg/atual`, criar/entrar em sala) e quando o terminal abre `tcg`. Antes elas ficavam "jogando" para sempre e prendiam os dois jogadores ("você já está numa partida"). O terminal mostra "rolando agora" (só as ativas) e "encerradas por abandono" (últimas 20, guardadas 7 dias). `REGRAS_VERSAO` não mudou.
+
 - **2026-10-01 · Histórico das partidas da Batalha no terminal (`tcg [jogador]`):** lista as partidas online que terminaram (data, quem jogou, quem ganhou ou empate, motivo, rodadas, botão "decks" com as 15 cartas de cada um), as que estão rolando agora e "mais antigas" para paginar; filtra por nome, e-mail ou id. Rota `GET /api/admin/tcg/partidas` (`api/admin.js`), dados de `tcg_resultados` (guardados para sempre) e `tcg_partidas`. Também no card PARTIDAS da central. Só online: as contra o NPC não ficam guardadas. Testes em `test/admin-tcg.test.js`. **Falta:** ver com partidas reais; replay passo a passo (as jogadas só ficam enquanto a partida existe).
 
 - **2026-10-01 · Decisão do Henrique: a Batalha está equilibrada por ora, sem compensação de vida do nocaute** (nada de ×1,5, ×1,75 ou ×2; fica como está na `REGRAS_VERSAO` 10). Se voltar a incomodar o ritmo (partidas lentas, muitas no limite de turnos), reabrir com as medições de 2026-09-30.

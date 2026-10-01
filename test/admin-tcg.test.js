@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const { createApi } = require('../api/handler.js');
 const { createLocalDb } = require('../api/db-local.js');
 
+const DIA = 24 * 60 * 60 * 1000;
 const ENV = { GOOGLE_CLIENT_ID: 'teste.apps.googleusercontent.com', SESSION_SECRET: 'x'.repeat(40), ADMIN_EMAILS: 'chefe@exemplo.com' };
 
 function montar() {
@@ -83,11 +84,33 @@ test('histórico de partidas da Batalha: só admin vê; lista resultados, filtra
         `INSERT INTO tcg_partidas (id, jogador_a, jogador_b, deck_a, deck_b, estado, versao, regras, prazo, status, criado_em, atualizado_em)
          VALUES ($4, $1, $2, 'custom', 'custom', $3, 1, 10, 9999, 'jogando', $5, $5)`,
         [ze.id, b.id, JSON.stringify({ turno: 7 }), 'parada', m.relogio.agora - 24 * 60 * 60 * 1000]);
-    const vivas = (await chefe('GET', '/api/admin/tcg/partidas')).dados.aoVivo;
-    assert.equal(vivas.length, 2);
-    const viva = vivas.find((v) => v.id === 'viva');
-    assert.equal(viva.turnos, 4);
-    assert.equal(viva.a.id, ze.id);
-    assert.equal(viva.abandonada, false, 'jogada há 30 s: está ao vivo');
-    assert.equal(vivas.find((v) => v.id === 'parada').abandonada, true, 'sem jogada há um dia: abandonada, não "ao vivo"');
+    const dados = (await chefe('GET', '/api/admin/tcg/partidas')).dados;
+    assert.deepEqual(dados.aoVivo.map((v) => v.id), ['viva'], 'só a que teve jogada há 30 s está ao vivo');
+    assert.equal(dados.aoVivo[0].turnos, 4);
+    assert.equal(dados.aoVivo[0].a.id, ze.id);
+    // a de ontem foi encerrada sozinha: sem resultado, e aparece como abandonada
+    assert.deepEqual(dados.abandonadas.map((v) => v.id), ['parada']);
+    assert.equal(dados.abandonadas[0].turnos, 7);
+    const [linha] = await m.db.query("SELECT status, motivo FROM tcg_partidas WHERE id = 'parada'");
+    assert.deepEqual([linha.status, linha.motivo], ['fim', 'abandonada']);
+    assert.equal((await m.db.query("SELECT 1 FROM tcg_resultados WHERE partida_id = 'parada'")).length, 0, 'abandono não vira resultado nem placar');
+});
+
+test('partida abandonada não prende mais os jogadores: encerra sozinha quando o site pergunta', async (t) => {
+    const m = montar();
+    t.after(() => m.db.close());
+    const ze = m.navegador();
+    const b = m.navegador();
+    const u1 = await entrar(ze, 'ze2', 'Ze');
+    const u2 = await entrar(b, 'bia2', 'Bia');
+    await m.db.query(
+        `INSERT INTO tcg_partidas (id, jogador_a, jogador_b, deck_a, deck_b, estado, versao, regras, prazo, status, criado_em, atualizado_em)
+         VALUES ('velha', $1, $2, 'custom', 'custom', $3, 1, 10, 9999, 'jogando', $4, $4)`,
+        [u1.id, u2.id, JSON.stringify({ turno: 3 }), m.relogio.agora - DIA]);
+    // /api/tcg/atual é o que o site pergunta para saber se a pessoa já está numa partida
+    const atual = await ze('GET', '/api/tcg/atual');
+    assert.equal(atual.status, 200);
+    assert.ok(!atual.dados.partida && !atual.dados.id, 'a partida de ontem não prende mais ninguém');
+    const [linha] = await m.db.query("SELECT status, motivo FROM tcg_partidas WHERE id = 'velha'");
+    assert.deepEqual([linha.status, linha.motivo], ['fim', 'abandonada']);
 });
