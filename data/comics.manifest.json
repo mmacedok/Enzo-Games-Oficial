@@ -63,6 +63,18 @@
           "title": "As origens de Superkid"
         }
       }
+    },
+    "hatsune-neves": {
+      "id": "hatsune-neves",
+      "title": "Hatsune Neves",
+      "description": "O poder do Magic",
+      "order": 130,
+      "featured": false,
+      "chapters": {
+        "1": {
+          "title": "O poder do Magic"
+        }
+      }
     }
   },
   "censorship": {

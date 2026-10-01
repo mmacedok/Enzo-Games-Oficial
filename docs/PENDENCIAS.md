@@ -6,7 +6,7 @@
 > item (ex.: `> Henrique: deixa para depois`); o Claude segue isso na próxima atualização.
 > Testes que faltam rodar ficam em [`TESTES-PENDENTES.md`](TESTES-PENDENTES.md) (não repetidos aqui).
 >
-> Última atualização: **2026-09-30**.
+> Última atualização: **2026-10-01**.
 
 **Legenda:**
 - **Quem:**
@@ -77,6 +77,8 @@
 ---
 
 ## ✅ Feito recentemente
+
+- **2026-10-01 · Hatsune Neves, capítulo 1 "O poder do Magic" no ZeZoVerso:** spin-off novo (`hatsune-neves`, order 130, `featured: false`) com capa e 14 páginas (PNG sem perda, 80 → 59 MB); estante nova em `zezoverso.html#hatsune-neves`; botão "voltar" do leitor (`CASA`) aponta para ela; teste do orçamento de capas subiu de 3,0 para 3,5 MB. **Falta:** conquista "ler tudo" (precisa de arte do Codex), ligar o Bairro das Mansões do mapa ao gibi, conferir a descrição da capa.
 
 - **2026-09-30 · Animações sempre ligadas (pedido do Henrique):** o padrão agora ignora o pedido do navegador/sistema (`prefers-reduced-motion`); só desliga se a pessoa tocar em "🎞️ Animações" no menu da Batalha (fica em `localStorage enzo-movimento = nao`). Os blocos CSS antigos de reduced-motion foram neutralizados (o global `html[data-movimento=nao]` cobre o modo desligado).
 

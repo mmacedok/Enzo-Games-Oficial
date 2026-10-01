@@ -3233,6 +3233,246 @@
       }
     ]
   },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Capa/capa.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5a8a4463d5f19040-640.webp",
+        "bytes": 295724
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/5a8a4463d5f19040-1080.webp",
+        "bytes": 603494
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-01.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1ca933955c4ca32d-640.webp",
+        "bytes": 242652
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/1ca933955c4ca32d-1080.webp",
+        "bytes": 540320
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-02.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/82b910be063ee4a3-640.webp",
+        "bytes": 281208
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/82b910be063ee4a3-1080.webp",
+        "bytes": 610264
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-03.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d592223ae9c34bab-640.webp",
+        "bytes": 260338
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/d592223ae9c34bab-1080.webp",
+        "bytes": 530660
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-04.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/878607bb42fd5d33-640.webp",
+        "bytes": 265776
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/878607bb42fd5d33-1080.webp",
+        "bytes": 564572
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-05.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d24bf69029da0d12-640.webp",
+        "bytes": 229038
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/d24bf69029da0d12-1080.webp",
+        "bytes": 439530
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-06.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1169483b4b06cb70-640.webp",
+        "bytes": 348014
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/1169483b4b06cb70-1080.webp",
+        "bytes": 751272
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-07.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a91b13af16203899-640.webp",
+        "bytes": 359072
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/a91b13af16203899-1080.webp",
+        "bytes": 786300
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-08.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6c02ab90be774f89-640.webp",
+        "bytes": 196886
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/6c02ab90be774f89-1080.webp",
+        "bytes": 386432
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-09.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/267d0e2973eee775-640.webp",
+        "bytes": 305530
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/267d0e2973eee775-1080.webp",
+        "bytes": 627050
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-10.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/191be5a29664cb69-640.webp",
+        "bytes": 335130
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/191be5a29664cb69-1080.webp",
+        "bytes": 694896
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-11.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5b602aebde631ec0-640.webp",
+        "bytes": 343932
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/5b602aebde631ec0-1080.webp",
+        "bytes": 718478
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-12.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c0c15ffdedc28500-640.webp",
+        "bytes": 227254
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/c0c15ffdedc28500-1080.webp",
+        "bytes": 452724
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-13.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/3694b80413d06dba-640.webp",
+        "bytes": 311952
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/3694b80413d06dba-1080.webp",
+        "bytes": 643666
+      }
+    ]
+  },
+  "assets/Spin Offs/Hatsune Neves/Capitulo 1/Paginas/pagina-14.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b68fbb8c7b930857-640.webp",
+        "bytes": 264050
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/b68fbb8c7b930857-1080.webp",
+        "bytes": 512728
+      }
+    ]
+  },
   "assets/Spin Offs/Superkid/Capitulo 1/Capa/capa.png": {
     "width": 941,
     "height": 1672,
