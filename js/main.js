@@ -43,6 +43,22 @@
                 spine: 'ENZO GAMES',
             }));
         }
+        if (colecao === 'zezoverso') {
+            // Todos os gibis do ZeZoVerso numa estante só: os spin-offs (menos o Degustador, que tem página própria), cada capítulo um volume.
+            const todos = [...state.comics].filter((c) => isSpinOff(c) && c.id !== 'degustador').sort(byReleaseOrder)
+                .flatMap((comic) => comic.chapters.map((chapter) => ({ comic, chapter })));
+            return todos.map(({ comic, chapter }, index) => ({
+                comic,
+                chapterId: chapter.id,
+                cover: chapter.cover || comic.cover,
+                firstPage: chapter.pages?.[0],
+                kicker: `${comic.title} · Capítulo ${chapter.id}`,
+                headline: chapter.title || `Capítulo ${chapter.id}`,
+                issue: `#${index + 1}`,
+                isNew: index === todos.length - 1,
+                spine: String(comic.title || comic.id).split(' ')[0].toUpperCase(),
+            }));
+        }
         const comic = state.comics.find((entry) => entry.id === colecao);
         if (!comic) return [];
         return comic.chapters.map((chapter, index) => ({

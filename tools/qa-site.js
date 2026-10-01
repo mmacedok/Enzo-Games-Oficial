@@ -88,10 +88,10 @@
         const topo = document.querySelector('.zezoverso-header');
         check(topo && topo.naturalWidth > 0, 'letreiro do ZeZoVerso carregado');
         check(document.querySelector('#spin-offs a[href="degustador.html"]'), 'spin-off do Degustador listado');
-        check(document.querySelector('#superkid .bookcase[data-colecao="superkid"]'), 'estante do Superkid');
         check(document.querySelectorAll('#fichas .character-card').length >= 7, 'fichas do ZeZoVerso (todos os personagens)');
-        const torado = [...document.querySelectorAll('#comic-shelf .shelf-book')];
-        check(torado.length >= 1 && torado.every((b) => b.dataset.comicId === 'torado'), 'estante do Torado');
+        const zezo = [...document.querySelectorAll('#zezoverso .shelf-book')];
+        const ids = new Set(zezo.map((b) => b.dataset.comicId));
+        check(['torado', 'superkid', 'hatsune-neves'].every((id) => ids.has(id)), 'estante única do ZeZoVerso com Torado, Superkid e Hatsune Neves');
     }
     if (path === '/degustador.html') {
         const livros = [...document.querySelectorAll('#comic-shelf .shelf-book')];
