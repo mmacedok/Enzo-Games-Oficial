@@ -4807,5 +4807,144 @@
         "bytes": 39628
       }
     ]
+  },
+  "assets/zezoverso/zezoverso-cabecalho.png": {
+    "width": 1600,
+    "height": 500,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/424cdd1c1885f42a-640.webp",
+        "bytes": 42778
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/424cdd1c1885f42a-1280.webp",
+        "bytes": 119616
+      },
+      {
+        "width": 1600,
+        "src": "assets/web/424cdd1c1885f42a-1600.webp",
+        "bytes": 166202
+      }
+    ]
+  },
+  "assets/zezoverso/zezoverso-divisor.png": {
+    "width": 1200,
+    "height": 120,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/de7a10f5b1755ba9-640.webp",
+        "bytes": 11764
+      },
+      {
+        "width": 1200,
+        "src": "assets/web/de7a10f5b1755ba9-1200.webp",
+        "bytes": 30310
+      }
+    ]
+  },
+  "assets/zezoverso/zezoverso-estante.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/8eb1dec1bfbd39c0-512.webp",
+        "bytes": 66448
+      }
+    ]
+  },
+  "assets/zezoverso/zezoverso-etiqueta.png": {
+    "width": 512,
+    "height": 128,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/c7d2a709fa45fcef-512.webp",
+        "bytes": 11194
+      }
+    ]
+  },
+  "assets/zezoverso/zezoverso-fundo.png": {
+    "width": 1920,
+    "height": 1080,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/bdad64c88c02c9d8-640.webp",
+        "bytes": 75020
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/bdad64c88c02c9d8-1280.webp",
+        "bytes": 256648
+      },
+      {
+        "width": 1920,
+        "src": "assets/web/bdad64c88c02c9d8-1920.webp",
+        "bytes": 448864
+      }
+    ]
+  },
+  "assets/zezoverso/zezoverso-lombada.png": {
+    "width": 128,
+    "height": 512,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/880e3f4b98906bc5-128.webp",
+        "bytes": 16316
+      }
+    ]
+  },
+  "assets/zezoverso/zezoverso-nebulosa.png": {
+    "width": 1920,
+    "height": 1080,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/2775ff9fee342b79-640.webp",
+        "bytes": 91320
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/2775ff9fee342b79-1280.webp",
+        "bytes": 313366
+      },
+      {
+        "width": 1920,
+        "src": "assets/web/2775ff9fee342b79-1920.webp",
+        "bytes": 602220
+      }
+    ]
+  },
+  "assets/zezoverso/zezoverso-portal.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/4daf9a61eadcd431-512.webp",
+        "bytes": 110388
+      }
+    ]
+  },
+  "assets/zezoverso/zezoverso-prateleira.png": {
+    "width": 1024,
+    "height": 96,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6e80580eb47158ae-640.webp",
+        "bytes": 10548
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/6e80580eb47158ae-1024.webp",
+        "bytes": 24124
+      }
+    ]
   }
 }

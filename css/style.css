@@ -1745,13 +1745,88 @@ body.game-dialog-open { overflow: hidden; }
 
 /* =============================================================== ZeZoVerso
    zezoverso.html: spin-offs e o Superkid. Tema cósmico (roxo, rosa e ciano). */
-body.theme-zezoverso { background: radial-gradient(circle at 20% 10%, #3a1a6b 0%, #120a2a 45%, #07041a 100%) fixed; color: #fff; }
+/* Arte do ZeZoVerso (assets/zezoverso/, tarefa 04 do Codex): cada imagem fica por cima do visual antigo, que continua de reserva. */
+body.theme-zezoverso {
+    background:
+        url('../assets/web/bdad64c88c02c9d8-1920.webp') center top / cover no-repeat fixed,
+        radial-gradient(circle at 20% 10%, #3a1a6b 0%, #120a2a 45%, #07041a 100%) fixed;
+    color: #fff;
+}
+/* nebulosa: camada fixa por cima do fundo, bem sutil, que anda devagar */
+body.theme-zezoverso::before {
+    content: '';
+    position: fixed;
+    inset: -4%;
+    z-index: 0;
+    background: url('../assets/web/2775ff9fee342b79-1920.webp') center / cover no-repeat;
+    opacity: 0.2;
+    pointer-events: none;
+    animation: zezo-nebulosa 90s ease-in-out infinite alternate;
+}
+@keyframes zezo-nebulosa { from { transform: translate3d(-1.5%, 0, 0) scale(1); } to { transform: translate3d(1.5%, -1%, 0) scale(1.06); } }
+body.theme-zezoverso > * { position: relative; z-index: 1; }
 .theme-zezoverso .section-title { color: #fff; text-shadow: 3px 3px 0 #000, 0 0 16px rgba(255, 79, 216, 0.7); }
 .theme-zezoverso .back-link { border-color: #ff4fd8; box-shadow: 2px 2px 0 #ff4fd8; }
 .zezoverso-title { padding: 0 0 18px; line-height: 0; text-align: center; }
-.zezoverso-header { display: block; width: min(94vw, 570px); height: auto; margin-inline: auto; filter: drop-shadow(0 0 22px rgba(0, 229, 255, 0.35)); }
+.zezoverso-header { display: block; width: min(94vw, 720px); height: auto; margin-inline: auto; filter: drop-shadow(0 0 22px rgba(0, 229, 255, 0.35)); }
 .theme-zezoverso .section { scroll-margin-top: 16px; }
 .theme-zezoverso .characters-roster .character-name { color: var(--text); }
+
+/* divisor ornamental embaixo de cada título de seção */
+.theme-zezoverso .section-title::after {
+    content: '';
+    display: block;
+    width: min(100%, 600px);
+    height: 48px;
+    margin: 4px auto 0;
+    background: url('../assets/web/de7a10f5b1755ba9-1200.webp') center / contain no-repeat;
+}
+/* buraco negro ao lado do letreiro (só em telas largas) */
+.zezoverso-title { position: relative; }
+@media (min-width: 900px) {
+    .zezoverso-title::before {
+        content: '';
+        position: absolute;
+        left: calc(50% - 570px);
+        top: -10px;
+        width: 150px;
+        height: 150px;
+        background: url('../assets/web/4daf9a61eadcd431-512.webp') center / contain no-repeat;
+        animation: zezo-portal 40s linear infinite;
+        pointer-events: none;
+    }
+}
+@keyframes zezo-portal { to { transform: rotate(360deg); } }
+/* estante cósmica: parede de cristal, prateleira, lombadas e plaquinha */
+.theme-zezoverso .bookcase {
+    background:
+        radial-gradient(ellipse at 50% -10%, rgba(120, 220, 255, 0.18), transparent 60%),
+        url('../assets/web/8eb1dec1bfbd39c0-512.webp') 0 0 / 256px 256px repeat,
+        linear-gradient(#1b1038, #0b0620);
+    border-color: #ff4fd8;
+    box-shadow: 6px 6px 0 #00e5ff, inset 0 0 60px rgba(0, 0, 0, 0.8);
+}
+.theme-zezoverso .shelf-plank::before { display: none; }
+.theme-zezoverso .shelf-plank::after {
+    top: 0;
+    height: 44px;
+    border: 0;
+    background: url('../assets/web/6e80580eb47158ae-1024.webp') 0 0 / auto 100% repeat-x, linear-gradient(#a0602a, #6b3914);
+}
+.theme-zezoverso .book-spine {
+    background: url('../assets/web/880e3f4b98906bc5-128.webp') center / 100% 100% no-repeat, linear-gradient(90deg, #26104a, #5a2a9a 45%, #26104a);
+}
+.theme-zezoverso .book-spine span { color: #ffe36a; text-shadow: 1px 1px 0 #000, 0 0 6px rgba(255, 79, 216, 0.8); }
+.theme-zezoverso .book-back { background: #1b1038; }
+.theme-zezoverso .book-badge.is-new { background: #00e5ff; color: #000; }
+.theme-zezoverso .book-caption small { color: #00e5ff; }
+.theme-zezoverso .shelf-label {
+    padding: 6px 30px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    background: url('../assets/web/c7d2a709fa45fcef-512.webp') center / 100% 100% no-repeat, linear-gradient(#f4d98a, #c99a3c);
+    border: 0;
+}
 
 
 /* ============================ Conta: medalhão, balão de fala e Ficha do Leitor
