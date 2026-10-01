@@ -4,7 +4,8 @@
 // Regra de visibilidade de um capítulo:
 //   1. se ele tem estado no banco (aba "lançamentos"): `no-ar` aparece; `agendado` aparece a partir do horário
 //      (relógio do servidor); `rascunho` fica escondido;
-//   2. sem estado no banco, vale o catálogo: `hidden` no gibi ou no capítulo (data/comics.manifest.json) esconde,
+//   2. quem tem acesso antecipado (dado pelo admin, por leitor) vê o capítulo mesmo escondido ou agendado;
+//   3. sem estado no banco, vale o catálogo: `hidden` no gibi ou no capítulo (data/comics.manifest.json) esconde,
 //      a não ser que o gibi tenha sido revelado pelo comando antigo `reveal` ou tenha `revealAt` já vencido.
 // Os horários são mostrados e digitados em horário de Fortaleza (UTC-3, sem horário de verão).
 // ============================================================================
@@ -19,11 +20,19 @@
     function indexar(dados) {
         const mapa = new Map();
         for (const item of dados?.capitulos || []) mapa.set(item.c, item);
-        return { mapa, ids: dados?.ids || [], agora: Number(dados?.agora) || 0 };
+        return { mapa, ids: dados?.ids || [], meus: new Set(dados?.meus || []), agora: Number(dados?.agora) || 0 };
     }
 
-    /** { estado: 'no-ar' | 'agendado' | 'escondido', origem: 'banco' | 'catalogo', em } */
+    /** { estado: 'no-ar' | 'agendado' | 'escondido', origem: 'banco' | 'catalogo' | 'acesso', em } */
     function situacao(comic, capitulo, idx) {
+        const s = situacaoPublica(comic, capitulo, idx);
+        // Acesso antecipado: o leitor que o admin escolheu vê antes da hora, mesmo escondido ou agendado.
+        if (s.estado !== 'no-ar' && idx.meus.has(`${comic.id}/${capitulo.id}`)) return { estado: 'no-ar', origem: 'acesso', em: s.em };
+        return s;
+    }
+
+    /** O que um leitor qualquer vê (sem acesso antecipado). */
+    function situacaoPublica(comic, capitulo, idx) {
         const linha = idx.mapa.get(`${comic.id}/${capitulo.id}`);
         if (linha) {
             if (linha.estado === 'no-ar') return { estado: 'no-ar', origem: 'banco', em: linha.em };
@@ -70,5 +79,5 @@
         return `${new Date(ms).toLocaleString('pt-BR', { timeZone: FUSO, dateStyle: 'short', timeStyle: 'short' })} (Fortaleza)`;
     }
 
-    return { FUSO, indexar, situacao, filtrar, deFortaleza, paraCampo, formatar };
+    return { FUSO, indexar, situacao, situacaoPublica, filtrar, deFortaleza, paraCampo, formatar };
 }));

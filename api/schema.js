@@ -120,6 +120,14 @@ module.exports = [
         atualizado_em BIGINT NOT NULL,
         PRIMARY KEY (comic_id, chapter_id)
     )`,
+    // Acesso antecipado: leitores específicos que veem um capítulo ainda escondido ou agendado (api/lancamentos.js).
+    `CREATE TABLE IF NOT EXISTS lancamentos_acesso (
+        comic_id TEXT NOT NULL,
+        chapter_id TEXT NOT NULL,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        dado_em BIGINT NOT NULL,
+        PRIMARY KEY (comic_id, chapter_id, user_id)
+    )`,
     // Cartas dos Leitores (api/comentarios.js). censuras = JSON [[inicio, fim], ...];
     // apagar é "soft delete" (apagado_em), para o histórico saber o que saiu.
     `CREATE TABLE IF NOT EXISTS comments (

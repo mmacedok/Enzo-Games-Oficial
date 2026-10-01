@@ -486,3 +486,6 @@ a.cmd { text-decoration: none; display: inline-block; }
 .lanc-data { font: inherit; color: var(--verde-forte); background: #000; border: 1px solid var(--verde-apagado); padding: 4px 6px; color-scheme: dark; }
 .lanc-dica { color: var(--ambar); }
 .lanc-go { font-weight: 700; }
+.lanc-acesso { color: var(--ambar); font-size: .9em; }
+.lanc-acesso:empty { display: none; }
+.lanc-painel input[type=search] { max-width: 100%; width: 22em; }

@@ -65,3 +65,6 @@ hora), **Esconder**, **Ver como leitor** (o admin abre o capítulo escondido par
   é a fase 1 a 4. Subir imagens **pelo navegador** dentro da aba (armazenamento de arquivos novo) fica como fase futura.
 - **Agendar por data e hora?** Sim (recomendado; já existe `revealAt`).
 - **Aviso "Novo capítulo!" na home** ao publicar? Opcional (fase 5).
+
+## Acesso antecipado (feito em 2026-10-01)
+Pedido do Henrique: dar acesso a leitores específicos antes da publicação. Tabela `lancamentos_acesso (comic_id, chapter_id, user_id)`; no terminal, botão "acesso antecipado" em cada capítulo escondido/agendado (busca por nome ou e-mail); no site, `js/lancamentos.js` mostra o capítulo a quem tem acesso (`meus` em `/api/site/revelados`).

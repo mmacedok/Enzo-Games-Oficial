@@ -137,3 +137,59 @@ test('horário de Fortaleza: ida e volta (UTC-3, sem horário de verão)', () =>
     assert.ok(Number.isNaN(L.deFortaleza('amanhã')));
     assert.match(L.formatar(ms), /02\/10\/2026.*09:30.*Fortaleza/);
 });
+
+test('acesso antecipado: o admin escolhe quem vê antes; só o leitor escolhido recebe o capítulo em `meus`', async (t) => {
+    const { db, chefe, leitor, navegador } = await cenario();
+    t.after(() => db.close());
+    const eu = (await leitor('GET', '/api/auth/me')).dados.user;
+    const outro = navegador();
+    await outro('POST', '/api/auth/google', { credential: `google:outro:Bia-${'x'.repeat(20)}` });
+    const dar = (corpo) => chefe('POST', '/api/admin/lancamentos/acesso', { comic: 'degustador', capitulo: '5', usuario: eu.id, dar: true, ...corpo });
+
+    // só admin e com dados válidos
+    assert.equal((await leitor('POST', '/api/admin/lancamentos/acesso', { comic: 'degustador', capitulo: '5', usuario: eu.id, dar: true })).status, 404);
+    assert.equal((await dar({ usuario: 'nao-e-uuid' })).status, 400);
+    assert.equal((await dar({ dar: 'sim' })).status, 400);
+    assert.equal((await dar({ comic: 'Degustador!' })).status, 400);
+    assert.equal((await dar({ usuario: '00000000-0000-4000-8000-000000000000' })).status, 404, 'leitor que não existe');
+
+    assert.deepEqual((await leitor('GET', '/api/site/revelados')).dados.meus, []);
+    const r = await dar({});
+    assert.equal(r.status, 200);
+    assert.equal(r.dados.mudou, true);
+    assert.equal((await dar({})).dados.mudou, false, 'dar de novo não muda nada');
+
+    assert.deepEqual((await leitor('GET', '/api/site/revelados')).dados.meus, ['degustador/5']);
+    assert.deepEqual((await outro('GET', '/api/site/revelados')).dados.meus, [], 'outro leitor não ganha acesso');
+    assert.deepEqual((await navegador()('GET', '/api/site/revelados')).dados.meus, [], 'visitante também não');
+
+    const lista = (await chefe('GET', '/api/admin/lancamentos/acessos')).dados.acessos;
+    assert.equal(lista.length, 1);
+    assert.equal(lista[0].c, 'degustador/5');
+    assert.equal(lista[0].usuario.id, eu.id);
+    assert.equal((await leitor('GET', '/api/admin/lancamentos/acessos')).status, 404);
+
+    assert.equal((await dar({ dar: false })).dados.mudou, true);
+    assert.deepEqual((await leitor('GET', '/api/site/revelados')).dados.meus, []);
+    const log = (await chefe('GET', '/api/admin/log')).dados;
+    const acoes = (log.acoes || log.log || log).map((l) => l.acao);
+    assert.ok(acoes.includes('early-access') && acoes.includes('early-revoke'));
+});
+
+test('acesso antecipado: vê o capítulo escondido ou agendado, mas não muda o que os outros veem', () => {
+    const agora = 1_700_000_000_000;
+    const gibi = { id: 'degustador', chapters: [{ id: '4' }, { id: '5', hidden: true }] };
+    const comAcesso = L.indexar({ ids: [], capitulos: [], meus: ['degustador/5'], agora });
+    const semAcesso = L.indexar({ ids: [], capitulos: [], meus: [], agora });
+    assert.equal(L.situacao(gibi, gibi.chapters[1], comAcesso).estado, 'no-ar');
+    assert.equal(L.situacao(gibi, gibi.chapters[1], comAcesso).origem, 'acesso');
+    assert.equal(L.situacao(gibi, gibi.chapters[1], semAcesso).estado, 'escondido');
+    assert.equal(L.situacaoPublica(gibi, gibi.chapters[1], comAcesso).estado, 'escondido', 'a visão pública ignora o acesso');
+    // agendado e rascunho do banco também
+    const agendado = L.indexar({ capitulos: [{ c: 'degustador/5', estado: 'agendado', em: agora + 1000 }], meus: ['degustador/5'], agora });
+    assert.equal(L.situacao(gibi, gibi.chapters[1], agendado).estado, 'no-ar');
+    // e o filtro do site mostra o capítulo só para quem tem acesso
+    const db = { comics: [gibi] };
+    assert.deepEqual(L.filtrar(db, { meus: ['degustador/5'], agora }).comics[0].chapters.map((c) => c.id), ['4', '5']);
+    assert.deepEqual(L.filtrar(db, { meus: [], agora }).comics[0].chapters.map((c) => c.id), ['4']);
+});

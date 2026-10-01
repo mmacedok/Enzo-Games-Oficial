@@ -86,7 +86,11 @@ const rotas = [
                 .filter((l) => l.aviso && (l.estado === 'no-ar' || (l.estado === 'agendado' && Number(l.publicar_em) <= agora)))
                 .map((l) => ({ c: `${l.comic_id}/${l.chapter_id}`, em: Number(l.estado === 'agendado' ? l.publicar_em : l.publicado_em) }))
                 .filter((a) => agora - a.em < 7 * 24 * 60 * 60 * 1000);
-            return { ids: linhas.map((l) => l.comic_id), capitulos, avisos, agora };
+            // Capítulos que ESTE leitor (logado) vê antes da hora, por acesso antecipado dado pelo admin.
+            const meus = ctx.usuario
+                ? (await ctx.db.query('SELECT comic_id, chapter_id FROM lancamentos_acesso WHERE user_id = $1', [ctx.usuario.id])).map((l) => `${l.comic_id}/${l.chapter_id}`)
+                : [];
+            return { ids: linhas.map((l) => l.comic_id), capitulos, avisos, meus, agora };
         },
     },
     {

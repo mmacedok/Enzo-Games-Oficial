@@ -731,11 +731,15 @@
      */
     async function telaLancamentos() {
         const L = window.Lancamentos;
-        const [catalogo, dados] = await Promise.all([
+        const [catalogo, dados, doBanco] = await Promise.all([
             fetch('data/database.json', { cache: 'no-store' }).then((r) => r.json()),
             fetch('/api/site/revelados', { cache: 'no-store' }).then((r) => r.json()),
+            pedir('/api/admin/lancamentos/acessos'),
         ]);
-        const idx = L.indexar(dados);
+        // Acesso antecipado do próprio admin não entra na conta: aqui o estado é o que os leitores em geral veem.
+        const idx = L.indexar({ ...dados, meus: [] });
+        const porCap = new Map();   // 'gibi/capítulo' -> leitores com acesso antecipado
+        for (const a of doBanco.acessos) porCap.set(a.c, [...(porCap.get(a.c) || []), a.usuario]);
         const itens = [];
         for (const comic of catalogo.comics) {
             for (const cap of comic.chapters || []) {
@@ -813,6 +817,60 @@
             p.appendChild(acoes);
             cartao.appendChild(p);
         };
+        const chaveDe = (item) => `${item.comic.id}/${item.cap.id}`;
+        const quemVe = (item) => porCap.get(chaveDe(item)) || [];
+        const resumoAcesso = (item) => (quemVe(item).length ? `👥 vê antes: ${quemVe(item).map((u) => primeiroNome(u.name)).join(', ')}` : '');
+        /** Acesso antecipado: busca um leitor e dá (ou tira) o acesso a este capítulo, sem publicar para todos. */
+        const painelAcesso = (cartao, item, linhaAcesso) => {
+            cartao.querySelector('.lanc-painel')?.remove();
+            const p = el('div', 'lanc-painel');
+            p.appendChild(el('p', 'lanc-pergunta', `Quem vê "${nome(item)}" antes de todo mundo?`));
+            const pessoas = el('div', 'lanc-acoes');
+            const resultados = el('div', 'lanc-acoes');
+            const busca = el('input', 'lanc-data');
+            busca.type = 'search';
+            busca.placeholder = 'buscar leitor por nome ou e-mail';
+            busca.setAttribute('aria-label', 'buscar leitor');
+            const mudar = async (u, dar) => {
+                await pedir('/api/admin/lancamentos/acesso', { comic: item.comic.id, capitulo: item.cap.id, usuario: u.id, dar });
+                const resto = quemVe(item).filter((x) => x.id !== u.id);
+                porCap.set(chaveDe(item), dar ? [...resto, u] : resto);
+                linhaAcesso.textContent = resumoAcesso(item);
+                ok(dar ? `${primeiroNome(u.name)} agora vê "${nome(item)}" antes dos outros.` : `${primeiroNome(u.name)} perdeu o acesso antecipado.`);
+                desenharPessoas();
+                resultados.replaceChildren();
+                busca.value = '';
+            };
+            const desenharPessoas = () => {
+                pessoas.replaceChildren(...(quemVe(item).length
+                    ? quemVe(item).map((u) => acaoBotao(`✕ ${u.name}`, () => mudar(u, false).catch((e) => erro(e.message)), true))
+                    : [el('span', 'lanc-dica', 'ninguém ainda: só você vê antes.')]));
+            };
+            let espera = 0;
+            busca.addEventListener('input', () => {
+                clearTimeout(espera);
+                espera = setTimeout(async () => {
+                    const q = busca.value.trim();
+                    if (q.length < 2) { resultados.replaceChildren(); return; }
+                    try {
+                        const r = await pedir(`/api/admin/users?q=${encodeURIComponent(q)}`);
+                        const novos = r.users.filter((u) => !quemVe(item).some((x) => x.id === u.id)).slice(0, 8);
+                        resultados.replaceChildren(...(novos.length
+                            ? novos.map((u) => acaoBotao(`+ ${u.name} (${u.email || 'sem e-mail'})`, () => mudar(u, true).catch((e) => erro(e.message))))
+                            : [el('span', 'lanc-dica', 'ninguém com esse nome.')]));
+                    } catch (e) { erro(e.message); }
+                }, 300);
+            });
+            const fechar = el('button', 'cmd cmd--link', 'fechar');
+            fechar.type = 'button';
+            fechar.addEventListener('click', () => p.remove());
+            const acoes = el('div', 'lanc-acoes');
+            acoes.appendChild(fechar);
+            desenharPessoas();
+            p.append(pessoas, busca, resultados, acoes);
+            cartao.appendChild(p);
+            busca.focus();
+        };
         const leitor = (item) => {
             const b = el('a', 'cmd', '👁 ver como leitor');
             b.href = `reader.html?comic=${encodeURIComponent(item.comic.id)}&chapter=${encodeURIComponent(item.cap.id)}&previa=1`;
@@ -835,6 +893,8 @@
             texto.append(el('strong', 'lanc-nome', nome(item)),
                 el('span', 'lanc-sub', `${item.cap.title || `Capítulo ${item.cap.id}`} · ${(item.cap.pages || []).length} páginas`),
                 el('span', `lanc-selo lanc-selo--${item.estado}`, `${selo}${quando ? ` · ${quando}` : ''}`));
+            const linhaAcesso = el('span', 'lanc-acesso', item.estado === 'no-ar' ? '' : resumoAcesso(item));
+            texto.appendChild(linhaAcesso);
             topo.append(miniatura(item), texto);
             const botoes = el('div', 'lanc-acoes');
             if (item.estado === 'no-ar') {
@@ -843,7 +903,7 @@
                 botoes.append(acaoBotao('🚀 publicar agora', () => painel(c, item, 'publicar')),
                     acaoBotao(item.estado === 'agendado' ? '🕒 mudar horário' : '🕒 agendar…', () => painel(c, item, 'agendar')));
                 if (item.estado === 'agendado') botoes.append(acaoBotao('✖ cancelar agendamento', () => aplicar(item, { acao: 'esconder' }, `${nome(item)}: agendamento cancelado, segue escondido.`).catch((e) => erro(e.message)), true));
-                botoes.append(leitor(item));
+                botoes.append(acaoBotao('👥 acesso antecipado', () => painelAcesso(c, item, linhaAcesso)), leitor(item));
             }
             c.append(topo, botoes);
             return c;
