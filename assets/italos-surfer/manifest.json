@@ -1,0 +1,207 @@
+{
+  "title": "Italo's Surfer",
+  "map": "Operator Village",
+  "format": "Three.js ObjectLoader JSON + PCM WAV",
+  "reference": "Fichas Italolol.png e Enzo games ficha.png; cabelo preto e rosa conforme ficha atual",
+  "assets": [
+    {
+      "id": "italo",
+      "path": "models/italo.json",
+      "triangles": 13612,
+      "collision": null
+    },
+    {
+      "id": "enzo",
+      "path": "models/enzo.json",
+      "triangles": 12160,
+      "collision": null
+    },
+    {
+      "id": "dodge",
+      "path": "models/dodge.json",
+      "triangles": 1076,
+      "collision": {
+        "width": 1.72,
+        "depth": 2.65,
+        "action": "dodge"
+      }
+    },
+    {
+      "id": "jump",
+      "path": "models/jump.json",
+      "triangles": 108,
+      "collision": {
+        "width": 1.72,
+        "depth": 0.78,
+        "action": "jump"
+      }
+    },
+    {
+      "id": "slide",
+      "path": "models/slide.json",
+      "triangles": 424,
+      "collision": {
+        "width": 1.72,
+        "depth": 0.58,
+        "action": "slide"
+      }
+    },
+    {
+      "id": "train",
+      "path": "models/train.json",
+      "triangles": 1528,
+      "collision": {
+        "width": 1.72,
+        "depth": 12,
+        "action": "train"
+      }
+    },
+    {
+      "id": "ramp",
+      "path": "models/ramp.json",
+      "triangles": 100,
+      "collision": {
+        "width": 1.72,
+        "depth": 6,
+        "action": "ramp"
+      }
+    },
+    {
+      "id": "prancha",
+      "path": "models/prancha.json",
+      "triangles": 708,
+      "collision": null
+    },
+    {
+      "id": "guindaste",
+      "path": "models/guindaste.json",
+      "triangles": 304,
+      "collision": null
+    },
+    {
+      "id": "macarronada",
+      "path": "models/macarronada.json",
+      "triangles": 1036,
+      "collision": null
+    },
+    {
+      "id": "shield",
+      "path": "models/shield.json",
+      "triangles": 16,
+      "collision": null
+    },
+    {
+      "id": "magnet",
+      "path": "models/magnet.json",
+      "triangles": 336,
+      "collision": null
+    },
+    {
+      "id": "jetpack",
+      "path": "models/jetpack.json",
+      "triangles": 844,
+      "collision": null
+    },
+    {
+      "id": "sneakers",
+      "path": "models/sneakers.json",
+      "triangles": 72,
+      "collision": null
+    },
+    {
+      "id": "double",
+      "path": "models/double.json",
+      "triangles": 40,
+      "collision": null
+    },
+    {
+      "id": "factory-0",
+      "path": "models/factory-0.json",
+      "triangles": 592,
+      "collision": null
+    },
+    {
+      "id": "factory-1",
+      "path": "models/factory-1.json",
+      "triangles": 664,
+      "collision": null
+    },
+    {
+      "id": "factory-2",
+      "path": "models/factory-2.json",
+      "triangles": 736,
+      "collision": null
+    },
+    {
+      "id": "factory-3",
+      "path": "models/factory-3.json",
+      "triangles": 808,
+      "collision": null
+    },
+    {
+      "id": "gantry",
+      "path": "models/gantry.json",
+      "triangles": 180,
+      "collision": null
+    },
+    {
+      "id": "tank",
+      "path": "models/tank.json",
+      "triangles": 896,
+      "collision": null
+    },
+    {
+      "id": "container",
+      "path": "models/container.json",
+      "triangles": 120,
+      "collision": null
+    },
+    {
+      "id": "coleta",
+      "path": "audio/coleta.wav",
+      "duration": 0.15
+    },
+    {
+      "id": "pulo",
+      "path": "audio/pulo.wav",
+      "duration": 0.18
+    },
+    {
+      "id": "deslize",
+      "path": "audio/deslize.wav",
+      "duration": 0.15
+    },
+    {
+      "id": "impacto",
+      "path": "audio/impacto.wav",
+      "duration": 0.25
+    },
+    {
+      "id": "poder",
+      "path": "audio/poder.wav",
+      "duration": 0.3
+    },
+    {
+      "id": "capturado",
+      "path": "audio/capturado.wav",
+      "duration": 0.5
+    },
+    {
+      "id": "operator-loop",
+      "path": "audio/operator-loop.wav",
+      "duration": 1.76
+    },
+    {
+      "id": "cover",
+      "path": "cover.png",
+      "type": "comic cover"
+    },
+    {
+      "id": "cover-site",
+      "path": "capa-site.png",
+      "type": "landscape game cover",
+      "format": "png",
+      "aspectRatio": "4:3"
+    }
+  ]
+}
