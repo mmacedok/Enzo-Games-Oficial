@@ -8,6 +8,7 @@
         { nome: 'Flappy Enzo', capa: 'flappy', abrir: () => window.EnzoJogos?.abrir('flappy') },
         { nome: 'Caçada ao Inominável', capa: 'cacada', abrir: () => window.EnzoJogos?.abrir('ronda') },
         { nome: 'Batalha dos Torados', capa: 'batalha', abrir: () => { location.href = 'batalha.html'; } },
+        { nome: "Italo's Surfer", capa: 'italos-surfer', abrir: () => { location.href = 'italos-surfer.html'; } },
         { nome: 'Degustação Noturna', capa: 'degustacao', breve: true },
     ];
 
