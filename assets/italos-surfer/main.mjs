@@ -88,12 +88,13 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-(last||n
   const running=mode==='playing',phase=mode==='menu'?now*.001:state.distance*.65;
   animateCharacter(player,phase,running?state.y:0,running&&state.sliding);animateCharacter(chaser,phase+.8);
   if(mode==='menu'){
-    player.root.position.set(innerWidth<650?1.6:2.4,0,0);chaser.root.position.set(innerWidth<650?3.1:4.4,0,1);player.root.rotation.y=Math.PI-.35;chaser.root.rotation.y=Math.PI-.55;
+    player.root.position.set(innerWidth<650?1:2.4,0,0);chaser.root.position.set(innerWidth<650?1.8:4.4,0,innerWidth<650?-2:1);player.root.rotation.y=Math.PI-.35;chaser.root.rotation.y=Math.PI-.55;
     camera.position.set(0,3.1,9);camera.lookAt(0,1.1,-1);
   }else{
     player.root.position.x=laneToX(state.lane);const targetZ=state.status==='gameover'?.55:4.1-(3-state.lives)*.85;
     chaser.root.position.x=T.MathUtils.lerp(chaser.root.position.x,player.root.position.x,1-Math.exp(-5*dt));chaser.root.position.z=T.MathUtils.lerp(chaser.root.position.z,targetZ,1-Math.exp(-3*dt));
-    camera.position.set(laneToX(state.lane)*.12,4.2,9.8);camera.lookAt(0,1,-10);
+    const mobileView=innerWidth<650,playerX=laneToX(state.lane);
+    camera.position.set(playerX*(mobileView?1:.12),4.2,9.8);camera.lookAt(mobileView?playerX*.65:0,1,-10);
   }
   player.shield.visible=state.shieldTime>0&&mode==='playing';player.body.visible=!(running&&state.invulnerable>0&&Math.floor(now/90)%2===0);
   for(const p of particles)if(p.life>0){if(running){p.life-=dt;p.velocity.y-=9*dt;p.mesh.position.addScaledVector(p.velocity,dt);p.mesh.scale.setScalar(Math.max(.01,p.life*2));}p.mesh.visible=p.life>0;}
