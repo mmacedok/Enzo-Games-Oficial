@@ -3677,6 +3677,140 @@
       }
     ]
   },
+  "assets/degustador-pagina/degustador-cabecalho.png": {
+    "width": 1600,
+    "height": 1100,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/45e9db3382ea9848-640.webp",
+        "bytes": 103658
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/45e9db3382ea9848-1280.webp",
+        "bytes": 277346
+      },
+      {
+        "width": 1600,
+        "src": "assets/web/45e9db3382ea9848-1600.webp",
+        "bytes": 373000
+      }
+    ]
+  },
+  "assets/degustador-pagina/degustador-destaque.png": {
+    "width": 1600,
+    "height": 600,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/4c062975445227fd-640.webp",
+        "bytes": 24188
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/4c062975445227fd-1280.webp",
+        "bytes": 96062
+      },
+      {
+        "width": 1600,
+        "src": "assets/web/4c062975445227fd-1600.webp",
+        "bytes": 142978
+      }
+    ]
+  },
+  "assets/degustador-pagina/degustador-divisor.png": {
+    "width": 1200,
+    "height": 120,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c5ebcdd49d417b5f-640.webp",
+        "bytes": 13026
+      },
+      {
+        "width": 1200,
+        "src": "assets/web/c5ebcdd49d417b5f-1200.webp",
+        "bytes": 31556
+      }
+    ]
+  },
+  "assets/degustador-pagina/degustador-estante.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/41ca47aa51656830-512.webp",
+        "bytes": 51684
+      }
+    ]
+  },
+  "assets/degustador-pagina/degustador-etiqueta.png": {
+    "width": 512,
+    "height": 128,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/3ad4b9524221f15a-512.webp",
+        "bytes": 11184
+      }
+    ]
+  },
+  "assets/degustador-pagina/degustador-fundo.png": {
+    "width": 1024,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/212d754fac15d818-640.webp",
+        "bytes": 41416
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/212d754fac15d818-1024.webp",
+        "bytes": 92312
+      }
+    ]
+  },
+  "assets/degustador-pagina/degustador-lombada.png": {
+    "width": 128,
+    "height": 512,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/fe2b5291881c22db-128.webp",
+        "bytes": 7440
+      }
+    ]
+  },
+  "assets/degustador-pagina/degustador-morcegos.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/e395055719ffb048-512.webp",
+        "bytes": 39072
+      }
+    ]
+  },
+  "assets/degustador-pagina/degustador-prateleira.png": {
+    "width": 1024,
+    "height": 96,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b5387edc48af6b97-640.webp",
+        "bytes": 10278
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/b5387edc48af6b97-1024.webp",
+        "bytes": 22564
+      }
+    ]
+  },
   "assets/enzo-cabeca-logo.png": {
     "width": 600,
     "height": 542,

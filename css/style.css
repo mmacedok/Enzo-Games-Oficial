@@ -1397,6 +1397,43 @@ a { color: var(--orange-light); text-decoration: none; }
 body.theme-degustador {
     background-color: var(--purple-deep);
 }
+/* Arte da página do Degustador (assets/degustador-pagina/, tarefa 05 do Codex): por cima do visual antigo, que fica de reserva. */
+body.theme-degustador {
+    background: url('../assets/web/212d754fac15d818-1024.webp') center bottom / cover no-repeat fixed, var(--purple-deep);
+}
+/* morcegos de papel no canto (só em telas largas) */
+@media (min-width: 900px) {
+    body.theme-degustador::after {
+        content: '';
+        position: fixed;
+        right: 12px;
+        top: 90px;
+        width: 220px;
+        height: 220px;
+        background: url('../assets/web/e395055719ffb048-512.webp') center / contain no-repeat;
+        opacity: 0.85;
+        pointer-events: none;
+        z-index: 0;
+        animation: degu-morcegos 7s ease-in-out infinite alternate;
+    }
+}
+@keyframes degu-morcegos { from { transform: translate(0, 0) rotate(-3deg); } to { transform: translate(-14px, 10px) rotate(3deg); } }
+body.theme-degustador > * { position: relative; z-index: 1; }
+/* banner da edição mais recente: cenário de telhado no lugar da capa borrada */
+.theme-degustador .hero-bg {
+    inset: 0;
+    background-image: url('../assets/web/4c062975445227fd-1600.webp') !important;
+    background-position: center;
+    filter: none;
+}
+.theme-degustador .section-title::after {
+    content: '';
+    display: block;
+    width: min(100%, 600px);
+    height: 48px;
+    margin: 4px auto 0;
+    background: url('../assets/web/c5ebcdd49d417b5f-1200.webp') center / contain no-repeat;
+}
 body.theme-degustador .page-title,
 body.theme-degustador .section-title { color: var(--purple); }
 
@@ -1413,7 +1450,7 @@ body.theme-degustador .section-title { color: var(--purple); }
 .batman-title { padding: 0 0 18px; text-align: center; line-height: 0; }
 .degustador-header {
     display: block;
-    width: min(94vw, 760px);
+    width: min(94vw, 520px);
     height: auto;
     margin-inline: auto;
     filter: drop-shadow(0 0 22px rgba(138, 43, 226, 0.45));
@@ -1716,17 +1753,29 @@ body.game-dialog-open { overflow: hidden; }
 .theme-degustador .bookcase {
     background:
         radial-gradient(ellipse at 50% -10%, rgba(170, 90, 255, 0.35), transparent 60%),
-        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.25) 0 3px, transparent 3px 150px),
+        url('../assets/web/41ca47aa51656830-512.webp') 0 0 / 256px 256px repeat,
         linear-gradient(#2a1238, #140818);
     border-color: var(--purple);
     box-shadow: 6px 6px 0 var(--purple), inset 0 0 60px rgba(0, 0, 0, 0.8);
 }
-.theme-degustador .book-spine { background: linear-gradient(90deg, #1a0a26, #4b1f7a 45%, #22102f); }
+.theme-degustador .book-spine { background: url('../assets/web/fe2b5291881c22db-128.webp') center / 100% 100% no-repeat, linear-gradient(90deg, #1a0a26, #4b1f7a 45%, #22102f); }
+.theme-degustador .shelf-plank::before { display: none; }
+.theme-degustador .shelf-plank::after {
+    top: 0;
+    height: 44px;
+    border: 0;
+    background: url('../assets/web/b5387edc48af6b97-1024.webp') 0 0 / auto 100% repeat-x, linear-gradient(#6b3914, #3a1f0a);
+}
 .theme-degustador .book-spine span { color: var(--mp5k); }
 .theme-degustador .book-back { background: #2a1238; }
 .theme-degustador .book-badge.is-new { background: var(--mp5k); }
 .theme-degustador .book-caption small { color: var(--mp5k); }
-.theme-degustador .shelf-label { background: linear-gradient(#c9a6ff, #8a2be2); color: #fff; }
+.theme-degustador .shelf-label {
+    padding: 6px 30px;
+    color: #1a0033;
+    background: url('../assets/web/3ad4b9524221f15a-512.webp') center / 100% 100% no-repeat, linear-gradient(#c9a6ff, #8a2be2);
+    border: 0;
+}
 .theme-degustador .comic-fly-flash { background: var(--purple-deep); }
 
 /* Capa fora do 9:16 (js/site.js fitCover): inteira, com a própria capa desfocada atrás */
