@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-10-01 · Decisão do Henrique: a Batalha está equilibrada por ora, sem compensação de vida do nocaute** (nada de ×1,5, ×1,75 ou ×2; fica como está na `REGRAS_VERSAO` 10). Se voltar a incomodar o ritmo (partidas lentas, muitas no limite de turnos), reabrir com as medições de 2026-09-30.
+
 - **2026-10-01 · Acesso antecipado por leitor (aba lançamentos):** em cada capítulo escondido ou agendado, o botão "👥 acesso antecipado" busca leitores por nome ou e-mail e dá (ou tira) o acesso só a eles; eles veem o capítulo no site mesmo antes de publicar, os outros não. Tabela `lancamentos_acesso`; rotas `GET /api/admin/lancamentos/acessos` e `POST /api/admin/lancamentos/acesso`; `GET /api/site/revelados` devolve `meus` (só do leitor logado). O acesso vale até o capítulo ser publicado para todos (continua guardado). Testes em `test/lancamentos.test.js`.
 
 - **2026-10-01 · Degustador da Noite, capítulos 5 ("Amor com Validade", 8 páginas) e 6 ("Uma Noite na Prisão", 28 páginas) subidos ESCONDIDOS** (`hidden` no manifesto) para testar a aba lançamentos: publicar em admin.html → lançamentos. **Conferir antes de publicar:** no cap. 5 a capa é a "PAGINA 00" (sem arquivo de capa separado) e no cap. 6 a página 7 vinha como "rascunho" no nome do arquivo (foi incluída).
