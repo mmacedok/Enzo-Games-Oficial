@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-10-01 · Degustador da Noite, capítulos 5 ("Amor com Validade", 8 páginas) e 6 ("Uma Noite na Prisão", 28 páginas) subidos ESCONDIDOS** (`hidden` no manifesto) para testar a aba lançamentos: publicar em admin.html → lançamentos. **Conferir antes de publicar:** no cap. 5 a capa é a "PAGINA 00" (sem arquivo de capa separado) e no cap. 6 a página 7 vinha como "rascunho" no nome do arquivo (foi incluída).
+
 - **2026-10-01 · Aba "lançamentos" no terminal (`launch`):** lista todos os capítulos (retroativo: os que já estão no ar entram como "NO AR") com capa, estado e botões **publicar agora**, **agendar** (horário de Fortaleza), **esconder** (2 passos) e **ver como leitor** (`reader.html?...&previa=1`, só admin). Estado por capítulo no banco (`lancamentos`, `api/lancamentos.js`), sem deploy; o site filtra por capítulo (`js/lancamentos.js`, `window.carregarCatalogo`). Ao publicar dá para marcar "avisar": faixa "Novo capítulo!" na home por 7 dias. Capítulo novo nasce escondido com `hidden: true` no manifesto (skill `comicuploader`). Plano em `docs/PLANO-LANCAMENTOS.md`. **Falta:** QA no celular (Gemini) e data de publicação dos capítulos antigos.
 
 - **2026-10-01 · Visual do Degustador da Noite com arte do Codex (tarefa 05):** fundo de skyline noturna com lua, banner da edição mais recente com cenário de telhado (no lugar da capa borrada), estante de madeira de caixote roxa, prateleira com fita de perigo, lombadas, plaquinha, divisor de morcego embaixo dos títulos, morcegos de papel no canto (só ≥ 900 px) e letreiro novo em alta resolução (`assets/degustador-pagina/`). Visual antigo de reserva no CSS. **Falta:** conferir no celular.

@@ -3233,6 +3233,794 @@
       }
     ]
   },
+  "assets/Spin Offs/Degustador da noite/Capitulo 5/Capa/capa.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ab2d41d7d10da7f7-640.webp",
+        "bytes": 220314
+      },
+      {
+        "width": 941,
+        "src": "assets/web/ab2d41d7d10da7f7-941.webp",
+        "bytes": 389282
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 5/Paginas/pagina-01.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/aaeafcd98bf219bf-640.webp",
+        "bytes": 106286
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/aaeafcd98bf219bf-1280.webp",
+        "bytes": 362820
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/aaeafcd98bf219bf-1536.webp",
+        "bytes": 496900
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 5/Paginas/pagina-02.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e60ea454218af1de-640.webp",
+        "bytes": 92116
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/e60ea454218af1de-1280.webp",
+        "bytes": 318870
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/e60ea454218af1de-1536.webp",
+        "bytes": 431196
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 5/Paginas/pagina-03.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/15c922037b8fad70-640.webp",
+        "bytes": 105326
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/15c922037b8fad70-1280.webp",
+        "bytes": 361110
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/15c922037b8fad70-1536.webp",
+        "bytes": 496362
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 5/Paginas/pagina-04.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a09dfd51756afd3e-640.webp",
+        "bytes": 102306
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/a09dfd51756afd3e-1280.webp",
+        "bytes": 344472
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/a09dfd51756afd3e-1536.webp",
+        "bytes": 472962
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 5/Paginas/pagina-05.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ef917f0be6ec7844-640.webp",
+        "bytes": 101156
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/ef917f0be6ec7844-1280.webp",
+        "bytes": 357820
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/ef917f0be6ec7844-1536.webp",
+        "bytes": 498418
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 5/Paginas/pagina-06.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/15b85385e8fe8e60-640.webp",
+        "bytes": 89340
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/15b85385e8fe8e60-1280.webp",
+        "bytes": 317772
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/15b85385e8fe8e60-1536.webp",
+        "bytes": 436580
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 5/Paginas/pagina-07.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/820a833f5973739a-640.webp",
+        "bytes": 111096
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/820a833f5973739a-1280.webp",
+        "bytes": 391416
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/820a833f5973739a-1536.webp",
+        "bytes": 533342
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 5/Paginas/pagina-08.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5bc1d3679a184a5d-640.webp",
+        "bytes": 102182
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/5bc1d3679a184a5d-1280.webp",
+        "bytes": 364844
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/5bc1d3679a184a5d-1536.webp",
+        "bytes": 500898
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Capa/capa.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f2cb93a3a0e0352c-640.webp",
+        "bytes": 215406
+      },
+      {
+        "width": 941,
+        "src": "assets/web/f2cb93a3a0e0352c-941.webp",
+        "bytes": 383812
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-01.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1b993b6b9d309eca-640.webp",
+        "bytes": 106258
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/1b993b6b9d309eca-1280.webp",
+        "bytes": 371920
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/1b993b6b9d309eca-1536.webp",
+        "bytes": 511560
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-02.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ff0659d2b6f0a319-640.webp",
+        "bytes": 95734
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/ff0659d2b6f0a319-1280.webp",
+        "bytes": 343484
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/ff0659d2b6f0a319-1536.webp",
+        "bytes": 478204
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-03.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/2fa35c5d6c128530-640.webp",
+        "bytes": 94158
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/2fa35c5d6c128530-1280.webp",
+        "bytes": 313038
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/2fa35c5d6c128530-1536.webp",
+        "bytes": 407888
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-04.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/46568731eadcf0fa-640.webp",
+        "bytes": 92976
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/46568731eadcf0fa-1280.webp",
+        "bytes": 310294
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/46568731eadcf0fa-1536.webp",
+        "bytes": 409482
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-05.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/9e696ad8e2a93fd3-640.webp",
+        "bytes": 101646
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/9e696ad8e2a93fd3-1280.webp",
+        "bytes": 345408
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/9e696ad8e2a93fd3-1536.webp",
+        "bytes": 471682
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-06.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/08ac8b4910281aeb-640.webp",
+        "bytes": 93710
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/08ac8b4910281aeb-1280.webp",
+        "bytes": 338524
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/08ac8b4910281aeb-1536.webp",
+        "bytes": 464446
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-07.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e360b5fd2f5b124b-640.webp",
+        "bytes": 96876
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/e360b5fd2f5b124b-1280.webp",
+        "bytes": 326424
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/e360b5fd2f5b124b-1536.webp",
+        "bytes": 441788
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-08.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/df484cd2386ca39a-640.webp",
+        "bytes": 100410
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/df484cd2386ca39a-1280.webp",
+        "bytes": 356140
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/df484cd2386ca39a-1536.webp",
+        "bytes": 487796
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-09.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/503227e4788014d1-640.webp",
+        "bytes": 91378
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/503227e4788014d1-1280.webp",
+        "bytes": 316994
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/503227e4788014d1-1536.webp",
+        "bytes": 436528
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-10.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/56c0346bd021b82a-640.webp",
+        "bytes": 102316
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/56c0346bd021b82a-1280.webp",
+        "bytes": 359562
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/56c0346bd021b82a-1536.webp",
+        "bytes": 498736
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-11.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/eeda1015a4caf630-640.webp",
+        "bytes": 102082
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/eeda1015a4caf630-1280.webp",
+        "bytes": 351568
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/eeda1015a4caf630-1536.webp",
+        "bytes": 479362
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-12.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a1f3320a18d6a70e-640.webp",
+        "bytes": 109956
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/a1f3320a18d6a70e-1280.webp",
+        "bytes": 410184
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/a1f3320a18d6a70e-1536.webp",
+        "bytes": 554716
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-13.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/793abdda6350dd00-640.webp",
+        "bytes": 92166
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/793abdda6350dd00-1280.webp",
+        "bytes": 324944
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/793abdda6350dd00-1536.webp",
+        "bytes": 448062
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-14.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1ed36803da4e42a5-640.webp",
+        "bytes": 114934
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/1ed36803da4e42a5-1280.webp",
+        "bytes": 418530
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/1ed36803da4e42a5-1536.webp",
+        "bytes": 580286
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-15.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/9e226dc02ce9b1a5-640.webp",
+        "bytes": 114174
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/9e226dc02ce9b1a5-1280.webp",
+        "bytes": 406182
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/9e226dc02ce9b1a5-1536.webp",
+        "bytes": 545978
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-16.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f3c781922a8805b8-640.webp",
+        "bytes": 104210
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/f3c781922a8805b8-1280.webp",
+        "bytes": 365738
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/f3c781922a8805b8-1536.webp",
+        "bytes": 497668
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-17.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/3a26f25b5b71c982-640.webp",
+        "bytes": 120924
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/3a26f25b5b71c982-1280.webp",
+        "bytes": 426700
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/3a26f25b5b71c982-1536.webp",
+        "bytes": 594332
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-18.png": {
+    "width": 1448,
+    "height": 1086,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/9a7996066c4625c5-640.webp",
+        "bytes": 140856
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/9a7996066c4625c5-1280.webp",
+        "bytes": 482668
+      },
+      {
+        "width": 1448,
+        "src": "assets/web/9a7996066c4625c5-1448.webp",
+        "bytes": 583082
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-19.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b3d0655f1b38e382-640.webp",
+        "bytes": 101028
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/b3d0655f1b38e382-1280.webp",
+        "bytes": 343228
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/b3d0655f1b38e382-1536.webp",
+        "bytes": 465920
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-20.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/816666ed686b3320-640.webp",
+        "bytes": 106188
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/816666ed686b3320-1280.webp",
+        "bytes": 355004
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/816666ed686b3320-1536.webp",
+        "bytes": 482716
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-21.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/375c0fb2e6956589-640.webp",
+        "bytes": 124522
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/375c0fb2e6956589-1280.webp",
+        "bytes": 445978
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/375c0fb2e6956589-1536.webp",
+        "bytes": 607834
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-22.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/012924de40ffbebb-640.webp",
+        "bytes": 122598
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/012924de40ffbebb-1280.webp",
+        "bytes": 447116
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/012924de40ffbebb-1536.webp",
+        "bytes": 610472
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-23.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f394f3b6f57ffcd5-640.webp",
+        "bytes": 131280
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/f394f3b6f57ffcd5-1280.webp",
+        "bytes": 461064
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/f394f3b6f57ffcd5-1536.webp",
+        "bytes": 638976
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-24.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/fc3883a0a427d323-640.webp",
+        "bytes": 114222
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/fc3883a0a427d323-1280.webp",
+        "bytes": 413672
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/fc3883a0a427d323-1536.webp",
+        "bytes": 561208
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-25.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/74176be54a34ad6d-640.webp",
+        "bytes": 124352
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/74176be54a34ad6d-1280.webp",
+        "bytes": 446412
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/74176be54a34ad6d-1536.webp",
+        "bytes": 618664
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-26.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1b1be09789d07106-640.webp",
+        "bytes": 134852
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/1b1be09789d07106-1280.webp",
+        "bytes": 474862
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/1b1be09789d07106-1536.webp",
+        "bytes": 643030
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-27.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/41f6c91e0ac1d198-640.webp",
+        "bytes": 131658
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/41f6c91e0ac1d198-1280.webp",
+        "bytes": 475808
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/41f6c91e0ac1d198-1536.webp",
+        "bytes": 645020
+      }
+    ]
+  },
+  "assets/Spin Offs/Degustador da noite/Capitulo 6/Paginas/pagina-28.png": {
+    "width": 1445,
+    "height": 1089,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/2b712d0b44785e2b-640.webp",
+        "bytes": 135824
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/2b712d0b44785e2b-1280.webp",
+        "bytes": 456844
+      },
+      {
+        "width": 1445,
+        "src": "assets/web/2b712d0b44785e2b-1445.webp",
+        "bytes": 560054
+      }
+    ]
+  },
   "assets/Spin Offs/Hatsune Neves/Capitulo 1/Capa/capa.png": {
     "width": 1080,
     "height": 1920,

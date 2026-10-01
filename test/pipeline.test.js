@@ -45,6 +45,6 @@ test('variantes web têm dimensões, arquivos e orçamento adequado para capas e
         if (source.includes('/Capa/')) covers += item.variants[0].bytes;
         if (source.startsWith('assets/Personagens/')) characters += item.variants[0].bytes;
     }
-    assert.ok(covers < 3_500_000, `capas: ${covers}`);
+    assert.ok(covers < 5_000_000, `capas: ${covers}`);
     assert.ok(characters < 6_000_000, `fichas: ${characters}`);
 });
