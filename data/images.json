@@ -4021,19 +4021,19 @@
       }
     ]
   },
-  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Capa/capa-provisoria.png": {
-    "width": 720,
-    "height": 1280,
+  "assets/Spin Offs/Felipe Robozao/Capitulo 1/Capa/capa.png": {
+    "width": 941,
+    "height": 1672,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/e94703eeb47e5405-640.webp",
-        "bytes": 190496
+        "src": "assets/web/49ca48bb7a5e93d3-640.webp",
+        "bytes": 288790
       },
       {
-        "width": 720,
-        "src": "assets/web/e94703eeb47e5405-720.webp",
-        "bytes": 226716
+        "width": 941,
+        "src": "assets/web/49ca48bb7a5e93d3-941.webp",
+        "bytes": 514752
       }
     ]
   },
