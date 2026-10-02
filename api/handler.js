@@ -15,12 +15,14 @@ const games = require('./games.js');
 const user = require('./user.js');
 const leitores = require('./leitores.js');
 const admin = require('./admin.js');
+const lancamentos = require('./lancamentos.js');
 const comentarios = require('./comentarios.js');
 const baralho = require('./baralho.js');
 const tcg = require('./tcg.js');
+const acessos = require('./acessos.js');
 const SCHEMA = require('./schema.js');
 
-const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas];
+const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...lancamentos.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas, ...acessos.rotas];
 
 function acharRota(metodo, caminho) {
     let caminhoExiste = false;
@@ -46,6 +48,7 @@ function lerConfig(env) {
 }
 
 async function migrar(db) {
+    if (typeof db.migrate === 'function') return db.migrate(SCHEMA);
     for (const comando of SCHEMA) await db.query(comando);
 }
 
@@ -79,6 +82,12 @@ function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, a
         };
         try {
             if (request.method !== 'GET' && request.method !== 'HEAD') checarMesmaOrigem(request);
+            // Configuração pública e visitante sem sessão não precisam esperar o banco.
+            const sid = ctx.cookies.sid;
+            if (url.pathname === '/api/auth/config' ||
+                (url.pathname === '/api/auth/me' && (!sid || sid.length > 128 || !config.loginAtivo))) {
+                return json(200, await rota.executar(ctx), ctx.headers);
+            }
             // Esquema criado uma vez por processo; se falhar, a próxima requisição tenta de novo.
             pronto ??= migrar(db).catch((erro) => { pronto = null; throw erro; });
             await pronto;
@@ -86,7 +95,9 @@ function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, a
             if (rota.login && !ctx.usuario) throw new HttpError(401, 'faça login para continuar');
             // Rotas de admin não existem para quem não é admin.
             if (rota.admin && !admin.ehAdmin(config, ctx.usuario)) throw new HttpError(404, 'rota não encontrada');
-            return json(200, await rota.executar(ctx), ctx.headers);
+            const dados = await rota.executar(ctx);
+            await acessos.registrarAcesso(ctx);
+            return json(200, dados, ctx.headers);
         } catch (erro) {
             if (erro instanceof HttpError) return json(erro.status, { error: erro.message, ...erro.extra }, ctx.headers);
             console.error('[api]', request.method, url.pathname, erro);

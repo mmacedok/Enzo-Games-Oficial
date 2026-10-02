@@ -145,7 +145,7 @@ imagem. Todo ataque ainda ganha o `fx-impacto` quando acerta.
 | ItaloLOL | 0/14/2 | `fx-kda.png` (peça) | o placar aparece em cima dele, o golpe acerta o alvo e ele também leva dano (tremida com fumacinha) |
 | Stand do Joinha | Joinha | `fx-joinha.png` (peça) | a mão gigante desce do alto e esmaga o alvo |
 | Stand do Joinha | Poder: Num Tem Eu | `fx-joinha.png` (a mesma, pequena) | um joinha pequeno sai do banco e gruda no ativo quando ele ataca |
-| Encantadora | Vem Cá, Meu Gadinho | `fx-laco.png` (peça) | o laço rosa sai dela, pega a carta do banco do adversário e puxa para o ativo |
+| Encantadora | Poder: Vem Cá, Meu Gadinho | `fx-laco.png` (peça) | o laço rosa sai dela, pega a carta do banco do adversário e puxa para o ativo |
 | Encantadora | Chama Rosa | `fx-chama-rosa.png` (folha 4) | a chama sobe no alvo, que fica Iludido |
 | Marreteiro do Coração | Quebrar Tudo | `fx-marreta.png` (peça), `fx-rachadura.png` (folha 4) | a marreta bate no campo do meio da mesa, o chão racha e o campo cai fora |
 | Marreteiro do Coração | Marretada | `fx-marreta.png`, `fx-rachadura.png` | a marreta gira por cima e desce no alvo, a mesa racha embaixo dele |

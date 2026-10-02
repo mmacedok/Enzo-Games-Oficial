@@ -4,7 +4,15 @@
    em CSS até existir a arte (js/batalha.js, ARTE; docs/BATALHA-ASSETS.md).
    ========================================================================== */
 
+/* Komika Axis (Apostrophic Labs, freeware; licença em assets/fonts/Komika-LEIA-ME.txt) */
+@font-face {
+    font-family: 'Komika Axis';
+    src: url('../assets/fonts/KomikaAxis.ttf') format('truetype');
+    font-weight: 400 800;
+    font-display: swap;
+}
 .pagina-batalha {
+    --font-sans: 'Komika Axis', 'Comic Neue', 'Trebuchet MS', sans-serif;
     min-height: 100dvh;
     background: #121212;
     overflow-x: hidden;
@@ -36,9 +44,10 @@
 .bt-logo-cima { font-size: clamp(1.4rem, 5vw, 2.4rem); transform: rotate(-3deg); }
 .bt-logo-baixo { font-size: clamp(3rem, 14vw, 6.5rem); color: var(--orange-light) !important; transform: rotate(-3deg); }
 .bt-menu-sub { margin: 10px 0 0; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 400; letter-spacing: 1px; color: var(--caption); }
+.bt-rivais { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bt-decks { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .bt-decks, .bt-rivais {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
     width: 100%;
 }
@@ -68,6 +77,19 @@
 .bt-deck-leque .carta-tcg:nth-child(3) { transform: rotate(12deg) translate(-14px, 8px); }
 .bt-deck-nome { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 400; letter-spacing: 0.5px; }
 .bt-deck-texto { font-size: 0.9rem; font-weight: 700; }
+.bt-deck-item { display: grid; gap: 10px; align-content: start; }
+/* "Ver cartas" do deck: detalhe da carta escolhida em cima, grade das cartas embaixo. */
+dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); overflow-y: auto; }
+.bt-cartas-detalhe { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; align-items: start; }
+.bt-cartas-grande .carta-tcg { width: 150px; box-shadow: 4px 4px 0 var(--ink); }
+.bt-cartas-info h3 { margin: 0 0 4px; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 400; }
+.bt-cartas-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 10px; margin: 6px 0 12px; padding: 0; list-style: none; }
+.bt-cartas-item { position: relative; }
+.bt-cartas-carta { display: block; width: 100%; padding: 0; background: none; border: 0; cursor: pointer; }
+.bt-cartas-carta .carta-tcg { width: 100%; pointer-events: none; }
+.bt-cartas-item--ativa .bt-cartas-carta { outline: 3px solid var(--orange); outline-offset: 2px; }
+.bt-cartas-qtd { position: absolute; top: -6px; right: -6px; padding: 1px 6px; font-family: var(--font-heading); color: var(--paper); background: var(--ink); border-radius: 10px; }
+@media (max-width: 480px) { .bt-cartas-detalhe { grid-template-columns: 1fr; justify-items: center; } .bt-cartas-info { justify-self: stretch; } }
 .bt-rival strong { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; }
 .bt-rival span:last-child { font-size: 0.85rem; font-weight: 700; }
 .bt-rival-rosto { font-size: 2.2rem; line-height: 1; }
@@ -97,12 +119,19 @@
     margin-top: 8px;
     padding: 8px 16px;
     font-weight: 700;
-    color: var(--caption);
-    background: none;
-    border: 2px dashed var(--caption);
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 400;
+    letter-spacing: 1px;
+    color: var(--caution);
+    background: rgba(18, 18, 18, 0.82);
+    border: 2px solid var(--caution);
     border-radius: 999px;
     cursor: pointer;
 }
+/* Link dentro da caixa clara: texto escuro, nada de amarelo no creme. */
+.bt-online-corpo .bt-link, .bt-menu-claro .bt-link { color: var(--paper-ink); background: rgba(255, 255, 255, 0.7); border: 2px solid var(--ink); }
+.bt-link:hover, .bt-link:focus-visible { filter: brightness(1.15); }
 
 /* ------------------------------------------------------------------ mesa */
 .bt-mesa {
@@ -552,6 +581,32 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 .bt-botao--forte { background: var(--caution); }
 
 .bt-menu-jogo { position: absolute; top: 8px; right: 10px; z-index: 6; display: flex; gap: 4px; }
+.bt-voltar {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    z-index: 7;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+    color: var(--paper);
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid var(--ink);
+    border-radius: 17px;
+    cursor: pointer;
+}
+.bt-voltar { text-decoration: none; }
+.bt-voltar:hover { background: rgba(0, 0, 0, 0.8); }
+.bt-voltar-seta { font-size: 1.2rem; line-height: 1; }
+@media (max-width: 700px) {
+    .bt-voltar { top: 4px; left: 4px; width: 34px; padding: 0; justify-content: center; border-radius: 50%; }
+    .bt-voltar-txt { display: none; }
+}
 .bt-icone {
     width: 34px;
     height: 34px;
@@ -624,6 +679,7 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 .bt-painel-poder, .bt-painel-campo { margin: 0 0 8px; padding: 6px 10px; background: #efe3ff; border: 2px solid var(--ink); border-radius: 6px; }
 .bt-painel-campo { background: #fff0c2; }
 .bt-painel-frase { margin: 10px 0 0; font-style: italic; opacity: 0.8; }
+.bt-painel-tcg { margin: 6px 0 0; font-size: 0.9rem; line-height: 1.35; white-space: pre-line; }
 .bt-ataques { display: grid; gap: 8px; }
 .bt-ataque {
     display: grid;
@@ -755,7 +811,7 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 /* O resultado só aparece quando a moeda cai. */
 .bt-moeda-rotulo { animation: bt-moeda-rotulo 0.2s 0.9s both; }
 @keyframes bt-moeda-rotulo { from { opacity: 0; transform: scale(0.6); } }
-@media (prefers-reduced-motion: reduce) { .bt-moeda-rotulo { animation: none; } }
+@media (prefers-reduced-motion: reduce) and (min-width: 99999px) { .bt-moeda-rotulo { animation: none; } }
 .bt-moeda-chamada {
     font-family: var(--font-heading);
     font-size: 1.2rem;
@@ -830,6 +886,8 @@ html:has(.pagina-batalha), .pagina-batalha { overscroll-behavior: none; }
 .bt-fim--empate .bt-fim-titulo { color: var(--orange-light); }
 .bt-fim p { margin: 0; font-weight: 700; }
 .bt-fim-placar { font-family: var(--font-heading); font-size: 1.4rem; }
+.bt-fim-creditos { margin: 0; font-weight: 700; color: var(--caution); text-shadow: 1px 1px 0 var(--ink); }
+.bt-fim-creditos[hidden] { display: none; }
 .bt-fim-acoes { display: flex; gap: 10px; margin-top: 10px; }
 .bt-confete {
     position: absolute;
@@ -866,7 +924,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-placar-pos { width: 3em; }
 .bt-placar-eu { background: var(--caution); font-weight: 700; }
 
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce) and (min-width: 99999px) {
     .bt-carta--pode::after, .bt-carta--alvo, .bt-aura--pronta .bt-orbe, .bt-confete { animation: none; }
 }
 .bt-pergunta-texto { font-family: var(--font-heading); font-size: 1.5rem; letter-spacing: 0.5px; }
@@ -907,18 +965,52 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 .bt-online-msg { margin: 0; font-weight: 700; }
 .bt-online-msg--erro { color: #b3261e; }
 .bt-online-deck { margin: 0; }
-.bt-online-ou { margin: 0; font-size: 0.9rem; opacity: 0.8; }
-.bt-online-entrar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.bt-online-codigo {
-    width: 9.5em;
-    padding: 8px 10px;
-    font: 700 1.2rem/1 var(--font-heading, inherit);
-    letter-spacing: 2px;
-    text-align: center;
-    text-transform: uppercase;
-    border: 3px solid var(--ink);
-    border-radius: 10px;
+/* As duas opções do multiplayer: lista de salas e criar sala. */
+.bt-online-opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+.bt-online-opcoes .bt-botao { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px; }
+.bt-online-opcoes .bt-botao strong { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 400; letter-spacing: 1px; }
+.bt-online-opcoes .bt-botao span { font-size: 0.85rem; font-weight: 700; opacity: 0.85; }
+.bt-online-opcoes { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+@media (max-width: 480px) { .bt-online-opcoes { grid-template-columns: 1fr; } }
+
+/* Quem só assiste: sem mão, sem botões de jogar, sem dica de vez e sem clique nas cartas. */
+.bt-espectador .bt-mao--eu, .bt-espectador .bt-aura, .bt-espectador .bt-passar, .bt-espectador .bt-cancelar,
+.bt-espectador .bt-dica, .bt-espectador .bt-menu-jogo > :nth-child(4) { display: none; }
+.bt-espectador .bt-carta { pointer-events: none; }
+
+/* Comentários da partida (chat temporário). */
+.bt-chat { position: absolute; left: 8px; top: 46%; z-index: 7; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.bt-chat-abrir {
+    position: relative; width: 42px; height: 42px; font-size: 1.3rem; cursor: pointer;
+    border: 3px solid var(--ink); border-radius: 50%; background: var(--paper); box-shadow: 2px 2px 0 var(--ink);
 }
+.bt-chat-novos {
+    position: absolute; top: -6px; right: -6px; min-width: 18px; padding: 0 4px; font: 700 0.75rem/18px var(--font-body, sans-serif);
+    color: #fff; background: #d62828; border-radius: 9px; text-align: center;
+}
+.bt-chat-novos[hidden] { display: none; }
+.bt-chat-painel {
+    display: flex; flex-direction: column; gap: 6px; width: min(300px, 78vw); max-height: 46vh; padding: 8px;
+    color: var(--paper-ink, #222); background: var(--paper); border: 3px solid var(--ink); border-radius: 12px; box-shadow: 3px 3px 0 var(--ink);
+}
+.bt-chat-painel[hidden] { display: none; }
+.bt-chat-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.bt-chat-aviso { margin: 0; font-size: 0.72rem; opacity: 0.75; }
+.bt-chat-fechar { flex: none; width: 28px; height: 28px; font: 700 1.2rem/1 sans-serif; cursor: pointer; color: var(--ink); background: transparent; border: 2px solid var(--ink); border-radius: 50%; }
+@media (max-width: 600px) {
+    .bt-chat-painel { max-height: 34vh; width: min(300px, calc(100vw - 20px)); }
+    .bt-chat-lista { max-height: 16vh; }
+}
+.bt-chat-lista { list-style: none; margin: 0; padding: 0; min-height: 60px; overflow-y: auto; font-size: 0.85rem; display: grid; gap: 3px; align-content: start; }
+.bt-chat-item { overflow-wrap: anywhere; }
+.bt-chat-item--meu { background: rgba(255, 204, 0, 0.25); border-radius: 4px; }
+.bt-chat-nome { color: #7a2a00; }
+.bt-chat-nome--plateia { color: #1f6f8b; }
+.bt-chat-form { display: flex; gap: 6px; }
+.bt-chat-campo { flex: 1; min-width: 0; padding: 5px 8px; font: inherit; border: 2px solid var(--ink); border-radius: 8px; }
+.bt-chat-enviar { padding: 4px 10px; }
+/* Revanche pedida pelo outro jogador: o botão pisca chamando. */
+.bt-botao--chamando { animation: bt-piscar 0.9s ease-in-out infinite; outline: 3px solid var(--caution); }
 .bt-online-sala {
     margin: 0;
     font-family: var(--font-heading);
@@ -930,12 +1022,11 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 }
 .bt-online-espera { margin: 0; font-weight: 700; animation: bt-piscar 1.4s ease-in-out infinite; }
 @keyframes bt-piscar { 50% { opacity: 0.45; } }
-.bt-rival--convite { outline: 4px solid var(--caution); outline-offset: 2px; }
 /* Salas abertas na tela online (lista com 1 clique para entrar). */
 .bt-online-salas { width: 100%; }
 .bt-online-salas-titulo { margin: 0 0 6px; font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; }
 .bt-online-salas-lista { display: grid; gap: 6px; }
-.bt-online-vazio { margin: 0; font-size: 0.9rem; opacity: 0.85; }
+.bt-online-vazio { margin: 0; font-size: 1rem; opacity: 1; }
 .bt-sala-linha {
     display: flex;
     align-items: center;
@@ -946,9 +1037,14 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     border-radius: 8px;
 }
 .bt-sala-nome { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.bt-sala-deck, .bt-sala-placar, .bt-sala-espera { font-size: 0.85rem; }
+.bt-sala-deck, .bt-sala-placar, .bt-sala-espera { font-size: 1rem; font-weight: 700; color: var(--paper-ink);}
 .bt-sala-espera { white-space: nowrap; opacity: 0.8; }
 .bt-sala-linha .bt-botao { padding: 4px 10px; font-size: 0.9rem; box-shadow: 2px 2px 0 var(--ink); }
+@media (max-width: 480px) {
+    .bt-sala-linha { flex-wrap: wrap; }
+    .bt-sala-nome { flex-basis: 100%; }
+    .bt-sala-linha .bt-botao { margin-left: auto; }
+}
 .bt-relogio {
     margin: 0;
     white-space: nowrap;
@@ -962,7 +1058,7 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     border-radius: 999px;
 }
 .bt-relogio--fim { color: #fff; background: #d33; animation: bt-piscar 0.8s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .bt-online-espera, .bt-relogio--fim { animation: none; } .bt-vida-fill { transition: none; } }
+@media (prefers-reduced-motion: reduce) and (min-width: 99999px) { .bt-online-espera, .bt-relogio--fim { animation: none; } .bt-vida-fill { transition: none; } }
 
 /* Ícones pequenos dentro de textos (histórico, balões, selos, relógio). */
 .bt-ic { display: inline-block; width: 1.25em; height: 1.25em; object-fit: contain; vertical-align: -0.25em; }
@@ -993,3 +1089,157 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
     .bt-centro .bt-relogio { grid-column: 2; grid-row: 2; }
     .bt-centro .bt-campo-texto { grid-column: 3; grid-row: 1; }
 }
+
+/* Cartilhas do "Como jogar" (imagens 9:16). */
+dialog.bt-cartilha {
+    inset: 0;
+    margin: auto;
+    width: min(560px, 100vw);
+    max-height: 100dvh;
+    padding: 10px;
+    overflow: hidden;
+    color: var(--paper);
+    background: #121212;
+    border: 4px solid var(--ink);
+    border-radius: 12px;
+    box-shadow: 8px 8px 0 var(--ink);
+}
+dialog.bt-cartilha::backdrop { background: rgba(0, 0, 0, 0.75); }
+.bt-cartilha-img { display: block; width: auto; max-width: 100%; height: calc(100dvh - 110px); max-height: 900px; margin: 0 auto; object-fit: contain; }
+.bt-cartilha-controles { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+.bt-cartilha-contador { font-family: var(--font-heading); font-size: 1.2rem; }
+.bt-cartilha-fechar { position: absolute; top: 6px; right: 6px; width: 34px; height: 34px; padding: 0; font-size: 1.3rem; color: var(--paper); background: rgba(0, 0, 0, 0.7); border: 2px solid var(--ink); border-radius: 50%; cursor: pointer; }
+
+/* ---- deck customizado: 4º deck do menu e o editor ---- */
+.bt-deck-vazio { display: grid; place-items: center; width: 100%; height: 108px; margin-bottom: 4px; font: 3rem/1 var(--font-heading); color: var(--caption); border: 3px dashed var(--ink); border-radius: 8px; }
+dialog.bt-regras.bt-editor { display: flex; flex-direction: column; width: min(1000px, calc(100vw - 20px)); height: calc(100dvh - 20px); max-height: calc(100dvh - 20px); overflow: hidden; }
+dialog.bt-regras.bt-editor:not([open]) { display: none; }
+.bt-editor-corpo { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; flex: 1; min-height: 0; }
+.bt-editor-lado { display: flex; flex-direction: column; gap: 6px; min-height: 0; overflow-y: auto; padding: 2px 4px 2px 2px; }
+.bt-editor-rolagem { min-height: 0; overflow-y: auto; padding: 4px 6px 4px 2px; }
+.bt-editor-resumo { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.bt-editor-chip { padding: 3px 12px; font-family: var(--font-heading); font-size: 1.2rem; background: var(--paper); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 2px 2px 0 var(--ink); }
+.bt-editor-chip--ok { background: #b9f5b1; }
+.bt-editor-chip--erro { background: #ffb3a8; }
+.bt-editor-erro { min-height: 1.3em; margin: 0; color: #b3261e; font-weight: 700; }
+.bt-editor-erro:empty { display: none; }
+.bt-editor-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.bt-editor-item { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px; background: var(--paper); border: 3px solid var(--ink); border-radius: 10px; }
+.bt-editor-item--no { background: #fff3c4; border-color: var(--orange); }
+.bt-editor-carta .carta-tcg { width: 96px; }
+.bt-editor-info { display: grid; gap: 3px; min-width: 0; }
+.bt-editor-nome { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 400; letter-spacing: .5px; }
+.bt-editor-frase { font-size: .85rem; color: #4a3a22; }
+.bt-editor-menu summary { cursor: pointer; font-size: .85rem; font-weight: 700; color: var(--paper-ink); padding: 4px 0; }
+.bt-editor-menu[open] summary { margin-bottom: 2px; }
+.bt-editor-desc { margin: 0; font-size: .92rem; line-height: 1.4; color: #1c1408; }
+.bt-editor-controle { display: flex; align-items: center; gap: 8px; }
+.bt-editor-mm { width: 40px; height: 40px; padding: 0; font: 1.6rem/1 var(--font-heading); color: var(--paper-ink); background: var(--paper); border: 3px solid var(--ink); border-radius: 50%; box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
+.bt-editor-mm:disabled { opacity: .35; cursor: default; }
+.bt-editor-qtd { min-width: 1.6ch; text-align: center; font: 1.6rem/1 var(--font-heading); }
+.bt-editor-tem { font-size: .85rem; font-weight: 700; color: #4a3a22; }
+.bt-editor-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.bt-editor-acoes .bt-botao:disabled { opacity: 1; color: #777; background: #e4dcc4; box-shadow: none; cursor: default; }
+@media (max-width: 760px) {
+    .bt-editor-corpo { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    .bt-editor-lado { max-height: 42dvh; }
+    .bt-editor-grade { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- Decks de players ---- */
+.bt-players { display: grid; gap: 2px; justify-items: center; width: 100%; padding: 10px 14px; color: var(--paper-ink); text-align: center; background: var(--halftone), var(--paper); border: 3px dashed var(--ink); border-radius: 10px; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.bt-players:hover { transform: translateY(-2px) rotate(-.5deg); box-shadow: 5px 6px 0 var(--ink); }
+.bt-players strong { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 400; letter-spacing: 1px; }
+.bt-players span { font-size: .95rem; opacity: .85; }
+dialog.bt-regras.bt-players-janela { width: min(760px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); overflow-y: auto; }
+.bt-players-ordem { display: flex; gap: 8px; margin: 6px 0; }
+.bt-players-lista { display: grid; gap: 12px; margin: 8px 0 12px; }
+.bt-players-item { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 10px; background: var(--paper); border: 3px solid var(--ink); border-radius: 10px; box-shadow: 3px 3px 0 var(--ink); }
+.bt-players-item .bt-deck-leque { width: 150px; height: 96px; margin: 0; }
+.bt-players-item .bt-deck-leque .carta-tcg { width: 56px; }
+.bt-players-info { display: grid; gap: 2px; min-width: 0; }
+.bt-players-autor, .bt-players-meta { font-size: .85rem; opacity: .75; }
+.bt-players-acoes { display: grid; gap: 6px; }
+@media (max-width: 560px) { .bt-players-item { grid-template-columns: 1fr; justify-items: center; text-align: center; } .bt-players-acoes { width: 100%; } }
+.bt-editor-campo { display: block; width: 100%; margin: 4px 0; padding: 8px 10px; font: inherit; color: var(--paper-ink); background: #fff; border: 3px solid var(--ink); border-radius: 8px; }
+
+/* Os diálogos da Batalha voltam ao centro: o reset de margin do site tirava o "margin: auto" do navegador. */
+dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
+
+.bt-editor-ok { color: #1d7a1d; }
+
+.bt-aviso-flutuante { position: fixed; left: 50%; bottom: 24px; z-index: 10000; max-width: min(90vw, 460px); padding: 10px 16px; font-weight: 700; text-align: center; color: #fff; background: #b3261e; border: 3px solid var(--ink); border-radius: 10px; box-shadow: 3px 3px 0 var(--ink); transform: translateX(-50%); }
+
+/* Chat no PC: fica sempre aberto numa coluna ao lado da mesa (a mesa cede o espaço), nunca por cima das cartas. */
+/* Só quando sobra espaço: a mesa mantém a largura inteira (980px, ou 1180px no desenho de tela larga) e o chat usa o que sobra. */
+@media (min-width: 1480px) and (min-aspect-ratio: 5 / 4), (min-width: 1280px) and (max-aspect-ratio: 1249 / 1000) {
+    .bt-mesa:has(> .bt-chat) {
+        --bt-mw: 980px;
+        --bt-ml: max(0px, calc((100vw - var(--bt-mw) - 300px) / 2));
+        width: var(--bt-mw);
+        margin-left: var(--bt-ml);
+        margin-right: 0;
+    }
+    .bt-chat { position: fixed; z-index: 7; top: 64px; bottom: 12px; left: calc(var(--bt-ml) + var(--bt-mw) + 12px); width: 272px; }
+    .bt-chat-abrir, .bt-chat-fechar { display: none; }
+    .bt-chat-painel { display: flex; flex: 1; width: 100%; max-height: none; min-height: 0; }
+    .bt-chat-lista { flex: 1; max-height: none; }
+}
+@media (min-width: 1480px) and (min-aspect-ratio: 5 / 4) { .bt-mesa:has(> .bt-chat) { --bt-mw: 1180px; } }
+
+/* Descrição das cartas: cores por tipo de informação (texto escuro no fundo claro, partes importantes em destaque). */
+.bt-desc-linha { display: block; margin-bottom: 3px; }
+.bt-desc-nome { font-family: var(--font-heading); font-size: 1.05em; font-weight: 400; letter-spacing: .4px; color: #1c1408; }
+.bt-desc-vida { font-weight: 800; color: #1b6b2a; }
+.bt-desc-recuo { font-weight: 800; color: #7a4a00; }
+.bt-desc-dano { font-weight: 800; color: #b3120a; }
+.bt-desc-cura { font-weight: 800; color: #0f7a5a; }
+.bt-desc-escudo { font-weight: 800; color: #1452a8; }
+.bt-desc-estado { font-weight: 800; color: #b34a00; }
+.bt-desc-recarga { font-weight: 700; font-style: italic; color: #4a5568; }
+.bt-desc-aura { font-weight: 800; color: #6a1fb0; }
+.bt-desc-cartas .bt-desc-linha { margin-bottom: 4px; }
+
+.bt-editor .bt-placar-nota { color: #3a2d18; opacity: 1; font-size: .9rem; }
+
+.bt-online-opcoes--uma { grid-template-columns: 1fr; }
+.bt-sala-linha--ao-vivo { background: #f2ecff; }
+.bt-online-salas, .bt-online-salas-lista { width: 100%; min-width: 0; box-sizing: border-box; }
+.bt-sala-linha { box-sizing: border-box; max-width: 100%; }
+.bt-sala-nome { font-size: 1.1rem; }
+.bt-online-salas-lista { grid-template-columns: minmax(0, 1fr); }
+
+/* ---- Tela online com as imagens da tarefa 02 (cada uma só vale se o arquivo existir) ---- */
+.bt-online-cabecalho { display: block; width: min(440px, 88vw); height: auto; margin: 6px auto 0; }
+/* moldura em 9 partes: os cantos não esticam e a caixa cresce com o conteúdo sem o texto encostar na borda */
+.bt-online-corpo--arte { background: none; box-shadow: none; border: 44px solid transparent; border-image: var(--moldura-sala) 110 fill / 44px stretch; padding: 4px 6px 10px; }
+.bt-online-icone { width: 64px; height: 64px; object-fit: contain; }
+.bt-online-icone-botao { width: 28px; height: 28px; margin-right: 6px; object-fit: contain; vertical-align: middle; }
+.bt-online-ilustracao { width: min(170px, 50%); height: auto; }
+.bt-online-vazio-caixa { display: grid; justify-items: center; gap: 6px; }
+.bt-online-vs { width: 34px; height: 34px; margin: 0 8px; object-fit: contain; vertical-align: middle; }
+
+/* ---- Contador de rodadas ---- */
+.bt-rodada { position: absolute; top: 6px; left: 50%; z-index: 5; margin: 0; padding: 3px 14px; transform: translateX(-50%); font-family: var(--font-heading); font-size: 1.15rem; letter-spacing: 1px; color: var(--ink); background: var(--caution); border: 3px solid var(--ink); border-radius: 16px; box-shadow: 2px 2px 0 var(--ink); pointer-events: none; }
+
+/* ---- Banimento de cartas ---- */
+.bt-banir { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 10px; background: rgba(0, 0, 0, 0.78); }
+.bt-banir-miolo { box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; width: min(980px, 100%); max-height: calc(100dvh - 20px); overflow-y: auto; padding: 16px; color: var(--paper-ink); background: var(--halftone), var(--paper); border: 4px solid var(--ink); border-radius: 14px; box-shadow: 5px 5px 0 var(--ink); }
+.bt-banir-miolo h2 { margin: 0; font-family: var(--font-heading); font-size: 1.8rem; font-weight: 400; }
+.bt-banir-miolo h3 { margin: 0 0 4px; font-family: var(--font-heading); font-size: 1.3rem; font-weight: 400; }
+.bt-banir-contador { margin: 0; font-family: var(--font-heading); font-size: 1.3rem; }
+.bt-banir-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.bt-banir-grade--pequena { grid-template-columns: repeat(auto-fill, minmax(100px, 120px)); }
+.bt-banir-item { position: relative; display: grid; justify-items: center; gap: 4px; padding: 6px; background: #fff; border: 3px solid var(--ink); border-radius: 10px; }
+.bt-banir-item--marcada, .bt-banir-item:has(.bt-banir-item--marcada) { background: #ffd0c8; border-color: #b3261e; }
+.bt-banir-item--trava { opacity: 0.6; }
+.bt-banir-carta { padding: 0; background: none; border: 0; cursor: pointer; }
+.bt-banir-carta:disabled { cursor: default; }
+.bt-banir-carta .carta-tcg { width: 96px; }
+.bt-banir-item--marcada .carta-tcg { outline: 4px solid #b3261e; outline-offset: 2px; }
+.bt-banir-nome { font-family: var(--font-heading); font-size: 1.05rem; text-align: center; }
+.bt-banir-selo { padding: 1px 8px; font-family: var(--font-heading); font-size: 0.95rem; color: #fff; background: #555; border-radius: 10px; }
+.bt-banir-item--banida .bt-banir-selo { background: #b3261e; }
+.bt-banir-item--banida .carta-tcg { filter: grayscale(0.7); }
+.bt-banir-secao { margin-top: 4px; }
+.bt-banir-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }

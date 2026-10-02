@@ -17,6 +17,8 @@ module.exports = [
     )`,
     // Fala do balão na Ficha do Leitor (pública; null = fala sorteada do Enzo).
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS fala TEXT',
+    // Censura (tarja do Cabo Côco) liberada para esta conta. Só o admin muda, pelo terminal (`censura on|off`).
+    'ALTER TABLE users ADD COLUMN IF NOT EXISTS censura_liberada BOOLEAN NOT NULL DEFAULT FALSE',
     'CREATE INDEX IF NOT EXISTS idx_users_last_login ON users(last_login_at DESC)',
     'CREATE INDEX IF NOT EXISTS idx_users_created ON users(created_at)',
     // id = HMAC-SHA256 do token do cookie: vazar o banco não entrega sessões.
@@ -26,6 +28,8 @@ module.exports = [
         expires_at BIGINT NOT NULL,
         created_at BIGINT NOT NULL
     )`,
+    // lembrar = "chave do aparelho": guardada no localStorage, só serve para pedir uma sessão nova quando o cookie some (api/auth.js, /api/auth/restaurar).
+    'ALTER TABLE sessions ADD COLUMN IF NOT EXISTS lembrar BOOLEAN NOT NULL DEFAULT FALSE',
     'CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)',
     'CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)',
     // verified = passou pelo anti-cheat. Recordes trazidos do localStorage
@@ -78,6 +82,52 @@ module.exports = [
         created_at BIGINT NOT NULL
     )`,
     'CREATE INDEX IF NOT EXISTS idx_admin_log_created ON admin_log(created_at)',
+    // De onde vieram as ações sensíveis (api/acessos.js). Some sozinho depois de 60 dias.
+    `CREATE TABLE IF NOT EXISTS acessos (
+        id TEXT PRIMARY KEY,
+        user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+        ip TEXT,
+        pais TEXT,
+        estado TEXT,
+        cidade TEXT,
+        evento TEXT NOT NULL,
+        pagina TEXT,
+        created_at BIGINT NOT NULL
+    )`,
+    // Operadora do IP (ex.: Claro, Vivo); coluna acrescentada depois da tabela já estar no ar.
+    'ALTER TABLE acessos ADD COLUMN IF NOT EXISTS operadora TEXT',
+    // Coordenadas aproximadas do IP (mapa-radar do terminal admin).
+    'ALTER TABLE acessos ADD COLUMN IF NOT EXISTS aparelho TEXT',
+    'ALTER TABLE acessos ADD COLUMN IF NOT EXISTS lat REAL',
+    'ALTER TABLE acessos ADD COLUMN IF NOT EXISTS lon REAL',
+    'CREATE INDEX IF NOT EXISTS idx_acessos_user ON acessos(user_id, created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_acessos_ip ON acessos(ip, created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_acessos_created ON acessos(created_at)',
+    // Gibis com `hidden: true` no catálogo que um admin já revelou (comando `reveal` do terminal).
+    `CREATE TABLE IF NOT EXISTS gibis_revelados (
+        comic_id TEXT PRIMARY KEY,
+        created_at BIGINT NOT NULL
+    )`,
+    // Estado de cada capítulo (api/lancamentos.js): publicar, agendar ou esconder sem deploy.
+    `CREATE TABLE IF NOT EXISTS lancamentos (
+        comic_id TEXT NOT NULL,
+        chapter_id TEXT NOT NULL,
+        estado TEXT NOT NULL,
+        publicar_em BIGINT,
+        publicado_em BIGINT,
+        aviso BOOLEAN NOT NULL DEFAULT FALSE,
+        atualizado_por TEXT,
+        atualizado_em BIGINT NOT NULL,
+        PRIMARY KEY (comic_id, chapter_id)
+    )`,
+    // Acesso antecipado: leitores específicos que veem um capítulo ainda escondido ou agendado (api/lancamentos.js).
+    `CREATE TABLE IF NOT EXISTS lancamentos_acesso (
+        comic_id TEXT NOT NULL,
+        chapter_id TEXT NOT NULL,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        dado_em BIGINT NOT NULL,
+        PRIMARY KEY (comic_id, chapter_id, user_id)
+    )`,
     // Cartas dos Leitores (api/comentarios.js). censuras = JSON [[inicio, fim], ...];
     // apagar é "soft delete" (apagado_em), para o histórico saber o que saiu.
     `CREATE TABLE IF NOT EXISTS comments (
@@ -125,6 +175,27 @@ module.exports = [
         resultado TEXT
     )`,
     'CREATE INDEX IF NOT EXISTS idx_pacotes_usuario ON pacotes(user_id, aberto_em)',
+    // Pacote diário: último dia (AAAA-MM-DD, Brasília) e dias seguidos.
+    'ALTER TABLE carteira ADD COLUMN IF NOT EXISTS diario_dia TEXT',
+    'ALTER TABLE carteira ADD COLUMN IF NOT EXISTS diario_seq INTEGER NOT NULL DEFAULT 0',
+    // Presentes de uma vez só por conta (PRESENTES_UNICOS e 'visitante').
+    `CREATE TABLE IF NOT EXISTS presentes (
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        presente_id TEXT NOT NULL,
+        created_at BIGINT NOT NULL,
+        PRIMARY KEY (user_id, presente_id)
+    )`,
+    // Pacotes de boas-vindas abertos por visitante sem login. id = código guardado no
+    // navegador; ao entrar, as cartas vão para a conta (uma vez: resgatado_por).
+    // resultado = JSON [{ tipo, cartas: [ids] }].
+    `CREATE TABLE IF NOT EXISTS pacotes_visitante (
+        id TEXT PRIMARY KEY,
+        resultado TEXT NOT NULL,
+        created_at BIGINT NOT NULL,
+        resgatado_por TEXT REFERENCES users(id) ON DELETE SET NULL,
+        resgatado_em BIGINT
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_pacotes_visitante_data ON pacotes_visitante(created_at)',
     `CREATE TABLE IF NOT EXISTS colecao (
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         card_id TEXT NOT NULL,
@@ -165,6 +236,49 @@ module.exports = [
         criado_em BIGINT NOT NULL,
         atualizado_em BIGINT NOT NULL
     )`,
+    // Deck customizado de cada jogador (montado com a coleção; api/tcg.js, /api/tcg/deck).
+    `CREATE TABLE IF NOT EXISTS tcg_deck_custom (
+        user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        cartas TEXT NOT NULL,
+        atualizado_em BIGINT NOT NULL
+    )`,
+    // Deck listado ("Decks de players"): nome, descrição curta e se outros jogadores podem ver e copiar.
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS nome TEXT',
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS descricao TEXT',
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS publico BOOLEAN NOT NULL DEFAULT FALSE',
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS publicado_em BIGINT',
+    'ALTER TABLE tcg_deck_custom ADD COLUMN IF NOT EXISTS copias INTEGER NOT NULL DEFAULT 0',
+    'CREATE INDEX IF NOT EXISTS idx_tcg_deck_publico ON tcg_deck_custom(publico, publicado_em)',
+    // Decks postados pelo admin em "Decks de players" (oficiais): vários, independentes do deck pessoal de cada conta.
+    `CREATE TABLE IF NOT EXISTS tcg_decks_postados (
+        id TEXT PRIMARY KEY,
+        autor_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        nome TEXT NOT NULL,
+        descricao TEXT NOT NULL DEFAULT '',
+        cartas TEXT NOT NULL,
+        copias INTEGER NOT NULL DEFAULT 0,
+        criado_em BIGINT NOT NULL
+    )`,
+    // Quando o deck da sala/partida é o customizado (deck = 'custom'), a lista de cartas vai junto (foto do momento).
+    'ALTER TABLE tcg_salas ADD COLUMN IF NOT EXISTS lista TEXT',
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS lista_a TEXT',
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS lista_b TEXT',
+    // Revanche: cada jogador marca que quer; com os dois, nasce outra partida (lados trocados) em revanche_id.
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_a BOOLEAN NOT NULL DEFAULT FALSE',
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_b BOOLEAN NOT NULL DEFAULT FALSE',
+    'ALTER TABLE tcg_partidas ADD COLUMN IF NOT EXISTS revanche_id TEXT',
+    // Comentários da partida (chat de quem joga e de quem assiste): só existem enquanto ela dura,
+    // o servidor apaga tudo quando a partida termina (api/tcg.js, registrarResultado).
+    `CREATE TABLE IF NOT EXISTS tcg_comentarios (
+        n BIGSERIAL PRIMARY KEY,
+        partida_id TEXT NOT NULL REFERENCES tcg_partidas(id) ON DELETE CASCADE,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        nome TEXT NOT NULL,
+        lado INTEGER,
+        texto TEXT NOT NULL,
+        criado_em BIGINT NOT NULL
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_tcg_comentarios_partida ON tcg_comentarios(partida_id, n)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_a ON tcg_partidas(jogador_a, status)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_b ON tcg_partidas(jogador_b, status)',
     'CREATE INDEX IF NOT EXISTS idx_tcg_partidas_criado ON tcg_partidas(criado_em)',

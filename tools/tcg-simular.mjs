@@ -40,7 +40,7 @@ function deckAleatorio() {
 }
 
 export function jogarPartida(decks, semente, niveis = [NIVEL, NIVEL], onJogada = null) {
-    let estado = R.criarPartida({ semente, decks });
+    let estado = R.criarPartida({ semente, decks, banimento: process.env.BANIR !== "0" });
     let passos = 0;
     while (estado.fase !== 'fim') {
         const j = Robo.quemJoga(estado);

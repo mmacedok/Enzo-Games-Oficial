@@ -9,6 +9,9 @@
 //   POST /api/tcg/salas/:codigo/cancelar     só quem criou, antes de alguém entrar
 //   GET  /api/tcg/salas                      salas abertas com o dono esperando (para entrar com 1 clique)
 //   GET  /api/tcg/placar                     placar permanente (vitórias/derrotas online) + o meu
+//   GET  /api/tcg/ao-vivo                    partidas em andamento (para assistir)
+//   GET  /api/tcg/assistir/:id               visão de quem assiste (sem as mãos), como a de jogar; ?desde=versão
+//   GET/POST /api/tcg/partidas/:id/comentarios  comentários da partida (quem joga e quem assiste); somem ao terminar
 //   GET  /api/tcg/atual                      partida em andamento e sala aberta do jogador
 //   GET  /api/tcg/partidas/:id?desde=<n>     "teve jogada?": { versao } ou visão + eventos novos
 //   POST /api/tcg/partidas/:id/jogada        { jogada, versao, regras }
@@ -20,22 +23,40 @@
 // ============================================================================
 const crypto = require('node:crypto');
 const { HttpError } = require('./http.js');
+const { CONTROLE, LINK, exigirUuid } = require('./validacao.js');
+const { nomePublico } = require('./auth.js');
 const R = require('../js/tcg-regras.js');
 const { DECKS_PRONTOS } = require('../js/tcg-cartas.js');
+const Baralho = require('../js/baralho-dados.js');
 
-const SALA_DURA = 15 * 60 * 1000;
-/** A sala só aparece na lista se a tela de espera do dono renovou há menos que isso. */
-const SALA_VIVA = 20 * 1000;
-/** A tela de espera pergunta a cada segundo; o visto_em só é regravado a cada 5 s. */
-const RENOVAR_VISTO = 5 * 1000;
+/**
+ * Sala pública: fica na lista por 5 minutos e o tempo recomeça enquanto a tela de espera do dono
+ * estiver aberta (ela pergunta "entrou alguém?" o tempo todo). Sem a tela aberta, some sozinha.
+ */
+const SALA_DURA = 5 * 60 * 1000;
+/** Só regrava a validade da sala se faltar menos que (SALA_DURA - isto): poupa escritas. */
+const RENOVAR_SALA = 5 * 1000;
+/** Depois que a partida termina, os dois têm este tempo para pedir a revanche. */
+const REVANCHE_DURA = 2 * 60 * 1000;
+/**
+ * Contra o NPC a partida roda no navegador e o servidor não confere, então o prêmio tem trava:
+ * poucas partidas premiadas por dia e um intervalo mínimo entre elas.
+ */
+/** Comentários sem limite de quantidade nem de ritmo; só um teto técnico no tamanho de cada um. */
+const COMENTARIO_MAX = 500;
+/** Partida sem nenhuma jogada há mais que isso não aparece na lista "ao vivo". */
+const AO_VIVO_FRESCA = 10 * 60 * 1000;
+const AO_VIVO_NA_LISTA = 20;
+const NPC_PREMIADAS_POR_DIA = 10;
+const NPC_INTERVALO = 90 * 1000;
 const SALAS_NA_LISTA = 20;
 const PLACAR_TOP = 50;
 const TURNO = 60 * 1000;
 const ESTOUROS_PARA_PERDER = 3;
-const PARTIDAS_POR_DIA = 50;
-const PARTIDAS_POR_JOGADOR = 10;
 const GUARDAR_TERMINADAS = 7 * 24 * 3600 * 1000;
 const DIA = 24 * 3600 * 1000;
+// Partida 'jogando' sem nenhuma jogada há tanto tempo foi abandonada (os dois sumiram, o relógio só anda quando alguém consulta).
+const ABANDONO = 10 * 60 * 1000;
 /** Estouros resolvidos numa chamada só (se os dois sumiram há muito tempo). */
 const MAX_ESTOUROS_POR_VEZ = 12;
 const LETRAS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -44,11 +65,59 @@ const ID = /^[0-9a-f-]{36}$/;
 
 const deckPronto = (id) => DECKS_PRONTOS.find((d) => d.id === id) || null;
 
-function lerDeck(id) {
+/** Deck customizado da conta: lista salva e se ainda é válida. Cartas infinitas: não depende da coleção, só dos limites do deck. */
+async function deckCustomDaConta(ctx, userId) {
+    const [salvo] = await ctx.db.query('SELECT cartas, nome, descricao, publico FROM tcg_deck_custom WHERE user_id = $1', [userId]);
+    let cartas = null;
+    try { cartas = salvo ? JSON.parse(salvo.cartas) : null; } catch { cartas = null; }
+    const erros = cartas ? R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }) : [];
+    return { cartas, erros, nome: salvo?.nome || '', descricao: salvo?.descricao || '', publico: salvo?.publico === true };
+}
+
+const NOME_DECK_MAX = 30;
+const DESCRICAO_DECK_MAX = 80;
+const DECKS_NA_LISTA = 60;
+
+/** Texto de nome/descrição do deck: uma linha, sem links, até `max` letras. */
+function limparTexto(valor, max, rotulo) {
+    if (valor === undefined || valor === null) return '';
+    if (typeof valor !== 'string') throw new HttpError(400, `${rotulo} inválido`);
+    const limpo = valor.normalize('NFC').replace(CONTROLE, ' ').replace(/\s+/g, ' ').trim();
+    if ([...limpo].length > max) throw new HttpError(400, `${rotulo}: no máximo ${max} letras`);
+    if (LINK.test(limpo)) throw new HttpError(400, `sem links no ${rotulo}`);
+    return limpo;
+}
+
+const respostaDeck = (d) => ({ cartas: d.cartas, nome: d.nome, descricao: d.descricao, publico: d.publico, erros: d.erros, limites: limitesDoDeck() });
+
+const CUSTOM = { id: 'custom', nome: 'Deck customizado' };
+const limitesDoDeck = () => ({ tamanho: R.TAMANHO_DECK, copias: R.MAX_COPIAS, copiasLendaria: R.MAX_COPIAS_LENDARIO, lendarias: R.MAX_LENDARIAS_CUSTOM });
+
+/** Deck do pedido: pronto ('turma'...) ou 'custom' (o salvo na conta, conferido de novo). */
+async function lerDeck(ctx, id) {
+    if (id === 'custom') {
+        const { cartas, erros } = await deckCustomDaConta(ctx, ctx.usuario.id);
+        if (!cartas) throw new HttpError(400, 'você ainda não montou o seu deck customizado');
+        if (erros.length) throw new HttpError(400, `seu deck customizado não está válido: ${erros[0]}`);
+        return { ...CUSTOM, cartas };
+    }
     const d = typeof id === 'string' ? deckPronto(id) : null;
-    if (!d) throw new HttpError(400, `deck: ${DECKS_PRONTOS.map((x) => x.id).join(', ')}`);
+    if (!d) throw new HttpError(400, `deck: ${DECKS_PRONTOS.map((x) => x.id).join(', ')}, custom`);
     return d;
 }
+
+/** Sala e partida online: só vale o deck customizado. */
+async function lerDeckOnline(ctx, id) {
+    if (id !== 'custom') throw new HttpError(400, 'o modo online só aceita o deck customizado: monte o seu em "Seu deck"');
+    return lerDeck(ctx, id);
+}
+
+/** Deck guardado numa sala/partida: pronto pelo id, ou a lista da foto quando é o customizado. */
+function deckGuardado(id, lista) {
+    if (id === 'custom') return { ...CUSTOM, cartas: JSON.parse(lista) };
+    return deckPronto(id);
+}
+const listaSeCustom = (d) => (d.id === 'custom' ? JSON.stringify(d.cartas) : null);
 
 function lerCodigo(texto) {
     const codigo = String(texto || '').toUpperCase();
@@ -66,7 +135,7 @@ const quemDeve = R.quemDeve;
 
 /** O que o servidor joga por quem estourou o tempo. */
 function jogadaAutomatica(estado, j) {
-    if (estado.fase === 'preparacao' || estado.pendentes.length) return R.jogadasValidas(estado, j)[0];
+    if (estado.fase === 'banimento' || estado.fase === 'preparacao' || estado.pendentes.length) return R.jogadasValidas(estado, j)[0];
     return { tipo: 'passar', jogador: j };
 }
 
@@ -134,19 +203,34 @@ async function registrarResultado(ctx, p) {
     const v = p.estado.vencedor;
     const vencedor = v === 0 || v === 1 ? p.jogadores[v] : null;
     const perdedor = v === 0 || v === 1 ? p.jogadores[1 - v] : null;
-    await ctx.db.query(
+    const novo = await ctx.db.query(
         `INSERT INTO tcg_resultados (partida_id, vencedor, perdedor, decks, turnos, motivo, fim_em, jogador_a, jogador_b)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (partida_id) DO NOTHING`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (partida_id) DO NOTHING RETURNING partida_id`,
         [p.id, vencedor, perdedor, JSON.stringify(p.decks), p.estado.turno, p.estado.motivo, ctx.agora(),
             p.jogadores[0], p.jogadores[1]]);
+    // Créditos do Baralho: 500 a quem venceu, 150 a quem perdeu (empate paga como derrota). Uma vez só por partida.
+    // O chat da partida some junto com ela.
+    await ctx.db.query('DELETE FROM tcg_comentarios WHERE partida_id = $1', [p.id]);
+    if (novo.length) {
+        const { creditarConta } = require('./baralho.js');
+        for (const lado of [0, 1]) {
+            await creditarConta(ctx, p.jogadores[lado], recompensaOnline(p.estado.vencedor, lado), 'batalha', `online:${p.id}`);
+        }
+    }
+}
+
+/** Créditos de quem jogou no `lado` numa partida online que acabou com `vencedor` (0, 1 ou 'empate'). */
+function recompensaOnline(vencedor, lado) {
+    const c = Baralho.CREDITOS_BATALHA.online;
+    return vencedor === lado ? c.vitoria : c.derrota;
 }
 
 /**
  * Placar permanente: vitórias, derrotas e empates das partidas online (só as do servidor:
  * contra o NPC roda no navegador e não dá para conferir). Top 50 + a linha de quem pede.
  */
-async function placar(ctx) {
-    const linhas = await ctx.db.query(
+async function classificacao(db) {
+    return db.query(
         `WITH r AS (
              SELECT vencedor AS id, 1 AS v, 0 AS d, 0 AS e FROM tcg_resultados WHERE vencedor IS NOT NULL
              UNION ALL SELECT perdedor, 0, 1, 0 FROM tcg_resultados WHERE perdedor IS NOT NULL
@@ -160,6 +244,10 @@ async function placar(ctx) {
          )
          SELECT *, RANK() OVER (ORDER BY vitorias DESC, derrotas ASC) AS posicao FROM t
           ORDER BY posicao, display_name`);
+}
+
+async function placar(ctx) {
+    const linhas = await classificacao(ctx.db);
     const linha = (l) => ({
         nome: l.display_name, vitorias: Number(l.vitorias), derrotas: Number(l.derrotas),
         empates: Number(l.empates), posicao: Number(l.posicao),
@@ -213,6 +301,9 @@ async function recarregarSeMudou(ctx, p) {
 const respostaBase = (ctx, p) => ({
     id: p.id, versao: p.versao, prazo: p.prazo, agora: ctx.agora(), eu: p.eu,
     estouros: p.estouros, status: p.status, regras: R.REGRAS_VERSAO,
+    // Partida online acabada com resultado: quanto rendeu de créditos para este jogador.
+    ...(p.status === 'fim' && p.estado && p.estado.fase === 'fim' && p.estado.motivo !== 'atualizacao'
+        ? { creditos: recompensaOnline(p.estado.vencedor, p.eu) } : {}),
 });
 
 /**
@@ -237,27 +328,91 @@ async function limpar(ctx) {
     const agora = ctx.agora();
     await ctx.db.query('DELETE FROM tcg_salas WHERE expira_em < $1', [agora - DIA]);
     await ctx.db.query(`DELETE FROM tcg_partidas WHERE status = 'fim' AND atualizado_em < $1`, [agora - GUARDAR_TERMINADAS]);
+    await varrerAbandonadas(ctx);
+}
+
+/**
+ * Encerra as partidas abandonadas: sem resultado, sem placar e sem créditos (motivo 'abandonada'), para quem estava nelas
+ * poder jogar de novo. Roda sozinha quando alguém entra numa sala ou olha o histórico no terminal.
+ */
+async function varrerAbandonadas(ctx) {
+    const agora = ctx.agora();
+    const linhas = await ctx.db.query(
+        `UPDATE tcg_partidas SET status = 'fim', motivo = 'abandonada', atualizado_em = $1
+          WHERE status = 'jogando' AND atualizado_em < $2 RETURNING id`, [agora, agora - ABANDONO]);
+    return linhas.length;
 }
 
 async function partidaEmAndamento(ctx, userId) {
+    await varrerAbandonadas(ctx);
     const [l] = await ctx.db.query(
         `SELECT id FROM tcg_partidas WHERE status = 'jogando' AND (jogador_a = $1 OR jogador_b = $1) AND regras = $2
           ORDER BY criado_em DESC LIMIT 1`, [userId, R.REGRAS_VERSAO]);
     return l?.id || null;
 }
 
-async function conferirLimites(ctx, userId) {
-    const desde = ctx.agora() - DIA;
-    const [site] = await ctx.db.query('SELECT COUNT(*) AS n FROM tcg_partidas WHERE criado_em > $1', [desde]);
-    if (Number(site.n) >= PARTIDAS_POR_DIA) throw new HttpError(429, 'o limite de partidas online de hoje acabou; jogue contra o NPC');
-    const [meu] = await ctx.db.query(
-        'SELECT COUNT(*) AS n FROM tcg_partidas WHERE criado_em > $1 AND (jogador_a = $2 OR jogador_b = $2)', [desde, userId]);
-    if (Number(meu.n) >= PARTIDAS_POR_JOGADOR) throw new HttpError(429, `você já jogou ${PARTIDAS_POR_JOGADOR} partidas online hoje`);
-}
-
 async function semPartidaAberta(ctx) {
     const id = await partidaEmAndamento(ctx, ctx.usuario.id);
     if (id) throw new HttpError(409, 'você já está numa partida', { partida: id });
+}
+
+/** Texto do comentário: sem caracteres de controle, espaços juntos, até COMENTARIO_MAX. */
+function limparComentario(texto) {
+    return String(texto ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, COMENTARIO_MAX);
+}
+
+/** Partida em andamento (qualquer jogador logado pode ver e comentar). */
+async function lerAoVivo(ctx, id) {
+    if (!ID.test(id)) throw new HttpError(404, 'partida não encontrada');
+    const [l] = await ctx.db.query('SELECT * FROM tcg_partidas WHERE id = $1', [id]);
+    if (!l) throw new HttpError(404, 'partida não encontrada');
+    return l;
+}
+
+async function lerParaRevanche(ctx, id) {
+    if (!ID.test(id)) throw new HttpError(404, 'partida não encontrada');
+    const [l] = await ctx.db.query('SELECT * FROM tcg_partidas WHERE id = $1', [id]);
+    const eu = l ? [l.jogador_a, l.jogador_b].indexOf(ctx.usuario.id) : -1;
+    if (eu < 0) throw new HttpError(404, 'partida não encontrada');
+    return { l, eu };
+}
+
+function situacaoRevanche(ctx, l, eu) {
+    const meu = eu === 0 ? l.revanche_a : l.revanche_b;
+    const dele = eu === 0 ? l.revanche_b : l.revanche_a;
+    return {
+        euQuero: meu === true, outroQuer: dele === true, partida: l.revanche_id || null,
+        expirou: !l.revanche_id && ctx.agora() > Number(l.atualizado_em) + REVANCHE_DURA,
+    };
+}
+
+/** Os dois querem: nasce a partida nova com os mesmos decks e os lados trocados (quem abriu agora joga em segundo). */
+async function criarRevanche(ctx, l) {
+    const [a, b] = [l.jogador_b, l.jogador_a];
+    for (const j of [a, b]) {
+        if (await partidaEmAndamento(ctx, j)) throw new HttpError(409, 'alguém já está em outra partida');
+    }
+    const id = crypto.randomUUID();
+    const agora = ctx.agora();
+    // Marca num comando só: se os dois clicarem juntos, só uma partida nasce.
+    const pegou = await ctx.db.query(
+        `UPDATE tcg_partidas SET revanche_id = $2 WHERE id = $1 AND revanche_id IS NULL AND revanche_a AND revanche_b RETURNING id`,
+        [l.id, id]);
+    if (!pegou.length) return;
+    const [nomeA] = await ctx.db.query('SELECT display_name FROM users WHERE id = $1', [a]);
+    const [nomeB] = await ctx.db.query('SELECT display_name FROM users WHERE id = $1', [b]);
+    const deckA = deckGuardado(l.deck_b, l.lista_b);
+    const deckB = deckGuardado(l.deck_a, l.lista_a);
+    const estado = R.criarPartida({
+        semente: ctx.aleatorio(2 ** 31 - 1),
+        banimento: true,
+        decks: [deckA.cartas, deckB.cartas],
+        nomes: [nomeA?.display_name || 'Jogador 1', nomeB?.display_name || 'Jogador 2'],
+    });
+    await ctx.db.query(
+        `INSERT INTO tcg_partidas (id, jogador_a, jogador_b, deck_a, deck_b, lista_a, lista_b, estado, versao, regras, prazo, criado_em, atualizado_em)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10, $11, $11)`,
+        [id, a, b, deckA.id, deckB.id, listaSeCustom(deckA), listaSeCustom(deckB), JSON.stringify(estado), R.REGRAS_VERSAO, agora + TURNO, agora]);
 }
 
 const rotas = [
@@ -267,20 +422,155 @@ const rotas = [
         async executar(ctx) {
             const agora = ctx.agora();
             const linhas = await ctx.db.query(
-                `SELECT s.codigo, s.deck, s.criado_em, u.display_name,
+                `SELECT s.codigo, s.deck, s.criado_em, s.expira_em, u.display_name,
                         (SELECT COUNT(*) FROM tcg_resultados r WHERE r.vencedor = s.criador) AS vitorias,
                         (SELECT COUNT(*) FROM tcg_resultados r WHERE r.perdedor = s.criador) AS derrotas
                    FROM tcg_salas s JOIN users u ON u.id = s.criador
-                  WHERE s.partida_id IS NULL AND s.expira_em >= $1 AND s.visto_em >= $2
-                    AND s.criador <> $3 AND u.role <> 'banned'
-                  ORDER BY s.criado_em DESC LIMIT $4`,
-                [agora, agora - SALA_VIVA, ctx.usuario.id, SALAS_NA_LISTA]);
+                  WHERE s.partida_id IS NULL AND s.expira_em >= $1
+                    AND s.criador <> $2 AND u.role <> 'banned'
+                  ORDER BY s.criado_em DESC LIMIT $3`,
+                [agora, ctx.usuario.id, SALAS_NA_LISTA]);
             return {
                 salas: linhas.map((l) => ({
-                    codigo: l.codigo, deck: l.deck, criador: l.display_name, desde: Number(l.criado_em),
+                    codigo: l.codigo, deck: l.deck, criador: l.display_name, desde: Number(l.criado_em), expira: Number(l.expira_em),
                     vitorias: Number(l.vitorias), derrotas: Number(l.derrotas),
                 })),
             };
+        },
+    },
+    {
+        // Deck customizado: a lista salva e os limites (qualquer carta vale, não precisa tê-la).
+        metodo: 'GET', caminho: '/api/tcg/deck', login: true,
+        async executar(ctx) {
+            return respostaDeck(await deckCustomDaConta(ctx, ctx.usuario.id));
+        },
+    },
+    {
+        // Salva o deck customizado (15 cartas, 2 lendárias no máximo, repetição limitada; qualquer carta do jogo).
+        metodo: 'POST', caminho: '/api/tcg/deck', login: true,
+        async executar(ctx) {
+            const corpo = await ctx.corpo();
+            const { cartas } = corpo;
+            if (!Array.isArray(cartas) || cartas.length > 40 || cartas.some((c) => typeof c !== 'string' || c.length > 64)) throw new HttpError(400, 'cartas inválidas');
+            const erros = R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM });
+            if (erros.length) throw new HttpError(400, erros[0], { erros });
+            // nome, descrição e "listado" não enviados mantêm o que já estava
+            const antes = await deckCustomDaConta(ctx, ctx.usuario.id);
+            const nome = corpo.nome === undefined ? antes.nome : limparTexto(corpo.nome, NOME_DECK_MAX, 'nome');
+            const descricao = corpo.descricao === undefined ? antes.descricao : limparTexto(corpo.descricao, DESCRICAO_DECK_MAX, 'descrição');
+            const publico = corpo.publico === undefined ? antes.publico : corpo.publico === true;
+            if (publico && !nome) throw new HttpError(400, 'dê um nome ao deck para listá-lo');
+            const agora = ctx.agora();
+            await ctx.db.query(
+                `INSERT INTO tcg_deck_custom (user_id, cartas, atualizado_em, nome, descricao, publico, publicado_em) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                 ON CONFLICT (user_id) DO UPDATE SET cartas = EXCLUDED.cartas, atualizado_em = EXCLUDED.atualizado_em, nome = EXCLUDED.nome,
+                     descricao = EXCLUDED.descricao, publico = EXCLUDED.publico,
+                     publicado_em = CASE WHEN EXCLUDED.publico THEN COALESCE(tcg_deck_custom.publicado_em, EXCLUDED.atualizado_em) ELSE NULL END`,
+                [ctx.usuario.id, JSON.stringify(cartas), agora, nome, descricao, publico, publico ? agora : null]);
+            return respostaDeck({ cartas, erros: [], nome, descricao, publico });
+        },
+    },
+    {
+        // "Decks de players": decks que jogadores deixaram listados. ?ordem=novos (padrão) ou copias.
+        metodo: 'GET', caminho: '/api/tcg/decks-publicos', login: true,
+        async executar(ctx) {
+            const porCopias = ctx.url.searchParams.get('ordem') === 'copias';
+            const linhas = await ctx.db.query(
+                `SELECT d.user_id, d.cartas, d.nome, d.descricao, d.copias, d.publicado_em, u.display_name
+                   FROM tcg_deck_custom d JOIN users u ON u.id = d.user_id
+                  WHERE d.publico AND u.role <> 'banned'
+                  ORDER BY ${porCopias ? 'd.copias DESC, d.publicado_em DESC' : 'd.publicado_em DESC'}, d.user_id LIMIT $1`, [DECKS_NA_LISTA]);
+            const decks = [];
+            // Decks oficiais (postados pelo admin) vêm antes dos dos jogadores.
+            const oficiais = await ctx.db.query(
+                `SELECT id, cartas, nome, descricao, copias, criado_em FROM tcg_decks_postados
+                  ORDER BY ${porCopias ? 'copias DESC, criado_em DESC' : 'criado_em DESC'}, id LIMIT $1`, [DECKS_NA_LISTA]);
+            for (const o of oficiais) {
+                let cartas;
+                try { cartas = JSON.parse(o.cartas); } catch { continue; }
+                if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) continue;
+                decks.push({ id: o.id, nome: o.nome, descricao: o.descricao || '', autor: 'Enzo Games', oficial: true, cartas, copias: Number(o.copias), em: Number(o.criado_em), meu: false });
+            }
+            for (const l of linhas) {
+                let cartas;
+                try { cartas = JSON.parse(l.cartas); } catch { continue; }
+                if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) continue;
+                decks.push({
+                    id: l.user_id, nome: l.nome, descricao: l.descricao || '', autor: nomePublico(l.display_name), cartas,
+                    copias: Number(l.copias), em: Number(l.publicado_em), meu: l.user_id === ctx.usuario.id,
+                });
+            }
+            return { decks };
+        },
+    },
+    {
+        // Copia um deck listado para o deck customizado de quem pediu (substitui o que ele tinha; a cópia não fica listada).
+        metodo: 'POST', caminho: /^\/api\/tcg\/decks-publicos\/([^/]{1,64})\/copiar$/, login: true,
+        async executar(ctx) {
+            const dono = exigirUuid(ctx.params[0], 'deck não encontrado');
+            const [oficial] = await ctx.db.query('SELECT cartas, nome FROM tcg_decks_postados WHERE id = $1', [dono]);
+            if (oficial) {
+                const cartas = JSON.parse(oficial.cartas);
+                if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) throw new HttpError(409, 'esse deck não está mais válido');
+                await ctx.db.query(
+                    `INSERT INTO tcg_deck_custom (user_id, cartas, atualizado_em, nome, descricao, publico, publicado_em) VALUES ($1, $2, $3, $4, '', FALSE, NULL)
+                     ON CONFLICT (user_id) DO UPDATE SET cartas = EXCLUDED.cartas, atualizado_em = EXCLUDED.atualizado_em, nome = EXCLUDED.nome,
+                         descricao = '', publico = FALSE, publicado_em = NULL`, [ctx.usuario.id, oficial.cartas, ctx.agora(), `${oficial.nome}`.slice(0, NOME_DECK_MAX)]);
+                await ctx.db.query('UPDATE tcg_decks_postados SET copias = copias + 1 WHERE id = $1', [dono]);
+                return respostaDeck(await deckCustomDaConta(ctx, ctx.usuario.id));
+            }
+            if (dono === ctx.usuario.id) throw new HttpError(400, 'esse deck já é o seu');
+            const [l] = await ctx.db.query(
+                `SELECT d.cartas, d.nome FROM tcg_deck_custom d JOIN users u ON u.id = d.user_id WHERE d.user_id = $1 AND d.publico AND u.role <> 'banned'`, [dono]);
+            if (!l) throw new HttpError(404, 'deck não encontrado (talvez o dono tenha tirado da lista)');
+            const cartas = JSON.parse(l.cartas);
+            if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) throw new HttpError(409, 'esse deck não está mais válido');
+            const nome = `Cópia: ${l.nome}`.slice(0, NOME_DECK_MAX);
+            await ctx.db.query(
+                `INSERT INTO tcg_deck_custom (user_id, cartas, atualizado_em, nome, descricao, publico, publicado_em) VALUES ($1, $2, $3, $4, '', FALSE, NULL)
+                 ON CONFLICT (user_id) DO UPDATE SET cartas = EXCLUDED.cartas, atualizado_em = EXCLUDED.atualizado_em, nome = EXCLUDED.nome,
+                     descricao = '', publico = FALSE, publicado_em = NULL`, [ctx.usuario.id, l.cartas, ctx.agora(), nome]);
+            await ctx.db.query('UPDATE tcg_deck_custom SET copias = copias + 1 WHERE user_id = $1', [dono]);
+            return respostaDeck(await deckCustomDaConta(ctx, ctx.usuario.id));
+        },
+    },
+    {
+        // Admin: posta um deck oficial em "Decks de players" (quantos quiser, sem ser o deck pessoal). Mesmas regras de deck.
+        metodo: 'POST', caminho: '/api/tcg/decks-postados', admin: true,
+        async executar(ctx) {
+            const { cartas, nome, descricao } = await ctx.corpo();
+            if (!Array.isArray(cartas) || cartas.length > 40 || cartas.some((c) => typeof c !== 'string' || c.length > 64)) throw new HttpError(400, 'cartas inválidas');
+            const erros = R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM });
+            if (erros.length) throw new HttpError(400, erros[0], { erros });
+            const nomeLimpo = limparTexto(nome, NOME_DECK_MAX, 'nome');
+            if (!nomeLimpo) throw new HttpError(400, 'dê um nome ao deck');
+            const id = crypto.randomUUID();
+            await ctx.db.query(
+                'INSERT INTO tcg_decks_postados (id, autor_id, nome, descricao, cartas, criado_em) VALUES ($1, $2, $3, $4, $5, $6)',
+                [id, ctx.usuario.id, nomeLimpo, limparTexto(descricao, DESCRICAO_DECK_MAX, 'descrição'), JSON.stringify(cartas), ctx.agora()]);
+            await require('./admin.js').registrar(ctx, 'deck-postar', null, nomeLimpo);
+            return { id };
+        },
+    },
+    {
+        metodo: 'POST', caminho: /^\/api\/tcg\/decks-postados\/([^/]{1,64})\/remover$/, admin: true,
+        async executar(ctx) {
+            const id = exigirUuid(ctx.params[0], 'deck não encontrado');
+            const r = await ctx.db.query('DELETE FROM tcg_decks_postados WHERE id = $1 RETURNING nome', [id]);
+            if (!r.length) throw new HttpError(404, 'deck não encontrado');
+            await require('./admin.js').registrar(ctx, 'deck-remover', null, r[0].nome);
+            return { removido: true };
+        },
+    },
+    {
+        // Admin: tira da lista o deck de uma conta (nome ou descrição ruim).
+        metodo: 'POST', caminho: /^\/api\/admin\/users\/([^/]{1,64})\/deck\/despublicar$/, admin: true,
+        async executar(ctx) {
+            const admin = require('./admin.js');
+            const alvo = await admin.exigirUsuario(ctx, ctx.params[0]);
+            const r = await ctx.db.query('UPDATE tcg_deck_custom SET publico = FALSE, publicado_em = NULL WHERE user_id = $1 AND publico RETURNING nome', [alvo.id]);
+            if (r.length) await admin.registrar(ctx, 'deck-despublicar', alvo.id, r[0].nome);
+            return { tirado: r.length > 0 };
         },
     },
     {
@@ -291,9 +581,8 @@ const rotas = [
         metodo: 'POST', caminho: '/api/tcg/salas', login: true,
         async executar(ctx) {
             const { deck } = await ctx.corpo();
-            const d = lerDeck(deck);
+            const d = await lerDeckOnline(ctx, deck);
             await semPartidaAberta(ctx);
-            await conferirLimites(ctx, ctx.usuario.id);
             await limpar(ctx);
             // Uma sala aberta por jogador: a nova substitui a antiga.
             await ctx.db.query('DELETE FROM tcg_salas WHERE criador = $1 AND partida_id IS NULL', [ctx.usuario.id]);
@@ -301,13 +590,13 @@ const rotas = [
             for (let tentativa = 0; tentativa < 8; tentativa++) {
                 const codigo = novoCodigo(ctx.aleatorio);
                 const linhas = await ctx.db.query(
-                    `INSERT INTO tcg_salas (codigo, criador, deck, criado_em, expira_em, visto_em) VALUES ($1, $2, $3, $4, $5, $4)
-                     ON CONFLICT (codigo) DO UPDATE SET criador = EXCLUDED.criador, deck = EXCLUDED.deck,
+                    `INSERT INTO tcg_salas (codigo, criador, deck, lista, criado_em, expira_em, visto_em) VALUES ($1, $2, $3, $6, $4, $5, $4)
+                     ON CONFLICT (codigo) DO UPDATE SET criador = EXCLUDED.criador, deck = EXCLUDED.deck, lista = EXCLUDED.lista,
                          criado_em = EXCLUDED.criado_em, expira_em = EXCLUDED.expira_em, partida_id = NULL,
                          visto_em = EXCLUDED.visto_em
                       WHERE tcg_salas.expira_em < $4 AND tcg_salas.partida_id IS NULL
                      RETURNING codigo`,
-                    [codigo, ctx.usuario.id, d.id, agora, agora + SALA_DURA]);
+                    [codigo, ctx.usuario.id, d.id, agora, agora + SALA_DURA, listaSeCustom(d)]);
                 if (linhas.length) return { codigo, expira: agora + SALA_DURA, deck: d.id };
             }
             throw new HttpError(503, 'não consegui criar a sala, tente de novo');
@@ -319,15 +608,17 @@ const rotas = [
             const codigo = lerCodigo(ctx.params[0]);
             const [s] = await ctx.db.query(
                 `SELECT s.*, u.display_name FROM tcg_salas s JOIN users u ON u.id = s.criador WHERE s.codigo = $1`, [codigo]);
-            if (!s || (Number(s.expira_em) < ctx.agora() && !s.partida_id)) throw new HttpError(404, 'sala não encontrada ou expirada');
-            // Quem criou está na tela de espera perguntando: a sala continua "viva" na lista.
             const agora = ctx.agora();
-            if (s.criador === ctx.usuario.id && !s.partida_id && !(Number(s.visto_em) > agora - RENOVAR_VISTO)) {
-                await ctx.db.query('UPDATE tcg_salas SET visto_em = $2 WHERE codigo = $1 AND partida_id IS NULL', [codigo, agora]);
+            if (!s || (Number(s.expira_em) < agora && !s.partida_id)) throw new HttpError(404, 'sala não encontrada ou expirada');
+            let expira = Number(s.expira_em);
+            // O dono está com a tela de espera aberta: a sala ganha mais 5 minutos.
+            if (s.criador === ctx.usuario.id && !s.partida_id && expira < agora + SALA_DURA - RENOVAR_SALA) {
+                expira = agora + SALA_DURA;
+                await ctx.db.query('UPDATE tcg_salas SET expira_em = $2 WHERE codigo = $1 AND partida_id IS NULL', [codigo, expira]);
             }
             return {
                 codigo, deck: s.deck, criador: s.display_name, minha: s.criador === ctx.usuario.id,
-                expira: Number(s.expira_em), partida: s.partida_id || null,
+                expira, partida: s.partida_id || null,
             };
         },
     },
@@ -336,33 +627,33 @@ const rotas = [
         async executar(ctx) {
             const codigo = lerCodigo(ctx.params[0]);
             const { deck } = await ctx.corpo();
-            const d = lerDeck(deck);
+            const d = await lerDeckOnline(ctx, deck);
             const eu = ctx.usuario.id;
             await semPartidaAberta(ctx);
             const [s] = await ctx.db.query('SELECT * FROM tcg_salas WHERE codigo = $1', [codigo]);
             if (!s || Number(s.expira_em) < ctx.agora() || s.partida_id) throw new HttpError(404, 'sala não encontrada ou expirada');
-            if (s.criador === eu) throw new HttpError(400, 'essa sala é sua: mande o código para um amigo');
-            await conferirLimites(ctx, eu);
+            if (s.criador === eu) throw new HttpError(400, 'essa sala é sua: espere alguém entrar');
             if (await partidaEmAndamento(ctx, s.criador)) throw new HttpError(409, 'quem criou a sala já está em outra partida');
 
             const id = crypto.randomUUID();
             const agora = ctx.agora();
             // Pega a sala num comando só: dois entrando ao mesmo tempo, só um consegue.
             const pegou = await ctx.db.query(
-                `UPDATE tcg_salas SET partida_id = $2 WHERE codigo = $1 AND partida_id IS NULL AND expira_em >= $3 RETURNING criador, deck`,
+                `UPDATE tcg_salas SET partida_id = $2 WHERE codigo = $1 AND partida_id IS NULL AND expira_em >= $3 RETURNING criador, deck, lista`,
                 [codigo, id, agora]);
             if (!pegou.length) throw new HttpError(409, 'alguém entrou nessa sala antes');
             const [nomeA] = await ctx.db.query('SELECT display_name FROM users WHERE id = $1', [s.criador]);
-            const deckA = deckPronto(pegou[0].deck);
+            const deckA = deckGuardado(pegou[0].deck, pegou[0].lista);
             const estado = R.criarPartida({
                 semente: ctx.aleatorio(2 ** 31 - 1),
+        banimento: true,
                 decks: [deckA.cartas, d.cartas],
                 nomes: [nomeA?.display_name || 'Jogador 1', ctx.usuario.display_name || 'Jogador 2'],
             });
             await ctx.db.query(
-                `INSERT INTO tcg_partidas (id, jogador_a, jogador_b, deck_a, deck_b, estado, versao, regras, prazo, criado_em, atualizado_em)
-                 VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, $9, $9)`,
-                [id, s.criador, eu, deckA.id, d.id, JSON.stringify(estado), R.REGRAS_VERSAO, agora + TURNO, agora]);
+                `INSERT INTO tcg_partidas (id, jogador_a, jogador_b, deck_a, deck_b, lista_a, lista_b, estado, versao, regras, prazo, criado_em, atualizado_em)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10, $11, $11)`,
+                [id, s.criador, eu, deckA.id, d.id, listaSeCustom(deckA), listaSeCustom(d), JSON.stringify(estado), R.REGRAS_VERSAO, agora + TURNO, agora]);
             const p = await carregar(ctx, id);
             return resposta(ctx, p, -1);
         },
@@ -409,6 +700,128 @@ const rotas = [
         },
     },
     {
+        // Partidas em andamento, para entrar como espectador.
+        metodo: 'GET', caminho: '/api/tcg/ao-vivo', login: true,
+        async executar(ctx) {
+            const agora = ctx.agora();
+            const linhas = await ctx.db.query(
+                `SELECT p.id, p.deck_a, p.deck_b, p.criado_em, p.versao, p.estado, ua.display_name AS nome_a, ub.display_name AS nome_b
+                   FROM tcg_partidas p
+                   JOIN users ua ON ua.id = p.jogador_a JOIN users ub ON ub.id = p.jogador_b
+                  WHERE p.status = 'jogando' AND p.regras = $1 AND p.atualizado_em > $2
+                  ORDER BY p.atualizado_em DESC LIMIT $3`,
+                [R.REGRAS_VERSAO, agora - AO_VIVO_FRESCA, AO_VIVO_NA_LISTA]);
+            return {
+                partidas: linhas.map((l) => {
+                    const e = JSON.parse(l.estado);
+                    return {
+                        id: l.id, jogadores: [l.nome_a, l.nome_b], decks: [l.deck_a, l.deck_b], desde: Number(l.criado_em),
+                        turno: e.turno, vida: [e.jogadores[0].vida, e.jogadores[1].vida],
+                    };
+                }),
+            };
+        },
+    },
+    {
+        // Quem assiste vê a mesa como um terceiro: as duas mãos e os baralhos só como quantidade.
+        metodo: 'GET', caminho: /^\/api\/tcg\/assistir\/([^/]{1,64})$/, login: true,
+        async executar(ctx) {
+            const desde = ctx.url.searchParams.has('desde') ? Number(ctx.url.searchParams.get('desde')) : -1;
+            const l = await lerAoVivo(ctx, ctx.params[0]);
+            if (Number(l.regras) !== R.REGRAS_VERSAO && l.status === 'jogando') throw new HttpError(409, 'o jogo foi atualizado; recarregue', { recarregar: true });
+            const base = {
+                id: l.id, versao: Number(l.versao), prazo: Number(l.prazo), agora: ctx.agora(), eu: -1,
+                estouros: [Number(l.estouros_a), Number(l.estouros_b)], status: l.status, regras: R.REGRAS_VERSAO,
+            };
+            if (desde === base.versao) return base;
+            let eventos = [];
+            if (Number.isInteger(desde) && desde >= 0 && desde < base.versao) {
+                const linhas = await ctx.db.query('SELECT eventos FROM tcg_jogadas WHERE partida_id = $1 AND n > $2 ORDER BY n', [l.id, desde]);
+                eventos = linhas.flatMap((x) => R.eventosPara(JSON.parse(x.eventos), -1));
+            }
+            return { ...base, decks: [l.deck_a, l.deck_b], visao: R.visaoDe(JSON.parse(l.estado), -1), eventos };
+        },
+    },
+    {
+        metodo: 'GET', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/comentarios$/, login: true,
+        async executar(ctx) {
+            const l = await lerAoVivo(ctx, ctx.params[0]);
+            if (l.status !== 'jogando') return { ativa: false, comentarios: [] };
+            const desde = Number.parseInt(ctx.url.searchParams.get('desde'), 10) || 0;
+            const linhas = await ctx.db.query(
+                'SELECT n, user_id, nome, lado, texto, criado_em FROM tcg_comentarios WHERE partida_id = $1 AND n > $2 ORDER BY n LIMIT 100',
+                [l.id, desde]);
+            return {
+                ativa: true,
+                comentarios: linhas.map((c) => ({
+                    n: Number(c.n), nome: c.nome, lado: c.lado === null ? null : Number(c.lado), texto: c.texto,
+                    em: Number(c.criado_em), meu: c.user_id === ctx.usuario.id,
+                })),
+            };
+        },
+    },
+    {
+        metodo: 'POST', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/comentarios$/, login: true,
+        async executar(ctx) {
+            const l = await lerAoVivo(ctx, ctx.params[0]);
+            if (l.status !== 'jogando') throw new HttpError(409, 'a partida terminou: os comentários se foram');
+            const texto = limparComentario((await ctx.corpo()).texto);
+            if (!texto) throw new HttpError(400, 'escreva alguma coisa');
+            const agora = ctx.agora();
+            const lado = [l.jogador_a, l.jogador_b].indexOf(ctx.usuario.id);
+            const nome = String(ctx.usuario.display_name || 'Leitor').trim().split(/\s+/)[0].slice(0, 20);
+            const [c] = await ctx.db.query(
+                `INSERT INTO tcg_comentarios (partida_id, user_id, nome, lado, texto, criado_em) VALUES ($1, $2, $3, $4, $5, $6) RETURNING n`,
+                [l.id, ctx.usuario.id, nome, lado < 0 ? null : lado, texto, agora]);
+            return { n: Number(c.n) };
+        },
+    },
+    {
+        // Prêmio da partida contra o NPC: { resultado: 'vitoria' | 'derrota' | 'empate' }.
+        metodo: 'POST', caminho: '/api/tcg/npc', login: true,
+        async executar(ctx) {
+            const { resultado } = await ctx.corpo();
+            if (!['vitoria', 'derrota', 'empate'].includes(resultado)) throw new HttpError(400, 'resultado deve ser vitoria, derrota ou empate');
+            const agora = ctx.agora();
+            const [{ n, ultima }] = await ctx.db.query(
+                `SELECT COUNT(*) AS n, MAX(created_at) AS ultima FROM extrato
+                  WHERE user_id = $1 AND motivo = 'batalha-npc' AND created_at > $2`, [ctx.usuario.id, agora - DIA]);
+            if (Number(n) >= NPC_PREMIADAS_POR_DIA) return { creditos: 0, motivo: 'limite' };
+            if (ultima !== null && agora - Number(ultima) < NPC_INTERVALO) return { creditos: 0, motivo: 'rapido' };
+            const c = Baralho.CREDITOS_BATALHA.npc;
+            const valor = resultado === 'vitoria' ? c.vitoria : c.derrota;
+            const { creditarConta } = require('./baralho.js');
+            await creditarConta(ctx, ctx.usuario.id, valor, 'batalha-npc', `npc:${crypto.randomUUID()}`);
+            return { creditos: valor };
+        },
+    },
+    {
+        // Revanche: como está o pedido (meu, do outro) e, quando os dois querem, a partida nova.
+        metodo: 'GET', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/revanche$/, login: true,
+        async executar(ctx) {
+            const { l, eu } = await lerParaRevanche(ctx, ctx.params[0]);
+            return situacaoRevanche(ctx, l, eu);
+        },
+    },
+    {
+        metodo: 'POST', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/revanche$/, login: true,
+        async executar(ctx) {
+            const id = ctx.params[0];
+            let { l, eu } = await lerParaRevanche(ctx, id);
+            if (l.status !== 'fim' || l.motivo === 'atualizacao' || l.motivo === 'abandonada' || Number(l.regras) !== R.REGRAS_VERSAO) {
+                throw new HttpError(409, 'essa partida não aceita revanche');
+            }
+            if (!l.revanche_id) {
+                if (ctx.agora() > Number(l.atualizado_em) + REVANCHE_DURA) throw new HttpError(409, 'o tempo da revanche acabou');
+                await ctx.db.query(`UPDATE tcg_partidas SET ${eu === 0 ? 'revanche_a' : 'revanche_b'} = TRUE WHERE id = $1`, [id]);
+                [l] = await ctx.db.query('SELECT * FROM tcg_partidas WHERE id = $1', [id]);
+                if (l.revanche_a && l.revanche_b) await criarRevanche(ctx, l);
+                [l] = await ctx.db.query('SELECT * FROM tcg_partidas WHERE id = $1', [id]);
+            }
+            return situacaoRevanche(ctx, l, eu);
+        },
+    },
+    {
         metodo: 'POST', caminho: /^\/api\/tcg\/partidas\/([^/]{1,64})\/jogada$/, login: true,
         async executar(ctx) {
             const { jogada, versao, regras } = await ctx.corpo();
@@ -443,4 +856,4 @@ const rotas = [
     },
 ];
 
-module.exports = { rotas, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, PARTIDAS_POR_DIA, PARTIDAS_POR_JOGADOR, SALA_VIVA };
+module.exports = { rotas, varrerAbandonadas, classificacao, quemDeve, jogadaAutomatica, TURNO, ESTOUROS_PARA_PERDER, SALA_DURA, REVANCHE_DURA, NPC_PREMIADAS_POR_DIA, NPC_INTERVALO, recompensaOnline, COMENTARIO_MAX };

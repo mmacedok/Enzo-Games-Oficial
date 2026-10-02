@@ -38,11 +38,46 @@
         return { records, achievements: conquistasLocais(), lastRead: comicId && chapterId ? { comicId, chapterId } : null };
     }
 
+    /** Visitante sem login: avisa o servidor (no máximo 1x a cada 30 min por navegador) para o registro de acessos do admin. */
+    function avisarVisita() {
+        const agora = Date.now();
+        // Já tinha entrado neste aparelho mas a sessão não voltou: conta ao servidor (1x por dia) para o admin ver o aparelho.
+        const perdida = lerLocal('enzoJaLogou') === '1';
+        if (perdida && agora - (Number.parseInt(lerLocal('enzoPerdida'), 10) || 0) > 24 * 60 * 60 * 1000) {
+            gravarLocal('enzoPerdida', String(agora));
+            pedir('/api/visita', { pagina: location.pathname, perdida: true }).catch(() => {});
+            return;
+        }
+        if (agora - (Number.parseInt(lerLocal('enzoVisita'), 10) || 0) < 30 * 60 * 1000) return;
+        gravarLocal('enzoVisita', String(agora));
+        pedir('/api/visita', { pagina: location.pathname }).catch(() => {});
+    }
+
+    /** Cookie sumiu mas o aparelho guarda a chave: pede uma sessão nova (a chave também é trocada). */
+    async function restaurarSessao() {
+        const chave = lerLocal('enzoLembrar');
+        if (!chave) return null;
+        const r = await pedir('/api/auth/restaurar', { token: chave }).catch(() => null);
+        if (r?.ok && r.dados?.loggedIn) {
+            if (r.dados.lembrar) gravarLocal('enzoLembrar', r.dados.lembrar);
+            gravarLocal('enzoJaLogou', '1');
+            return r.dados;
+        }
+        // 401/403: chave vencida ou conta bloqueada. Só apaga se nenhuma outra aba trocou a chave nesse meio tempo.
+        if (r && (r.status === 401 || r.status === 403) && lerLocal('enzoLembrar') === chave) gravarLocal('enzoLembrar', '');
+        return null;
+    }
+
     async function carregarConta() {
-        const eu = await pedir('/api/auth/me');
-        if (!eu.dados?.loggedIn) { estado.usuario = null; estado.admin = false; estado.dados = null; return; }
+        let eu = await pedir('/api/auth/me');
+        if (!eu.dados?.loggedIn) {
+            const volta = await restaurarSessao();
+            if (volta) eu = { dados: { loggedIn: true, user: volta.user, admin: volta.admin } };
+        }
+        if (!eu.dados?.loggedIn) { avisarVisita(); estado.usuario = null; estado.admin = false; estado.dados = null; return; }
         estado.usuario = eu.dados.user;
         estado.admin = eu.dados.admin === true;
+        gravarLocal('enzoJaLogou', '1');
         const sync = await pedir('/api/user/sync');
         estado.dados = sync.ok ? sync.dados : null;
     }
@@ -88,6 +123,8 @@
         const login = await pedir('/api/auth/google', { credential });
         if (!login.ok) { mostrarErroLogin(login.dados?.error || 'Não deu para entrar agora. Tente de novo.'); return; }
         estado.usuario = login.dados.user;
+        gravarLocal('enzoJaLogou', '1');
+        if (login.dados.lembrar) gravarLocal('enzoLembrar', login.dados.lembrar);
         const sync = await pedir('/api/user/sync-guest', dadosDoConvidado());
         estado.dados = sync.ok ? sync.dados : null;
         fecharConvite();
@@ -97,7 +134,9 @@
     }
 
     async function sairDaConta() {
-        await pedir('/api/auth/logout', {});
+        await pedir('/api/auth/logout', { token: lerLocal('enzoLembrar') || undefined });
+        gravarLocal('enzoJaLogou', '0');
+        gravarLocal('enzoLembrar', '');
         window.google?.accounts.id.disableAutoSelect();
         estado.usuario = null;
         estado.admin = false;
@@ -183,6 +222,8 @@
         let visto = false;
         try { visto = sessionStorage.getItem(CONVITE_VISTO) === '1'; } catch { /* sem sessionStorage */ }
         if (visto || !document.querySelector('[data-conta]') || document.querySelector('dialog[open]')) return;
+        // O baralho (js/baralho.js) mostra os pacotes grátis do visitante; se mostrou, o convite fica quieto.
+        if (window.EnzoBaralhoUI?.chegadaVisitante?.()) return;
         abrirConvite();
     }
 
@@ -234,10 +275,12 @@
             achievements: estado.dados?.achievements || [],
             records: Object.fromEntries(Object.keys(JOGOS).map((jogo) => [jogo, melhorRecorde(jogo)])),
             progress: estado.dados?.progress,
+            batalha: batalhaProprio,
             proprio: true,
         };
     }
     let numeroProprio = null;
+    let batalhaProprio = null;   // placar da Batalha dos Torados (vem do perfil público)
 
     /** Balão de fala do leitor; na própria ficha vira um campo para editar e salvar. */
     function balaoDaFala(perfil) {
@@ -357,9 +400,6 @@
             if (achado) vaga.appendChild(icone('enzo-secreto', '🐱', 'album-icone'));
             vaga.appendChild(el('span', 'album-numero', String(n)));
             vaga.title = achado ? `Enzo secreto nº ${n}` : `Nº ${n}: ainda escondido`;
-            // Porta secreta: o último quadradinho leva à Batalha dos Torados, que fica fora dos
-            // menus até a liberação. Sem cursor nem destaque, para quem não sabe não perceber.
-            if (n === C.SECRETOS) vaga.addEventListener('click', () => { location.href = 'batalha.html'; });
             grade.appendChild(vaga);
         }
         const texto = perfil.proprio ? 'Enzos escondidos nas páginas das HQs. Clique neles para colar no álbum!' : 'Enzos secretos que este leitor já achou nas HQs.';
@@ -380,10 +420,27 @@
         return quadro('quadro--cartas', `Baralho Enzo · ${tem.size}/${B.CARTAS.length}`, fileira);
     }
 
+    /** Placar da Batalha dos Torados (só partidas online). Na própria ficha carrega junto com o número de leitor. */
+    function quadroDaBatalha(perfil) {
+        const b = perfil.batalha;
+        const lista = el('div', 'ficha-recordes');
+        for (const [chave, titulo] of [['vitorias', 'Vitórias'], ['derrotas', 'Derrotas'], ['empates', 'Empates']]) {
+            const item = el('div', 'ficha-recorde');
+            item.append(el('span', 'ficha-recorde-jogo', titulo), el('strong', 'ficha-estouro', b ? String(b[chave]) : '...'));
+            lista.appendChild(item);
+        }
+        const jogou = b && b.vitorias + b.derrotas + b.empates > 0;
+        const nota = !b ? 'Carregando o placar...'
+            : jogou ? `${b.posicao}º lugar no placar. Só partidas online contam.`
+                : (perfil.proprio ? 'Você ainda não jogou online. Só partidas online contam.' : 'Ainda não jogou online.');
+        return quadro('quadro--batalha', 'Batalha dos Torados', lista, el('p', 'quadro-texto', nota));
+    }
+
     function gradeDoPerfil(perfil) {
         const grade = el('div', 'ficha-grade');
         grade.append(quadroDoLeitor(perfil), quadroDeRecordes(perfil));
         if (window.EnzoConquistas) grade.append(quadroDeConquistas(perfil), quadroDeSecretos(perfil));
+        grade.appendChild(quadroDaBatalha(perfil));
         if (!perfil.proprio && Array.isArray(perfil.cartas) && window.EnzoBaralhoUI) grade.appendChild(quadroDeCartas(perfil));
         return grade;
     }
@@ -482,12 +539,14 @@
                 terminal.href = 'admin.html';
                 rodape.appendChild(terminal);
             }
-            // Número de leitor vem do perfil público (ordem de chegada ao site).
-            if (!numeroProprio) {
-                pedir(`/api/readers/${estado.usuario.id}`).then(({ ok, dados }) => {
-                    if (ok) { numeroProprio = dados.numero; if (vistaAtual === 'minha') setSelo(numeroProprio); }
-                }).catch(() => {});
-            }
+            // Número de leitor e placar da Batalha vêm do perfil público (o placar muda a cada partida: busca sempre).
+            pedir(`/api/readers/${estado.usuario.id}`).then(({ ok, dados }) => {
+                if (!ok || vistaAtual !== 'minha') return;
+                numeroProprio = dados.numero;
+                batalhaProprio = dados.batalha || null;
+                setSelo(numeroProprio);
+                corpo.querySelector('.quadro--batalha')?.replaceWith(quadroDaBatalha(perfilProprio()));
+            }).catch(() => {});
         } else if (vista === 'baralho') {
             // Aba do Baralho Enzo (js/baralho.js): carteira, pacotes, fichário.
             corpo.appendChild(window.EnzoBaralhoUI.aba());
@@ -726,10 +785,7 @@
 
     let catalogoPronto = null;
     function carregarCatalogo() {
-        catalogoPronto ??= fetch('data/database.json').then((r) => {
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            return r.json();
-        }).catch((erro) => { catalogoPronto = null; throw erro; });
+        catalogoPronto ??= window.carregarCatalogo().catch((erro) => { catalogoPronto = null; throw erro; });
         return catalogoPronto;
     }
 
@@ -768,6 +824,8 @@
         enviarPartida,
         melhorRecorde,
         temConquista,
+        /** A censura só some para quem o admin liberou no terminal (`censura on`); sem login, sempre censurado. */
+        censuraLiberada: () => estado.usuario?.censuraLiberada === true,
         conquista,
         anunciarConquista,
         verificarColecoes,

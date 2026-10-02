@@ -74,8 +74,10 @@
             poder: { nome: 'Num Tem Eu', tipo: 'bonusDoBanco', ativavel: false, valor: 10,
                 texto: 'No banco: +10 de dano nos ataques do seu ativo (não soma com outro Stand).' },
             ataques: [{ nome: 'Joinha', custo: 1, dano: 20 }] },
-        'encantadora': { hp: 70, recuo: 1, ataques: [
-            { nome: 'Vem Cá, Meu Gadinho', custo: 1, dano: 0, efeitos: [{ tipo: 'puxar' }] },
+        'encantadora': { hp: 70, recuo: 1,
+            poder: { nome: 'Vem Cá, Meu Gadinho', tipo: 'puxar', ativavel: true,
+                texto: '1 vez por turno, de qualquer lugar da mesa: escolhe uma carta do banco do adversário e ela vira o ativo. Depois a Encantadora fica virada por 1 turno.' },
+            ataques: [
             { nome: 'Chama Rosa', custo: 2, dano: 30, efeitos: [{ tipo: 'estado', estado: 'iludido' }] },
         ] },
         'marreteiro-do-coracao': { hp: 100, recuo: 2, ataques: [
@@ -106,7 +108,7 @@
 
         // ---- Campos (ficam na mesa e valem para os dois) --------------------
         'piscina-de-macarronada': { campo: { tipo: 'curaInicio', valor: 20,
-            texto: 'No começo de cada turno, cura 20 do ativo de quem vai jogar.' } },
+            texto: 'Quando quem a joga a põe na mesa, cura 20 do ativo dele no mesmo turno; depois, no começo de cada turno, cura 20 do ativo de quem vai jogar.' } },
         'toradolandia': { campo: { tipo: 'compraExtra', limiteMao: 3,
             texto: 'Quem começa o turno com 3 cartas ou menos na mão compra 1 a mais.' } },
         'mansao-do-inominavel': { campo: { tipo: 'mansao', veneno: 20, hpGoon: 20,

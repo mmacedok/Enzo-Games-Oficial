@@ -15,7 +15,7 @@
 //
 // Online (outro jogador): o servidor é o juiz (api/tcg.js). A tela guarda só a VISÃO do jogador
 // (a mão do outro é um número), manda cada jogada para a API e toca os eventos que voltam.
-// Na vez do outro pergunta "teve jogada?" a cada 2,5 s. batalha.html?sala=TORA-XXX abre o convite.
+// Na vez do outro pergunta "teve jogada?" a cada 2,5 s. As salas são públicas: 5 minutos na lista, renovados enquanto o dono está com a tela aberta.
 //
 // Teste: batalha.html?auto=1 faz o robô jogar pelos dois lados; &rapido=1 sem esperas.
 // ============================================================================
@@ -32,6 +32,7 @@
     // Contra o NPC você é sempre o 0. Online, quem criou a sala é o 0 e quem entrou é o 1.
     let EU = 0;
     let NPC = 1;           // o outro lado (NPC ou o outro jogador)
+    let ESPECTADOR = false; // assistindo uma partida de outros: vê da posição do jogador 0, sem mãos e sem jogar
     const params = new URLSearchParams(location.search);
     const AUTO = params.has('auto');
     const RAPIDO = params.has('rapido');
@@ -56,6 +57,9 @@
             caixas: { turma: A('caixa-turma'), legiao: A('caixa-legiao'), internet: A('caixa-internet') },
             rivais: { facil: A('icone-npc-facil'), normal: A('icone-npc-normal'), pvp: A('icone-outro-jogador') },
         },
+        // Tela "Outro jogador" (tarefa 02 do Codex). Cada peça é opcional: sem o arquivo, a tela usa o visual de antes.
+        online: Object.fromEntries(['fundo', 'cabecalho', 'caixa', 'icone-criar', 'icone-lista', 'icone-assistir', 'espera', 'vazia', 'vs']
+            .map((n) => [n, A(`sala-${n}`)])),
         campos: Object.fromEntries(['piscina-de-macarronada', 'toradolandia', 'mansao-do-inominavel', 'estacionamento-noturno',
             'casa-do-enzo-games', 'sao-joao-do-butico'].map((id) => [id, A(`mesa-${id}`)])),
     };
@@ -73,6 +77,15 @@
         if (!src) return emoji;
         const img = document.createElement('img');
         Object.assign(img, { className: 'bt-ic', src, alt: '', decoding: 'async' });
+        return img;
+    };
+
+    /** <img> de uma peça da tela online, ou null se o arquivo ainda não existe. */
+    const imgOnline = (nome, classe = 'bt-online-img', alt = '') => {
+        const src = arte(ARTE.online[nome]);
+        if (!src) return null;
+        const img = document.createElement('img');
+        Object.assign(img, { className: classe, src, alt, decoding: 'async' });
         return img;
     };
 
@@ -105,6 +118,42 @@
     };
     const def = (id) => B.carta(id);
     const nomeVisivel = (id) => (UI.nomeVisivel ? UI.nomeVisivel(def(id)) : def(id).nome);
+    /**
+     * Descrição da carta com as partes importantes coloridas (mesma regra em todo lugar):
+     * vida = verde, dano = vermelho, Aura = roxo, cura = verde-claro, escudo = azul, estados = laranja, recarga = cinza,
+     * e o nome de cada ataque/poder em negrito.
+     */
+    const PARTES_DESCRICAO = [
+        ['vida', /Vida [\d.]+/],
+        ['recuo', /Recuo \d+ Aura/],
+        ['dano', /[\d.]+(?:\s*\+\s*[\d.]+)?(?: por \w+)? de dano|[\d.]+ de vida/],
+        ['cura', /cura[r]? [\d.]+|compra \d+ carta|puxa [^.;]*/],
+        ['escudo', /segura [\d.]+|escudo(?: de)? [\d.]+|protege o banco/],
+        ['estado', /Notificado|Iludido|Silenciado|Escudo/],
+        ['recarga', /fica virad[oa][^.;]*|virada[^.;]*/],
+        ['aura', /\+?\d+ Aura|\(\d+ Aura\)|Aura/],
+    ];
+    function descricaoColorida(texto) {
+        const raiz = document.createDocumentFragment();
+        String(texto).split('\n').forEach((linha, i) => {
+            const p = el('span', 'bt-desc-linha');
+            // nome do ataque/poder: o que vem antes de " (N Aura)" ou de ":" (a 1ª linha é só Vida/Recuo)
+            let resto = linha;
+            const m = i > 0 && linha.match(/^(.+?)(?= \(\d+ Aura\)|:)/);
+            if (m) { p.appendChild(el('strong', 'bt-desc-nome', m[1])); resto = linha.slice(m[1].length); }
+            const junto = new RegExp(PARTES_DESCRICAO.map(([, r]) => `(${r.source})`).join('|'), 'g');
+            let fim = 0;
+            for (const achou of resto.matchAll(junto)) {
+                if (achou.index > fim) p.appendChild(document.createTextNode(resto.slice(fim, achou.index)));
+                const tipo = PARTES_DESCRICAO[achou.findIndex((v, k) => k > 0 && v !== undefined) - 1][0];
+                p.appendChild(el('span', `bt-desc-${tipo}`, achou[0]));
+                fim = achou.index + achou[0].length;
+            }
+            if (fim < resto.length) p.appendChild(document.createTextNode(resto.slice(fim)));
+            raiz.appendChild(p);
+        });
+        return raiz;
+    }
     /** Número grande no formato do site: 6.000. */
     const num = (v) => Number(v).toLocaleString('pt-BR');
     /** Número da escala pequena das cartas (tcg-cartas.js) no valor real da partida (×20). */
@@ -115,14 +164,18 @@
     let estado = null;
     let nivel = 'normal';
     let deckEscolhido = DECKS[0];
+    // Deck customizado (4º deck): qualquer carta do jogo (cartas infinitas), guardado na conta (GET/POST /api/tcg/deck).
+    const custom = { estado: 'nada', cartas: null, nome: '', descricao: '', publico: false, erros: [], limites: null, obj: null };
+    const aplicarDeckDoServidor = (d) => Object.assign(custom, { estado: 'ok', cartas: d.cartas, nome: d.nome || '', descricao: d.descricao || '', publico: d.publico === true, erros: d.erros || [], limites: d.limites || custom.limites });
     let ocupado = false;
+    let editorVoltaOnline = false;   // o editor de deck foi aberto pela tela online: ao salvar, volta para ela
+    let banirSel = new Set();   // uids (do deck do adversário) marcados para banir agora
     let modo = null;            // { tipo: 'alvo', jogada, alvos, texto } | { tipo: 'aura' } | { tipo: 'preparar', ativo, banco }
     let partida = 0;            // muda a cada batalha: a vez do NPC antiga para sozinha
     let mesa = null;            // elementos fixos da mesa
     const cartasVivas = new Map();   // uid -> elemento .bt-carta (reaproveitado entre desenhos)
     // Partida online: { id, versao, prazo, dif (relógio do servidor - o daqui), timer } ou null.
     let online = null;
-    const convite = (params.get('sala') || '').trim().toUpperCase() || null;
 
     /** Nome do outro lado: "o NPC" ou o nome do outro jogador. */
     const dele = () => (online ? (String(estado?.jogadores[NPC]?.nome || '').trim().split(/\s+/)[0] || 'o outro jogador') : 'o NPC');
@@ -180,6 +233,7 @@
     // ---------------------------------------------------------------- menu
     function telaMenu() {
         pararOnline();
+        ESPECTADOR = false;
         limparMesa();
         raiz.replaceChildren();
         raiz.className = 'batalha batalha--menu';
@@ -222,9 +276,48 @@
                 d.capa.forEach((id) => capa.appendChild(UI.carta(id)));
             }
             b.append(capa, el('strong', 'bt-deck-nome', d.nome), el('span', 'bt-deck-texto', d.texto));
-            decks.appendChild(b);
+            const item = el('div', 'bt-deck-item');
+            item.append(b, botao('bt-botao', '🃏 Ver cartas', () => mostrarCartasDoDeck(d)));
+            decks.appendChild(item);
         }
+        const itemCustom = el('div', 'bt-deck-item');
+        decks.appendChild(itemCustom);
+        const desenharCustom = () => {
+            if (!itemCustom.isConnected) return;
+            itemCustom.replaceChildren();
+            const d = custom.obj;
+            const b = botao(`bt-deck bt-deck--custom${d && d === deckEscolhido ? ' bt-deck--ativo' : ''}`, null, () => {
+                if (custom.estado === 'login') { window.EnzoConta?.pedirLogin?.(); return; }
+                if (!d) { abrirEditorDeck(); return; }
+                deckEscolhido = d;
+                decks.querySelectorAll('.bt-deck').forEach((x) => x.classList.toggle('bt-deck--ativo', x === b));
+            });
+            b.setAttribute('aria-pressed', String(!!d && d === deckEscolhido));
+            let capa;
+            if (d) {
+                capa = el('div', 'bt-deck-leque');
+                d.capa.forEach((id) => capa.appendChild(UI.carta(id)));
+            } else {
+                capa = el('div', 'bt-deck-vazio', custom.estado === 'nada' ? '…' : '＋');
+            }
+            const texto = custom.estado === 'login' ? 'Entre com o Google para montar o seu'
+                : custom.estado === 'fora' ? 'Só no site'
+                : custom.estado === 'nada' ? 'Carregando o seu deck...'
+                : custom.erros.length ? `Precisa de ajuste: ${custom.erros[0]}`
+                : d ? d.texto : 'Monte com as cartas que quiser';
+            b.append(capa, el('strong', 'bt-deck-nome', d && custom.nome ? custom.nome : 'Seu deck'), el('span', 'bt-deck-texto', texto));
+            itemCustom.appendChild(b);
+            if (custom.estado === 'ok') {
+                if (d) itemCustom.appendChild(botao('bt-botao', '🃏 Ver cartas', () => mostrarCartasDoDeck(d)));
+                itemCustom.appendChild(botao('bt-botao', d || custom.cartas ? '✏️ Editar deck' : '🛠️ Montar deck', abrirEditorDeck));
+            }
+        };
+        desenharCustom();
+        carregarDeckCustom().then(desenharCustom);
         caixa.appendChild(decks);
+        const dePlayers = botao('bt-players', null, abrirDecksDePlayers);
+        dePlayers.append(el('strong', '', '👥 Decks de players'), el('span', '', 'Veja e copie os decks que outros jogadores listaram'));
+        caixa.appendChild(dePlayers);
 
         caixa.appendChild(el('h2', 'bt-menu-sub', 'Contra quem?'));
         const rivais = el('div', 'bt-rivais');
@@ -243,10 +336,9 @@
         facil.append(rosto('facil', '🤖'), el('strong', '', 'NPC fácil'), el('span', '', 'Para aprender'));
         normal.append(rosto('normal', '😈'), el('strong', '', 'NPC normal'), el('span', '', 'Joga para ganhar'));
         const pvpTexto = el('span', '', 'Procurando o servidor...');
-        pvp.append(rosto('pvp', '🧑‍🤝‍🧑'), el('strong', '', convite ? `Entrar na sala ${convite}` : 'Outro jogador'), pvpTexto);
+        pvp.append(rosto('pvp', '🧑‍🤝‍🧑'), el('strong', '', 'Outro jogador'), pvpTexto);
         pvp.disabled = true;
         pvp.addEventListener('click', () => telaOnline());
-        if (convite) pvp.classList.add('bt-rival--convite');
         verificarOnline().then((situacao) => {
             if (!pvp.isConnected) return;
             pvp.disabled = situacao === 'fora';
@@ -256,7 +348,7 @@
             }
             pvpTexto.textContent = {
                 fora: 'Só no site', login: 'Entre com o Google', partida: 'Voltar para a partida',
-                ok: convite ? 'Escolha o deck e toque aqui' : 'Com um amigo',
+                ok: 'Salas online',
             }[situacao];
         });
         caixa.appendChild(rivais);
@@ -273,41 +365,360 @@
         }
         caixa.appendChild(comoJogar);
         caixa.appendChild(botao('bt-link', '🏆 Placar', mostrarPlacar));
-        raiz.appendChild(caixa);
+        // Animações: sempre ligadas (mesmo se o navegador pedir menos); este botão desliga e liga de novo.
+        if (window.EnzoMovimento) {
+            const M = window.EnzoMovimento;
+            const ligadas = M.escolha === 'sim';
+            caixa.appendChild(botao('bt-link', ligadas ? '🎞️ Animações: ligadas (tocar para desligar)' : '🎞️ Animações: desligadas (tocar para ligar)', () => M.definir(ligadas ? 'nao' : 'sim')));
+        }
+        // Voltar ao site, no canto superior esquerdo (o cabeçalho da página fica escondido atrás da arte do menu).
+        const voltarAoSite = el('a', 'bt-voltar');
+        voltarAoSite.href = 'index.html';
+        voltarAoSite.dataset.nav = 'index.html';
+        voltarAoSite.setAttribute('aria-label', 'Voltar ao site');
+        voltarAoSite.append(el('span', 'bt-voltar-seta', '←'), el('span', 'bt-voltar-txt', 'Voltar'));
+        raiz.append(voltarAoSite, caixa);
     }
 
-    function mostrarRegras() {
-        const janela = el('dialog', 'bt-regras');
-        const texto = el('div', 'bt-regras-texto');
-        const itens = [
-            ['Objetivo', 'Zere a vida do adversário (6.000). Ataque o ativo dele ou o rosto dele (arraste até o rosto) — mas o golpe no jogador é mais fraco enquanto ele tiver ativo (veja Proteção).'],
-            ['Deck', '15 cartas. Você começa com 5 na mão e compra 1 por turno.'],
-            ['Mesa', 'Um ATIVO (quem luta) e até 3 no BANCO (quem espera). O CAMPO é da mesa inteira e vale para os dois.'],
-            ['Aura', 'Todo turno você ganha 1 Aura e arrasta para uma carta sua. A Aura fica presa naquela carta e vai acumulando de um turno para o outro (as bolinhas amarelas na carta). Para atacar, o ativo precisa ter a Aura do ataque presa nele (atacar não gasta).'],
-            ['Seu turno', 'Ponha cartas no banco, jogue 1 campo, prenda a Aura, use poderes, recue se precisar e ATAQUE. Atacar acaba o turno.'],
-            ['Recuar', 'Arraste uma carta do banco para o ativo. Custa a Aura de recuo, que sai da Aura presa no ativo. Voltar para o banco tira os estados.'],
-            ['Começo', 'Quem começa não ataca no 1º turno. Quem joga em segundo ganha +1 Aura de Reforço (só para o banco).'],
-            ['Estados', '🔔 Notificado: leva 200 por turno. 🔇 Silenciado: não ataca nem recua no próximo turno (e não dá para silenciar a mesma carta dois turnos seguidos). 💘 Iludido: pode errar o ataque.'],
-            ['Carta derrubada', `O dono perde vida: ${[['comum', 'comum'], ['raro', 'raro'], ['epico', 'épico'], ['lendario', 'lendário']]
-                .map(([k, nome]) => `${nome} ${R.DANO_NOCAUTE[k].toLocaleString('pt-BR')}`).join(', ')}.`],
-            ['Proteção', 'Com o ativo dele na mesa, o golpe no jogador entra só com 35% do dano.'],
-            ['Golpe extra', 'Derrubou uma carta? Você acerta o jogador de graça com o mesmo dano (inteiro).'],
-            ['De um golpe só', 'Derrubar uma carta de vida cheia num golpe só vira a sua carta até o seu próximo turno.'],
-            ['Recarga', 'Macarronada a 300%, Vírgula-rangue, Bala Dourada e Ban de 7 Dias viram a carta para baixo até o próximo turno do dono: ela não ataca, não usa poder e não recua, mas pode levar golpe.'],
-            ['Mesa vazia', 'Sem ninguém na mesa você não perde: todo ataque vai em você até baixar alguém, que entra direto como ativo.'],
-            ['Devolver cartas', `Na sua vez, dá para devolver ao baralho até ${R.DEVOLVER_MAO_POR_TURNO} cartas da mão e 1 da mesa (com ou sem Aura; a Aura se perde). Elas não voltam para a mão: vão para o baralho, embaralhado. Tirar a sua carta da mesa não tira vida. Na Casa do Enzo Games, ainda dá para trocar 1 da mão: devolve e compra outra.`],
-            ['Jogar', 'Arraste as cartas: da mão para o banco, o campo para o meio da mesa, a Aura para uma carta, e o seu ativo até o ativo ou o rosto do adversário para atacar.'],
-            ['Dica', 'Toque em qualquer carta (até as do NPC) para ver os ataques e o que ela faz.'],
-        ];
-        for (const [t, d] of itens) {
-            const p = el('p');
-            p.append(el('strong', '', `${t}: `), d);
-            texto.appendChild(p);
+    // ---------------------------------------------------------------- deck customizado
+    const ORDEM_RARIDADE = { lendario: 0, epico: 1, raro: 2, comum: 3 };
+    const temCombate = (id) => Boolean(window.EnzoTcgCartas.COMBATE[id]);
+
+    /** Monta o objeto de deck (mesmo formato dos prontos) a partir do que o servidor guardou. */
+    function objetoDoDeckCustom() {
+        if (!custom.cartas || custom.erros.length) return null;
+        const lendarias = custom.cartas.filter((id) => def(id).raridade === 'lendario').length;
+        const capa = [...new Set(custom.cartas)].sort((a, b) => ORDEM_RARIDADE[def(a).raridade] - ORDEM_RARIDADE[def(b).raridade]).slice(0, 3);
+        return {
+            id: 'custom', nome: 'Deck customizado', capa, cartas: custom.cartas,
+            texto: `${custom.cartas.length} cartas, ${lendarias} lendária${plu(lendarias)}${custom.publico ? ' · listado' : ''}`,
+        };
+    }
+
+    async function carregarDeckCustom() {
+        try {
+            const d = await api('GET', '/api/tcg/deck');
+            aplicarDeckDoServidor(d);
+        } catch (erro) {
+            custom.estado = erro.status === 401 ? 'login' : 'fora';
+            custom.cartas = null;
         }
-        janela.append(el('h2', '', 'Como jogar'), texto, botao('bt-botao', 'Entendi!', () => janela.close()));
+        custom.obj = objetoDoDeckCustom();
+        if (deckEscolhido.id === 'custom') deckEscolhido = custom.obj || DECKS[0];
+    }
+
+    /** Montar o deck: qualquer carta do jogo; 15 cartas, 2 lendárias e a repetição limitada. */
+    function abrirEditorDeck() {
+        if (custom.estado !== 'ok') return;
+        const lim = custom.limites || { tamanho: R.TAMANHO_DECK, copias: R.MAX_COPIAS, copiasLendaria: R.MAX_COPIAS_LENDARIO, lendarias: R.MAX_LENDARIAS_CUSTOM };
+        const donas = B.CARTAS.filter((c) => temCombate(c.id))
+            .sort((a, b) => ORDEM_RARIDADE[a.raridade] - ORDEM_RARIDADE[b.raridade] || a.numero - b.numero);
+        const sel = new Map();
+        for (const id of custom.cartas || []) if (donas.some((c) => c.id === id)) sel.set(id, (sel.get(id) || 0) + 1);
+        const total = () => [...sel.values()].reduce((s, n) => s + n, 0);
+        const lendarias = () => [...sel].reduce((s, [id, n]) => s + (def(id).raridade === 'lendario' ? n : 0), 0);
+        const limiteDe = (c) => (c.raridade === 'lendario' ? lim.copiasLendaria : lim.copias);
+        const lista = () => [...sel].flatMap(([id, n]) => Array(n).fill(id));
+
+        const janela = el('dialog', 'bt-regras bt-editor');
+        const resumo = el('div', 'bt-editor-resumo');
+        const erro = el('p', 'bt-editor-erro');
+        const nomeCampo = el('input', 'bt-editor-campo');
+        Object.assign(nomeCampo, { type: 'text', maxLength: 30, placeholder: 'Nome do deck (obrigatório para listar)', value: custom.nome });
+        nomeCampo.setAttribute('aria-label', 'Nome do deck');
+        const descCampo = el('input', 'bt-editor-campo');
+        Object.assign(descCampo, { type: 'text', maxLength: 80, placeholder: 'Descrição curta (opcional)', value: custom.descricao });
+        descCampo.setAttribute('aria-label', 'Descrição do deck');
+        const salvar = botao('bt-botao bt-botao--forte', custom.publico ? 'Salvar (continua listado)' : 'Salvar deck', null);
+        const listar = custom.publico ? botao('bt-botao', 'Salvar e tirar da lista', null) : botao('bt-botao', '👥 Salvar e listar', null);
+        // Admin: posta o deck do editor em "Decks de players" como oficial (sem mexer no deck pessoal; quantos quiser).
+        const postar = window.EnzoConta?.admin ? botao('bt-botao', '📌 Postar como oficial', null) : null;
+        const grade = el('ul', 'bt-editor-grade');
+        const linhas = new Map();
+
+        const atualizar = () => {
+            const t = total();
+            const l = lendarias();
+            resumo.replaceChildren(
+                el('span', `bt-editor-chip${t === lim.tamanho ? ' bt-editor-chip--ok' : ''}`, `Cartas ${t}/${lim.tamanho}`),
+                el('span', `bt-editor-chip${l > lim.lendarias ? ' bt-editor-chip--erro' : l === lim.lendarias ? ' bt-editor-chip--ok' : ''}`, `Lendárias ${l}/${lim.lendarias}`));
+            const erros = R.validarDeck(lista(), { maxLendarias: lim.lendarias });
+            // enquanto faltam cartas, o contador já diz tudo; só mostra erro de verdade quando chega nas 15
+            erro.textContent = t === lim.tamanho && erros.length ? erros[0] : '';
+            salvar.disabled = erros.length > 0 || (custom.publico && !nomeCampo.value.trim());
+            listar.disabled = erros.length > 0 || (!custom.publico && !nomeCampo.value.trim());
+            if (postar) postar.disabled = erros.length > 0 || !nomeCampo.value.trim();
+            for (const c of donas) {
+                const { menos, mais, qtd, li } = linhas.get(c.id);
+                const n = sel.get(c.id) || 0;
+                qtd.textContent = String(n);
+                li.classList.toggle('bt-editor-item--no', n > 0);
+                menos.disabled = n === 0;
+                mais.disabled = n >= limiteDe(c) || t >= lim.tamanho || (c.raridade === 'lendario' && l >= lim.lendarias);
+            }
+        };
+        const mexer = (c, delta) => {
+            const n = (sel.get(c.id) || 0) + delta;
+            if (n <= 0) sel.delete(c.id); else sel.set(c.id, n);
+            atualizar();
+        };
+        for (const c of donas) {
+            const li = el('li', 'bt-editor-item');
+            const carta = el('div', 'bt-editor-carta');
+            carta.appendChild(UI.carta(c.id));
+            const info = el('div', 'bt-editor-info');
+            info.appendChild(el('strong', 'bt-editor-nome', nomeVisivel(c.id)));
+            const dc = def(c.id);
+            if (dc.frase) info.appendChild(el('span', 'bt-editor-frase', `(${dc.frase})`));
+            if (dc.tcg) {
+                // menu que abre e fecha com a descrição da carta
+                const menu = el('details', 'bt-editor-menu');
+                const desc = el('p', 'bt-editor-desc');
+                desc.appendChild(descricaoColorida(dc.tcg));
+                menu.append(el('summary', '', 'Ver o que faz'), desc);
+                info.appendChild(menu);
+            }
+            const menos = botao('bt-editor-mm', '−', () => mexer(c, -1));
+            const mais = botao('bt-editor-mm', '+', () => mexer(c, 1));
+            menos.setAttribute('aria-label', `Tirar ${nomeVisivel(c.id)}`);
+            mais.setAttribute('aria-label', `Pôr ${nomeVisivel(c.id)}`);
+            const qtd = el('b', 'bt-editor-qtd', '0');
+            const controle = el('div', 'bt-editor-controle');
+            controle.append(menos, qtd, mais);
+            info.append(el('span', 'bt-editor-tem', `até ${limiteDe(c)}${c.raridade === 'lendario' ? ' · lendária' : ''}`), controle);
+            li.append(carta, info);
+            grade.appendChild(li);
+            linhas.set(c.id, { menos, mais, qtd, li });
+        }
+
+        nomeCampo.addEventListener('input', atualizar);
+        // publico: true lista, false deixa só para você; o nome e a descrição vão juntos
+        const enviar = async (publico) => {
+            salvar.disabled = true;
+            listar.disabled = true;
+            erro.textContent = '';
+            try {
+                const d = await api('POST', '/api/tcg/deck', { cartas: lista(), nome: nomeCampo.value, descricao: descCampo.value, publico });
+                aplicarDeckDoServidor(d);
+                custom.obj = objetoDoDeckCustom();
+                if (custom.obj) deckEscolhido = custom.obj;
+                const voltar = editorVoltaOnline;
+                janela.close();
+                if (voltar) telaOnline();
+                else if (raiz.classList.contains('batalha--menu')) telaMenu();
+            } catch (e) {
+                erro.textContent = e.message;
+                atualizar();
+            }
+        };
+        salvar.addEventListener('click', () => enviar(custom.publico));
+        listar.addEventListener('click', () => enviar(!custom.publico));
+        if (postar) {
+            postar.addEventListener('click', async () => {
+                postar.disabled = true;
+                erro.textContent = '';
+                let mensagem = '';
+                try {
+                    await api('POST', '/api/tcg/decks-postados', { cartas: lista(), nome: nomeCampo.value, descricao: descCampo.value });
+                    mensagem = '✔ Postado em "Decks de players" como deck oficial.';
+                } catch (e) {
+                    mensagem = e.message;
+                }
+                atualizar();
+                erro.textContent = mensagem;
+                erro.classList.toggle('bt-editor-ok', mensagem.startsWith('✔'));
+            });
+        }
+        const limpar = botao('bt-botao', 'Limpar', () => { sel.clear(); atualizar(); });
+        const fechar = botao('bt-botao', 'Cancelar', () => janela.close());
+        const acoes = el('div', 'bt-editor-acoes');
+        acoes.append(salvar, listar, ...(postar ? [postar] : []), limpar, fechar);
+        // Painel fixo ao lado (contadores, nome, erro e botões) e a lista de cartas rolando ao lado dele: nada fica por cima das cartas.
+        const lado = el('div', 'bt-editor-lado');
+        lado.append(resumo, nomeCampo, descCampo,
+            el('p', 'bt-placar-nota', custom.publico ? 'Este deck está listado em "Decks de players": outros jogadores podem ver e copiar.' : 'Quer mostrar o seu deck? "Salvar e listar" coloca ele em "Decks de players" (sem links no nome).'),
+            erro, acoes);
+        const rolagem = el('div', 'bt-editor-rolagem');
+        rolagem.appendChild(grade);
+        const corpo = el('div', 'bt-editor-corpo');
+        corpo.append(lado, rolagem);
+        janela.append(
+            el('h2', '', 'Seu deck customizado'),
+            el('p', 'bt-placar-nota', `Escolha qualquer carta. ${lim.tamanho} cartas, no máximo ${lim.lendarias} lendárias (1 cópia de cada) e até ${lim.copias} cópias das outras.`),
+            corpo);
+        janela.addEventListener('close', () => { janela.remove(); setTimeout(() => { editorVoltaOnline = false; }, 0); });
+        document.body.appendChild(janela);
+        janela.showModal();
+        atualizar();
+    }
+
+    /** "Decks de players": decks que outros jogadores listaram; dá para ver as cartas e copiar para o seu. */
+    function abrirDecksDePlayers() {
+        const janela = el('dialog', 'bt-regras bt-players-janela');
+        const corpo = el('div', 'bt-players-lista');
+        let ordem = 'novos';
+        const ordens = el('div', 'bt-players-ordem');
+        const bNovos = botao('bt-botao bt-botao--forte', 'Mais novos', () => carregar('novos'));
+        const bCopias = botao('bt-botao', 'Mais copiados', () => carregar('copias'));
+        ordens.append(bNovos, bCopias);
+        const fechar = botao('bt-botao', 'Fechar', () => janela.close());
+        janela.append(el('h2', '', '👥 Decks de players'),
+            el('p', 'bt-placar-nota', 'Decks que outros jogadores deixaram listados. "Usar este deck" copia para o seu deck (substitui o atual).'),
+            ordens, corpo, fechar);
         janela.addEventListener('close', () => janela.remove());
         document.body.appendChild(janela);
         janela.showModal();
+
+        async function carregar(nova) {
+            ordem = nova;
+            bNovos.classList.toggle('bt-botao--forte', ordem === 'novos');
+            bCopias.classList.toggle('bt-botao--forte', ordem === 'copias');
+            corpo.replaceChildren(el('p', 'bt-online-vazio', 'Carregando...'));
+            let decks;
+            try {
+                decks = (await api('GET', `/api/tcg/decks-publicos?ordem=${ordem}`)).decks;
+            } catch (erro) {
+                corpo.replaceChildren(el('p', 'bt-online-vazio', erro.status === 401 ? 'Entre com o Google para ver os decks dos outros jogadores.' : 'Não deu para carregar agora.'));
+                return;
+            }
+            if (!corpo.isConnected) return;
+            if (!decks.length) {
+                corpo.replaceChildren(el('p', 'bt-online-vazio', 'Nenhum deck listado ainda. Monte o seu e escolha "Salvar e listar" para ser o primeiro!'));
+                return;
+            }
+            corpo.replaceChildren(...decks.map((d) => {
+                const item = el('div', 'bt-players-item');
+                const capa = el('div', 'bt-deck-leque');
+                [...new Set(d.cartas)].sort((a, b) => ORDEM_RARIDADE[def(a).raridade] - ORDEM_RARIDADE[def(b).raridade]).slice(0, 3).forEach((id) => capa.appendChild(UI.carta(id)));
+                const lendarias = d.cartas.filter((id) => def(id).raridade === 'lendario').length;
+                const info = el('div', 'bt-players-info');
+                info.append(el('strong', 'bt-deck-nome', d.oficial ? `⭐ ${d.nome}` : d.nome), el('span', 'bt-players-autor', d.oficial ? 'Deck oficial · Enzo Games' : `por ${d.autor}${d.meu ? ' (você)' : ''}`));
+                if (d.descricao) info.appendChild(el('span', 'bt-deck-texto', d.descricao));
+                info.appendChild(el('span', 'bt-players-meta', `${lendarias} lendária${plu(lendarias)} · copiado ${d.copias}×`));
+                const acoes = el('div', 'bt-players-acoes');
+                acoes.appendChild(botao('bt-botao', '🃏 Ver cartas', () => mostrarCartasDoDeck({ nome: d.nome, cartas: d.cartas })));
+                if (d.oficial && window.EnzoConta?.admin) {
+                    const tirar = botao('bt-botao', '🗑️ Remover da lista', async () => {
+                        if (!window.confirm(`Remover "${d.nome}" de Decks de players?`)) return;
+                        tirar.disabled = true;
+                        try { await api('POST', `/api/tcg/decks-postados/${encodeURIComponent(d.id)}/remover`, {}); carregar(ordem); } catch (e) { tirar.disabled = false; tirar.textContent = e.message; }
+                    });
+                    acoes.appendChild(tirar);
+                }
+                if (!d.meu) {
+                    const usar = botao('bt-botao bt-botao--forte', 'Usar este deck', async () => {
+                        if (custom.cartas && !window.confirm('Isso substitui o seu deck customizado atual. Continuar?')) return;
+                        usar.disabled = true;
+                        try {
+                            aplicarDeckDoServidor(await api('POST', `/api/tcg/decks-publicos/${encodeURIComponent(d.id)}/copiar`, {}));
+                            custom.obj = objetoDoDeckCustom();
+                            if (custom.obj) deckEscolhido = custom.obj;
+                            janela.close();
+                            if (raiz.classList.contains('batalha--menu')) telaMenu();
+                        } catch (e) {
+                            usar.disabled = false;
+                            usar.textContent = e.message;
+                        }
+                    });
+                    acoes.appendChild(usar);
+                }
+                item.append(capa, info, acoes);
+                return item;
+            }));
+        }
+        carregar('novos');
+    }
+
+    /** "Ver cartas" do deck: as cartas dele (com a quantidade) e, ao tocar numa, o que ela faz. */
+    function mostrarCartasDoDeck(deck) {
+        const janela = el('dialog', 'bt-regras bt-cartas');
+        const quantas = new Map();
+        deck.cartas.forEach((id) => quantas.set(id, (quantas.get(id) || 0) + 1));
+        const ids = [...quantas.keys()];
+        const detalhe = el('div', 'bt-cartas-detalhe');
+        const grade = el('ul', 'bt-cartas-grade');
+        const escolher = (id) => {
+            const d = def(id);
+            const grande = el('div', 'bt-cartas-grande');
+            grande.appendChild(UI.carta(id));
+            const info = el('div', 'bt-cartas-info');
+            info.append(el('h3', '', nomeVisivel(id)), el('p', 'bt-painel-frase', `(${d.frase})`));
+            if (d.tcg) { const t = el('p', 'bt-painel-tcg bt-desc-cartas'); t.appendChild(descricaoColorida(d.tcg)); info.appendChild(t); }
+            detalhe.replaceChildren(grande, info);
+            grade.querySelectorAll('.bt-cartas-item').forEach((x) => x.classList.toggle('bt-cartas-item--ativa', x.dataset.carta === id));
+        };
+        for (const id of ids) {
+            const li = el('li', 'bt-cartas-item');
+            li.dataset.carta = id;
+            const b = botao('bt-cartas-carta', null, () => escolher(id));
+            b.setAttribute('aria-label', `${nomeVisivel(id)}, ${quantas.get(id)} no deck. Ver o que faz`);
+            b.appendChild(UI.carta(id));
+            li.appendChild(b);
+            if (quantas.get(id) > 1) li.appendChild(el('span', 'bt-cartas-qtd', `×${quantas.get(id)}`));
+            grade.appendChild(li);
+        }
+        janela.append(el('h2', '', `${deck.nome}: ${deck.cartas.length} cartas`), detalhe,
+            el('p', 'bt-placar-nota', 'Toque numa carta para ver o que ela faz.'), grade,
+            botao('bt-botao', 'Fechar', () => janela.close()));
+        janela.addEventListener('close', () => janela.remove());
+        document.body.appendChild(janela);
+        janela.showModal();
+        escolher(ids[0]);
+    }
+
+    /**
+     * "Como jogar": as duas cartilhas ilustradas (assets/Batalha/como-jogar-1.png e -2.png).
+     * Abrem sozinhas na primeira vez que a pessoa entra na Batalha (marca no navegador) e
+     * depois pelo botão "Como jogar" do menu e da mesa.
+     */
+    const CARTILHAS = [A('como-jogar-1'), A('como-jogar-2')];
+    const CHAVE_CARTILHA = 'enzo-batalha-cartilha-vista';
+    let cartilhaDaSessao = false;
+    function cartilhaJaVista() {
+        try { return localStorage.getItem(CHAVE_CARTILHA) === '1' || cartilhaDaSessao; } catch (erro) { return cartilhaDaSessao; }
+    }
+    function marcarCartilhaVista() {
+        cartilhaDaSessao = true;
+        try { localStorage.setItem(CHAVE_CARTILHA, '1'); } catch (erro) { /* sem armazenamento: vale só nesta visita */ }
+    }
+
+    function mostrarRegras() {
+        marcarCartilhaVista();
+        const janela = el('dialog', 'bt-cartilha');
+        janela.setAttribute('aria-label', 'Como jogar');
+        const img = el('img', 'bt-cartilha-img');
+        img.decoding = 'async';
+        const contador = el('span', 'bt-cartilha-contador');
+        const anterior = botao('bt-botao', '← Anterior', () => ir(pagina - 1));
+        const proxima = botao('bt-botao bt-botao--forte', null, () => (pagina === CARTILHAS.length - 1 ? janela.close() : ir(pagina + 1)));
+        const fechar = botao('bt-cartilha-fechar', '×', () => janela.close());
+        fechar.setAttribute('aria-label', 'Fechar');
+        let pagina = 0;
+        function ir(p) {
+            pagina = Math.max(0, Math.min(CARTILHAS.length - 1, p));
+            const src = arteGrande(CARTILHAS[pagina]);
+            if (src) img.src = src; else img.removeAttribute('src');
+            img.alt = `Como jogar, parte ${pagina + 1} de ${CARTILHAS.length}`;
+            contador.textContent = `${pagina + 1} / ${CARTILHAS.length}`;
+            anterior.disabled = pagina === 0;
+            proxima.textContent = pagina === CARTILHAS.length - 1 ? 'Entendi!' : 'Próxima →';
+            // Já deixa a outra página carregando.
+            const outra = arteGrande(CARTILHAS[pagina === 0 ? 1 : 0]);
+            if (outra) new Image().src = outra;
+        }
+        const controles = el('div', 'bt-cartilha-controles');
+        controles.append(anterior, contador, proxima);
+        janela.append(fechar, img, controles);
+        janela.addEventListener('click', (e) => { if (e.target === janela) janela.close(); });
+        janela.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') ir(pagina + 1);
+            else if (e.key === 'ArrowLeft') ir(pagina - 1);
+        });
+        janela.addEventListener('close', () => janela.remove());
+        document.body.appendChild(janela);
+        janela.showModal();
+        ir(0);
+        proxima.focus({ preventScroll: true });
     }
 
     /** Placar permanente (GET /api/tcg/placar): top 50 + a sua linha, se estiver fora do top. */
@@ -351,6 +762,7 @@
     // ---------------------------------------------------------------- começo da partida
     function comecar(n) {
         pararOnline();
+        ESPECTADOR = false;
         EU = 0;
         NPC = 1;
         nivel = n;
@@ -362,9 +774,11 @@
             semente: `${Date.now()}-${Math.random()}`,
             decks: [deckEscolhido.cartas, deckNpc.cartas],
             nomes: ['Você', `NPC (${deckNpc.nome})`],
+            banimento: true,
         });
-        // O NPC escolhe o ativo e o banco escondido.
+        // Primeiro o banimento: o NPC já escolheu (em segredo); o jogador escolhe na tela. O NPC prepara depois do jogador.
         estado = R.aplicar(estado, Robo.escolherJogada(estado, NPC, { nivel })).estado;
+        banirSel = new Set();
         montarMesa();
         registrar(`Você joga com ${deckEscolhido.nome}; o NPC com ${deckNpc.nome}.`);
         if (AUTO) {
@@ -373,7 +787,7 @@
             executar(Robo.escolherJogada(estado, EU, { nivel: 'normal' }));
             return;
         }
-        modo = { tipo: 'preparar', ativo: null, banco: [] };
+        modo = null;
         desenhar();
     }
 
@@ -475,6 +889,11 @@
             m.menu.children[i].setAttribute('aria-label', rotulo);
             m.menu.children[i].title = rotulo;
         });
+        // Voltar no canto superior esquerdo (o mesmo "Voltar ao menu" do 🏠, que fica atrás da conta no canto direito).
+        m.voltar = botao('bt-voltar', null, sair);
+        m.voltar.append(el('span', 'bt-voltar-seta', '←'), el('span', 'bt-voltar-txt', 'Voltar'));
+        m.voltar.setAttribute('aria-label', 'Voltar ao menu');
+        m.voltar.title = 'Voltar ao menu';
         m.log = el('ol', 'bt-log');
 
         m.efeitos = el('div', 'bt-efeitos');   // camada de números, balões e voos
@@ -484,7 +903,9 @@
         m.seta.setAttribute('class', 'bt-seta');
         m.seta.innerHTML = '<defs><marker id="bt-ponta" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs><path class="bt-seta-linha" d="" marker-end="url(#bt-ponta)"/>';
 
-        m.raiz.append(m.fundo, m.fundoNovo, m.npc.l, m.centro, m.eu.l, m.mao, m.menu, m.log, m.seta, m.efeitos, m.painel);
+        m.rodada = el('p', 'bt-rodada');
+        m.rodada.hidden = true;
+        m.raiz.append(m.fundo, m.fundoNovo, m.npc.l, m.centro, m.eu.l, m.mao, m.menu, m.voltar, m.rodada, m.log, m.seta, m.efeitos, m.painel);
         raiz.appendChild(m.raiz);
         mesa = m;
         // Tocar numa dica recolhida abre de novo (e ela recolhe sozinha depois).
@@ -598,6 +1019,8 @@
 
     function desenhar() {
         if (!mesa || !estado) return;
+        // Acabou o banimento: agora é escolher o ativo e o banco.
+        if (!modo && !AUTO && !ESPECTADOR && estado.fase === 'preparacao' && !estado.jogadores[EU].preparado) modo = { tipo: 'preparar', ativo: null, banco: [] };
         const antes = posicoes();
         // A carta que fica no mesmo lugar dispensa a segunda medida do FLIP — desde que a vaga
         // dela não tenha se mexido (a dica do centro, o relógio, a barra do lado mexem a mesa toda).
@@ -648,10 +1071,11 @@
             lado.inativo.setAttribute('aria-label', lado.inativo.title);
             lado.deck.textContent = `🂠 ${x.deck}`;
             lado.deck.title = `${x.deck} cartas no deck`;
-            if (j === NPC) lado.mao.replaceChildren(icone(A('mao-cartas'), '✋'), ` ${x.mao}`);
+            const nMao = x.maoQtd ?? (Array.isArray(x.mao) ? x.mao.length : x.mao);
+            if (j === NPC || ESPECTADOR) lado.mao.replaceChildren(icone(A('mao-cartas'), '✋'), ` ${nMao}`);
             else lado.mao.textContent = '';
-            lado.mao.hidden = j !== NPC;
-            lado.mao.title = `${x.mao} cartas na mão`;
+            lado.mao.hidden = j !== NPC && !ESPECTADOR;
+            lado.mao.title = `${nMao} cartas na mão`;
             lado.ativo.replaceChildren();
             lado.vagas.forEach((v) => v.replaceChildren());
             if (x.ativo) por(x.ativo, lado.ativo);
@@ -807,8 +1231,17 @@
         mesa.raiz.classList.toggle('bt-mesa--mirando', modo?.tipo === 'alvo');
         if (modo?.tipo !== 'alvo') mesa.seta.classList.remove('bt-seta--viva');
 
+        // Contador de rodadas (cada rodada = um turno de cada jogador; a partida acaba na última).
+        mesa.rodada.hidden = estado.fase !== 'jogo' || !estado.turno;
+        if (!mesa.rodada.hidden) {
+            mesa.rodada.textContent = `Rodada ${R.rodadaDe(estado.turno)}/${R.RODADAS_MAX}`;
+            mesa.rodada.title = `Turno ${estado.turno} de ${R.LIMITE_TURNOS}: a partida acaba no fim da rodada ${R.RODADAS_MAX}`;
+        }
+        sincronizarBanimento();
+
         let dica = '';
-        if (preparando) dica = modo.ativo ? 'Arraste até 3 cartas para o banco (opcional) e toque em Começar!' : 'Arraste um personagem ou goon da mão para o ATIVO. Toque numa carta para ver o que ela faz.';
+        if (estado.fase === 'banimento') dica = '';
+        else if (preparando) dica = modo.ativo ? 'Arraste até 3 cartas para o banco (opcional) e toque em Começar!' : 'Arraste um personagem ou goon da mão para o ATIVO. Toque numa carta para ver o que ela faz.';
         else if (estado.fase === 'fim') dica = '';
         else if (modo?.tipo === 'alvo') dica = modo.texto;
         else if (modo?.tipo === 'aura') dica = 'Toque na carta que vai receber a Aura. Ela fica presa ali e acumula.';
@@ -818,6 +1251,113 @@
         else if (estado.pendentes.length && online) dica = `Esperando ${dele()} escolher o novo ativo...`;
         else if (estado.fase === 'jogo') dica = `Vez de ${dele()}...`;
         mostrarDica(dica);
+    }
+
+    // ---------------------------------------------------------------- banimento de cartas
+    /** Janela de banimento: escolhe 2 cartas diferentes não lendárias do deck do adversário (vale para local e online). */
+    function sincronizarBanimento() {
+        const aberta = mesa.raiz.querySelector('.bt-banir');
+        if (estado.fase !== 'banimento') { aberta?.remove(); return; }
+        if (ESPECTADOR) { mesaDica('Os jogadores estão escolhendo as cartas para banir...'); return; }
+        const feito = !!estado.banimento?.feitos?.[EU];
+        const deckDele = estado.jogadores[NPC].deck;   // na hora de banir a visão traz a lista do deck dele
+        if (!Array.isArray(deckDele)) return;
+        const assinatura = `${feito}|${deckDele.length}`;
+        if (aberta && aberta.dataset.assinatura === assinatura) return;
+        aberta?.remove();
+        const caixa = el('div', 'bt-banir');
+        caixa.dataset.assinatura = assinatura;
+        const miolo = el('div', 'bt-banir-miolo');
+        caixa.appendChild(miolo);
+        if (feito) {
+            miolo.append(el('h2', '', 'Banimento enviado'),
+                el('p', 'bt-placar-nota', `Esperando ${online ? dele() : 'o NPC'} escolher as cartas que vai banir do seu deck...`));
+            mesa.raiz.appendChild(caixa);
+            return;
+        }
+        const n = R.quantasBanir(deckDele);
+        const idDe = (uid) => deckDele.find((c) => c.uid === uid)?.id;
+        miolo.append(el('h2', '', `Banimento: escolha ${n} carta${n === 1 ? '' : 's'} do deck de ${online ? dele() : 'NPC'}`),
+            el('p', 'bt-placar-nota', 'As cartas banidas saem do deck dele antes de qualquer carta ir para a mesa. Lendárias não podem ser banidas e as duas cópias da mesma carta não podem ser banidas juntas. Vocês dois escolhem ao mesmo tempo, sem ver a escolha do outro.'));
+        const contador = el('p', 'bt-banir-contador', '');
+        const erro = el('p', 'bt-editor-erro', '');
+        const grade = el('ul', 'bt-banir-grade');
+        const botoes = new Map();
+        const confirmar = botao('bt-botao bt-botao--forte', 'Banir', async () => {
+            const jogada = { tipo: 'banir', cartas: [...banirSel] };
+            const motivoErro = R.motivoInvalida(estado, { ...jogada, jogador: EU });
+            if (motivoErro) { erro.textContent = motivoErro; return; }
+            confirmar.disabled = true;
+            await executar(jogada);
+        });
+        const atualizar = () => {
+            contador.textContent = `Banidas: ${banirSel.size}/${n}`;
+            confirmar.disabled = banirSel.size !== n;
+            for (const [uid, b] of botoes) {
+                b.classList.toggle('bt-banir-item--marcada', banirSel.has(uid));
+                const copiaJaBanida = [...banirSel].some((s) => s !== uid && idDe(s) === idDe(uid));
+                b.disabled = !banirSel.has(uid) && (banirSel.size >= n || copiaJaBanida);
+            }
+            erro.textContent = '';
+        };
+        // agrupa as cópias iguais só na aparência: cada cópia é uma carta que pode ser banida
+        for (const c of [...deckDele].sort((a, b) => (R.banivel(a) - R.banivel(b)) || String(a.id).localeCompare(b.id))) {
+            const li = el('li', 'bt-banir-item');
+            const pode = R.banivel(c);
+            const b = botao('bt-banir-carta', null, () => {
+                if (banirSel.has(c.uid)) banirSel.delete(c.uid); else if (banirSel.size < n) banirSel.add(c.uid);
+                atualizar();
+            });
+            b.disabled = !pode;
+            b.setAttribute('aria-label', `${nomeVisivel(c.id)}${pode ? '' : ' (lendária: não pode ser banida)'}`);
+            b.appendChild(UI.carta(c.id));
+            if (pode) botoes.set(c.uid, b);
+            else li.classList.add('bt-banir-item--trava');
+            li.append(b, el('span', 'bt-banir-nome', nomeVisivel(c.id)));
+            if (!pode) li.appendChild(el('span', 'bt-banir-selo', 'LENDÁRIA'));
+            else if (def(c.id).tcg) {
+                const menu = el('details', 'bt-editor-menu');
+                const desc = el('p', 'bt-editor-desc');
+                desc.appendChild(descricaoColorida(def(c.id).tcg));
+                menu.append(el('summary', '', 'Ver o que faz'), desc);
+                li.appendChild(menu);
+            }
+            grade.appendChild(li);
+        }
+        const topo = el('div', 'bt-banir-topo');
+        topo.append(contador, confirmar);
+        miolo.append(topo, erro, grade);
+        atualizar();
+        mesa.raiz.appendChild(caixa);
+    }
+    const mesaDica = (texto) => { if (mesa) mostrarDica(texto); };
+
+    /** Depois que os dois banem: mostra o que saiu de cada deck. */
+    async function mostrarBanidas() {
+        mesa.raiz.querySelector('.bt-banir')?.remove();   // a janela de escolha sai; fica só o resultado
+        const caixa = el('div', 'bt-banir');
+        const miolo = el('div', 'bt-banir-miolo');
+        caixa.appendChild(miolo);
+        miolo.appendChild(el('h2', '', 'Cartas banidas!'));
+        const nomeDe = (j) => (!ESPECTADOR && j === EU ? 'Seu deck' : `Deck de ${nomeDoLado(j)}`);
+        for (const j of [0, 1]) {
+            const secao = el('div', 'bt-banir-secao');
+            secao.appendChild(el('h3', '', `${nomeDe(j)} perdeu:`));
+            const lista = el('ul', 'bt-banir-grade bt-banir-grade--pequena');
+            for (const c of estado.banidas[j]) {
+                const li = el('li', 'bt-banir-item bt-banir-item--banida');
+                li.append(UI.carta(c.id), el('span', 'bt-banir-nome', nomeVisivel(c.id)), el('span', 'bt-banir-selo', 'BANIDA'));
+                lista.appendChild(li);
+            }
+            secao.appendChild(lista);
+            miolo.appendChild(secao);
+        }
+        let fechar;
+        const pronto = new Promise((r) => { fechar = r; });
+        miolo.appendChild(botao('bt-botao bt-botao--forte', 'Continuar', () => fechar()));
+        mesa.raiz.appendChild(caixa);
+        await Promise.race([pronto, esperar(6000)]);
+        caixa.remove();
     }
 
     // A dica aparece inteira quando muda e, depois de DICA_MS, vira uma linha pequena
@@ -942,7 +1482,17 @@
         if (!minha) return acoes;
         add('Prender a Aura aqui', { tipo: 'aura', alvo: uid });
         const poder = R.combate(minha.id).poder;
-        if (poder?.ativavel) add(`Usar poder: ${poder.nome}`, { tipo: 'poder', uid });
+        if (poder?.ativavel && poder.tipo === 'puxar') {
+            // Vem Cá: escolhe no banco do rival quem vira o ativo (ela pode estar em qualquer lugar da mesa)
+            const alvos = ele.banco.map((c) => c.uid);
+            add(`Usar poder: ${poder.nome}`, { tipo: 'poder', uid, alvo: '?' }, {
+                alvos,
+                fazer: () => {
+                    modo = { tipo: 'alvo', jogada: { tipo: 'poder', uid }, alvos, texto: `${poder.nome}: escolha quem vem do banco dele.` };
+                    desenhar();
+                },
+            });
+        } else if (poder?.ativavel) add(`Usar poder: ${poder.nome}`, { tipo: 'poder', uid });
         if (eu.banco.some((c) => c.uid === uid) && eu.ativo) {
             add(`Recuar: esta vira o ativo (gasta ${R.custoRecuo(estado, eu.ativo)} da Aura presa no ativo, que tem ${eu.ativo.aura})`, { tipo: 'recuar', para: uid });
         }
@@ -960,11 +1510,7 @@
                 const previsto = ele.ativo ? R.calcularDano(estado, EU, a, ele.ativo, { resultadoMoeda: true }) : 0;
                 // No jogador o ativo dele segura 65% do golpe (só entra 35%).
                 const previstoJogador = R.calcularDano(estado, EU, a, R.JOGADOR, { resultadoMoeda: true });
-                // Se este golpe derruba o ativo dele, vem o golpe extra de graça no jogador (dano inteiro).
-                const vidaAtivo = ele.ativo ? R.hpMax(estado, ele.ativo) - ele.ativo.dano : 0;
-                const derrubaAtivo = !!ele.ativo && previsto >= vidaAtivo;
-                const previstoExtra = derrubaAtivo ? R.calcularDano(estado, EU, a, null, { resultadoMoeda: true }) : 0;
-                add(a.nome, jogada, { ataque: a, alvos, previsto, previstoJogador, previstoExtra });
+                add(a.nome, jogada, { ataque: a, alvos, previsto, previstoJogador });
             });
         }
         return acoes;
@@ -1041,7 +1587,6 @@
                 if (botoes.children.length) box.appendChild(botoes);
                 else box.appendChild(el('span', 'bt-motivo', acao ? (acao.motivo || 'nenhum alvo agora') : 'não é a sua vez'));
                 // O golpe que derruba o ativo ainda acerta o jogador de graça, com o dano inteiro.
-                if (acao && acao.previstoExtra > 0) box.appendChild(el('span', 'bt-extra', `+ golpe extra de ${num(acao.previstoExtra)} no jogador`));
                 lista.appendChild(box);
             });
             info.appendChild(lista);
@@ -1054,7 +1599,8 @@
             outras.appendChild(b);
         }
         if (outras.children.length) info.appendChild(outras);
-        info.appendChild(el('p', 'bt-painel-frase', `“${d.frase}”`));
+        info.appendChild(el('p', 'bt-painel-frase', `(${d.frase})`));
+        if (d.tcg) info.appendChild(el('p', 'bt-painel-tcg', d.tcg));
         p.append(fechar, grande, info);
         animar(p, [{ transform: 'translateY(40px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220 });
         fechar.focus({ preventScroll: true });
@@ -1325,11 +1871,13 @@
     }
 
     async function sair() {
-        if (ocupado) return;
         const aviso = online
             ? 'Sair da mesa? A partida continua e o tempo corre: 3 vezes sem jogar e você perde. Dá para voltar pelo menu.'
             : 'Sair desta batalha? Ela não fica salva.';
-        if (estado && estado.fase !== 'fim' && !(await perguntar(aviso, 'Sair'))) return;
+        if (!ESPECTADOR && estado && estado.fase !== 'fim' && !(await perguntar(aviso, 'Sair'))) return;
+        // Durante uma animação ou a vez do NPC o botão parecia morto: espera o passo acabar (até ~8 s) e sai.
+        for (let i = 0; ocupado && i < 80; i++) await new Promise((ok) => setTimeout(ok, 100));
+        if (ocupado) return;
         pararOnline();
         estado = null;
         depoisDaMoeda = null;
@@ -1434,6 +1982,7 @@
     function pararOnline() {
         if (online?.timer) clearTimeout(online.timer);
         if (online?.relogioTimer) clearInterval(online.relogioTimer);
+        online?.chatParar?.();
         online = null;
         esperaSala?.parar();
         esperaSala = null;
@@ -1443,6 +1992,7 @@
         pararAoMudar = null;
     }
 
+    let creditosFim = null;  // créditos que o servidor pagou pela partida online que acabou
     let esperaSala = null;   // { parar } enquanto espera alguém entrar na sala
     let salasAbertas = null; // { parar, atualizar } enquanto a lista de salas abertas está na tela
 
@@ -1456,20 +2006,27 @@
         return `há ${Math.floor(h / 24)} dia${plu(Math.floor(h / 24))}`;
     };
 
-    /** Tela "Outro jogador": criar sala, entrar com código, voltar para a partida. */
+    /** Tela "Outro jogador": lista de salas públicas ou criar a sua (sem código), ou voltar para a partida. */
     async function telaOnline(aviso) {
         pararOnline();
+        ESPECTADOR = false;
         limparMesa();
         raiz.replaceChildren();
         raiz.className = 'batalha batalha--menu';
-        const fundoMenu = arteGrande(ARTE.menu.fundo);
+        const fundoMenu = arteGrande(ARTE.online.fundo) || arteGrande(ARTE.menu.fundo);
         if (fundoMenu) {
             raiz.style.setProperty('--fundo-menu', `url('${new URL(fundoMenu, document.baseURI).href}')`);
             raiz.classList.add('batalha--menu-arte');
         }
         const caixa = el('div', 'bt-menu bt-online');
-        caixa.append(el('h2', 'bt-menu-sub', 'Outro jogador'));
+        const cabecalho = imgOnline('cabecalho', 'bt-online-cabecalho', 'Salas online');
+        caixa.append(cabecalho || el('h2', 'bt-menu-sub', 'Outro jogador'));
         const corpo = el('div', 'bt-online-corpo');
+        const molduraSala = arte(ARTE.online.caixa);
+        if (molduraSala) {
+            corpo.classList.add('bt-online-corpo--arte');
+            corpo.style.setProperty('--moldura-sala', `url('${new URL(molduraSala, document.baseURI).href}')`);
+        }
         caixa.append(corpo, botao('bt-link', '← Voltar', telaMenu));
         raiz.appendChild(caixa);
         const msg = (texto, tipo = '') => { const p = el('p', `bt-online-msg ${tipo}`, texto); corpo.appendChild(p); return p; };
@@ -1496,128 +2053,150 @@
             return;
         }
 
-        corpo.appendChild(el('p', 'bt-online-deck', `Seu deck: ${deckEscolhido.nome}`));
-        const trocar = botao('bt-link', 'trocar deck', telaMenu);
+        // No online só vale o deck customizado: sem ele (ou com ele inválido) o jogador é levado a montar o seu.
+        if (custom.estado === 'nada') await carregarDeckCustom();
+        if (!caixa.isConnected) return;
+        const meuDeck = objetoDoDeckCustom();
+        if (!meuDeck) {
+            msg(custom.cartas
+                ? 'O seu deck customizado não está válido. No modo online só vale o deck customizado: arrume o seu.'
+                : 'No modo online só vale o deck customizado. Monte o seu primeiro (15 cartas, até 2 lendárias).');
+            corpo.appendChild(botao('bt-botao bt-botao--forte', custom.cartas ? 'Editar deck' : 'Montar deck', () => { if (custom.estado === 'ok') { editorVoltaOnline = true; abrirEditorDeck(); } }));
+            return;
+        }
+        deckEscolhido = meuDeck;
+        corpo.appendChild(el('p', 'bt-online-deck', `Seu deck: ${custom.nome || meuDeck.nome}`));
+        const trocar = botao('bt-link', 'editar deck', () => { if (custom.estado === 'ok') { editorVoltaOnline = true; abrirEditorDeck(); } });
         corpo.lastChild.append(' ', trocar);
 
-        // O mesmo fluxo de "entrar na sala" para o código digitado e para o botão da lista.
-        const entrarPorCodigo = async (codigo, alvo, b) => {
-            b.disabled = true;
-            try {
-                const d = await api('POST', `/api/tcg/salas/${encodeURIComponent(codigo)}/entrar`, { deck: deckEscolhido.id });
-                limparConvite();
-                salasAbertas?.parar();
-                comecarOnline(d);
-            } catch (erro) {
-                b.disabled = false;
-                if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
-                if (erro.status === 409 && !erro.dados?.recarregar) { msg(erro.message, 'bt-online-msg--erro'); salasAbertas?.atualizar(); return; }
-                balao(alvo, erro.message, 'erro');
-            }
-        };
-
-        // Salas esperando: lista com 1 clique para entrar (renova a cada 3 s, só com a aba visível).
-        const listaSalas = el('div', 'bt-online-salas');
-        const corpoSalas = el('div', 'bt-online-salas-lista');
-        listaSalas.append(el('h3', 'bt-online-salas-titulo', 'Salas esperando'), corpoSalas);
-        corpo.appendChild(listaSalas);
-        const renderSalas = (salas) => {
-            if (!corpoSalas.isConnected) return;
-            if (!salas.length) {
-                corpoSalas.replaceChildren(el('p', 'bt-online-vazio', 'Ninguém esperando agora. Crie uma sala e ela aparece aqui para os outros.'));
-                return;
-            }
-            corpoSalas.replaceChildren(...salas.map((s) => {
-                const d = DECKS.find((x) => x.id === s.deck);
-                const linha = el('div', 'bt-sala-linha');
-                linha.append(el('span', 'bt-sala-nome', s.criador),
-                    el('span', 'bt-sala-deck', d ? d.nome : s.deck),
-                    el('span', 'bt-sala-placar', `V ${s.vitorias} · D ${s.derrotas}`),
-                    el('span', 'bt-sala-espera', haQuanto(s.desde)));
-                const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarPorCodigo(s.codigo, b, b));
-                linha.appendChild(b);
-                return linha;
-            }));
-        };
-        const atualizarSalas = async () => {
-            if (!corpoSalas.isConnected || salasAbertas !== controleSalas) return;
-            try { const d = await api('GET', '/api/tcg/salas'); renderSalas(d.salas || []); }
-            catch { /* sem servidor agora: tenta de novo no próximo ciclo */ }
-        };
-        let timerSalas = null;
-        const checarSalas = async () => {
-            timerSalas = null;
-            if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
-            await atualizarSalas();
-            if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
-            timerSalas = setTimeout(checarSalas, SALAS_MS);
-        };
-        const visivelSalas = () => { if (!document.hidden && !timerSalas && corpoSalas.isConnected && salasAbertas === controleSalas) checarSalas(); };
-        const controleSalas = {
-            parar() {
-                if (timerSalas) clearTimeout(timerSalas);
-                document.removeEventListener('visibilitychange', visivelSalas);
-                if (salasAbertas === controleSalas) salasAbertas = null;
-            },
-            atualizar: () => atualizarSalas(),
-        };
-        salasAbertas = controleSalas;
-        document.addEventListener('visibilitychange', visivelSalas);
-        timerSalas = setTimeout(checarSalas, 0);
-
-        // Entrar numa sala (código do amigo).
-        const entrar = el('form', 'bt-online-entrar');
-        const campo = el('input', 'bt-online-codigo');
-        campo.placeholder = 'TORA-XXX';
-        campo.maxLength = 8;
-        campo.autocomplete = 'off';
-        campo.setAttribute('aria-label', 'Código da sala');
-        campo.value = convite || '';
-        const bEntrar = botao('bt-botao bt-botao--forte', 'Entrar na sala');
-        bEntrar.type = 'submit';
-        entrar.append(campo, bEntrar);
-        entrar.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            let codigo = campo.value.trim().toUpperCase().replace(/\s+/g, '');
-            if (/^[A-Z0-9]{3}$/.test(codigo)) codigo = `TORA-${codigo}`;
-            await entrarPorCodigo(codigo, entrar, bEntrar);
-        });
-
-        const criar = botao('bt-botao', 'Criar sala e chamar um amigo', async () => {
+        const opcoes = el('div', 'bt-online-opcoes bt-online-opcoes--uma');
+        const criar = botao('bt-botao', null, async () => {
             criar.disabled = true;
             try {
                 const d = await api('POST', '/api/tcg/salas', { deck: deckEscolhido.id });
-                mostrarSala(d.codigo);
+                mostrarSala(d.codigo, d.expira);
             } catch (erro) {
                 criar.disabled = false;
                 if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
                 balao(criar, erro.message, 'erro');
             }
         });
-        if (convite) {
-            msg(`Você foi chamado para a sala ${convite}.`);
-            corpo.append(entrar, el('p', 'bt-online-ou', 'ou'), criar);
-        } else {
-            corpo.append(criar, el('p', 'bt-online-ou', 'ou entre na sala de um amigo:'), entrar);
-        }
-        if (atual.sala) mostrarSala(atual.sala.codigo);
+        criar.className = 'bt-botao bt-botao--forte';
+        const icCriar = imgOnline('icone-criar', 'bt-online-icone');
+        if (icCriar) criar.prepend(icCriar);
+        criar.append(el('strong', '', 'Criar sala'), el('span', '', 'fica na lista enquanto a tela estiver aberta'));
+        opcoes.appendChild(criar);
+        corpo.appendChild(opcoes);
+        // A lista de salas esperando e de partidas ao vivo já aparece aqui embaixo, sem botão de entrar/assistir à parte.
+        if (atual.sala) mostrarSala(atual.sala.codigo, atual.sala.expira);
+        else mostrarLista();
 
-        function mostrarSala(codigo) {
+        /** Lista única: salas esperando (Entrar) e partidas em andamento (Assistir). Renova sozinha. */
+        function mostrarLista() {
+            // Entrar numa sala da lista (1 clique).
+            const entrarNaSala = async (codigo, alvo, b) => {
+                b.disabled = true;
+                try {
+                    const d = await api('POST', `/api/tcg/salas/${encodeURIComponent(codigo)}/entrar`, { deck: deckEscolhido.id });
+                    salasAbertas?.parar();
+                    comecarOnline(d);
+                } catch (erro) {
+                    b.disabled = false;
+                    if (erro.dados?.partida) { abrirPartida(erro.dados.partida); return; }
+                    if (erro.status === 409 && !erro.dados?.recarregar) { msg(erro.message, 'bt-online-msg--erro'); salasAbertas?.atualizar(); return; }
+                    balao(alvo, erro.message, 'erro');
+                }
+            };
+
+            // Salas esperando: lista com 1 clique para entrar (renova a cada 3 s, só com a aba visível).
+            const listaSalas = el('div', 'bt-online-salas');
+            const corpoSalas = el('div', 'bt-online-salas-lista');
+            listaSalas.append(el('h3', 'bt-online-salas-titulo', 'Salas e partidas ao vivo'), corpoSalas);
+            corpo.appendChild(listaSalas);
+            const primeiro = (nome) => String(nome || '').trim().split(/\s+/)[0] || '?';
+            const renderSalas = (salas, partidas = []) => {
+                if (!corpoSalas.isConnected) return;
+                if (!salas.length && !partidas.length) {
+                    const vazio = el('div', 'bt-online-vazio-caixa');
+                    const ilus = imgOnline('vazia', 'bt-online-ilustracao');
+                    if (ilus) vazio.appendChild(ilus);
+                    vazio.appendChild(el('p', 'bt-online-vazio', 'Nada por aqui agora. Crie uma sala e ela aparece para os outros.'));
+                    corpoSalas.replaceChildren(vazio);
+                    return;
+                }
+                const aoVivo = partidas.map((p) => {
+                    const linha = el('div', 'bt-sala-linha bt-sala-linha--ao-vivo');
+                    const b = botao('bt-botao', 'Assistir', () => abrirAssistir(p.id, b));
+                    const icVer = imgOnline('icone-assistir', 'bt-online-icone-botao');
+                    if (icVer) b.prepend(icVer);
+                    const vs = imgOnline('vs', 'bt-online-vs');
+                    if (vs) {
+                        const nome = el('span', 'bt-sala-nome');
+                        nome.append(primeiro(p.jogadores[0]), vs, primeiro(p.jogadores[1]));
+                        nome.title = `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`;
+                        linha.append(nome, b);
+                    } else {
+                        linha.append(el('span', 'bt-sala-nome', `${primeiro(p.jogadores[0])} × ${primeiro(p.jogadores[1])}`), b);
+                    }
+                    return linha;
+                });
+                corpoSalas.replaceChildren(...salas.map((s) => {
+                    const linha = el('div', 'bt-sala-linha');
+                    // "Nome × alguém": quem criou a sala e a vaga esperando
+                    linha.append(el('span', 'bt-sala-nome', `${primeiro(s.criador)} × alguém`));
+                    const b = botao('bt-botao bt-botao--forte', 'Entrar', () => entrarNaSala(s.codigo, b, b));
+                    const icEntrar = imgOnline('icone-lista', 'bt-online-icone-botao');
+                    if (icEntrar) b.prepend(icEntrar);
+                    linha.appendChild(b);
+                    return linha;
+                }), ...aoVivo);
+            };
+            const atualizarSalas = async () => {
+                if (!corpoSalas.isConnected || salasAbertas !== controleSalas) return;
+                try {
+                    const [d, v] = await Promise.all([api('GET', '/api/tcg/salas'), api('GET', '/api/tcg/ao-vivo').catch(() => ({ partidas: [] }))]);
+                    renderSalas(d.salas || [], v.partidas || []);
+                } catch { /* sem servidor agora: tenta de novo no próximo ciclo */ }
+            };
+            let timerSalas = null;
+            const checarSalas = async () => {
+                timerSalas = null;
+                if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
+                await atualizarSalas();
+                if (document.hidden || !corpoSalas.isConnected || salasAbertas !== controleSalas) return;
+                timerSalas = setTimeout(checarSalas, SALAS_MS);
+            };
+            const visivelSalas = () => { if (!document.hidden && !timerSalas && corpoSalas.isConnected && salasAbertas === controleSalas) checarSalas(); };
+            const controleSalas = {
+                parar() {
+                    if (timerSalas) clearTimeout(timerSalas);
+                    document.removeEventListener('visibilitychange', visivelSalas);
+                    if (salasAbertas === controleSalas) salasAbertas = null;
+                },
+                atualizar: () => atualizarSalas(),
+            };
+            salasAbertas = controleSalas;
+            document.addEventListener('visibilitychange', visivelSalas);
+            timerSalas = setTimeout(checarSalas, 0);
+        }
+
+        function mostrarSala(codigo, expira) {
             salasAbertas?.parar();
             corpo.replaceChildren();
-            const link = `${location.origin}${location.pathname}?sala=${codigo}`;
-            corpo.append(el('p', 'bt-online-msg', 'Mande este código (ou o link) para o seu amigo:'),
-                el('p', 'bt-online-sala', codigo));
-            const copiar = botao('bt-botao bt-botao--forte', 'Copiar link', async () => {
-                try { await navigator.clipboard.writeText(link); balao(copiar, 'Link copiado!'); } catch { balao(copiar, link); }
-            });
-            const espera = el('p', 'bt-online-espera', 'Esperando alguém entrar...');
+            corpo.append(el('p', 'bt-online-msg', 'Sua sala está na lista de salas. Quem escolher ela entra direto.'));
+            const relogio = el('p', 'bt-online-sala', '');
+            const restante = () => Math.max(0, Math.ceil(((expira || Date.now()) - Date.now()) / 1000));
+            const desenharRelogio = () => { const s = restante(); relogio.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+            desenharRelogio();
+            const ilusEspera = imgOnline('espera', 'bt-online-ilustracao');
+            if (ilusEspera) corpo.appendChild(ilusEspera);
+            const espera = el('p', 'bt-online-espera', 'Esperando alguém entrar... a sala continua na lista enquanto esta tela estiver aberta (5 minutos a cada renovação).');
             const cancelar = botao('bt-botao', 'Cancelar sala', async () => {
                 esperaSala?.parar();
                 try { await api('POST', `/api/tcg/salas/${codigo}/cancelar`, {}); } catch { /* sala já sumiu */ }
                 telaOnline();
             });
-            corpo.append(copiar, espera, cancelar);
+            corpo.append(relogio, espera, cancelar);
             // Pergunta de tempos em tempos se alguém entrou (parado com a aba escondida).
             let timer = null;
             const checar = async () => {
@@ -1627,15 +2206,18 @@
                     const s = await api('GET', `/api/tcg/salas/${codigo}`);
                     if (!caixa.isConnected || esperaSala !== controle) return;
                     if (s.partida) { controle.parar(); abrirPartida(s.partida); return; }
+                    if (s.expira) expira = s.expira;   // o servidor renovou: a contagem volta a 5:00
                 } catch (erro) {
-                    if (erro.status === 404) { controle.parar(); telaOnline('A sala expirou. Crie outra.'); return; }
+                    if (erro.status === 404) { controle.parar(); telaOnline('A sala saiu da lista (ficou 5 minutos sem a tela aberta). Crie outra.'); return; }
                 }
                 if (esperaSala === controle) timer = setTimeout(checar, BUSCA_MS);
             };
             const visivel = () => { if (!document.hidden && !timer && esperaSala === controle) checar(); };
+            const contagem = setInterval(() => { if (!caixa.isConnected) clearInterval(contagem); else desenharRelogio(); }, 1000);
             const controle = {
                 parar() {
                     if (timer) clearTimeout(timer);
+                    clearInterval(contagem);
                     document.removeEventListener('visibilitychange', visivel);
                     if (esperaSala === controle) esperaSala = null;
                 },
@@ -1644,13 +2226,6 @@
             document.addEventListener('visibilitychange', visivel);
             timer = setTimeout(checar, BUSCA_MS);
         }
-    }
-
-    function limparConvite() {
-        if (!params.has('sala')) return;
-        params.delete('sala');
-        const q = params.toString();
-        history.replaceState(null, '', `${location.pathname}${q ? `?${q}` : ''}`);
     }
 
     /** Recado do servidor + botão "Recarregar" (partida de regra velha, jogo atualizado). */
@@ -1674,21 +2249,181 @@
         }
     }
 
+    // ---------------------------------------------------------------- assistir
+    const nomeDoLado = (j) => String(estado?.jogadores[j]?.nome || '').trim().split(/\s+/)[0] || `Jogador ${j + 1}`;
+
+    /** A visão de quem assiste traz as duas mãos como número: a do lado 0 vira lista vazia + contagem. */
+    function veEspectador(v) {
+        const x = v.jogadores[EU];
+        if (typeof x.mao === 'number') { x.maoQtd = x.mao; x.mao = []; }
+        return v;
+    }
+
+    /** Entra numa partida em andamento como espectador (só olha e comenta). */
+    async function abrirAssistir(id, alvo) {
+        try {
+            comecarAssistindo(await api('GET', `/api/tcg/assistir/${encodeURIComponent(id)}?desde=-1`));
+        } catch (erro) {
+            if (erro.dados?.recarregar) { avisarRecarregar(erro.message); return; }
+            balao(alvo || raiz, erro.status ? erro.message : 'Sem conexão. Tente de novo.', 'erro');
+        }
+    }
+
+    function comecarAssistindo(d) {
+        pararOnline();
+        if (d.regras !== R.REGRAS_VERSAO) { location.reload(); return; }
+        ESPECTADOR = true;
+        EU = 0;
+        NPC = 1;
+        partida++;
+        depoisDaMoeda = null;
+        online = { id: d.id, versao: d.versao, prazo: d.prazo, estouros: d.estouros || [0, 0], dif: d.agora - Date.now(), timer: null, relogioTimer: null, espectador: true };
+        estado = veEspectador(d.visao);
+        montarMesa();
+        mesa.raiz.classList.add('bt-espectador');
+        registrar(`Você está assistindo ${nomeDoLado(0)} × ${nomeDoLado(1)}.`);
+        modo = null;
+        desenhar();
+        online.relogioTimer = setInterval(atualizarRelogio, 500);
+        montarChat();
+        if (estado.fase === 'fim') telaFim();
+        else agendarBusca();
+    }
+
+    /** Fim da partida vista de fora: quem venceu e para onde voltar. */
+    function telaFimEspectador() {
+        if (!mesa || mesa.raiz.querySelector('.bt-fim')) return;
+        desenhar();
+        const v = estado.vencedor;
+        const vida = (j) => num(estado.jogadores[j].vida);
+        const caixa = el('div', 'bt-fim bt-fim--empate');
+        const miolo = el('div', 'bt-fim-miolo');
+        miolo.append(el('h2', 'bt-fim-titulo', v === 'empate' ? 'EMPATE!' : `${nomeDoLado(v)} venceu!`),
+            el('p', 'bt-fim-placar', `Vida: ${vida(0)} × ${vida(1)}`));
+        const acoes = el('div', 'bt-fim-acoes');
+        pararOnline();
+        mesa.raiz.querySelector('.bt-chat')?.remove();
+        acoes.append(botao('bt-botao bt-botao--forte', 'Ver outras partidas', () => telaOnline()), botao('bt-botao', 'Menu', telaMenu));
+        miolo.appendChild(acoes);
+        caixa.appendChild(miolo);
+        mesa.raiz.appendChild(caixa);
+        acoes.querySelector('button').focus({ preventScroll: true });
+    }
+
+    // ---------------------------------------------------------------- comentários da partida
+    /** Chat temporário de quem joga e de quem assiste: o servidor apaga tudo quando a partida termina. */
+    function montarChat() {
+        if (!online || !mesa) return;
+        const idPartida = online.id;
+        const caixa = el('div', 'bt-chat');
+        const abrir = botao('bt-chat-abrir', null, () => alternar());
+        const novos = el('span', 'bt-chat-novos');
+        novos.hidden = true;
+        abrir.append(el('span', '', '💬'), novos);
+        abrir.setAttribute('aria-label', 'Comentários da partida');
+        abrir.title = 'Comentários da partida';
+        const painel = el('div', 'bt-chat-painel');
+        // No PC o painel fica sempre aberto numa coluna ao lado da mesa (ver css); no celular abre e fecha pelo botão 💬.
+        const colunaFixa = window.matchMedia('(min-width: 1480px) and (min-aspect-ratio: 5 / 4), (min-width: 1280px) and (max-aspect-ratio: 1249 / 1000)');
+        painel.hidden = !colunaFixa.matches;
+        colunaFixa.addEventListener('change', () => { painel.hidden = !colunaFixa.matches; });
+        const lista = el('ol', 'bt-chat-lista');
+        const form = el('form', 'bt-chat-form');
+        const campo = el('input', 'bt-chat-campo');
+        campo.maxLength = 500;
+        campo.autocomplete = 'off';
+        campo.placeholder = 'Comente a partida...';
+        campo.setAttribute('aria-label', 'Comentário');
+        const enviar = botao('bt-botao bt-chat-enviar', 'Enviar');
+        enviar.type = 'submit';
+        form.append(campo, enviar);
+        const topo = el('div', 'bt-chat-topo');
+        const fechar = botao('bt-chat-fechar', '×', () => alternar());
+        fechar.setAttribute('aria-label', 'Fechar comentários');
+        topo.append(el('p', 'bt-chat-aviso', 'Os comentários somem quando a partida terminar.'), fechar);
+        painel.append(topo, lista, form);
+        caixa.append(abrir, painel);
+        mesa.raiz.appendChild(caixa);
+
+        let ultimo = 0;
+        let naoLidos = 0;
+        let parou = false;
+        let timer = 0;
+        const marcar = () => { novos.textContent = String(naoLidos); novos.hidden = !naoLidos; };
+        const alternar = () => {
+            painel.hidden = !painel.hidden;
+            if (painel.hidden) return;
+            naoLidos = 0;
+            marcar();
+            lista.scrollTop = lista.scrollHeight;
+            campo.focus({ preventScroll: true });
+        };
+        const adicionar = (c) => {
+            const li = el('li', `bt-chat-item${c.meu ? ' bt-chat-item--meu' : ''}`);
+            li.append(el('strong', c.lado === null ? 'bt-chat-nome bt-chat-nome--plateia' : 'bt-chat-nome', `${c.nome}${c.lado === null ? ' 👁' : ''}`), ' ', document.createTextNode(c.texto));
+            lista.appendChild(li);
+            while (lista.children.length > 100) lista.firstChild.remove();
+        };
+        const buscarNovos = async () => {
+            timer = 0;
+            if (parou || !caixa.isConnected || !online || online.id !== idPartida) return;
+            if (!document.hidden) {
+                try {
+                    const d = await api('GET', `/api/tcg/partidas/${idPartida}/comentarios?desde=${ultimo}`);
+                    if (!d.ativa) { parou = true; return; }
+                    const noFim = lista.scrollHeight - lista.scrollTop - lista.clientHeight < 40;
+                    for (const c of d.comentarios) {
+                        ultimo = Math.max(ultimo, c.n);
+                        adicionar(c);
+                        if (painel.hidden && !c.meu) naoLidos++;
+                    }
+                    if (d.comentarios.length) {
+                        marcar();
+                        if (noFim || !painel.hidden) lista.scrollTop = lista.scrollHeight;
+                    }
+                } catch { /* tenta de novo */ }
+            }
+            if (!parou) timer = setTimeout(buscarNovos, 2500);
+        };
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const texto = campo.value.trim();
+            if (!texto) return;
+            enviar.disabled = true;
+            try {
+                await api('POST', `/api/tcg/partidas/${idPartida}/comentarios`, { texto });
+                campo.value = '';
+                if (timer) clearTimeout(timer);
+                buscarNovos();
+            } catch (erro) {
+                balao(enviar, erro.status ? erro.message : 'Sem conexão.', 'erro');
+            } finally {
+                enviar.disabled = false;
+                campo.focus({ preventScroll: true });
+            }
+        });
+        timer = setTimeout(buscarNovos, 300);
+        online.chatParar = () => { parou = true; if (timer) clearTimeout(timer); };
+    }
+
     /** Monta a mesa de uma partida online a partir da resposta do servidor. */
     function comecarOnline(d) {
         pararOnline();
         if (d.regras !== R.REGRAS_VERSAO) { location.reload(); return; }
+        ESPECTADOR = false;
         EU = d.eu;
         NPC = 1 - d.eu;
         partida++;
         depoisDaMoeda = null;
         online = { id: d.id, versao: d.versao, prazo: d.prazo, estouros: d.estouros || [0, 0], dif: d.agora - Date.now(), timer: null, relogioTimer: null };
+        creditosFim = d.creditos ?? null;
         estado = d.visao;
         montarMesa();
         registrar(`Partida online: você contra ${dele()}.`);
         modo = estado.fase === 'preparacao' && !estado.jogadores[EU].preparado ? { tipo: 'preparar', ativo: null, banco: [] } : null;
         desenhar();
         online.relogioTimer = setInterval(atualizarRelogio, 500);
+        if (estado.fase !== 'fim') montarChat();
         if (estado.fase === 'fim') telaFim();
         else agendarBusca();
     }
@@ -1712,9 +2447,10 @@
         online.prazo = d.prazo;
         if (d.estouros) online.estouros = d.estouros;
         online.dif = d.agora - Date.now();
+        if (d.creditos !== undefined) creditosFim = d.creditos;
         if (d.visao) {
             const antes = estado;
-            estado = d.visao;
+            estado = ESPECTADOR ? veEspectador(d.visao) : d.visao;
             // O que eu estava fazendo pode não valer mais (o tempo acabou, o servidor escolheu por mim).
             if (modo?.tipo === 'preparar' && estado.jogadores[EU].preparado) modo = null;
             if (!modo && estado.fase === 'preparacao' && !estado.jogadores[EU].preparado) modo = { tipo: 'preparar', ativo: null, banco: [] };
@@ -1769,7 +2505,7 @@
         const id = online.id;
         let d = null;
         try {
-            d = await api('GET', `/api/tcg/partidas/${id}?desde=${online.versao}`);
+            d = await api('GET', `/api/tcg/${online.espectador ? 'assistir' : 'partidas'}/${id}?desde=${online.versao}`);
         } catch (erro) {
             if (erro.status === 404) { pararOnline(); telaOnline('Essa partida não existe mais.'); return; }
             if (erro.dados?.recarregar) { pararOnline(); avisarRecarregar(erro.message); return; }
@@ -1798,7 +2534,7 @@
             // Só eu preciso agir: nada muda até eu jogar ou o meu tempo acabar. Se o outro também
             // precisa (preparo, escolha de ativo), continua perguntando.
             const quem = R.quemDeve(estado);
-            espera = quem.length === 1 && quem[0] === EU
+            espera = !ESPECTADOR && quem.length === 1 && quem[0] === EU
                 ? Math.max(1000, online.prazo - agoraServidor() + 1500)
                 : BUSCA_MS;
         }
@@ -1818,13 +2554,15 @@
         while (mesa.log.children.length > 60) mesa.log.lastChild.remove();
     }
     function registrarEvento(ev, antes) {
-        const quem = (j) => (j === EU ? 'Você' : Dele());
+        const quem = (j) => (ESPECTADOR ? nomeDoLado(j) : (j === EU ? 'Você' : Dele()));
         const n = (uid) => nomeDoUid(uid, estado, antes);
         switch (ev.tipo) {
+            case 'banimentoPronto': registrar(`${ev.jogador === EU && !ESPECTADOR ? 'Você escolheu' : `${nomeDoLado(ev.jogador)} escolheu`} as cartas para banir.`); break;
+            case 'banimento': registrar(`${nomeDoLado(ev.alvo)} perdeu do deck: ${ev.cartas.map((c) => nomeVisivel(c.id)).join(' e ')}.`); break;
             case 'inicio': registrar(`${quem(ev.primeiro)} começa.`); break;
-            case 'turno': registrar(`— Turno ${ev.turno}: ${ev.jogador === EU ? 'sua vez' : `vez de ${dele()}`} —`); break;
+            case 'turno': registrar(`— Turno ${ev.turno}: ${ESPECTADOR ? `vez de ${nomeDoLado(ev.jogador)}` : (ev.jogador === EU ? 'sua vez' : `vez de ${dele()}`)} —`); break;
             case 'tempo': registrar([icone(A('relogio'), '⏱'), ` ${quem(ev.jogador)} ficou sem jogar: inatividade ${ev.estouros} de ${ESTOUROS_PARA_PERDER}.`]); break;
-            case 'compra': if (ev.jogador === EU) registrar(`Você comprou ${nomeVisivel(ev.id)}.`); break;
+            case 'compra': if (!ESPECTADOR && ev.jogador === EU) registrar(`Você comprou ${nomeVisivel(ev.id)}.`); break;
             case 'baixar': registrar(`${quem(ev.jogador)} pôs ${nomeVisivel(ev.id)} ${ev.ativo ? 'no ativo (mesa vazia)' : 'no banco'}.`); break;
             case 'aura': registrar(`${n(ev.uid)} ganhou Aura (${ev.aura}).`); break;
             case 'campo': registrar(`${quem(ev.jogador)} jogou o campo ${nomeVisivel(ev.id)}.`); break;
@@ -1836,9 +2574,8 @@
                 : `${quem(ev.jogador)} levou ${num(ev.valor)}.`); break;
             case 'cura': registrar(`${n(ev.uid)} curou ${num(ev.valor)}.`); break;
             case 'nocaute': registrar([icone(A('nocaute'), '💥'), ` ${nomeVisivel(ev.id)} caiu!`]); break;
-            case 'golpeExtra': registrar(`${n(ev.uid)} derrubou e ainda acertou o jogador: ${num(ev.valor)}.`); break;
-            case 'virada': registrar(ev.motivo === 'umGolpe'
-                ? `${n(ev.uid)} derrubou de um golpe só e virou (recarga).`
+            case 'virada': registrar(ev.motivo === 'derrubou'
+                ? `${n(ev.uid)} derrubou a carta e virou (recarga).`
                 : `${n(ev.uid)} virou: recarga até o próximo turno.`); break;
             case 'estado': registrar(`${n(ev.uid)} ficou ${ESTADOS[ev.estado].nome}.`); break;
             case 'imune': registrar(`${n(ev.uid)} acabou de ser ${ESTADOS[ev.estado].nome.toLowerCase()} e não pode ser de novo agora.`); break;
@@ -1887,7 +2624,16 @@
     }
 
     function balao(perto, texto, tipo = '') {
-        if (!mesa) return Promise.resolve();
+        if (!mesa) {
+            // Fora da mesa (menus, salas online) não há onde o balão subir: o erro aparece como aviso flutuante.
+            if (tipo === 'erro') {
+                const aviso = el('div', 'bt-aviso-flutuante', texto);
+                aviso.setAttribute('role', 'alert');
+                document.body.appendChild(aviso);
+                setTimeout(() => aviso.remove(), 5000);
+            }
+            return Promise.resolve();
+        }
         const b = el('div', `bt-balao ${tipo ? `bt-balao--${tipo}` : ''}`);
         b.append(...[].concat(texto));
         const c = centro(perto);
@@ -2327,13 +3073,6 @@
             },
         },
         'encantadora': {
-            'Vem Cá, Meu Gadinho': async (at, alvo, ev) => {
-                await vooImg('fx-laco', at, alvo, { tam: .7, arco: 140, dur: 460 });
-                // A carta puxada vai para a vaga do ativo: o laço a arrasta até lá.
-                const vaga = ladoDe(ev.uid) === EU ? mesa.npc.ativo : mesa.eu.ativo;
-                const antigo = vaga.firstElementChild;
-                if (antigo?.classList.contains('bt-carta')) await vooImg('fx-laco', alvo, antigo, { tam: .7, arco: 140, dur: 420 });
-            },
             'Chama Rosa': async (at, alvo) => {
                 await folha('fx-chama-rosa', alvo, { tam: 1.3 });
             },
@@ -2406,6 +3145,13 @@
                 await vooImg('fx-processo', at, alvo, { tam: .65, girar: 1, dur: 520 });
             },
         },
+        'encantadora': {
+            // Poder: o laço sai dela, pega a carta do banco do adversário (a troca com o ativo vem no evento seguinte)
+            'Vem Cá, Meu Gadinho': async (at, _ativo, ev) => {
+                const puxado = ev.alvo && elDe(ev.alvo);
+                if (puxado) await vooImg('fx-laco', at, puxado, { tam: .7, arco: 140, dur: 460 });
+            },
+        },
         'hatsune-neves': {
             'Invoco uma Carta de Magic': async (at) => {
                 await peca('fx-circulo-magico', at, { tam: 1.3, dy: (caixaDe(at).h || 60) * .45, girar: 360, dur: 900 });
@@ -2437,15 +3183,22 @@
     async function tocar(ev, antes) {
         if (!mesa) return;
         switch (ev.tipo) {
+            case 'banimento':
+                // Os dois eventos (um por deck) chegam juntos: a janela mostra as duas listas uma vez só.
+                if (ev.alvo === 0) await mostrarBanidas();
+                break;
             case 'inicio': {
                 // Cara ou coroa para ver quem começa: o jogador 0 é Games (cara, o Enzo) e o
                 // jogador 1 é Torado (coroa, o touro). O motor já sorteou; a moeda só mostra.
+                // Todo mundo (os dois jogadores e quem assiste) vê o mesmo: a moeda, o texto de cima (quem é cara e quem
+                // é coroa, com os nomes) e o nome de quem começa embaixo.
                 const lado = ev.primeiro === 0 ? 'cara' : 'coroa';
+                const nomeDe = (j) => (!ESPECTADOR && j === EU ? 'Você' : nomeDoLado(j));
                 await moeda(lado, {
-                    chamada: `Você é ${EU === 0 ? 'GAMES' : 'TORADO'}`,
-                    rotulo: lado === 'cara' ? 'GAMES!' : 'TORADO!',
+                    chamada: `${nomeDe(0)} = CARA · ${nomeDe(1)} = COROA`,
+                    rotulo: `${nomeDe(ev.primeiro).toUpperCase()}!`,
                 });
-                await banner(ev.primeiro === EU ? 'VOCÊ COMEÇA!' : `${Dele().toUpperCase()} COMEÇA!`);
+                await banner(!ESPECTADOR && ev.primeiro === EU ? 'VOCÊ COMEÇA!' : `${nomeDe(ev.primeiro).toUpperCase()} COMEÇA!`);
                 break;
             }
             case 'turno':
@@ -2496,11 +3249,6 @@
                 if (ev.valor >= 90) tremer(mesa.raiz, 10);
                 break;
             }
-            case 'golpeExtra':
-                // Derrubou a carta: acerta o jogador de graça. O danoJogador logo abaixo já desce a
-                // barra e mostra o número, então aqui só entra o aviso (nada de número duplicado).
-                await banner('GOLPE EXTRA!');
-                break;
             case 'danoJogador': {
                 // Golpe direto na vida: a barra desce e um "-1.200" sobe perto do rosto.
                 const lado = ev.jogador === EU ? mesa.eu : mesa.npc;
@@ -2669,7 +3417,59 @@
     }
 
     // ---------------------------------------------------------------- fim
+    /**
+     * Botão de revanche: pede ao servidor e, quando os dois querem, entra na partida nova (mesma dupla,
+     * mesmos decks, lados trocados). Pergunta a cada 2 s enquanto a tela de fim estiver aberta.
+     */
+    function botaoRevanche(idPartida, nome) {
+        let parou = false;
+        let timer = 0;
+        const rev = botao('bt-botao bt-botao--forte', 'Revanche', async () => {
+            rev.disabled = true;
+            try { aplicar(await api('POST', `/api/tcg/partidas/${encodeURIComponent(idPartida)}/revanche`, {})); } catch (erro) {
+                rev.disabled = false;
+                balao(rev, erro.message, 'erro');
+            }
+        });
+        const aplicar = (s) => {
+            if (parou) return;
+            if (s.partida) { parou = true; abrirPartida(s.partida); return; }
+            if (s.expirou) { parou = true; rev.disabled = true; rev.textContent = 'Revanche indisponível'; return; }
+            rev.disabled = s.euQuero;
+            rev.textContent = s.euQuero ? `Esperando ${nome}...` : (s.outroQuer ? `${nome} quer revanche! Aceitar` : 'Revanche');
+            rev.classList.toggle('bt-botao--chamando', s.outroQuer && !s.euQuero);
+        };
+        const checar = async () => {
+            timer = 0;
+            if (parou || !rev.isConnected) return;
+            if (!document.hidden) { try { aplicar(await api('GET', `/api/tcg/partidas/${encodeURIComponent(idPartida)}/revanche`)); } catch { /* tenta de novo */ } }
+            if (!parou && rev.isConnected) timer = setTimeout(checar, 2000);
+        };
+        timer = setTimeout(checar, 300);
+        return rev;
+    }
+
+    function mostrarCreditos(no, valor) {
+        no.textContent = `+${valor.toLocaleString('pt-BR')} créditos para o Baralho`;
+        no.hidden = false;
+    }
+
+    /** Contra o NPC o servidor paga 250 (vitória) ou 50, com limite por dia; só para quem está logado no site. */
+    async function premiarNpc(tipo, no) {
+        no.hidden = true;
+        const conta = Conta();
+        if (AUTO || !conta || estado.motivo === 'desistencia') return;   // desistir não rende
+        if (!conta.usuario) { no.textContent = 'Entre com o Google no site para ganhar créditos contra o NPC.'; no.hidden = false; return; }
+        try {
+            const r = await api('POST', '/api/tcg/npc', { resultado: tipo });
+            if (r.creditos > 0) mostrarCreditos(no, r.creditos);
+            else if (r.motivo === 'limite') { no.textContent = 'Limite de créditos contra o NPC de hoje atingido (10 partidas).'; no.hidden = false; }
+            else if (r.motivo === 'rapido') { no.textContent = 'Partida muito rápida: sem créditos dessa vez.'; no.hidden = false; }
+        } catch { /* sem servidor: joga do mesmo jeito, só não ganha */ }
+    }
+
     function telaFim() {
+        if (ESPECTADOR) { telaFimEspectador(); return; }
         if (!mesa || mesa.raiz.querySelector('.bt-fim--vitoria, .bt-fim--derrota, .bt-fim--empate')) return;
         desenhar();
         const v = estado.vencedor;
@@ -2684,11 +3484,19 @@
         const miolo = el('div', 'bt-fim-miolo');
         miolo.append(el('h2', 'bt-fim-titulo', titulos[tipo]), el('p', '', motivos[estado.motivo] || ''),
             el('p', 'bt-fim-placar', `Vida: ${num(estado.jogadores[EU].vida)} × ${num(estado.jogadores[NPC].vida)}`));
+        const creditos = el('p', 'bt-fim-creditos');
+        miolo.appendChild(creditos);
         const acoes = el('div', 'bt-fim-acoes');
         if (online) {
+            if (creditosFim > 0) mostrarCreditos(creditos, creditosFim);
+            mesa.raiz.querySelector('.bt-chat')?.remove();   // os comentários acabam com a partida
+            const idPartida = online.id;
+            const nomeDele = dele();   // antes do pararOnline(): depois dele o nome viraria "o NPC"
             pararOnline();
-            acoes.append(botao('bt-botao bt-botao--forte', 'Nova partida online', () => telaOnline()), botao('bt-botao', 'Menu', telaMenu));
+            const revanche = estado.motivo === 'atualizacao' ? null : botaoRevanche(idPartida, nomeDele);
+            acoes.append(...(revanche ? [revanche] : []), botao(revanche ? 'bt-botao' : 'bt-botao bt-botao--forte', 'Nova partida online', () => telaOnline()), botao('bt-botao', 'Menu', telaMenu));
         } else {
+            premiarNpc(tipo, creditos);
             acoes.append(botao('bt-botao bt-botao--forte', 'Jogar de novo', () => comecar(nivel)), botao('bt-botao', 'Menu', telaMenu));
         }
         miolo.appendChild(acoes);
@@ -2722,7 +3530,7 @@
         if (!mesa.painel.hidden) fecharPainel();
         else if (modo && modo.tipo !== 'preparar') { modo = null; desenhar(); }
     });
-    if (convite) telaOnline();
-    else telaMenu();
+    telaMenu();
     if (AUTO) comecar(params.get('nivel') || 'normal');
+    else if (!cartilhaJaVista()) mostrarRegras();   // primeira vez na Batalha: mostra as cartilhas
 })();

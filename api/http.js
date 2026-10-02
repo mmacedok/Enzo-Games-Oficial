@@ -62,7 +62,9 @@ function lerCookies(request) {
 }
 
 function montarCookie(nome, valor, { maxAge, secure }) {
-    const partes = [`${nome}=${encodeURIComponent(valor)}`, 'Path=/', 'HttpOnly', 'SameSite=Lax', `Max-Age=${Math.max(0, Math.floor(maxAge))}`];
+    const segundos = Math.max(0, Math.floor(maxAge));
+    const expira = new Date(Date.now() + segundos * 1000).toUTCString();
+    const partes = [`${nome}=${encodeURIComponent(valor)}`, 'Path=/', 'HttpOnly', 'SameSite=Lax', `Max-Age=${segundos}`, `Expires=${segundos ? expira : 'Thu, 01 Jan 1970 00:00:00 GMT'}`];
     if (secure) partes.push('Secure');
     return partes.join('; ');
 }
