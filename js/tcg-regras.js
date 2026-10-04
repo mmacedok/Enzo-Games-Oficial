@@ -25,9 +25,12 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 10;
+    const REGRAS_VERSAO = 11;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
+    /** Auras que se prende por turno, e no máximo quantas na mesma carta (a 3ª tem de ir para outra). */
+    const AURAS_POR_TURNO = 3;
+    const AURAS_MAX_POR_CARTA_NO_TURNO = 2;
     const MAX_COPIAS_LENDARIO = 1;
     /** Deck customizado (montado com a coleção da conta): no máximo 2 cartas lendárias no total. */
     const MAX_LENDARIAS_CUSTOM = 2;
@@ -110,7 +113,7 @@
         for (const [id, qtd] of Object.entries(contagem)) {
             const carta = Baralho.carta(id);
             if (!carta || !combate(id)) { erros.push(`Carta desconhecida: ${id}.`); continue; }
-            const max = carta.raridade === 'lendario' ? MAX_COPIAS_LENDARIO : MAX_COPIAS;
+            const max = carta.raridade === 'lendario' ? MAX_COPIAS_LENDARIO : (combate(id).maxCopias || MAX_COPIAS);
             if (qtd > max) erros.push(`${carta.nome}: no máximo ${max} ${max === 1 ? 'cópia' : 'cópias'}.`);
             if (colecao && (colecao[id] || 0) < qtd) erros.push(`${carta.nome}: você tem ${colecao[id] || 0}.`);
         }
@@ -128,7 +131,7 @@
         return { uid, id, dano: 0, aura: 0, estados: { notificado: false, iludido: false, silenciado: 0, virada: 0 }, escudo: null };
     }
     function flagsDoTurno() {
-        return { auras: 1, reforco: 0, campo: false, recuo: false, trocarCarta: false, poderes: [], devolvidasMao: 0, devolvidasMesa: 0 };
+        return { auras: AURAS_POR_TURNO, auraEm: {}, reforco: 0, campo: false, recuo: false, trocarCarta: false, poderes: [], devolvidasMao: 0, devolvidasMesa: 0 };
     }
 
     /** Cartas que um deck pode ter banidas pelo adversário: só as que não são lendárias. */
@@ -320,6 +323,7 @@
                 const alvo = acharNaMesa(eu, jogada.alvo);
                 if (!alvo) return 'a Aura vai para uma carta sua na mesa';
                 if (alvo === eu.ativo && f.auras <= f.reforco) return 'a Aura de Reforço vai para o banco';
+                if ((f.auraEm?.[alvo.uid] || 0) >= AURAS_MAX_POR_CARTA_NO_TURNO) return `no máximo ${AURAS_MAX_POR_CARTA_NO_TURNO} Auras na mesma carta por turno`;
                 return null;
             }
             case 'campo': {
@@ -462,6 +466,26 @@
         eventos.push({ tipo: 'fim', vencedor, motivo });
     }
 
+    /** Cura `valor` de cada carta de quem joga (ativo e banco): Piscina de Macarronada. */
+    function curarMesa(jogador, valor, eventos) {
+        for (const inst of naMesa(jogador)) {
+            const cura = Math.min(valor, inst.dano);
+            if (cura <= 0) continue;
+            inst.dano -= cura;
+            eventos.push({ tipo: 'cura', uid: inst.uid, valor: cura, fonte: 'campo' });
+        }
+    }
+    /** Cartas na mesa que ainda estão de pé (antes de um campo sair). */
+    const vivosNaMesa = (estado) => estado.jogadores.flatMap((jg) => naMesa(jg).filter((i) => i.dano < hpMax(estado, i)).map((i) => i.uid));
+    /** Quando o campo sai, quem estava de pé e perdeu HP extra fica com 1 de vida em vez de cair. */
+    function segurarAposCampo(estado, vivos) {
+        for (const jg of estado.jogadores) {
+            for (const inst of naMesa(jg)) {
+                if (vivos.includes(inst.uid) && inst.dano >= hpMax(estado, inst)) inst.dano = hpMax(estado, inst) - 1;
+            }
+        }
+    }
+
     /** Quem tem mais vida (empate se igual). */
     function quemTemMaisVida(estado) {
         const [v0, v1] = estado.jogadores.map((x) => x.vida);
@@ -513,15 +537,11 @@
         const eu = estado.jogadores[j];
         eu.flags = flagsDoTurno();
         // Aura de Reforço: quem joga em segundo ganha +1 Aura no 1º turno, só para o banco.
-        if (estado.turno === 2) { eu.flags.auras = 2; eu.flags.reforco = 1; }
+        if (estado.turno === 2) { eu.flags.auras = AURAS_POR_TURNO + 1; eu.flags.reforco = 1; }
         eu.espiada = null;
         eventos.push({ tipo: 'turno', jogador: j, turno: estado.turno });
         const campo = efeitoCampo(estado);
-        if (campo?.tipo === 'curaInicio' && eu.ativo && eu.ativo.dano > 0) {
-            const valor = Math.min(campo.valor * ESCALA, eu.ativo.dano);
-            eu.ativo.dano -= valor;
-            eventos.push({ tipo: 'cura', uid: eu.ativo.uid, valor, fonte: 'campo' });
-        }
+        if (campo?.tipo === 'curaInicio') curarMesa(eu, campo.valor * ESCALA, eventos);
         const extra = campo?.tipo === 'compraExtra' && eu.mao.length <= campo.limiteMao;
         comprar(estado, j, eventos);
         if (extra) comprar(estado, j, eventos, 'campo');
@@ -589,6 +609,13 @@
             }
         }
 
+        // Mansão do Inominável: goon que ataca com 1 Aura a mais do que o ataque pede notifica o ativo do adversário.
+        if (efeitoCampo(estado)?.tipo === 'mansao' && tipoDe(atacante.id) === 'goon' && dano > 0 && atacante.aura > ataque.custo
+            && ele.ativo && !ele.ativo.estados.notificado && acharNaMesa(ele, ele.ativo.uid)) {
+            ele.ativo.estados.notificado = true;
+            eventos.push({ tipo: 'estado', uid: ele.ativo.uid, estado: 'notificado', fonte: 'mansao' });
+        }
+
         for (const ef of efeitos) {
             switch (ef.tipo) {
                 case 'estado':
@@ -638,9 +665,11 @@
                 }
                 case 'descartarCampo':
                     if (estado.campo) {
+                        const vivosAntes = vivosNaMesa(estado);
                         const { carta, dono } = estado.campo;
                         paraDescarte(estado.jogadores[dono], carta);
                         estado.campo = null;
+                        segurarAposCampo(estado, vivosAntes);
                         eventos.push({ tipo: 'campoSai', id: carta.id, uid: carta.uid });
                     }
                     break;
@@ -736,6 +765,8 @@
                 const inst = acharNaMesa(eu, jogada.alvo);
                 inst.aura++;
                 eu.flags.auras--;
+                eu.flags.auraEm = eu.flags.auraEm || {};
+                eu.flags.auraEm[inst.uid] = (eu.flags.auraEm[inst.uid] || 0) + 1;
                 if (inst !== eu.ativo && eu.flags.reforco > 0) eu.flags.reforco--;
                 eventos.push({ tipo: 'aura', uid: inst.uid, valor: 1, aura: inst.aura, fonte: 'turno' });
                 return;
@@ -743,6 +774,7 @@
 
             case 'campo': {
                 const inst = tirarDaMao(eu, jogada.uid);
+                const vivosAntes = vivosNaMesa(estado);
                 if (estado.campo) {
                     const antigo = estado.campo;
                     paraDescarte(estado.jogadores[antigo.dono], antigo.carta);
@@ -753,12 +785,9 @@
                 eventos.push({ tipo: 'campo', jogador: j, uid: inst.uid, id: inst.id });
                 // Piscina de Macarronada: quem joga o campo já é curado neste mesmo turno (depois vem a cura de começo de turno).
                 const efeito = combate(inst.id).campo;
-                if (efeito?.tipo === 'curaInicio' && eu.ativo && eu.ativo.dano > 0) {
-                    const valor = Math.min(efeito.valor * ESCALA, eu.ativo.dano);
-                    eu.ativo.dano -= valor;
-                    eventos.push({ tipo: 'cura', uid: eu.ativo.uid, valor, fonte: 'campo' });
-                }
-                // Sair da Mansão pode derrubar goons que estavam vivos pelos +20 de HP.
+                if (efeito?.tipo === 'curaInicio') curarMesa(eu, efeito.valor * ESCALA, eventos);
+                // Sair da Mansão tira o HP extra dos goons, mas não derruba ninguém por isso.
+                segurarAposCampo(estado, vivosAntes);
                 verificarNocautes(estado, eventos);
                 return;
             }
@@ -985,7 +1014,7 @@
     return {
         TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAX_LENDARIAS_CUSTOM, MAO_INICIAL, VAGAS_BANCO, LIMITE_TURNOS,
         ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR, PROTECAO_ATIVO, DEVOLVER_MAO_POR_TURNO, DEVOLVER_MESA_POR_TURNO,
-        REGRAS_VERSAO, JogadaInvalida, BANIDAS_POR_JOGADOR, banivel, quantasBanir,
+        REGRAS_VERSAO, AURAS_POR_TURNO, AURAS_MAX_POR_CARTA_NO_TURNO, JogadaInvalida, BANIDAS_POR_JOGADOR, banivel, quantasBanir,
         validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, quemDeve, repetir,
         rodadaDe, RODADAS_MAX, hpMax, custoRecuo, calcularDano, danoNocaute, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado, virada,
     };

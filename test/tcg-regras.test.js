@@ -45,7 +45,7 @@ function mesa({ eu = {}, ele = {}, campo = null, turno = 5, vez = 0 } = {}) {
         x.deck = (lado.deck || ['bug-do-discord', 'bug-do-discord', 'bug-do-discord']).map((s) => inst(j, s));
         x.descarte = [];
         x.vida = lado.vida === undefined ? R.VIDA_INICIAL : lado.vida;
-        x.flags = { auras: 1, reforco: 0, campo: false, recuo: false, trocarCarta: false, poderes: [] };
+        x.flags = { auras: 1, auraEm: {}, reforco: 0, campo: false, recuo: false, trocarCarta: false, poderes: [] };
     });
     if (campo) e.campo = { carta: inst(campo.dono ?? vez, campo.id || campo), dono: campo.dono ?? vez };
     return e;
@@ -78,7 +78,7 @@ test('toda carta do Baralho tem números de combate coerentes com o tipo', () =>
             assert.ok(d.hp > 0 && d.hp % 10 === 0, `${c.id}: HP`);
             assert.ok(Number.isInteger(d.recuo) && d.recuo >= 0, `${c.id}: recuo`);
             assert.ok(d.ataques.length >= 1, `${c.id}: sem ataque`);
-            for (const a of d.ataques) assert.ok(a.nome && a.custo >= 1 && a.dano >= 0, `${c.id}: ataque ${a.nome}`);
+            for (const a of d.ataques) assert.ok(a.nome && a.custo >= 0 && a.dano >= 0, `${c.id}: ataque ${a.nome}`);
         }
     }
     assert.equal(Object.keys(COMBATE).length, Baralho.CARTAS.length);
@@ -176,20 +176,27 @@ test('Aura de Reforço: quem joga em segundo ganha +1 Aura no 1º turno, só par
     assert.equal(e.turno, 2);
     const ativo = EU(e).ativo.uid;
     const banco = EU(e).banco[0].uid;
+    // 3 Auras do turno + 1 de Reforço (essa só vale no banco); no máximo 2 na mesma carta.
     e = jogar(e, { tipo: 'aura', alvo: ativo }).estado;
-    invalida(() => jogar(e, { tipo: 'aura', alvo: ativo }), 'Reforço vai para o banco');
+    e = jogar(e, { tipo: 'aura', alvo: ativo }).estado;
+    invalida(() => jogar(e, { tipo: 'aura', alvo: ativo }), 'no máximo 2 Auras');
+    e = jogar(e, { tipo: 'aura', alvo: banco }).estado;
     e = jogar(e, { tipo: 'aura', alvo: banco }).estado;
     invalida(() => jogar(e, { tipo: 'aura', alvo: banco }), 'já prendeu');
+    assert.equal(EU(e).ativo.aura + EU(e).banco[0].aura, 4);
     // Na ordem inversa também: banco primeiro, depois ativo.
     let f = mesa({ turno: 1, eu: { banco: ['bug-do-discord'] }, ele: { banco: ['drone-vigia'] } });
     f = jogar(f, { tipo: 'passar' }).estado;
     f = jogar(f, { tipo: 'aura', alvo: EU(f).banco[0].uid }).estado;
     f = jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }).estado;
     assert.equal(EU(f).ativo.aura + EU(f).banco[0].aura, 2);
-    // Turno 3 volta a ser 1 Aura.
+    // Turno 3 volta a ser 3 Auras, no máximo 2 na mesma carta (a 3ª vai para outra).
     f = jogar(f, { tipo: 'passar' }).estado;
     f = jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }).estado;
-    invalida(() => jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }), 'já prendeu');
+    f = jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }).estado;
+    invalida(() => jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }), 'no máximo 2 Auras');
+    f = jogar(f, { tipo: 'aura', alvo: EU(f).banco[0].uid }).estado;
+    invalida(() => jogar(f, { tipo: 'aura', alvo: EU(f).banco[0].uid }), 'já prendeu');
 });
 
 test('só joga na sua vez; baixar vai para o banco (3 vagas)', () => {
@@ -365,7 +372,7 @@ test('Toradolândia: com 3 cartas ou menos na mão, compra 1 a mais', () => {
     assert.equal(jogar(cheia, { tipo: 'passar' }).estado.jogadores[1].mao.length, 5);
 });
 
-test('Mansão do Inominável: goons +20 HP, Notificado tira 20; sair da Mansão pode nocautear', () => {
+test('Mansão do Inominável: goons +20 HP, Notificado tira 20; sair da Mansão tira o HP extra mas não nocauteia', () => {
     const e = mesa({
         eu: { ativo: { id: 'drone-vigia', dano: 65 * R.ESCALA }, mao: ['toradolandia'] },
         ele: { ativo: { id: 'italolol', estados: { notificado: true } } },
@@ -375,8 +382,9 @@ test('Mansão do Inominável: goons +20 HP, Notificado tira 20; sair da Mansão 
     assert.equal(R.hpMax(e, ELE(e).ativo), 90 * R.ESCALA, 'personagem não ganha HP');
     assert.equal(jogar(e, { tipo: 'passar' }).estado.jogadores[1].ativo.dano, 20 * R.ESCALA);
     const r = jogar(e, { tipo: 'campo', uid: EU(e).mao[0].uid });
-    assert.ok(r.eventos.some((ev) => ev.tipo === 'nocaute' && ev.id === 'drone-vigia'));
-    assert.equal(r.estado.jogadores[0].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.comum);
+    assert.ok(!r.eventos.some((ev) => ev.tipo === 'nocaute'), 'sair da Mansão não derruba ninguém');
+    assert.equal(EU(r.estado).ativo.dano, 60 * R.ESCALA - 1, 'fica com 1 de vida');
+    assert.equal(r.estado.jogadores[0].vida, R.VIDA_INICIAL);
 });
 
 test('Estacionamento Noturno: goons recuam de graça', () => {
@@ -531,8 +539,8 @@ test('Enzo Games: Almôndega 30 e Macarronada a 300% 120', () => {
     assert.equal(atacar(e, 0).estado.jogadores[1].ativo.dano, 30 * R.ESCALA);
     const s = atacar(e, 1).estado;
     assert.equal(s.jogadores[1].ativo, null, 'Chorão tem 2200 HP: caiu com 2400');
-    // O Chorão caiu: o dono perde só o nocaute épico, sem golpe extra.
-    assert.equal(s.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.epico);
+    // O Chorão (raro) caiu: o dono perde só o nocaute raro, sem golpe extra.
+    assert.equal(s.jogadores[1].vida, R.VIDA_INICIAL - R.DANO_NOCAUTE.raro);
 });
 
 test('Cabo Côco: no ativo impede o adversário de jogar campo; Arquivo Confidencial cura 20', () => {
@@ -1085,7 +1093,7 @@ test('texto do TCG de cada carta: existe e cita todos os ataques e o poder (não
         for (const a of c.ataques || []) assert.ok(carta.tcg.includes(a.nome), `${carta.id}: falta o ataque ${a.nome}`);
         if (c.poder) assert.ok(carta.tcg.includes(c.poder.nome), `${carta.id}: falta o poder ${c.poder.nome}`);
         for (const a of c.ataques || []) {
-            assert.ok(carta.tcg.includes(`${a.nome} (${a.custo} Aura)`), `${carta.id}: custo de ${a.nome} diferente do jogo`);
+            assert.ok(carta.tcg.includes(`${a.nome} (${a.custo === 0 ? 'de graça' : `${a.custo} Aura`})`), `${carta.id}: custo de ${a.nome} diferente do jogo`);
             if (a.dano > 0) assert.ok(carta.tcg.includes(String(a.dano * R.ESCALA).replace(/\B(?=(\d{3})+(?!\d))/g, '.')), `${carta.id}: dano de ${a.nome} diferente do jogo`);
         }
         if (c.hp) assert.ok(carta.tcg.includes(`Vida ${String(c.hp * R.ESCALA).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`), `${carta.id}: vida diferente do jogo`);

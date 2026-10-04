@@ -15,11 +15,11 @@
     const forca = (id) => R.combate(id).hp + 2 * maiorAtaque(id);
     const acharNaMesa = (jogador, uid) => R.naMesa(jogador).find((c) => c.uid === uid);
 
-    /** Pior dano que o ativo do adversário consegue dar no próximo turno dele (+1 Aura). */
+    /** Pior dano que o ativo do adversário consegue dar no próximo turno dele (+2 Auras). */
     function ameaca(estado, j) {
         const ele = estado.jogadores[1 - j];
         if (!ele.ativo) return 0;
-        const aura = ele.ativo.aura + 1;
+        const aura = ele.ativo.aura + R.AURAS_MAX_POR_CARTA_NO_TURNO;
         return Math.max(0, ...R.combate(ele.ativo.id).ataques.filter((a) => a.custo <= aura).map((a) => (a.dano + 10) * R.ESCALA));
     }
 
@@ -149,7 +149,7 @@
 
     /** Fácil: joga como o normal, mas às vezes faz uma jogada qualquer e ataca sem pensar. */
     function escolherFacil(estado, j, validas, aleatorio) {
-        if (aleatorio() < 0.35) {
+        if (aleatorio() < 0.6) {
             // Devolver cartas ao baralho no sorteio seria só jogar fora; o fácil não faz isso ao acaso.
             const qualquer = validas.filter((v) => !['passar', 'devolverMao', 'devolverMesa'].includes(v.tipo));
             if (qualquer.length) return qualquer[Math.floor(aleatorio() * qualquer.length)];

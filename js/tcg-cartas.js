@@ -36,13 +36,13 @@
             ] },
         'degustador-da-noite': { hp: 130, recuo: 1, ataques: [
             { nome: 'Vírgula-rangue', custo: 1, dano: 20, alvo: 'qualquer', recarga: 1 },
-            { nome: 'Escudo de Parênteses', custo: 3, dano: 90, efeitos: [{ tipo: 'escudo', valor: 30 }] },
+            { nome: 'Escudo de Parênteses', custo: 3, dano: 90, recarga: 1, efeitos: [{ tipo: 'escudo', valor: 30 }] },
         ] },
         'o-inominavel': { hp: 120, recuo: 2,
             poder: { nome: 'Besteira no Discord', tipo: 'notificarAtivo', ativavel: true,
                 texto: '1 vez por turno: deixa o ativo do adversário Notificado.' },
             ataques: [
-                { nome: 'Bala Dourada', custo: 3, dano: 60, alvo: 'qualquer', recarga: 1 },
+                { nome: 'Bala Dourada', custo: 2, dano: 60, alvo: 'qualquer', recarga: 1 },
             ] },
         'superkid': { hp: 130, recuo: 2, ataques: [
             { nome: 'Farmar Aura', custo: 1, dano: 0, efeitos: [{ tipo: 'auraSi', valor: 1 }] },
@@ -84,7 +84,7 @@
             { nome: 'Quebrar Tudo', custo: 1, dano: 0, efeitos: [{ tipo: 'descartarCampo' }] },
             { nome: 'Marretada', custo: 3, dano: 90 },
         ] },
-        'moderador-do-ban': { hp: 90, recuo: 2, ataques: [
+        'moderador-do-ban': { hp: 90, recuo: 2, maxCopias: 1, ataques: [
             { nome: 'Ban de 7 Dias', custo: 2, dano: 30, recarga: 1, efeitos: [{ tipo: 'estado', estado: 'silenciado' }] },
         ] },
 
@@ -96,7 +96,7 @@
             { nome: 'Glitch', custo: 1, dano: 0, efeitos: [{ tipo: 'moeda', cara: 40, coroa: 0 }] },
         ] },
         'notificacao-morcego': { hp: 40, recuo: 0, ataques: [
-            { nome: '@everyone', custo: 1, dano: 10, efeitos: [{ tipo: 'estado', estado: 'notificado' }] },
+            { nome: '@everyone', custo: 0, dano: 10, efeitos: [{ tipo: 'estado', estado: 'notificado' }] },
         ] },
         'emoji-pistola': { hp: 60, recuo: 1, ataques: [
             { nome: 'Reação 😡', custo: 1, dano: 10, efeitos: [{ tipo: 'bonusPorGoon', valor: 10 }] },
@@ -104,15 +104,15 @@
         'drone-vigia': { hp: 60, recuo: 1,
             poder: { nome: 'Câmera', tipo: 'espiarMao', ativavel: true,
                 texto: '1 vez por turno: olha a mão do adversário.' },
-            ataques: [{ nome: 'Facho', custo: 1, dano: 20 }] },
+            ataques: [{ nome: 'Facho', custo: 0, dano: 20 }] },
 
         // ---- Campos (ficam na mesa e valem para os dois) --------------------
         'piscina-de-macarronada': { campo: { tipo: 'curaInicio', valor: 20,
-            texto: 'Quando quem a joga a põe na mesa, cura 20 do ativo dele no mesmo turno; depois, no começo de cada turno, cura 20 do ativo de quem vai jogar.' } },
+            texto: 'Quando quem a joga a põe na mesa, cura 20 de cada carta dele na mesa (ativo e banco) no mesmo turno; depois, no começo de cada turno, cura 20 de cada carta de quem vai jogar.' } },
         'toradolandia': { campo: { tipo: 'compraExtra', limiteMao: 3,
             texto: 'Quem começa o turno com 3 cartas ou menos na mão compra 1 a mais.' } },
         'mansao-do-inominavel': { campo: { tipo: 'mansao', veneno: 20, hpGoon: 20,
-            texto: 'Notificado tira 20 em vez de 10. Goons têm +20 HP.' } },
+            texto: 'Notificado tira 20 em vez de 10. Goons têm +20 HP enquanto ela estiver na mesa (se ela sair, perdem o HP extra, mas nunca caem por isso). Goon que ataca com 1 Aura a mais do que o ataque pede notifica o ativo do adversário.' } },
         'estacionamento-noturno': { campo: { tipo: 'recuoGratisGoon',
             texto: 'Goons recuam de graça.' } },
         'casa-do-enzo-games': { campo: { tipo: 'trocarCarta',
@@ -132,12 +132,12 @@
         { id: 'legiao', nome: 'Legião do Mal', texto: 'Veneno, ban e capangas que batem forte.',
             capa: ['o-inominavel', 'encantadora', 'marreteiro-do-coracao'],
             cartas: ['o-inominavel', 'cabo-coco', 'encantadora', 'encantadora', 'cara-de-coracao', 'cara-de-coracao',
-                'marreteiro-do-coracao', 'marreteiro-do-coracao', 'moderador-do-ban', 'moderador-do-ban',
+                'marreteiro-do-coracao', 'marreteiro-do-coracao', 'moderador-do-ban', 'drone-vigia',
                 'emoji-pistola', 'emoji-pistola', 'mansao-do-inominavel', 'mansao-do-inominavel', 'sombra-do-degustador'] },
         { id: 'internet', nome: 'Bichos da Internet', texto: 'Um enxame de goons baratos e rápidos.',
             capa: ['notificacao-morcego', 'bug-do-discord', 'drone-vigia'],
             cartas: ['bug-do-discord', 'bug-do-discord', 'notificacao-morcego', 'notificacao-morcego', 'emoji-pistola',
-                'emoji-pistola', 'drone-vigia', 'drone-vigia', 'moderador-do-ban', 'moderador-do-ban', 'cara-de-coracao',
+                'emoji-pistola', 'drone-vigia', 'drone-vigia', 'moderador-do-ban', 'marreteiro-do-coracao', 'cara-de-coracao',
                 'cara-de-coracao', 'estacionamento-noturno', 'estacionamento-noturno', 'toradolandia'] },
     ];
 

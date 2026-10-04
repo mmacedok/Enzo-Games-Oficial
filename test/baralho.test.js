@@ -337,14 +337,14 @@ test('B14. {todas: true} com repetidas de várias raridades: calcula pó exato e
     // Insere cartas na coleção do leitor diretamente no banco para testar o cálculo exato de várias raridades:
     // 3x cara-de-coracao (comum, 5): 2 repetidas = 10 pó
     // 2x hatsune-neves (raro, 15): 1 repetida = 15 pó
-    // 4x chorao (épico, 50): 3 repetidas = 150 pó
+    // 4x sombra-do-degustador (épico, 50): 3 repetidas = 150 pó
     // 2x enzo-games (lendário, 200): 1 repetida = 200 pó
     // Total esperado: 10 + 15 + 150 + 200 = 375 pó
     await db.query(
         `INSERT INTO colecao (user_id, card_id, qtd, primeira_em) VALUES
          ($1, 'cara-de-coracao', 3, $2),
          ($1, 'hatsune-neves', 2, $2),
-         ($1, 'chorao', 4, $2),
+         ($1, 'sombra-do-degustador', 4, $2),
          ($1, 'enzo-games', 2, $2)`, [u.id, relogio.agora]);
 
     const res = await leitor('POST', '/api/baralho/po', { todas: true });
@@ -353,7 +353,7 @@ test('B14. {todas: true} com repetidas de várias raridades: calcula pó exato e
     assert.equal(res.dados.carteira.po, 375);
     assert.equal(res.dados.colecao['cara-de-coracao'], 1);
     assert.equal(res.dados.colecao['hatsune-neves'], 1);
-    assert.equal(res.dados.colecao.chorao, 1);
+    assert.equal(res.dados.colecao['sombra-do-degustador'], 1);
     assert.equal(res.dados.colecao['enzo-games'], 1);
 });
 

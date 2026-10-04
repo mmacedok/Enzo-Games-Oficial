@@ -1,6 +1,6 @@
 # Batalha dos Torados — regras, cartas, efeitos e danos
 
-O TCG do site Enzo Games (`batalha.html`). Este documento vale para a versão de regras **9** (`REGRAS_VERSAO` em `js/tcg-regras.js`).
+O TCG do site Enzo Games (`batalha.html`). Este documento vale para a versão de regras **11** (histórico em `docs/BATALHA-CHANGELOG.md`) (`REGRAS_VERSAO` em `js/tcg-regras.js`).
 Os números das cartas vêm de `js/tcg-cartas.js` (multiplicados por 20) e os textos de `js/baralho-dados.js`. Se uma regra mudar, o motor (`js/tcg-regras.js`) manda; este arquivo deve ser regenerado.
 
 ## 1. Objetivo
@@ -11,21 +11,21 @@ Os números das cartas vêm de `js/tcg-cartas.js` (multiplicados por 20) e os te
 
 ## 2. Deck e começo
 
-- **Deck:** 15 cartas, até 2 cópias de cada e só 1 de cada lendária, com pelo menos 1 personagem ou goon.
+- **Deck:** 15 cartas, até 2 cópias de cada (o Moderador do Discord só 1) e só 1 de cada lendária, com pelo menos 1 personagem ou goon.
 - Decks prontos: **Turma do Enzo**, **Legião do Mal** e **Bichos da Internet**.
 - **Deck customizado (4º deck):** montado por cada conta com **qualquer carta do jogo** (cartas infinitas, não depende da coleção). Mesmas 15 cartas, **no máximo 2 lendárias** (1 cópia de cada) e até 2 cópias das outras; Vale contra o NPC e online. O dono pode **listar** o deck (nome e descrição curta) em **Decks de players**, onde os outros jogadores veem as cartas e podem copiá-lo para o próprio deck.
 - **Banimento (antes de tudo):** cada jogador bane 2 cartas diferentes não lendárias do deck do adversário (nunca as duas cópias da mesma), em segredo e ao mesmo tempo, antes de qualquer carta ir à mesa. As banidas saem do deck (ficam 13 cartas) e aparecem para os dois; só depois as mãos são compradas. Não dá para banir as cartas que deixariam o deck sem nenhum lutador.
 - **Contador de rodadas:** cada rodada é um turno de cada jogador; aparece "Rodada N/15" na mesa (a partida acaba no fim da rodada 15).
 - **Mão inicial:** 5 cartas. Mão sem lutador volta para o baralho e compra de novo, sem castigo.
 - **Preparação:** cada um escolhe 1 lutador ativo e até 3 no banco.
-- **Primeiro turno:** quem começa não ataca no 1º turno. Quem joga em segundo ganha **+1 Aura de Reforço** no 1º turno, e ela só pode ir para o banco.
+- **Primeiro turno:** quem começa não ataca no 1º turno. Quem joga em segundo ganha **+1 Aura de Reforço** no 1º turno (somada às 3 do turno), e ela só pode ir para o banco.
 
 ## 3. O turno
 
 Compra 1 carta. Depois, em qualquer ordem:
 
 - **Baixar** um lutador (banco até 3; sem ativo, a carta entra direto como ativo).
-- **Prender 1 Aura** numa carta (a Aura fica presa nela; atacar não gasta a Aura).
+- **Prender até 3 Auras** por turno, no máximo **2 na mesma carta** (a 3ª vai para outra). A Aura fica presa na carta; atacar não gasta a Aura.
 - **Jogar 1 campo** (substitui o campo que estiver na mesa; vale para os dois lados).
 - **Recuar 1 vez** (paga a Aura do recuo).
 - **Usar poderes** (1 vez por carta por turno, nos poderes que se ativam).
@@ -66,9 +66,9 @@ Um campo por vez na mesa; vale para os dois lados. Cabo Côco no ativo impede o 
 
 | Campo | Efeito |
 |---|---|
-| Piscina de Macarronada | cura 400 do ativo de quem a joga, no mesmo turno; depois, 400 do ativo de quem vai jogar, no começo de cada turno |
+| Piscina de Macarronada | cura 400 de cada carta de quem a joga (ativo e banco), no mesmo turno; depois, 400 de cada carta de quem vai jogar, no começo de cada turno |
 | Toradolândia | quem começa o turno com 3 cartas ou menos na mão compra 1 a mais |
-| Mansão do Inominável | Notificado tira 400 por turno; goons ganham +400 de vida |
+| Mansão do Inominável | Notificado tira 400 por turno; goons ganham +400 de vida enquanto ela está na mesa (ao sair, perdem o extra sem cair); goon que ataca com 1 Aura a mais do que o ataque pede notifica o ativo do adversário |
 | Estacionamento Noturno | goons recuam de graça |
 | Casa do Enzo Games | 1 vez por turno, cada jogador devolve 1 carta da mão ao baralho e compra 1 (fora do limite de 2) |
 | São João do Butico | os ataques não acertam o banco |
@@ -100,22 +100,22 @@ Vida, recuo, poder e ataques (custo de Aura entre parênteses; dano já na escal
 |---|---|---|---|---|
 | Enzo Games | Lendário | 2.800 | 2 Aura | Almôndega (1): 600 · Macarronada a 300% (3): 2.400 |
 | Cabo Côco | Lendário | 2.600 | 2 Aura | Poder: Conteúdo Banido · Arquivo Confidencial (2): 1.200 |
-| Degustador da Noite | Lendário | 2.600 | 1 Aura | Vírgula-rangue (1): 400 · Escudo de Parênteses (3): 1.800 |
-| O Inominável | Lendário | 2.400 | 2 Aura | Poder: Besteira no Discord · Bala Dourada (3): 1.200 |
+| Degustador da Noite | Lendário | 2.600 | 1 Aura | Vírgula-rangue (1): 400 · Escudo de Parênteses (3): 1.800, vira |
+| O Inominável | Lendário | 2.400 | 2 Aura | Poder: Besteira no Discord · Bala Dourada (2): 1.200 |
 | Superkid | Lendário | 2.600 | 2 Aura | Farmar Aura (1): só efeito · Aura de 67 Segundos (2): 400 |
-| Chorão | Épico | 2.200 | 2 Aura | Poder: Vou te Processar! · Birra (2): 1.000 |
+| Chorão | Raro | 2.200 | 2 Aura | Poder: Vou te Processar! · Birra (2): 1.000 |
 | Sombra do Degustador | Épico | 1.800 | grátis | Teemo no Top (1): 400 · Fumaça Roxa (2): 1.000 |
 | Hatsune Neves | Raro | 1.600 | 1 Aura | Poder: Invoco uma Carta de Magic · Porta do Quarto (2): 600 |
 | ItaloLOL | Raro | 1.800 | 1 Aura | Au! Aura! (1): 400 · 0/14/2 (2): 1.400 |
 | Stand do Joinha | Raro | 1.400 | 1 Aura | Poder: Num Tem Eu · Joinha (1): 400 |
 | Encantadora | Raro (goon) | 1.400 | 1 Aura | Poder: Vem Cá, Meu Gadinho · Chama Rosa (2): 600 |
 | Marreteiro do Coração | Raro (goon) | 2.000 | 2 Aura | Quebrar Tudo (1): só efeito · Marretada (3): 1.800 |
-| Moderador do Discord | Raro (goon) | 1.800 | 2 Aura | Ban de 7 Dias (2): 600 |
+| Moderador do Discord | Raro (goon, 1 por deck) | 1.800 | 2 Aura | Ban de 7 Dias (2): 600 |
 | Cara de Coração | Comum (goon) | 1.400 | 1 Aura | Soco Iludido (1): 400 |
 | Bug do Discord | Comum (goon) | 1.000 | 1 Aura | Glitch (1): só efeito |
-| Notificação Morcego | Comum (goon) | 800 | grátis | @everyone (1): 200 |
+| Notificação Morcego | Comum (goon) | 800 | grátis | @everyone (grátis): 200 |
 | Emoji Pistola | Comum (goon) | 1.200 | 1 Aura | Reação 😡 (1): 200 |
-| Drone Vigia | Comum (goon) | 1.200 | 1 Aura | Poder: Câmera · Facho (1): 400 |
+| Drone Vigia | Comum (goon) | 1.200 | 1 Aura | Poder: Câmera · Facho (grátis): 400 |
 
 ## 10. Cartas em detalhe
 
@@ -142,7 +142,7 @@ _(Vírgulas não lutam contra o crime. Eu luto.)_
 
 - Vida 2.600 · Recuo 1 Aura
 - Vírgula-rangue (1 Aura): 400 de dano em qualquer carta do adversário, até no banco; fica virado por 1 turno.
-- Escudo de Parênteses (3 Aura): 1.800 de dano e segura 600 do próximo golpe que receber.
+- Escudo de Parênteses (3 Aura): 1.800 de dano e segura 600 do próximo golpe que receber; fica virado por 1 turno.
 - Se for nocauteada, o dono perde **2.250** de vida.
 
 #### O Inominável — Lendário · personagem
@@ -161,7 +161,7 @@ _(Quanto mais besteira ao redor, mais aura.)_
 - Aura de 67 Segundos (2 Aura): 400 de dano, mais 400 por Aura que ele tem; se derrubar a carta, ele fica virado por 1 turno.
 - Se for nocauteada, o dono perde **2.250** de vida.
 
-#### Chorão — Épico · personagem
+#### Chorão — Raro · personagem
 _(Vou te processar! (chorando))_
 
 - Vida 2.200 · Recuo 2 Aura

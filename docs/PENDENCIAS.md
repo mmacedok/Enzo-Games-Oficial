@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-10-04 — Batalha, versão 11:** 3 Auras por turno (máx. 2 por carta), Degustador vira nos dois ataques, Moderador 1 por deck, Chorão raro, Inominável -1 Aura, Drone e Morcego de graça, Piscina cura todos, Mansão com HP extra enquanto está na mesa e notifica com Aura sobrando. Changelog em `docs/BATALHA-CHANGELOG.md`; cartas novas e Resenha só planejadas em `docs/PLANO-CARTAS-NOVAS.md` (7 dúvidas para o Henrique). Pendente: refazer as cartilhas "Como jogar" (dizem 1 Aura por turno) e conferir o equilíbrio ao vivo.
+
 - **2026-10-04 — Degustador da Noite, capítulo 7 (escondido):** capa e 13 páginas no site, com `hidden: true`. Publicar ou agendar pela aba lançamentos do terminal. Falta o título do capítulo (hoje aparece "Capítulo 7").
 
 - **2026-10-01 · Capa de verdade do Felipe Robozão (cap. 1):** entrou a capa gerada pelo Henrique no Codex (`assets/Spin Offs/Felipe Robozao/Capitulo 1/Capa/capa.png`, 941×1672, sem perda), no lugar da provisória (apagada). O texto da capa (título "A origem do Robozão", preço, "Gibi Games", "Editora Butico", código de barras) é da arte original, não foi mexido.
