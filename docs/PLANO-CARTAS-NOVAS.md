@@ -20,6 +20,11 @@ existe** entrou na versão 11 (ver `docs/BATALHA-CHANGELOG.md`). Este plano cobr
 
 Ordem sugerida: M9 (trivial) → M3 → M8 → M6 → M4 → M7 → M2 → M5 → **M1 por último** (é a maior: motor, visão online e tela).
 
+**Atualização 2026-10-05 (v12):** a M1 (Resenha) ficou pronta no motor, na tela e no robô, sem carta ainda: jogada `anexar`,
+`COMBATE[id].anexo` (ver o cabeçalho de `js/tcg-cartas.js`). A M9 (tags) também (`tags` em qualquer carta, `R.tagsDe`). A
+aparência alternativa (`anexo.visual`) já cobre parte da M5. O resto do motor ficou pronto para tipos novos: `TIPOS`/`MODOS`,
+`ficha()`, `EFEITOS` e `BONUS_DANO` em `js/tcg-regras.js`.
+
 ## 2. As cartas (texto da lista, com a leitura que o Claude fez)
 
 `id` = nome do arquivo da arte (`assets/Cartas/<id>.png`). Raridade entre colchetes é **sugestão** quando a lista não diz.

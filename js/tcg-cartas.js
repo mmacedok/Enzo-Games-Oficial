@@ -8,7 +8,16 @@
 // HP e números de dano ficam na escala pequena: o motor multiplica por ESCALA (js/tcg-regras.js).
 // `recarga`: depois de usar, a carta fica virada (sem atacar, poder nem recuo) por N turnos do dono.
 // Campos: `campo` { nome, texto, tipo, ... }.
-// O que cada `tipo` de efeito faz está em js/tcg-regras.js (EFEITOS_*).
+// Cartas complementares (tipo `resenha` no js/baralho-dados.js): `anexo` { texto, ... }. Ficam deitadas atrás de
+// um lutador e mudam só ele. Opcionais:
+//   em: { lado: 'meu'|'dele'|'qualquer', lugar: 'ativo'|'banco', tipos: [...], cartas: [ids], tags: [...] }
+//   hp, recuo, dano, reducao, custo (somam) · ataques (a mais) · trocaAtaques · efeitosAtaque · poder · tags
+//   visual: { arte: id de outra carta, nome, raridade } (muda a aparência do lutador)
+//   aoEntrar: [efeitos] · soAoEntrar: true (age e vai para o descarte) · usos: N ataques · turnos: N turnos do dono
+//   maxNoLutador (padrão R.ANEXOS_POR_LUTADOR)
+//   Exemplo: 'bone-da-sorte': { anexo: { texto: '+10 de dano; sai depois de 2 ataques.', dano: 10, usos: 2 } }
+// `tags`: lista opcional em qualquer carta (ex.: ['degustador']), para efeitos do tipo "toda carta X".
+// Tipo de carta novo: uma linha em TIPOS (js/tcg-regras.js). Efeito novo: uma entrada em EFEITOS ou BONUS_DANO.
 // Mudou um número? Rode `node --test test/tcg-regras.test.js`.
 // ============================================================================
 (function (root, factory) {

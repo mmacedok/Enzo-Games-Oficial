@@ -25,7 +25,7 @@
 
     const ESTRELAS = { comum: '★', raro: '★★', epico: '★★★', lendario: '★★★★' };
     /** Rótulo do tipo na faixa (personagem não leva rótulo). */
-    const TIPOS = { campo: 'Campo', goon: 'Capanga' };
+    const TIPOS = { campo: 'Campo', goon: 'Capanga', resenha: 'Resenha' };
     const NOMES_JOGOS = { 'flappy-enzo': 'Flappy Enzo', 'ronda-noturna': 'Degustação Noturna' };
     const CONFIRMAR_MS = 4000;
     const PRESENTE_VISITANTE = 'enzo-presente-visitante';   // cartas abertas sem login (ficam só aqui)
@@ -117,12 +117,19 @@
     if (window.EnzoConta) ouvirConta();
     else window.addEventListener('load', ouvirConta, { once: true });
 
-    function carta(cardId) {
-        const def = B.carta(cardId);
+    /**
+     * `visual` (opcional, da Batalha): carta complementar que muda a aparência. { arte: id de outra carta (ou caminho
+     * de imagem), nome, raridade (só a moldura) }.
+     */
+    function carta(cardId, visual = null) {
+        const original = B.carta(cardId);
+        const daArte = visual?.arte && !visual.arte.includes('/') ? B.carta(visual.arte) : null;
+        const def = visual ? { ...original, raridade: visual.raridade || original.raridade,
+            arte: daArte?.arte || visual.arte || original.arte, foco: daArte?.foco || original.foco } : original;
         const r = B.raridade(def.raridade);
-        const card = el('article', `carta-tcg carta-tcg--${def.raridade}${def.tipo === 'campo' ? ' carta-tcg--campo' : ''}`);
+        const card = el('article', `carta-tcg carta-tcg--${def.raridade}${def.tipo === 'campo' ? ' carta-tcg--campo' : ''}${def.tipo === 'resenha' ? ' carta-tcg--resenha' : ''}`);
         card.dataset.carta = def.id;
-        const nome = nomeVisivel(def);
+        const nome = visual?.nome || nomeVisivel(def);
         card.setAttribute('aria-label', `${nome}: carta ${def.numero} de ${B.CARTAS.length}, ${r.nome}.`);
 
         const topo = el('div', 'carta-tcg-topo');

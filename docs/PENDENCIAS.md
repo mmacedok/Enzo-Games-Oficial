@@ -6,7 +6,7 @@
 > item (ex.: `> Henrique: deixa para depois`); o Claude segue isso na próxima atualização.
 > Testes que faltam rodar ficam em [`TESTES-PENDENTES.md`](TESTES-PENDENTES.md) (não repetidos aqui).
 >
-> Última atualização: **2026-10-04**.
+> Última atualização: **2026-10-05**.
 
 **Legenda:**
 - **Quem:**
@@ -19,6 +19,14 @@
 ---
 
 ## 🔴 Agora (prioridade alta)
+
+- [ ] **Cartas complementares (Resenha) — motor pronto, faltam as cartas** (branch `tcg-anexos`, REGRAS_VERSAO 12,
+  ver `docs/BATALHA-CHANGELOG.md`). Falta: 🧑 decidir quantas cabem atrás de um lutador (hoje 1) e se o visual
+  (carta deitada aparecendo dos lados) está bom; 🧑 dizer quais cartas são Resenha (Itallo de Viego, Pedra Mole...)
+  e mandar as artes (de preferência na horizontal); 🤖 escrever os números em `js/tcg-cartas.js` (`anexo`) e
+  `js/baralho-dados.js` (`tipo: 'resenha'`), ensinar o "Como jogar" e testar; ♊ QA da tela no celular.
+- [ ] **Partidas longas desde a v11:** o simulador dá 22,8 turnos e 12,3% acabando no limite de turnos (meta: 16–22 e
+  menos de 3%). Vem das 3 Auras por turno; recalibrar. 🤖♊
 
 - [ ] **Multiplayer mais rápido no ar:** no painel da Cloudflare (Pages → Settings → Functions →
   Placement), testar "Smart" para a API rodar perto do banco Neon. Não deu para conferir a opção
