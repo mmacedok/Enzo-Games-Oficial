@@ -50,28 +50,28 @@
     align-items: center;
     gap: 8px;
     width: var(--v);
-    padding: 0;
-    border: 0;
-    background: none;
     color: var(--text);
-    font: inherit;
-    cursor: pointer;
 }
 .vinil::after { top: calc(var(--v) + 2px); }
-.vinil:focus-visible { outline: 3px dashed var(--focus); outline-offset: 6px; }
+/* Mesmo movimento dos gibis da estante: cresce, sobe e inclina seguindo o mouse (js/midia.js). */
 .vinil-corpo {
     position: relative;
     display: block;
     width: var(--v);
     height: var(--v);
     margin-bottom: calc(var(--tabua) + 4px);
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
     transform-style: preserve-3d;
-    transform: rotateY(26deg) rotateX(3deg);
+    transform: translateZ(var(--lift, 0px)) scale(var(--zoom, 1)) rotateX(var(--rx, -3deg)) rotateY(var(--ry, 20deg));
     transition: transform 0.35s ease;
 }
-.vinil:hover .vinil-corpo,
-.vinil:focus-visible .vinil-corpo,
-.vinil.musica-tocando .vinil-corpo { transform: rotateY(6deg) translateY(-8px); }
+.vinil-corpo:focus-visible { outline: 3px dashed var(--focus); outline-offset: 6px; }
+.vinil.is-active, .vinil:focus-within, .vinil:has(.musica-tocando) { z-index: 3; }
+.vinil.is-active .vinil-corpo, .vinil:focus-within .vinil-corpo { --lift: 34px; --zoom: 1.08; }
+.vinil.is-active .vinil-corpo { transition: transform 0.1s linear; }
 .vinil-capa {
     position: absolute;
     inset: 0;
@@ -107,14 +107,24 @@
     transition: background-position 0.6s ease;
     pointer-events: none;
 }
-.vinil:hover .vinil-plastico { background-position: 0 0, 0 0, 0 0; }
+.vinil.is-active .vinil-plastico { background-position: 0 0, 0 0, 0 0; }
 .tem-plastico .vinil-plastico {
     background-image: url("../assets/midia/vinil-plastico.png"),
         linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.25) 37%, transparent 44%);
     background-size: 100% 100%, 220% 100%;
     background-position: 0 0, 100% 0;
 }
-.tem-plastico .vinil:hover .vinil-plastico { background-position: 0 0, 0 0; }
+.tem-plastico .vinil.is-active .vinil-plastico { background-position: 0 0, 0 0; }
+/* reflexo que segue o mouse (como o brilho dos gibis) */
+.vinil-plastico::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--mx, 25%) var(--my, 15%), rgba(255, 255, 255, 0.45), transparent 55%);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.vinil.is-active .vinil-plastico::after { opacity: 1; }
 .vinil-adesivo {
     position: absolute;
     top: 6%;
@@ -174,9 +184,8 @@
     border-radius: 50%;
     background: #1b1b1b;
 }
-.vinil:hover .vinil-disco { translate: 14% 0; }
-.vinil.musica-tocando { z-index: 3; }
-.vinil.musica-tocando .vinil-disco { translate: 46% 0; animation: midia-gira 1.9s linear infinite; }
+.vinil.is-active .vinil-disco, .vinil:focus-within .vinil-disco { translate: 46% 0; }
+.vinil:has(.musica-tocando) .vinil-disco { translate: 46% 0; animation: midia-gira 1.9s linear infinite; }
 @keyframes midia-gira { to { rotate: 360deg; } }
 .vinil-nome {
     max-width: 100%;
@@ -188,17 +197,41 @@
     color: var(--caption);
     text-shadow: var(--pop-sm);
 }
-.vinil .musica-estado {
-    padding: 2px 10px;
-    font-size: 0.85rem;
-    font-weight: 700;
+.vinil-nome { align-self: stretch; }
+/* plaquinha do player */
+.vinil-player {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 6px 8px;
+    width: calc(var(--v) + 16px);
+    padding: 8px 10px;
     color: var(--ink);
     background: var(--paper);
     border: var(--stroke);
-    border-radius: 999px;
+    border-radius: 10px;
     box-shadow: var(--pop-sm);
 }
-.vinil.musica-tocando .musica-estado { background: var(--caution); }
+.vinil-player .vinil-nome { grid-column: 1 / -1; color: var(--ink); text-shadow: none; }
+.vinil:has(.musica-tocando) .vinil-player { background: var(--caution); }
+.vinil-play {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    font-size: 1rem;
+    color: var(--ink);
+    background: #fff;
+    border: var(--stroke);
+    border-radius: 50%;
+    cursor: pointer;
+}
+.vinil-play .musica-estado { font-size: 0; }
+.vinil-play .musica-estado::before { content: '▶'; font-size: 0.95rem; }
+.vinil-play.musica-tocando .musica-estado::before { content: '⏸'; }
+.vinil-barra, .vinil-volume { width: 100%; min-width: 0; accent-color: #7b2cbf; cursor: pointer; }
+.vinil-player-linha { grid-column: 1 / -1; display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 6px; }
+.vinil-tempo { font-size: 0.8rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vinil-som { font-size: 0.85rem; }
 
 /* ---------------------------------------------------------------- fitas em pé */
 .midia-estante--fitas { --gap: 8px; gap: 46px var(--gap); }
@@ -346,5 +379,5 @@ button.fita-frente:hover { translate: 0 -4px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .vinil.musica-tocando .vinil-disco, .fita-carretel, .fita-frente { animation: none; }
+    .vinil:has(.musica-tocando) .vinil-disco, .fita-carretel, .fita-frente { animation: none; }
 }

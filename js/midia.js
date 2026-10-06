@@ -29,14 +29,48 @@
     };
 
     // ------------------------------------------------------------ vinis
-    function vinil(faixa) {
-        const botao = criar('button', 'vinil');
-        botao.type = 'button';
-        botao.setAttribute('aria-pressed', 'false');
-        botao.setAttribute('aria-label', `Ouvir ${faixa.titulo}`);
-        botao.style.setProperty('--capa', `url("${encodeURI(faixa.capa)}")`);
+    const tempo = (s) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '--:--');
+    const players = []; // { faixa, barra, rotulo, volume, duracao }
 
-        const corpo = criar('span', 'vinil-corpo');
+    /** Inclinação 3D que segue o mouse: o mesmo código dos gibis da estante (js/shelf.js). */
+    function seguirMouse(item) {
+        let rect = null;
+        let frame = 0;
+        const medir = () => { rect = item.getBoundingClientRect(); };
+        item.addEventListener('pointerenter', medir);
+        window.addEventListener('resize', () => { rect = null; });
+        window.addEventListener('scroll', () => { rect = null; }, { passive: true });
+        item.addEventListener('pointermove', (event) => {
+            if (event.pointerType !== 'mouse') return;
+            if (!rect) medir();
+            const nx = Math.min(1, Math.max(-1, ((event.clientX - rect.left) / rect.width) * 2 - 1));
+            const ny = Math.min(1, Math.max(-1, ((event.clientY - rect.top) / rect.height) * 2 - 1));
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+                item.classList.add('is-active');
+                item.style.setProperty('--ry', `${(nx * 18).toFixed(2)}deg`);
+                item.style.setProperty('--rx', `${(-ny * 10).toFixed(2)}deg`);
+                item.style.setProperty('--mx', `${((nx + 1) * 50).toFixed(1)}%`);
+                item.style.setProperty('--my', `${((ny + 1) * 50).toFixed(1)}%`);
+            });
+        });
+        const soltar = () => {
+            cancelAnimationFrame(frame);
+            item.classList.remove('is-active');
+            for (const p of ['--ry', '--rx', '--mx', '--my']) item.style.removeProperty(p);
+        };
+        item.addEventListener('pointerleave', soltar);
+        item.addEventListener('pointercancel', soltar);
+    }
+
+    function vinil(faixa) {
+        const caixa = criar('div', 'vinil');
+        caixa.style.setProperty('--capa', `url("${encodeURI(faixa.capa)}")`);
+
+        // o disco (clicar toca/pausa)
+        const disco3d = criar('button', 'vinil-corpo');
+        disco3d.type = 'button';
+        disco3d.setAttribute('aria-label', `Ouvir ${faixa.titulo}`);
         const disco = criar('span', 'vinil-disco');
         disco.appendChild(criar('span', 'vinil-rotulo'));
         const capa = criar('span', 'vinil-capa');
@@ -46,11 +80,68 @@
         arte.loading = 'lazy';
         arte.decoding = 'async';
         capa.append(arte, criar('span', 'vinil-plastico'), criar('span', 'vinil-adesivo', 'LACRADO'));
-        corpo.append(criar('span', 'vinil-lombada'), disco, capa);
+        disco3d.append(criar('span', 'vinil-lombada'), disco, capa);
 
-        botao.append(corpo, criar('span', 'vinil-nome', faixa.titulo), criar('span', 'musica-estado', '▶ Ouvir'));
-        botao.addEventListener('click', () => window.EnzoMusicas.alternar(faixa.completa, botao));
-        return botao;
+        // plaquinha com o player
+        const player = criar('div', 'vinil-player');
+        const play = criar('button', 'vinil-play');
+        play.type = 'button';
+        play.setAttribute('aria-pressed', 'false');
+        play.setAttribute('aria-label', `Tocar ou pausar ${faixa.titulo}`);
+        play.appendChild(criar('span', 'musica-estado', '▶'));
+        const barra = criar('input', 'vinil-barra');
+        Object.assign(barra, { type: 'range', min: 0, max: 1000, value: 0 });
+        barra.setAttribute('aria-label', `Posição em ${faixa.titulo}`);
+        const rotulo = criar('span', 'vinil-tempo', '0:00 / --:--');
+        const volume = criar('input', 'vinil-volume');
+        Object.assign(volume, { type: 'range', min: 0, max: 1, step: 0.05, value: window.EnzoMusicas.audio.volume });
+        volume.setAttribute('aria-label', 'Volume');
+        const linha = criar('div', 'vinil-player-linha');
+        linha.append(rotulo, criar('span', 'vinil-som', '🔊'), volume);
+        player.append(criar('span', 'vinil-nome', faixa.titulo), play, barra, linha);
+
+        const info = { faixa, barra, rotulo, volume, duracao: NaN };
+        players.push(info);
+        // duração antes de tocar (só os metadados)
+        const meta = new Audio();
+        meta.preload = 'metadata';
+        meta.addEventListener('loadedmetadata', () => { info.duracao = meta.duration; rotulo.textContent = `0:00 / ${tempo(meta.duration)}`; meta.removeAttribute('src'); });
+        meta.src = faixa.completa;
+
+        const tocar = () => window.EnzoMusicas.alternar(faixa.completa, play);
+        play.addEventListener('click', tocar);
+        disco3d.addEventListener('click', tocar);
+        barra.addEventListener('input', () => {
+            const audio = window.EnzoMusicas.audio;
+            if (!ehAtual(faixa)) tocar();
+            const ir = () => { if (audio.duration) audio.currentTime = (barra.value / 1000) * audio.duration; };
+            if (audio.duration) ir(); else audio.addEventListener('loadedmetadata', ir, { once: true });
+        });
+        volume.addEventListener('input', () => {
+            window.EnzoMusicas.audio.volume = Number(volume.value);
+            for (const p of players) if (p.volume !== volume) p.volume.value = volume.value;
+        });
+
+        seguirMouse(caixa);
+        caixa.append(disco3d, player);
+        return caixa;
+    }
+
+    function ehAtual(faixa) {
+        const src = window.EnzoMusicas.audio.src;
+        return Boolean(src) && decodeURI(src).endsWith(faixa.completa);
+    }
+
+    // Barra e tempo do disco que está tocando.
+    function acompanharAudio() {
+        const audio = window.EnzoMusicas?.audio;
+        if (!audio) return;
+        audio.addEventListener('timeupdate', () => {
+            const p = players.find((x) => ehAtual(x.faixa));
+            if (!p || !audio.duration) return;
+            p.barra.value = Math.round((audio.currentTime / audio.duration) * 1000);
+            p.rotulo.textContent = `${tempo(audio.currentTime)} / ${tempo(audio.duration)}`;
+        });
     }
 
     // ------------------------------------------------------------ fitas
@@ -136,6 +227,7 @@
         const musicas = (await window.EnzoMusicas?.carregar()) || {};
         const faixas = Object.values(musicas).flatMap((gibi) => gibi.faixas || []);
         for (const f of faixas) estanteVinis.appendChild(vinil(f));
+        acompanharAudio();
         estanteVinis.closest('.midia-bloco').hidden = !faixas.length;
 
         const videos = await fetch(VIDEOS, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
