@@ -326,7 +326,11 @@ button.fita-frente:hover { translate: 0 -4px; }
     border: 3px solid var(--ink);
     border-radius: 6px;
 }
-.tem-fita .fita-etiqueta { background: none; border: 0; }
+/* etiqueta branca da cassete-frente.png: 15%–38% da altura, 17%–85% da largura */
+.tem-fita .fita-etiqueta { top: 15%; left: 17%; right: 15%; height: 23%; gap: 2px; background: none; border: 0; }
+.tem-fita .fita-titulo { font-size: clamp(1.1rem, 4.2vw, 2.1rem); }
+.tem-fita .fita-lado { font-size: clamp(0.6rem, 1.5vw, 0.8rem); }
+.tem-disco .vinil-rotulo { inset: 30.5%; }
 .fita-titulo {
     font-family: var(--font-heading);
     font-size: clamp(1.4rem, 5vw, 2.4rem);

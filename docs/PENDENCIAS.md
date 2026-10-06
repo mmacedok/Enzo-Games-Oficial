@@ -20,11 +20,6 @@
 
 ## 🔴 Agora (prioridade alta)
 
-- [ ] **Prateleira de mídia (branch `midia`, sem push):** em `personagens.html`, músicas viram vinis 3D lacrados e vídeos
-  viram fitas cassete (`js/midia.js`, `css/midia.css`). Já funciona só com CSS. Falta: as 6 peças desenhadas do Codex
-  (`Codex/Bridge/tarefas/07-prateleira-midia.md`, vão para `assets/midia/`), ajustar a posição do título na etiqueta da
-  fita depois que a imagem chegar, e os vídeos (`assets/midia/videos.json`, hoje vazio = 2 fitas "EM BREVE"). 🧑/🤖
-
 - [ ] **Multiplayer mais rápido no ar:** no painel da Cloudflare (Pages → Settings → Functions →
   Placement), testar "Smart" para a API rodar perto do banco Neon. Não deu para conferir a opção
   daqui. 🧑
@@ -82,6 +77,8 @@
 ---
 
 ## ✅ Feito recentemente
+
+- **2026-10-06 — Prateleira de mídia (branch `midia`, sem push):** em `personagens.html`, músicas em vinil 3D lacrado (mesmo movimento dos gibis, disco sai da capa, player com barra/tempo/volume) e vídeos em fitas cassete (deitam com o título na etiqueta). Peças do Codex (tarefa 07) em `assets/midia/`. Falta: os vídeos (`assets/midia/videos.json`, hoje 2 fitas "EM BREVE") e o push quando o Henrique pedir.
 
 - **2026-10-04 — Batalha, versão 11:** 3 Auras por turno (máx. 2 por carta), Degustador vira nos dois ataques, Moderador 1 por deck, Chorão raro, Inominável -1 Aura, Drone e Morcego de graça, Piscina cura todos, Mansão com HP extra enquanto está na mesa e notifica com Aura sobrando. Changelog em `docs/BATALHA-CHANGELOG.md`; cartas novas e Resenha só planejadas em `docs/PLANO-CARTAS-NOVAS.md` (7 dúvidas para o Henrique). Pendente: refazer as cartilhas "Como jogar" (dizem 1 Aura por turno) e conferir o equilíbrio ao vivo.
 
