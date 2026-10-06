@@ -20,6 +20,11 @@
 
 ## 🔴 Agora (prioridade alta)
 
+- [ ] **Prateleira de mídia (branch `midia`, sem push):** em `personagens.html`, músicas viram vinis 3D lacrados e vídeos
+  viram fitas cassete (`js/midia.js`, `css/midia.css`). Já funciona só com CSS. Falta: as 6 peças desenhadas do Codex
+  (`Codex/Bridge/tarefas/07-prateleira-midia.md`, vão para `assets/midia/`), ajustar a posição do título na etiqueta da
+  fita depois que a imagem chegar, e os vídeos (`assets/midia/videos.json`, hoje vazio = 2 fitas "EM BREVE"). 🧑/🤖
+
 - [ ] **Multiplayer mais rápido no ar:** no painel da Cloudflare (Pages → Settings → Functions →
   Placement), testar "Smart" para a API rodar perto do banco Neon. Não deu para conferir a opção
   daqui. 🧑

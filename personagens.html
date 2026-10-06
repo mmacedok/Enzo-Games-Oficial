@@ -17,6 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
     <script src="js/movimento.js?v=2"></script>
     <link rel="stylesheet" href="css/style.css?v=rev1001d">
+    <link rel="stylesheet" href="css/midia.css?v=rev1006m">
     <link rel="stylesheet" href="css/images.generated.css?v=1">
 </head>
 <body class="characters-page">
@@ -84,6 +85,19 @@
                 <span class="character-name">Hatsune Neves</span>
             </div>
         </section>
+
+        <!-- Prateleira de mídia (js/midia.js): músicas em vinil lacrado, vídeos em fita cassete -->
+        <section class="midia" data-midia aria-label="Músicas e vídeos" hidden>
+            <div class="midia-bloco">
+                <h2 class="section-title section-title--center">Discoteca</h2>
+                <div class="midia-estante midia-estante--vinis" data-midia-vinis></div>
+            </div>
+            <div class="midia-bloco">
+                <h2 class="section-title section-title--center">Videoteca</h2>
+                <div class="midia-palco" data-midia-palco hidden></div>
+                <div class="midia-estante midia-estante--fitas" data-midia-fitas></div>
+            </div>
+        </section>
     </main>
 
     <!-- Modal de senha (ficha banida) -->
@@ -97,5 +111,7 @@
     <script src="js/baralho.js?v=rev0931a"></script>
     <script src="js/auth-widget.js?v=rev0931j"></script>
     <script src="js/characters.js?v=rev0930zc"></script>
+    <script src="js/musicas.js?v=rev1006m"></script>
+    <script src="js/midia.js?v=rev1006m"></script>
 </body>
 </html>

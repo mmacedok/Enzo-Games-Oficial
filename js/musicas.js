@@ -140,5 +140,5 @@
         return secao;
     }
 
-    window.EnzoMusicas = { carregar, areasDaPagina, criarDiscografia, parar, formatarTempo };
+    window.EnzoMusicas = { carregar, alternar, areasDaPagina, criarDiscografia, parar, formatarTempo };
 }());

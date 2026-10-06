@@ -1,0 +1,350 @@
+/* ==========================================================================
+   Prateleira de mídia (personagens.html + js/midia.js)
+   Músicas = vinis 3D lacrados; vídeos = fitas cassete. As peças desenhadas ficam em
+   assets/midia/ e só entram (classes .tem-*) quando a imagem existe; sem elas, o CSS desenha tudo.
+   ========================================================================== */
+.midia { margin-top: 64px; display: grid; gap: 44px; }
+.midia[hidden], .midia-bloco[hidden], .midia-palco[hidden] { display: none; }
+.midia-estante {
+    --gap: clamp(18px, 4vw, 44px);
+    --tabua: 24px;
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 46px var(--gap);
+    padding: 40px clamp(14px, 3vw, 40px) 30px;
+    background:
+        radial-gradient(ellipse at 50% -10%, rgba(255, 196, 120, 0.22), transparent 60%),
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 3px, transparent 3px 150px),
+        linear-gradient(#3d2314, #221209);
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    box-shadow: var(--pop-lg), inset 0 0 60px rgba(0, 0, 0, 0.8);
+    perspective: 1400px;
+}
+/* Tábua: cada peça desenha o pedaço embaixo dela (as fileiras quebram sozinhas). */
+.vinil::after, .midia-estante--fitas::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: calc(var(--gap) / -2 - 1px);
+    right: calc(var(--gap) / -2 - 1px);
+    height: var(--tabua);
+    background:
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.1) 0 2px, transparent 2px 29px),
+        linear-gradient(#c88a4c 0 5px, #a0602a 5px, #6b3914);
+    border-block: 3px solid var(--ink);
+    box-shadow: 0 12px 18px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- vinil */
+.vinil {
+    --v: clamp(128px, 30vw, 210px);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: var(--v);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+}
+.vinil::after { top: calc(var(--v) + 2px); }
+.vinil:focus-visible { outline: 3px dashed var(--focus); outline-offset: 6px; }
+.vinil-corpo {
+    position: relative;
+    display: block;
+    width: var(--v);
+    height: var(--v);
+    margin-bottom: calc(var(--tabua) + 4px);
+    transform-style: preserve-3d;
+    transform: rotateY(26deg) rotateX(3deg);
+    transition: transform 0.35s ease;
+}
+.vinil:hover .vinil-corpo,
+.vinil:focus-visible .vinil-corpo,
+.vinil.musica-tocando .vinil-corpo { transform: rotateY(6deg) translateY(-8px); }
+.vinil-capa {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border: var(--stroke-thick);
+    border-radius: 3px;
+    background: #1b1b1b;
+    box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.45);
+    transform: translateZ(7px);
+}
+.vinil-arte { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* lombada da capa (espessura do disco lacrado) */
+.vinil-lombada {
+    position: absolute;
+    top: 0;
+    left: -7px;
+    width: 14px;
+    height: 100%;
+    background: linear-gradient(90deg, #121212, #393939 45%, #1b1b1b);
+    border: 3px solid var(--ink);
+    transform: rotateY(-90deg);
+}
+/* plástico do lacre: os brilhos andam quando o mouse passa */
+.vinil-plastico {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.38) 37%, transparent 44%),
+        linear-gradient(115deg, transparent 58%, rgba(255, 255, 255, 0.2) 62%, transparent 68%),
+        linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06));
+    background-size: 220% 100%, 220% 100%, auto;
+    background-position: 100% 0, 100% 0, 0 0;
+    transition: background-position 0.6s ease;
+    pointer-events: none;
+}
+.vinil:hover .vinil-plastico { background-position: 0 0, 0 0, 0 0; }
+.tem-plastico .vinil-plastico {
+    background-image: url("../assets/midia/vinil-plastico.png"),
+        linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.25) 37%, transparent 44%);
+    background-size: 100% 100%, 220% 100%;
+    background-position: 0 0, 100% 0;
+}
+.tem-plastico .vinil:hover .vinil-plastico { background-position: 0 0, 0 0; }
+.vinil-adesivo {
+    position: absolute;
+    top: 6%;
+    right: 6%;
+    display: grid;
+    place-items: center;
+    width: 34%;
+    aspect-ratio: 1;
+    isolation: isolate;
+    font-family: var(--font-heading);
+    font-size: calc(var(--v) * 0.068);
+    letter-spacing: 0.5px;
+    color: var(--ink);
+    transform: rotate(-14deg);
+}
+.vinil-adesivo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--caution);
+    clip-path: var(--estouro);
+}
+.tem-adesivo .vinil-adesivo::before { background: url("../assets/midia/vinil-adesivo.png") center / contain no-repeat; clip-path: none; }
+/* disco: fica dentro da capa, aparece um pouco no mouse e sai girando quando toca */
+.vinil-disco {
+    position: absolute;
+    top: 3%;
+    left: 3%;
+    width: 94%;
+    height: 94%;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle, #121212 0 2px, #262626 2px 3px);
+    box-shadow: 0 0 0 3px var(--ink), 6px 8px 0 rgba(0, 0, 0, 0.4);
+    transition: translate 0.6s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.vinil-disco::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 30deg, transparent 0 8%, rgba(255, 255, 255, 0.16) 12%, transparent 18% 50%, rgba(255, 255, 255, 0.12) 62%, transparent 68%);
+}
+.tem-disco .vinil-disco { background: url("../assets/midia/vinil-disco.png") center / 100% 100% no-repeat; box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.4); }
+.tem-disco .vinil-disco::before { display: none; }
+.vinil-rotulo {
+    position: absolute;
+    inset: 33%;
+    border-radius: 50%;
+    background: var(--capa) center / cover;
+    box-shadow: 0 0 0 2px var(--ink);
+}
+.vinil-rotulo::after {
+    content: '';
+    position: absolute;
+    inset: 44%;
+    border-radius: 50%;
+    background: #1b1b1b;
+}
+.vinil:hover .vinil-disco { translate: 14% 0; }
+.vinil.musica-tocando { z-index: 3; }
+.vinil.musica-tocando .vinil-disco { translate: 46% 0; animation: midia-gira 1.9s linear infinite; }
+@keyframes midia-gira { to { rotate: 360deg; } }
+.vinil-nome {
+    max-width: 100%;
+    font-family: var(--font-heading);
+    font-size: clamp(0.95rem, 2.4vw, 1.2rem);
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+    text-align: center;
+    color: var(--caption);
+    text-shadow: var(--pop-sm);
+}
+.vinil .musica-estado {
+    padding: 2px 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--paper);
+    border: var(--stroke);
+    border-radius: 999px;
+    box-shadow: var(--pop-sm);
+}
+.vinil.musica-tocando .musica-estado { background: var(--caution); }
+
+/* ---------------------------------------------------------------- fitas em pé */
+.midia-estante--fitas { --gap: 8px; gap: 46px var(--gap); }
+.fita {
+    --fita-cor: #ff8a1e;
+    position: relative;
+    width: clamp(40px, 9vw, 52px);
+    height: clamp(230px, 50vw, 300px);
+    margin-bottom: calc(var(--tabua) + 4px);
+    padding: 0;
+    border: 3px solid var(--ink);
+    border-radius: 4px;
+    background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.45), transparent 22% 78%, rgba(0, 0, 0, 0.2)),
+        linear-gradient(var(--fita-cor) 0 9%, #fff 9% 91%, var(--fita-cor) 91%);
+    box-shadow: 4px 6px 0 rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    transition: translate 0.25s ease, opacity 0.25s ease;
+}
+/* fitas: uma tábua só, na largura toda da estante */
+.fita::after { display: none; }
+.midia-estante--fitas::after { left: 0; right: 0; bottom: 31px; }
+.tem-lombada .fita { border: 0; background: url("../assets/midia/cassete-lombada.png") center / 100% 100% no-repeat; }
+.fita:hover, .fita:focus-visible { translate: 0 -12px; }
+.fita:focus-visible { outline: 3px dashed var(--focus); outline-offset: 4px; }
+.fita--fora, .fita--fora:hover { translate: 0 -38%; opacity: 0.25; }
+.fita-lombada-titulo {
+    position: absolute;
+    inset: 12% 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: var(--font-heading);
+    font-size: clamp(1rem, 2.6vw, 1.3rem);
+    letter-spacing: 1px;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- fita deitada */
+.midia-palco { display: grid; place-items: center; padding: 0 0 26px; }
+.fita-frente {
+    --fita-cor: #ff8a1e;
+    position: relative;
+    display: block;
+    width: min(540px, 92vw);
+    aspect-ratio: 1200 / 760;
+    padding: 0;
+    border: 4px solid var(--ink);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 40%), #2b2a33;
+    box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.45);
+    color: var(--ink);
+    font: inherit;
+    animation: fita-sai 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+button.fita-frente { cursor: pointer; }
+button.fita-frente:hover { translate: 0 -4px; }
+.fita-frente::after { /* faixa trapezoidal de baixo */
+    content: '';
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    bottom: -4px;
+    height: 20%;
+    background: #1f1e26;
+    border: 4px solid var(--ink);
+    border-bottom: 0;
+    clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
+}
+.tem-fita .fita-frente {
+    border: 0;
+    border-radius: 0;
+    background: url("../assets/midia/cassete-frente.png") center / 100% 100% no-repeat;
+    box-shadow: none;
+    filter: drop-shadow(8px 10px 0 rgba(0, 0, 0, 0.45));
+}
+.tem-fita .fita-frente::after, .tem-fita .fita-carretel { display: none; }
+.fita-etiqueta {
+    position: absolute;
+    top: 8%;
+    left: 7%;
+    right: 7%;
+    height: 44%;
+    display: grid;
+    place-content: center;
+    gap: 4px;
+    text-align: center;
+    background: linear-gradient(90deg, var(--fita-cor) 0 4%, #fff 4% 96%, var(--fita-cor) 96%);
+    border: 3px solid var(--ink);
+    border-radius: 6px;
+}
+.tem-fita .fita-etiqueta { background: none; border: 0; }
+.fita-titulo {
+    font-family: var(--font-heading);
+    font-size: clamp(1.4rem, 5vw, 2.4rem);
+    letter-spacing: 1px;
+    line-height: 1;
+    transform: rotate(-2deg);
+}
+.fita-lado { font-size: clamp(0.7rem, 1.8vw, 0.9rem); font-weight: 700; letter-spacing: 1px; color: #5a4a3a; }
+.fita-carretel {
+    position: absolute;
+    top: 58%;
+    width: 15%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, #2b2a33 0 22%, transparent 23%),
+        repeating-conic-gradient(#fff 0 10deg, #ddd 10deg 60deg);
+    border: 3px solid var(--ink);
+    box-shadow: 0 0 0 6px #6b3e1f;
+    animation: midia-gira 3s linear infinite;
+}
+.fita-carretel--e { left: 26%; }
+.fita-carretel--d { right: 26%; }
+.fita-brilho { position: absolute; inset: 0; pointer-events: none; }
+.tem-brilho .fita-brilho { background: url("../assets/midia/cassete-caixa-brilho.png") center / 100% 100% no-repeat; }
+@keyframes fita-sai {
+    from { opacity: 0; transform: translateY(70px) rotate(-90deg) scale(0.3); }
+    to { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------------- vídeo */
+.fita-video {
+    padding: 14px;
+    background: var(--surface);
+    border: var(--stroke-thick);
+    border-radius: var(--radius);
+    box-shadow: var(--pop-lg);
+}
+.fita-video::backdrop { background: rgba(0, 0, 0, 0.75); }
+.fita-video video { display: block; max-width: 88vw; max-height: 76vh; }
+.fita-video-fechar {
+    margin-top: 10px;
+    padding: 4px 16px;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    background: var(--paper);
+    border: var(--stroke);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vinil.musica-tocando .vinil-disco, .fita-carretel, .fita-frente { animation: none; }
+}
