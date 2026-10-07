@@ -1,6 +1,6 @@
 # Upload de capítulos pelo terminal
 
-No terminal (`admin.html`) existe a aba **upload** (comando `upload`, ou o botão "upload de capítulos" na central).
+No Enzo OS (`admin.html`) existem os programas **Upload** (capítulos novos) e **Gibis** (trocar páginas de capítulos que já existem). O comando `upload` do Terminal continua funcionando.
 
 ## Como usar
 1. Abra `admin.html` → `upload`.
@@ -48,3 +48,11 @@ Opcionais (só se mudar o repositório ou a branch): `GITHUB_REPO` (padrão `mma
 
 ## Testar no computador
 Sem `GITHUB_TOKEN` e fora da produção, o upload grava direto na pasta do projeto ("Modo local"): depois rode `npm run build` e dê o push.
+
+
+## Trocar páginas ou capas (programa Gibis)
+1. Abra **Gibis**, escolha o gibi (e o capítulo, nos spin-offs).
+2. Em cada página: **trocar…** (escolhe o arquivo) ou **arraste** a imagem em cima da página. Clique na miniatura para ver grande.
+3. Para várias de uma vez, solte os arquivos na faixa pontilhada: o número no nome decide a página (`PAG3.png` troca a página 3; `capa` troca a capa).
+4. Páginas trocadas ficam com borda colorida e a etiqueta NOVA. **Publicar** envia tudo num commit só (até 60 imagens). Se a extensão mudar (png para jpg), a antiga é apagada.
+5. No site de verdade a Cloudflare refaz as variantes webp no deploy (~2 minutos); até lá a estante pode mostrar a imagem antiga.

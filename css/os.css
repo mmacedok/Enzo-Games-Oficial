@@ -135,3 +135,72 @@ input, select { font: inherit; color: inherit; }
     .tabela .some-cel { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* ---- Gibis (estante e troca de páginas) ---- */
+.msg { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--linha); background: var(--vidro-2); margin-bottom: 12px; }
+.msg[hidden] { display: none; }
+.msg.ok { border-color: var(--bom); color: var(--bom); }
+.msg.ruim { border-color: var(--ruim); color: var(--ruim); }
+.estante { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); margin-top: 8px; }
+.gibi-card { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 8px; border-radius: 10px; border: 1px solid var(--linha); background: var(--vidro-2); }
+.gibi-card:hover { border-color: var(--acento); }
+.gibi-card b { font-size: 14px; }
+.gibi-card .suave { font-size: 12px; }
+.gibi-capa { aspect-ratio: 3 / 4; border-radius: 6px; background: #000 center / cover no-repeat; border: 1px solid var(--linha); }
+.zona-solta, .up-zona { border: 2px dashed var(--linha); border-radius: 10px; padding: 12px 14px; color: var(--suave); font-size: 13px; margin-bottom: 14px; }
+.zona-solta.sobre, .up-zona--sobre { border-color: var(--acento); background: color-mix(in srgb, var(--acento) 10%, transparent); color: var(--texto); }
+.paginas { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.pag { margin: 0; padding: 6px; border-radius: 10px; border: 2px solid var(--linha); background: var(--vidro-2); display: flex; flex-direction: column; gap: 6px; }
+.pag img { width: 100%; aspect-ratio: 3 / 4; object-fit: contain; background: #000; border-radius: 6px; cursor: zoom-in; }
+.pag figcaption { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+.pag--nova { border-color: var(--acento); box-shadow: 0 0 14px color-mix(in srgb, var(--acento) 35%, transparent); }
+.pag--ok { border-color: var(--bom); }
+.pag.sobre { border-color: var(--acento); background: color-mix(in srgb, var(--acento) 14%, transparent); }
+.pag-acoes { display: flex; gap: 4px; flex-wrap: wrap; }
+.pag-acoes .btn { height: 28px; padding: 0 8px; font-size: 12px; flex: 1; }
+.tag { font-size: 10px; font-weight: 800; letter-spacing: .06em; padding: 1px 6px; border-radius: 99px; background: var(--acento); color: #000; }
+.tag.ok { background: var(--bom); }
+.comparar { display: flex; gap: 16px; max-height: calc(100% - 70px); align-items: center; justify-content: center; }
+.comparar figure { margin: 0; max-height: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.comparar img { max-height: calc(100vh - 150px); max-width: 100%; object-fit: contain; border-radius: 6px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+/* ---- Upload (js/admin-upload.js usa estas classes) ---- */
+.cmd { height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--linha); background: var(--vidro-2); font-weight: 600; font-size: 13px; }
+.cmd:hover { border-color: var(--acento); }
+.cmd[disabled] { opacity: .45; cursor: not-allowed; }
+.cmd--link { background: none; border-color: transparent; color: var(--suave); text-decoration: underline; }
+.lanc-go { background: color-mix(in srgb, var(--acento) 24%, transparent); border-color: var(--acento); font-weight: 800; }
+.up-tirar { color: var(--ruim); }
+.up-zona { display: grid; gap: 8px; justify-items: start; padding: 20px; }
+.up-zona strong { color: var(--texto); font-size: 16px; }
+.up-botoes { display: flex; gap: 10px; flex-wrap: wrap; }
+.up-modo, .up-aviso { border-left: 4px solid var(--acento); padding: 8px 12px; background: var(--vidro-2); border-radius: 0 8px 8px 0; margin: 0 0 12px; }
+.up-area { display: grid; gap: 14px; }
+.up-cartao { border: 1px solid var(--linha); border-radius: 12px; padding: 14px; background: var(--vidro-2); display: grid; gap: 10px; }
+.up-topo { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.up-campo { display: grid; gap: 4px; font-size: 12px; color: var(--suave); }
+.up-campo input, .up-campo select { height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--linha); background: rgba(0, 0, 0, .35); color: var(--texto); min-width: 150px; }
+.up-opcoes { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; }
+.up-check { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.up-faixa { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.up-miniatura { margin: 0; flex: 0 0 auto; width: 96px; position: relative; display: flex; flex-direction: column; gap: 4px; }
+.up-miniatura img { width: 96px; height: 128px; object-fit: cover; border-radius: 6px; border: 1px solid var(--linha); background: #000; cursor: zoom-in; }
+.up-miniatura--capa img { border-color: var(--acento); cursor: default; }
+.up-miniatura--falta { display: grid; place-items: center; height: 128px; border: 2px dashed var(--ruim); border-radius: 6px; color: var(--ruim); font-size: 12px; }
+.up-miniatura figcaption { font-size: 12px; text-align: center; color: var(--suave); }
+.up-miniatura--capa figcaption { color: var(--acento); font-weight: 800; }
+.up-arrastando { opacity: .35; }
+.up-diverge { color: #ffc24d !important; }
+.up-setas { display: flex; justify-content: space-between; }
+.up-setas button { background: var(--vidro); border: 1px solid var(--linha); border-radius: 6px; font-size: 12px; padding: 1px 6px; }
+.up-setas button:hover { border-color: var(--acento); }
+.up-avisos { color: #ffc24d; margin: 0; font-size: 13px; }
+.up-dica { color: var(--suave); margin: 0; font-size: 13px; }
+.up-rodape { display: grid; gap: 8px; justify-items: end; position: sticky; bottom: -16px; padding: 10px 0; background: var(--vidro); }
+.up-status { margin: 0; color: #ffc24d; font-size: 13px; }
+.up-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0, 0, 0, .88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; }
+.up-modal-img { max-height: calc(100vh - 130px); max-width: 100%; object-fit: contain; }
+.up-modal-info { color: var(--texto); }
+.up-modal-barra { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+@media (max-width: 720px) { .comparar { flex-direction: column; } .comparar img { max-height: 38vh; } }

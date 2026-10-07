@@ -129,3 +129,33 @@ test('upload: slug tira acento e símbolos', () => {
     assert.equal(slug('Degustador da noite'), 'degustador-da-noite');
     assert.equal(slug('Felipe Robozão!'), 'felipe-robozao');
 });
+
+test('gibis/trocar: troca página e capa existentes (extensão nova apaga a antiga) e recusa o que não existe', async (t) => {
+    const { raiz, db, chefe, leitor, enviar } = await montar();
+    t.after(() => db.close());
+    const pasta = path.join(raiz, 'assets/Capitulo 3/Paginas');
+    fs.mkdirSync(pasta, { recursive: true });
+    fs.writeFileSync(path.join(pasta, 'PAG1.png'), 'velha1');
+    fs.writeFileSync(path.join(pasta, 'PAG2.png'), 'velha2');
+    const nova = await enviar('blue');
+    const caminho = 'assets/Capitulo 3/Paginas/PAG1.png';
+
+    assert.equal((await leitor('POST', '/api/admin/gibis/trocar', { trocas: [{ path: caminho, ...nova }] })).status, 404, 'leitor não troca');
+    const r = await chefe('POST', '/api/admin/gibis/trocar', { trocas: [{ path: caminho, ...nova }] });
+    assert.equal(r.status, 200);
+    assert.deepEqual(fs.readFileSync(path.join(pasta, 'PAG1.png')), await png('blue'));
+    assert.equal(fs.readFileSync(path.join(pasta, 'PAG2.png'), 'utf8'), 'velha2', 'as outras não mudam');
+
+    // extensão diferente: a antiga sai
+    const jpg = await chefe('POST', '/api/admin/upload/arquivo', await require('sharp')({ create: { width: 8, height: 8, channels: 3, background: 'red' } }).jpeg().toBuffer());
+    assert.equal(jpg.dados.ext, 'jpg');
+    assert.equal((await chefe('POST', '/api/admin/gibis/trocar', { trocas: [{ path: 'assets/Capitulo 3/Paginas/PAG2.png', ...jpg.dados }] })).status, 200);
+    assert.ok(fs.existsSync(path.join(pasta, 'PAG2.jpg')) && !fs.existsSync(path.join(pasta, 'PAG2.png')));
+
+    for (const p of ['assets/Capitulo 3/Paginas/NAO-EXISTE.png', 'assets/../server.js', 'assets/Capitulo 3/Paginas/../../../x.png', 'data/comics.manifest.json', 'assets/Batalha/aura.png']) {
+        const x = await chefe('POST', '/api/admin/gibis/trocar', { trocas: [{ path: p, ...nova }] });
+        assert.ok([400, 404].includes(x.status), p);
+    }
+    assert.equal((await chefe('POST', '/api/admin/gibis/trocar', { trocas: [{ path: caminho, ...nova }, { path: caminho, ...nova }] })).status, 400, 'repetida');
+    assert.equal((await chefe('POST', '/api/admin/gibis/trocar', { trocas: [] })).status, 400);
+});

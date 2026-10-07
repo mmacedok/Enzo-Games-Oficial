@@ -5,6 +5,7 @@
 //   GET  /api/admin/upload/estado     { configurado, modo }            o upload está ligado? (GitHub ou disco local)
 //   POST /api/admin/upload/arquivo    corpo = bytes da imagem          guarda a imagem e devolve o `sha` dela
 //   POST /api/admin/upload/publicar   { lote: [capítulo, ...] }        monta as pastas e o manifesto e faz UM commit
+//   POST /api/admin/gibis/trocar      { trocas: [{ path, sha, ext }] }  troca imagens que já existem (páginas e capas) num commit só
 //
 // Cada item do lote:
 //   { tipo: 'serie' | 'spin', gibi, titulo?, descricao?, capitulo, tituloCapitulo?, escondido?, substituir?,
@@ -23,6 +24,7 @@ const MAX_ARQUIVO = 15 * 1024 * 1024;
 const MAX_PAGINAS = 80;
 const EXTENSOES = ['png', 'jpg', 'webp', 'gif'];
 const MANIFESTO = 'data/comics.manifest.json';
+const CAMINHO_IMAGEM = /^assets\/(?:Capitulo \d{1,3}|Spin Offs\/[^/\\.]+\/Capitulo \d{1,3})\/(?:Capa|Paginas)\/[^/\\]+\.(?:png|jpe?g|webp|gif)$/i;
 
 /** "Degustador da noite" -> "degustador-da-noite" */
 function slug(texto) {
@@ -237,6 +239,35 @@ const rotas = [
             const feito = await ctx.upload.commit({ mensagem, arquivos });
             await registrar(ctx, 'upload', null, resumos.join('; '));
             return { ok: true, commit: feito.commit, resumos, modo: ctx.upload.modo };
+        },
+    },
+    {
+        // Troca páginas ou capas que já existem (programa Gibis do Enzo OS). O caminho tem de ser de uma imagem de
+        // capítulo (assets/Capitulo N/... ou assets/Spin Offs/<gibi>/Capitulo N/...) que exista de verdade na pasta.
+        metodo: 'POST', caminho: '/api/admin/gibis/trocar', admin: true,
+        async executar(ctx) {
+            if (!ctx.upload) throw new HttpError(503, 'upload não configurado (falta GITHUB_TOKEN)');
+            const { trocas } = await ctx.corpo();
+            if (!Array.isArray(trocas) || !trocas.length || trocas.length > 60) throw new HttpError(400, 'envie de 1 a 60 trocas por vez');
+            const arquivos = [];
+            const vistos = new Set();
+            const dirs = new Map();
+            for (const t of trocas) {
+                if (!t || typeof t.path !== 'string' || !CAMINHO_IMAGEM.test(t.path)) throw new HttpError(400, 'caminho de imagem inválido');
+                if (!/^[0-9a-f]{40}$/.test(String(t.sha)) || !EXTENSOES.includes(t.ext)) throw new HttpError(400, 'imagem nova inválida');
+                if (vistos.has(t.path)) throw new HttpError(400, 'a mesma imagem aparece duas vezes');
+                vistos.add(t.path);
+                const dir = t.path.slice(0, t.path.lastIndexOf('/'));
+                if (!dirs.has(dir)) dirs.set(dir, await ctx.upload.listar(dir));
+                if (!dirs.get(dir).includes(t.path)) throw new HttpError(404, `a imagem não existe: ${t.path.split('/').slice(-3).join('/')}`);
+                const novo = t.path.replace(/\.[^./]+$/,`.${t.ext}`);
+                arquivos.push({ path: novo, sha: t.sha });
+                if (novo !== t.path) arquivos.push({ path: t.path, apagar: true });
+            }
+            const resumo = `${trocas.length} imagem(ns) trocada(s): ${trocas.slice(0, 3).map((t) => t.path.split('/').slice(-3).join('/')).join(', ')}${trocas.length > 3 ? '…' : ''}`;
+            const feito = await ctx.upload.commit({ mensagem: `Troca de imagens pelo terminal: ${resumo}`, arquivos });
+            await registrar(ctx, 'gibi-troca', null, resumo);
+            return { ok: true, commit: feito.commit, trocadas: trocas.length, modo: ctx.upload.modo };
         },
     },
 ];

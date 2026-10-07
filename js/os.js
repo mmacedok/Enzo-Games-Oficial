@@ -104,8 +104,9 @@
         { id: 'visao', nome: 'Visão geral', emoji: '📊', icone: 'ic-visao-geral', w: 860, h: 600, mod: true, render: appVisao },
         { id: 'leitores', nome: 'Leitores', emoji: '👥', icone: 'ic-leitores', w: 900, h: 620, mod: true, render: appLeitores },
         { id: 'lancamentos', nome: 'Lançamentos', emoji: '🚀', icone: 'ic-lancamentos', w: 960, h: 640, mod: true, cru: true, render: () => quadroTerminal('terminal.html#cmd=launch') },
-        { id: 'upload', nome: 'Upload', emoji: '☁️', icone: 'ic-upload', w: 980, h: 660, cru: true, render: () => quadroTerminal('terminal.html#cmd=upload') },
-        { id: 'contas', nome: 'Contas', emoji: '🪪', icone: 'ic-gibis', w: 900, h: 620, render: appContas },
+        { id: 'upload', nome: 'Upload', emoji: '☁️', icone: 'ic-upload', w: 980, h: 660, render: (corpo) => window.OsGibis.upload(corpo) },
+        { id: 'gibis', nome: 'Gibis', emoji: '📚', icone: 'ic-gibis', w: 1000, h: 680, render: (corpo) => window.OsGibis.gibis(corpo) },
+        { id: 'contas', nome: 'Contas', emoji: '🪪', icone: 'ic-contas', w: 900, h: 620, render: appContas },
         { id: 'equipe', nome: 'Equipe e cargos', emoji: '👑', icone: 'ic-equipe', w: 760, h: 520, render: appEquipe },
         { id: 'acessos', nome: 'Acessos', emoji: '🌍', icone: 'ic-acessos', w: 960, h: 600, render: appAcessos },
         { id: 'partidas', nome: 'Batalha online', emoji: '⚔️', icone: 'ic-batalha', w: 900, h: 600, render: appPartidas },
@@ -445,6 +446,6 @@
         abrir(acharApp(pedido) && appsVisiveis().some((a) => a.id === pedido) ? pedido : 'visao');
     }
 
-    window.EnzoOS = { abrir, abrirTerminal };
+    window.EnzoOS = { abrir, abrirTerminal, util: { el, botao, api, tabela, n } };
     boot();
 })();
