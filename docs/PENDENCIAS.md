@@ -89,6 +89,7 @@
 
 ## ✅ Feito recentemente
 - **2026-10-07 — Vídeo do Degustador:** `degustador-cidade.mp4` (30 s, 18 MB, recomprimido) abre sozinho na página do Degustador no máximo a cada 24 h por navegador (chave própria, não gasta a da home) e entrou na Videoteca como fita nova. Falta a arte da etiqueta: tarefa 15 do Codex (`degustador-cidade-arte.png`, 768×768); ao chegar, converter para webp e pôr `"arte"` em `assets/midia/videos.json`.
+- **2026-10-07 · Upload pelo terminal:** aba `upload` no admin (arrasta capa e páginas, reconhece capa/ordem/capítulo pelos nomes, série principal ou spin-off novo/existente, confere e reordena as páginas, publica já ou escondido). Grava via GitHub (segredo `GITHUB_TOKEN` na Cloudflare: passo a passo em `docs/UPLOAD.md`). **Falta o Henrique criar o token**; primeiro uso real: conferir o deploy.
 - **2026-10-07 · DougXbox (novo spin-off), cap. 1 "O Besterol começa"** (autor Rafael Leão): capa e 12 páginas na estante do ZeZoVerso, já no ar. Sem conquista "ler tudo" nem ficha ainda.
 - **2026-10-07 · Capítulo 9 (Invasão na madrugada!)**: capa e 21 páginas no ar na série principal (PNGs recomprimidos sem perda); termina em "CONTINUA EM ITALO LOL.".
 - **2026-10-07 — Leitor:** dropdown próprio de capítulos (lista em tira de gibi, capítulo atual marcado, teclado) e selo LACRADO nos capítulos sem progresso na conta (só com login). Estátua do Degustador conferida: colher de pau certa. Falta olhar no celular, páginas do Degustador e telas de pausa/fim do Italo.

@@ -9,7 +9,7 @@
 // ADMIN_EMAILS (opcional): e-mails Google que abrem o painel admin.html.
 // Sem eles o site funciona, só que sem login (ranking continua visível).
 // ============================================================================
-const { HttpError, json, lerJson, checarMesmaOrigem, lerCookies } = require('./http.js');
+const { HttpError, json, lerJson, checarMesmaOrigem, checarOrigemBruta, lerCookies } = require('./http.js');
 const auth = require('./auth.js');
 const games = require('./games.js');
 const user = require('./user.js');
@@ -20,9 +20,10 @@ const comentarios = require('./comentarios.js');
 const baralho = require('./baralho.js');
 const tcg = require('./tcg.js');
 const acessos = require('./acessos.js');
+const upload = require('./upload.js');
 const SCHEMA = require('./schema.js');
 
-const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...lancamentos.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas, ...acessos.rotas];
+const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...lancamentos.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas, ...acessos.rotas, ...upload.rotas];
 
 function acharRota(metodo, caminho) {
     let caminhoExiste = false;
@@ -58,13 +59,16 @@ async function migrar(db) {
  * @param {object} [opcoes.env] variáveis de ambiente (padrão: process.env)
  * @param {Function} [opcoes.verificarGoogle] troca o verificador do Google (testes)
  * @param {Function} [opcoes.agora] relógio em ms (testes)
+ * @param {object} [opcoes.backendUpload] onde o upload de capítulos grava (testes); padrão: GitHub ou disco local
  * @param {Function} [opcoes.aleatorio] sorteador do Baralho: (max) -> inteiro em [0, max) (testes)
  */
-function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, aleatorio = baralho.aleatorioSeguro } = {}) {
+function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, aleatorio = baralho.aleatorioSeguro, backendUpload } = {}) {
     const config = lerConfig(env);
     const producao = env.NODE_ENV === 'production';
     verificarGoogle ??= auth.verificadorGoogle(config.clientId);
     let pronto = null;
+    const raizSite = env.NODE_ENV === 'production' ? null : require('node:path').join(__dirname, '..');
+    const destinoUpload = backendUpload === undefined ? upload.criarBackend(env, raizSite) : backendUpload;
 
     return async function api(request) {
         const url = new URL(request.url);
@@ -72,7 +76,7 @@ function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, a
         if (!rota) return json(caminhoExiste ? 405 : 404, { error: caminhoExiste ? 'método não permitido' : 'rota não encontrada' });
 
         const ctx = {
-            request, url, params, db, config, agora, verificarGoogle, aleatorio,
+            request, url, params, db, config, agora, verificarGoogle, aleatorio, upload: destinoUpload,
             headers: new Headers(),
             cookies: lerCookies(request),
             cookieSeguro: producao || url.protocol === 'https:',
@@ -81,7 +85,7 @@ function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, a
             corpo: () => lerJson(request),
         };
         try {
-            if (request.method !== 'GET' && request.method !== 'HEAD') checarMesmaOrigem(request);
+            if (request.method !== 'GET' && request.method !== 'HEAD') (rota.bruto ? checarOrigemBruta : checarMesmaOrigem)(request);
             // Configuração pública e visitante sem sessão não precisam esperar o banco.
             const sid = ctx.cookies.sid;
             if (url.pathname === '/api/auth/config' ||

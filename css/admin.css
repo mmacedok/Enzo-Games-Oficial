@@ -496,3 +496,37 @@ a.cmd { text-decoration: none; display: inline-block; }
 .tcg-decks { margin: 4px 0 2px; color: var(--verde-medio); }
 .tcg-decks p { margin: 2px 0; }
 .tcg-rodape { margin: 8px 0; }
+
+/* ---- upload de capítulos (js/admin-upload.js) ---- */
+.up-zona { border: 2px dashed var(--verde-medio); padding: 22px 14px; text-align: center; display: grid; gap: 8px; justify-items: center; background: var(--fundo-2); max-width: 760px; }
+.up-zona--sobre { background: var(--verde-linha); border-color: var(--verde-forte); }
+.up-zona span { color: var(--verde-apagado); }
+.up-botoes { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.up-modo, .up-aviso { border-left: 4px solid var(--ambar); padding: 6px 10px; color: var(--ambar); max-width: 760px; }
+.up-area { display: grid; gap: 14px; margin-top: 14px; max-width: 900px; }
+.up-cartao { border: 1px solid var(--verde-linha); border-left-width: 4px; padding: 10px 12px; background: var(--fundo-2); display: grid; gap: 8px; }
+.up-topo { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-end; }
+.up-campo { display: grid; gap: 2px; font-size: 12px; color: var(--verde-apagado); }
+.up-campo input, .up-campo select { background: var(--fundo); color: var(--verde); border: 1px solid var(--verde-linha); padding: 4px 6px; font: inherit; min-width: 140px; }
+.up-opcoes { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.up-check { cursor: pointer; }
+.up-faixa { display: flex; gap: 8px; overflow-x: auto; padding: 6px 2px 10px; }
+.up-miniatura { margin: 0; flex: 0 0 auto; width: 92px; position: relative; text-align: center; font-size: 11px; cursor: grab; }
+.up-miniatura img { width: 92px; height: 164px; object-fit: cover; display: block; border: 1px solid var(--verde-linha); cursor: zoom-in; background: #000; }
+.up-miniatura--capa { cursor: default; }
+.up-miniatura--capa img { border-color: var(--ambar); cursor: default; }
+.up-miniatura--falta { display: grid; place-items: center; width: 92px; height: 164px; border: 1px dashed var(--ambar); color: var(--ambar); }
+.up-miniatura--capa figcaption { color: var(--ambar); }
+.up-arrastando { opacity: .35; }
+.up-diverge { color: var(--ambar); }
+.up-setas { display: flex; justify-content: space-between; margin-top: 2px; }
+.up-setas button { background: transparent; border: 1px solid var(--verde-linha); color: var(--verde); cursor: pointer; padding: 0 5px; font: inherit; }
+.up-setas button:hover { background: var(--verde-linha); }
+.up-avisos { color: var(--ambar); margin: 0; }
+.up-dica { color: var(--verde-apagado); margin: 0; font-size: 12px; }
+.up-rodape { display: grid; gap: 8px; justify-items: start; }
+.up-status { margin: 0; color: var(--ambar); }
+.up-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, .92); z-index: 1000; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; gap: 8px; padding: 12px; }
+.up-modal-img { max-height: 100%; max-width: 100%; min-height: 0; object-fit: contain; }
+.up-modal-info { color: var(--verde); }
+.up-modal-barra { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }

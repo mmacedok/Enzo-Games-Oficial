@@ -88,7 +88,9 @@ function pegarApi() {
     }
     return api;
 }
-app.use('/api', express.raw({ type: () => true, limit: '32kb' }), async (req, res, next) => {
+const corpoApi = express.raw({ type: () => true, limit: '32kb' });
+const corpoUpload = express.raw({ type: () => true, limit: '20mb' });
+app.use('/api', (req, res, next) => (req.path === '/admin/upload/arquivo' ? corpoUpload : corpoApi)(req, res, next), async (req, res, next) => {
     try {
         pegarApi();
         const headers = new Headers();

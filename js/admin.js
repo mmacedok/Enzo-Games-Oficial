@@ -231,7 +231,7 @@
     function mostrarAtalhos() {
         const nav = $('atalhos');
         nav.replaceChildren(el('p', 'atalhos-titulo', 'atalhos rápidos'));
-        for (const comando of ['status', 'users', 'launch', 'scores', 'tcg', 'log', 'help', 'exit']) nav.appendChild(botao(comando, comando));
+        for (const comando of ['status', 'users', 'launch', 'upload', 'scores', 'tcg', 'log', 'help', 'exit']) nav.appendChild(botao(comando, comando));
     }
 
     function mostrarDashboard() {
@@ -243,7 +243,7 @@
         const grupos = [
             ['SISTEMA', 'Estado e acesso', [['status', 'status'], ['quem sou', 'whoami'], ['histórico', 'log']]],
             ['LEITORES', 'Contas e conquistas', [['listar leitores', 'users'], ['ajuda', 'help']]],
-            ['GIBIS', 'Publicar capítulos', [['lançamentos', 'launch']]],
+            ['GIBIS', 'Publicar capítulos', [['lançamentos', 'launch'], ['upload de capítulos', 'upload']]],
             ['PARTIDAS', 'Ranking e placares', [['todas', 'scores'], ['Flappy', 'scores flappy'], ['Degustação', 'scores degustacao'], ['Batalha online', 'tcg']]],
         ];
         for (const [titulo, descricao, acoes] of grupos) {
@@ -729,6 +729,12 @@
      * Aba "lançamentos": todos os capítulos do catálogo com o estado que os leitores veem e botões para publicar,
      * agendar (horário de Fortaleza) ou esconder, sem digitar comando. Regras em js/lancamentos.js; API em api/lancamentos.js.
      */
+    /** Aba "upload": arrastar capa e páginas, conferir a ordem e publicar (js/admin-upload.js; API em api/upload.js). */
+    async function telaUpload() {
+        novaTela('upload', [['upload de capítulos', null]]);
+        await window.AdminUpload.montar({ el, imprimir, pedir, ok, erro, apagado });
+    }
+
     async function telaLancamentos() {
         const L = window.Lancamentos;
         const [catalogo, dados, doBanco] = await Promise.all([
@@ -1091,6 +1097,11 @@
             uso: 'tcg [jogador]',
             desc: 'histórico das partidas online da Batalha dos Torados (filtra por jogador)',
             async fn(args) { await telaTcg(args.join(' ').trim()); },
+        },
+        upload: {
+            uso: 'upload',
+            desc: 'upload de capítulos: arrasta capa e páginas, confere a ordem e publica (série principal ou spin-off)',
+            async fn() { await telaUpload(); },
         },
         launch: {
             uso: 'launch',

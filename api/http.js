@@ -48,6 +48,19 @@ function checarMesmaOrigem(request) {
     }
 }
 
+/** Igual a checarMesmaOrigem, para corpos que não são JSON (upload de imagem): exige o cabeçalho próprio X-Enzo-Upload, que outro site não consegue mandar sem CORS. */
+function checarOrigemBruta(request) {
+    if (request.headers.get('x-enzo-upload') !== '1') throw new HttpError(415, 'cabeçalho X-Enzo-Upload ausente');
+    const site = request.headers.get('sec-fetch-site');
+    if (site && site !== 'same-origin' && site !== 'none') throw new HttpError(403, 'origem não permitida');
+    const origem = request.headers.get('origin');
+    if (origem) {
+        let host;
+        try { host = new URL(origem).host; } catch { throw new HttpError(403, 'origem não permitida'); }
+        if (host !== new URL(request.url).host) throw new HttpError(403, 'origem não permitida');
+    }
+}
+
 function lerCookies(request) {
     const cookies = {};
     for (const parte of (request.headers.get('cookie') || '').split(';')) {
@@ -69,4 +82,4 @@ function montarCookie(nome, valor, { maxAge, secure }) {
     return partes.join('; ');
 }
 
-module.exports = { HttpError, json, lerJson, checarMesmaOrigem, lerCookies, montarCookie, LIMITE_CORPO };
+module.exports = { HttpError, json, lerJson, checarMesmaOrigem, checarOrigemBruta, lerCookies, montarCookie, LIMITE_CORPO };
