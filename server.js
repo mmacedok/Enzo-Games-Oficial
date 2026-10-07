@@ -111,7 +111,12 @@ app.use('/api', express.raw({ type: () => true, limit: '32kb' }), async (req, re
 for (const file of ['database.json', 'images.json']) {
     app.get(`/data/${file}`, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(DATA_DIR, file)); });
 }
-app.use((req, res) => res.status(404).type('text').send('Página ou arquivo não encontrado.'));
+// Página (navegador pedindo HTML): 404 ilustrada. Arquivo de imagem/dado ou API: texto curto.
+app.use((req, res) => {
+    const arquivo = /\.(?:png|webp|jpe?g|gif|svg|ico|js|css|json|mp3|mp4|woff2?|txt|xml)$/i.test(req.path);
+    if (req.method === 'GET' && !arquivo && req.accepts('html')) return res.status(404).sendFile(path.join(__dirname, '404.html'));
+    res.status(404).type('text').send('Página ou arquivo não encontrado.');
+});
 
 function start() {
     return app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));

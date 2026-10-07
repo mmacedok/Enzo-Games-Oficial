@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Página não encontrada — Enzo Games</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/icones.css?v=2">
+    <style>
+        :root { --ink: #141014; --orange: #ff8a1e; --yellow: #ffdf3f; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 24px; text-align: center;
+            font-family: 'Comic Neue', 'Comic Sans MS', sans-serif; font-weight: 700; color: #fff;
+            background: radial-gradient(circle at 50% 35%, #ff9d3a, #e5600a 70%), #e5600a;
+            overflow-x: hidden;
+        }
+        body::before { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(rgba(20, 16, 20, 0.16) 1.4px, transparent 1.6px) 0 0 / 14px 14px; }
+        main { position: relative; max-width: 560px; }
+        .cabeca { width: min(240px, 26vh, 60vw); height: auto; filter: drop-shadow(5px 6px 0 rgba(20, 16, 20, 0.5)); animation: balanca 3.4s ease-in-out infinite; }
+        h1 { margin: 6px 0 0; font-family: 'Bangers', cursive; font-weight: 400; font-size: clamp(4.5rem, 22vw, 9rem); line-height: 0.9; letter-spacing: 4px; color: var(--yellow); text-shadow: 5px 5px 0 var(--ink), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink); transform: rotate(-3deg); }
+        h2 { margin: 10px 0 6px; font-family: 'Bangers', cursive; font-weight: 400; font-size: clamp(1.6rem, 6vw, 2.4rem); letter-spacing: 2px; text-shadow: 3px 3px 0 var(--ink); }
+        p { margin: 0 auto 22px; max-width: 420px; font-size: 1.15rem; text-shadow: 1px 1px 0 rgba(20, 16, 20, 0.6); }
+        .fio { display: block; width: min(420px, 90vw); height: 60px; margin: 6px auto 4px; overflow: visible; }
+        .fio path { fill: none; stroke-linecap: round; stroke-dasharray: 520; stroke-dashoffset: 520; animation: desenha 2.4s ease-out 0.3s forwards; }
+        .fio .borda { stroke: var(--ink); stroke-width: 13; }
+        .fio .massa { stroke: #ffd27a; stroke-width: 7; }
+        .botao {
+            display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; color: var(--ink); text-decoration: none;
+            font-family: 'Bangers', cursive; font-size: 1.6rem; letter-spacing: 1.5px; text-transform: uppercase;
+            background: var(--yellow) linear-gradient(rgba(255, 255, 255, 0.4), transparent 55%, rgba(0, 0, 0, 0.14));
+            border: 3px solid var(--ink); border-radius: 8px; box-shadow: 5px 5px 0 var(--ink); transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .botao:hover, .botao:focus-visible { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--ink); outline: none; }
+        .botao:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink); }
+        @keyframes balanca { 50% { transform: rotate(3deg) translateY(-6px); } }
+        @keyframes desenha { to { stroke-dashoffset: 0; } }
+        @media (prefers-reduced-motion: reduce) { .cabeca { animation: none; } .fio path { animation: none; stroke-dashoffset: 0; } }
+    </style>
+</head>
+<body>
+    <main>
+        <img class="cabeca" src="/assets/enzo-cabeca-logo.png" alt="" width="260" height="260">
+        <h1>404</h1>
+        <svg class="fio" viewBox="0 0 420 60" aria-hidden="true">
+            <path class="borda" d="M10 38C50 6 80 62 120 32S190 8 230 34s70 24 110-4 56-12 72 4"/>
+            <path class="massa" d="M10 38C50 6 80 62 120 32S190 8 230 34s70 24 110-4 56-12 72 4"/>
+        </svg>
+        <h2>O Enzo comeu essa página</h2>
+        <p>Procuramos em todo o prato e só achamos macarronada. O endereço pode estar errado ou a página mudou de lugar.</p>
+        <a class="botao" href="/"><span class="ico ico-seta-esq" aria-hidden="true"></span> Voltar para as HQs</a>
+    </main>
+</body>
+</html>

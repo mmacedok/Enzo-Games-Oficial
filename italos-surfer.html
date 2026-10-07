@@ -4,7 +4,8 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#252634"><meta name="description" content="Italo's Surfer: fuja do Enzo Games pelos trilhos e fábricas de Operator Village. Jogo 3D para computador e celular.">
   <title>Italo's Surfer · Enzo Games</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/italos-surfer/style.css?v=2">
+  <link rel="stylesheet" href="css/icones.css?v=2">
+  <link rel="stylesheet" href="assets/italos-surfer/style.css?v=3">
 </head>
 <body>
 <main id="game" aria-label="Italo's Surfer, corrida 3D">
@@ -18,13 +19,13 @@
   </header>
   <section id="menu" class="overlay menu">
     <div class="menu-card">
-      <a href="index.html#jogos" class="back">← ENZO GAMES</a>
+      <a href="index.html#jogos" class="back"><span class="ico ico-seta-esq" aria-hidden="true"></span> ENZO GAMES</a>
       <div class="edition">MAPA 01 <span>OPERATOR VILLAGE</span></div>
       <h1>ITALO'S<br><em>SURFER</em></h1>
       <p class="tagline">Um cão. Três pistas.<br>Um Enzo muito, muito furioso.</p>
-      <button id="play" class="primary">BORA CORRER! <span>→</span></button>
+      <button id="play" class="primary">BORA CORRER! <span class="ico ico-seta-dir" aria-hidden="true"></span></button>
       <div class="menu-small"><button id="help-btn">COMO JOGAR</button><button id="menu-sound">SOM: LIGADO</button></div>
-      <button id="practice" class="practice">PRIMEIRA FUGA? TREINE AQUI →</button><p id="career" class="career"></p><p class="best">SEU RECORDE <strong id="best">0</strong></p>
+      <button id="practice" class="practice">PRIMEIRA FUGA? TREINE AQUI <span class="ico ico-seta-dir" aria-hidden="true"></span></button><p id="career" class="career"></p><p class="best">SEU RECORDE <strong id="best">0</strong></p>
       <p class="keyboard">← → mover · ESPAÇO pular · ↓ deslizar · B prancha<br>No celular, deslize o dedo ou use os botões.</p>
     </div>
     <div class="map-stamp">DISTRITO INDUSTRIAL<br><b>OPERATOR<br>VILLAGE</b><span>FÁBRICAS · TRILHOS · CAOS</span></div>
@@ -38,7 +39,7 @@
   </section>
   <section id="paused" class="overlay modal" hidden><div class="panel"><small>ATÉ O ENZO PRECISA RESPIRAR</small><h2>PAUSADO</h2><button id="resume" class="primary">CONTINUAR</button><button id="restart">RECOMEÇAR</button><a class="back" href="index.html#jogos">← Voltar ao site</a></div></section>
   <section id="over" class="overlay modal" hidden><div class="panel"><small>FIM DA FUGA</small><h2>ENZO TE PEGOU!</h2><p id="result-message"></p><strong id="result-score" class="result">0</strong><p id="result-details"></p><button id="retry" class="primary">FUGIR DE NOVO!</button><button id="home-menu">MENU</button><a class="back" href="index.html#jogos">← Voltar ao site</a></div></section>
-  <aside id="tutorial-hint" hidden><strong id="tutorial-title"></strong><p id="tutorial-text"></p></aside><nav id="touch" hidden aria-label="Controles do jogo"><button data-action="left" aria-label="Esquerda">←</button><button data-action="right" aria-label="Direita">→</button><span></span><button data-action="slide" aria-label="Deslizar">↓</button><button data-action="jump" aria-label="Pular">↑</button></nav>
+  <aside id="tutorial-hint" hidden><strong id="tutorial-title"></strong><p id="tutorial-text"></p></aside><nav id="touch" hidden aria-label="Controles do jogo"><button data-action="left" aria-label="Esquerda"><span class="ico ico-seta-esq" aria-hidden="true"></span></button><button data-action="right" aria-label="Direita"><span class="ico ico-seta-dir" aria-hidden="true"></span></button><span></span><button data-action="slide" aria-label="Deslizar"><span class="ico ico-seta-baixo" aria-hidden="true"></span></button><button data-action="jump" aria-label="Pular"><span class="ico ico-seta-cima" aria-hidden="true"></span></button></nav>
   <section id="error" class="overlay modal" hidden role="alert"><div class="panel"><h2>FALTOU 3D!</h2><p>Ative a aceleração gráfica ou tente outro navegador.</p><a class="back" href="index.html#jogos">Voltar ao site</a></div></section>
   <noscript>Ative o JavaScript para jogar Italo's Surfer.</noscript>
 </main><script type="module" src="assets/italos-surfer/main.mjs?v=2"></script>

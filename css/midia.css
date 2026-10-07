@@ -226,8 +226,9 @@
     cursor: pointer;
 }
 .vinil-play .musica-estado { font-size: 0; }
-.vinil-play .musica-estado::before { content: '▶'; font-size: 0.95rem; }
-.vinil-play.musica-tocando .musica-estado::before { content: '⏸'; }
+.vinil-play .musica-estado::before, .vinil-play.musica-tocando .musica-estado::before { content: ''; display: block; width: 0.95rem; height: 0.95rem; background: currentColor; }
+.vinil-play .musica-estado::before { -webkit-mask: url("../assets/ui/icones/play.svg") center / contain no-repeat; mask: url("../assets/ui/icones/play.svg") center / contain no-repeat; }
+.vinil-play.musica-tocando .musica-estado::before { -webkit-mask-image: url("../assets/ui/icones/pause.svg"); mask-image: url("../assets/ui/icones/pause.svg"); }
 .vinil-barra, .vinil-volume { width: 100%; min-width: 0; accent-color: #7b2cbf; cursor: pointer; }
 .vinil-player-linha { grid-column: 1 / -1; display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 6px; }
 .vinil-tempo { font-size: 0.8rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }

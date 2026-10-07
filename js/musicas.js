@@ -32,7 +32,12 @@
         botao.classList.toggle('musica-tocando', tocando);
         botao.setAttribute('aria-pressed', tocando ? 'true' : 'false');
         const rotulo = botao.querySelector('.musica-estado');
-        if (rotulo) rotulo.textContent = tocando ? '⏸ Pausar' : '▶ Ouvir';
+        if (rotulo) {
+            const i = document.createElement('span');
+            i.className = `ico ico-${tocando ? 'pause' : 'play'}`;
+            i.setAttribute('aria-hidden', 'true');
+            rotulo.replaceChildren(i, tocando ? ' Pausar' : ' Ouvir');
+        }
     }
 
     function parar() {
@@ -109,7 +114,7 @@
         secao.setAttribute('aria-label', 'Discografia');
         const titulo = document.createElement('h2');
         titulo.className = 'discografia-titulo';
-        titulo.textContent = '💿 Discografia';
+        titulo.innerHTML = '<span class="ico ico-disco" aria-hidden="true"></span> Discografia';
         const lista = document.createElement('div');
         lista.className = 'discografia-lista';
         for (const f of faixas) {

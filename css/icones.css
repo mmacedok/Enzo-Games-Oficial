@@ -1,0 +1,32 @@
+/* Ícones do site (assets/ui/icones/*.svg): máscara cheia que pega a cor do texto, com contorno de nanquim.
+   Uso: <span class="ico ico-seta-esq" aria-hidden="true"></span>. O tamanho segue o font-size. */
+.ico {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    flex: none;
+    vertical-align: -0.2em;
+    background: currentColor;
+    -webkit-mask: var(--ico) center / contain no-repeat;
+    mask: var(--ico) center / contain no-repeat;
+    filter: drop-shadow(1px 1px 0 var(--ink, #141014));
+}
+.ico-seta-esq { --ico: url("/assets/ui/icones/seta-esq.svg"); }
+.ico-seta-dir { --ico: url("/assets/ui/icones/seta-dir.svg"); }
+.ico-seta-cima { --ico: url("/assets/ui/icones/seta-cima.svg"); }
+.ico-seta-baixo { --ico: url("/assets/ui/icones/seta-baixo.svg"); }
+.ico-chevron-esq { --ico: url("/assets/ui/icones/chevron-esq.svg"); }
+.ico-chevron-dir { --ico: url("/assets/ui/icones/chevron-dir.svg"); }
+.ico-fechar { --ico: url("/assets/ui/icones/fechar.svg"); }
+.ico-mais { --ico: url("/assets/ui/icones/mais.svg"); }
+.ico-menos { --ico: url("/assets/ui/icones/menos.svg"); }
+.ico-play { --ico: url("/assets/ui/icones/play.svg"); }
+.ico-pause { --ico: url("/assets/ui/icones/pause.svg"); }
+.ico-anterior { --ico: url("/assets/ui/icones/anterior.svg"); }
+.ico-proximo { --ico: url("/assets/ui/icones/proximo.svg"); }
+.ico-volume { --ico: url("/assets/ui/icones/volume.svg"); }
+.ico-mudo { --ico: url("/assets/ui/icones/mudo.svg"); }
+.ico-tela-cheia { --ico: url("/assets/ui/icones/tela-cheia.svg"); }
+.ico-disco { --ico: url("/assets/ui/icones/disco.svg"); }
+.ico-tesoura { --ico: url("/assets/ui/icones/tesoura.svg"); }
+.ico-banir { --ico: url("/assets/ui/icones/banir.svg"); }

@@ -39,6 +39,13 @@
         { id: 'em-breve-2', titulo: 'EM BREVE', cor: '#7b2cbf' },
     ];
 
+    const ico = (nome) => {
+        const e = document.createElement('span');
+        e.className = `ico ico-${nome}`;
+        e.setAttribute('aria-hidden', 'true');
+        return e;
+    };
+
     const criar = (tag, classe, texto) => {
         const e = document.createElement(tag);
         if (classe) e.className = classe;
@@ -83,7 +90,8 @@
 
     function vinil(faixa) {
         const caixa = criar('div', 'vinil');
-        caixa.style.setProperty('--capa', `url("${encodeURI(faixa.capa)}")`);
+        // url() em variável CSS é resolvida a partir do .css (css/assets/...): usa o caminho absoluto da página.
+        caixa.style.setProperty('--capa', `url("${new URL(encodeURI(faixa.capa), document.baseURI).href}")`);
 
         // o disco (clicar toca/pausa)
         const disco3d = criar('button', 'vinil-corpo');
@@ -115,7 +123,7 @@
         Object.assign(volume, { type: 'range', min: 0, max: 1, step: 0.05, value: window.EnzoMusicas.audio.volume });
         volume.setAttribute('aria-label', 'Volume');
         const linha = criar('div', 'vinil-player-linha');
-        linha.append(rotulo, criar('span', 'vinil-som', '🔊'), volume);
+        linha.append(rotulo, (() => { const som = criar('span', 'vinil-som'); som.appendChild(ico('volume')); return som; })(), volume);
         player.append(criar('span', 'vinil-nome', faixa.titulo), play, barra, linha);
 
         const info = { faixa, barra, rotulo, volume, duracao: NaN };
@@ -278,7 +286,7 @@
 
     function rodar(ligado) {
         cinema.projetor.classList.toggle('projetor--rodando', ligado);
-        cinema.botaoPlay.textContent = ligado ? '⏸' : '▶';
+        cinema.botaoPlay.replaceChildren(ico(ligado ? 'pause' : 'play'));
         cinema.botaoPlay.setAttribute('aria-label', ligado ? 'Pausar' : 'Tocar');
     }
 
@@ -302,17 +310,18 @@
         rolos.append(criar('span', 'projetor-rolo projetor-rolo--tras'), criar('span', 'projetor-rolo projetor-rolo--frente'));
         p.append(rolos, criar('span', 'projetor-corpo'), criar('span', 'projetor-lente'), criar('span', 'projetor-fenda'));
         const botoes = criar('div', 'projetor-botoes');
-        const b = (txt, rotulo, fn) => {
-            const e = criar('button', 'projetor-botao', txt);
+        const b = (nome, rotulo, fn) => {
+            const e = criar('button', 'projetor-botao');
+            e.appendChild(ico(nome));
             e.type = 'button';
             e.setAttribute('aria-label', rotulo);
             e.addEventListener('click', fn);
             botoes.appendChild(e);
             return e;
         };
-        b('⏮', 'Fita anterior', () => trocar(-1));
-        cinema.botaoPlay = b('▶', 'Tocar', alternarVideo);
-        b('⏭', 'Próxima fita', () => trocar(1));
+        b('anterior', 'Fita anterior', () => trocar(-1));
+        cinema.botaoPlay = b('play', 'Tocar', alternarVideo);
+        b('proximo', 'Próxima fita', () => trocar(1));
         p.appendChild(botoes);
         return p;
     }
