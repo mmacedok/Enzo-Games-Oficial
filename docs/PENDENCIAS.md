@@ -78,7 +78,7 @@
 
 ## ✅ Feito recentemente
 
-- **2026-10-06 — Prateleira de mídia (branch `midia`, sem push):** em `personagens.html`, músicas em vinil 3D lacrado (mesmo movimento dos gibis, disco sai da capa, player com barra/tempo/volume) e vídeos em fitas cassete (deitam com o título na etiqueta). Peças do Codex (tarefa 07) em `assets/midia/`. Falta: os vídeos (`assets/midia/videos.json`, hoje 2 fitas "EM BREVE") e o push quando o Henrique pedir.
+- **2026-10-06 — Prateleira de mídia (branch `midia`, sem push):** em `personagens.html`, músicas em vinil 3D lacrado (mesmo movimento dos gibis, disco sai da capa, player com barra/tempo/volume) e vídeos em fitas cassete (deitam com o título na etiqueta). Fita voa para o projetor (arte do Codex, tarefa 08: corpo, rolos girando, brilho da fita, claquete EM BREVE), feixe da lente até a tela. Peças das tarefas 07 e 08 em `assets/midia/`. Em andamento: tarefa 09 do Codex (lombadas por gibi, mesas com toalha xadrez, pratos, fundo de rabiscos em `assets/estante/`). Falta: os vídeos (`assets/midia/videos.json`, hoje 2 fitas "EM BREVE") e o push quando o Henrique pedir.
 
 - **2026-10-04 — Batalha, versão 11:** 3 Auras por turno (máx. 2 por carta), Degustador vira nos dois ataques, Moderador 1 por deck, Chorão raro, Inominável -1 Aura, Drone e Morcego de graça, Piscina cura todos, Mansão com HP extra enquanto está na mesa e notifica com Aura sobrando. Changelog em `docs/BATALHA-CHANGELOG.md`; cartas novas e Resenha só planejadas em `docs/PLANO-CARTAS-NOVAS.md` (7 dúvidas para o Henrique). Pendente: refazer as cartilhas "Como jogar" (dizem 1 Aura por turno) e conferir o equilíbrio ao vivo.
 

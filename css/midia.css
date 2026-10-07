@@ -431,10 +431,10 @@
 /* ---------------------------------------------------------------- projetor */
 .midia-estante--fitas { padding-right: clamp(150px, 30vw, 270px); min-height: 330px; }
 .projetor {
-    /* posições das peças em % do projetor (ajustadas para a arte do Codex quando ela chega) */
-    --lente-x: 2%; --lente-y: 30%; --lente-w: 26%; --lente-h: 24%;
-    --rolo1-x: 20%; --rolo1-y: 0%; --rolo1-d: 38%;
-    --rolo2-x: 52%; --rolo2-y: -8%; --rolo2-d: 34%;
+    /* posições das peças em % do projetor-corpo.png (900×760), medidas pelo Codex na tarefa 08 */
+    --lente-x: 5.3%; --lente-y: 22.9%; --lente-w: 14%; --lente-h: 16%;
+    --rolo1-x: 24%; --rolo1-y: -6.7%; --rolo1-d: 30%;
+    --rolo2-x: 75.8%; --rolo2-y: 3.7%; --rolo2-d: 28%;
     position: absolute;
     z-index: 3;
     top: 22px;
