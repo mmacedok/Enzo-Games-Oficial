@@ -2,8 +2,11 @@
 (function () {
     const INTERVALO = 24 * 60 * 60 * 1000;
     const CHAVE = 'enzo-intro-macarronada-ultima-exibicao';
-    const VIDEO = 'assets/midia/videos/macarronada-cosmica.mp4';
-    const CAPA = 'assets/midia/videos/macarronada-cosmica-poster.jpg';
+    // Cada página tem a sua abertura, com contagem de 24 h própria (a da Degustador não gasta a da home).
+    const ABERTURAS = {
+        padrao: { chave: CHAVE, video: 'assets/midia/videos/macarronada-cosmica.mp4', capa: 'assets/midia/videos/macarronada-cosmica-poster.jpg', nome: 'Macarronada Cósmica' },
+        degustador: { chave: 'enzo-intro-degustador-ultima-exibicao', video: 'assets/midia/videos/degustador-cidade.mp4', capa: 'assets/midia/videos/degustador-cidade-poster.jpg', nome: 'Degustador da Noite' },
+    };
 
     function podeMostrar(ultimo, agora = Date.now()) {
         const quando = Number(ultimo);
@@ -15,8 +18,13 @@
         return;
     }
 
+    const ABERTURA = document.body?.classList.contains('theme-degustador') ? ABERTURAS.degustador : ABERTURAS.padrao;
+    const VIDEO = ABERTURA.video;
+    const CAPA = ABERTURA.capa;
+    const CHAVE_PAGINA = ABERTURA.chave;
+
     let ultimo = null;
-    try { ultimo = localStorage.getItem(CHAVE); } catch { /* navegador sem armazenamento */ }
+    try { ultimo = localStorage.getItem(CHAVE_PAGINA); } catch { /* navegador sem armazenamento */ }
     const mostrar = podeMostrar(ultimo) && !new URLSearchParams(location.search).has('semintro');
     let liberar;
     const pronto = new Promise(resolve => { liberar = resolve; });
@@ -25,11 +33,11 @@
 
     function iniciar() {
         // Reconfere: outra aba pode ter iniciado a abertura enquanto esta página carregava.
-        try { if (!podeMostrar(localStorage.getItem(CHAVE))) { liberar(); return; } } catch { /* idem */ }
+        try { if (!podeMostrar(localStorage.getItem(CHAVE_PAGINA))) { liberar(); return; } } catch { /* idem */ }
         const anterior = document.activeElement;
         const caixa = document.createElement('dialog');
         caixa.className = 'intro-dia';
-        caixa.setAttribute('aria-label', 'Abertura: Macarronada Cósmica');
+        caixa.setAttribute('aria-label', 'Abertura: ' + ABERTURA.nome);
         caixa.innerHTML = `<video playsinline preload="auto" poster="${CAPA}"></video>
             <button type="button" class="intro-dia-btn intro-dia-som" aria-label="Ligar o som" hidden>🔇 Ligar som</button>
             <button type="button" class="intro-dia-btn intro-dia-tocar" hidden>Reproduzir abertura</button>
@@ -75,7 +83,7 @@
         caixa.showModal();
         document.documentElement.style.overflow = 'hidden';
         // Conta a exibição da abertura, inclusive quando a pessoa escolhe fechar.
-        try { localStorage.setItem(CHAVE, String(Date.now())); } catch { /* sem persistência */ }
+        try { localStorage.setItem(CHAVE_PAGINA, String(Date.now())); } catch { /* sem persistência */ }
         fechar.focus({ preventScroll: true });
         window.EnzoMusicas?.parar();
         video.src = VIDEO;

@@ -6,5 +6,12 @@
     "arte": "assets/midia/videos/macarronada-cosmica-arte.webp",
     "poster": "assets/midia/videos/macarronada-cosmica-poster.jpg",
     "cor": "#e65100"
+  },
+  {
+    "id": "degustador-cidade",
+    "titulo": "Degustador da Noite",
+    "video": "assets/midia/videos/degustador-cidade.mp4",
+    "poster": "assets/midia/videos/degustador-cidade-poster.jpg",
+    "cor": "#7b2cbf"
   }
 ]
