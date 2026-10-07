@@ -78,6 +78,8 @@
 
 ## ✅ Feito recentemente
 
+- **2026-10-06 — Intro do dia "Macarronada Cósmica":** na primeira visita de cada dia, a home toca o vídeo (31,5 s, 1080p, ~11 MB em `assets/intro/`) por cima do site, com ✕ discreto no canto superior direito (também fecha com Esc e no fim do vídeo). Tenta tocar com som; se o navegador bloquear, toca mudo com um botão 🔇. Não aparece para robôs de teste, com `?semintro` nem com "reduzir movimento". Código em `js/intro-diaria.js`; a animação vem de `E:\AI Workshop\animacoes\macarronada-cosmica`. Branch `intro-diaria`, **sem push** (aguarda o Henrique). Pendente: rodar os robôs (`npm test`) e decidir se a intro aparece também nas outras páginas.
+
 - **2026-10-04 — Batalha, versão 11:** 3 Auras por turno (máx. 2 por carta), Degustador vira nos dois ataques, Moderador 1 por deck, Chorão raro, Inominável -1 Aura, Drone e Morcego de graça, Piscina cura todos, Mansão com HP extra enquanto está na mesa e notifica com Aura sobrando. Changelog em `docs/BATALHA-CHANGELOG.md`; cartas novas e Resenha só planejadas em `docs/PLANO-CARTAS-NOVAS.md` (7 dúvidas para o Henrique). Pendente: refazer as cartilhas "Como jogar" (dizem 1 Aura por turno) e conferir o equilíbrio ao vivo.
 
 - **2026-10-04 — Degustador da Noite, capítulo 7 (escondido):** capa e 13 páginas no site, com `hidden: true`. Publicar ou agendar pela aba lançamentos do terminal. Falta o título do capítulo (hoje aparece "Capítulo 7").
