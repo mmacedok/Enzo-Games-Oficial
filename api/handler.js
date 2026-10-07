@@ -21,9 +21,10 @@ const baralho = require('./baralho.js');
 const tcg = require('./tcg.js');
 const acessos = require('./acessos.js');
 const upload = require('./upload.js');
+const leituras = require('./leituras.js');
 const SCHEMA = require('./schema.js');
 
-const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...lancamentos.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas, ...acessos.rotas, ...upload.rotas];
+const ROTAS = [...auth.rotas, ...games.rotas, ...user.rotas, ...leitores.rotas, ...admin.rotas, ...lancamentos.rotas, ...comentarios.rotas, ...baralho.rotas, ...tcg.rotas, ...acessos.rotas, ...upload.rotas, ...leituras.rotas];
 
 function acharRota(metodo, caminho) {
     let caminhoExiste = false;

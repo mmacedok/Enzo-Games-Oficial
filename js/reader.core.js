@@ -523,6 +523,7 @@
         buildChapterPanel();
         const chapter = state.comic.chapters?.[state.chapterIndex];
         const key = chapter && `${state.comic.id}/${chapter.id}`;
+        if (chapter) account.registrarVisualizacao?.(state.comic.id, chapter.id);
         if (!key || state.restoredKey === key) return;
         state.restoredKey = key;
         const saved = account.progressoDe(state.comic.id, chapter.id);

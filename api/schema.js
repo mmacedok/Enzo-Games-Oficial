@@ -315,4 +315,15 @@ module.exports = [
     // visto_em: a tela de espera de quem criou a sala renova; a lista de salas abertas só mostra
     // sala com dono esperando de verdade (quem fechou a aba some da lista em segundos).
     'ALTER TABLE tcg_salas ADD COLUMN IF NOT EXISTS visto_em BIGINT',
+    // Visualizações de capítulo por leitor (api/leituras.js): só a equipe vê.
+    `CREATE TABLE IF NOT EXISTS leituras (
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        comic_id TEXT NOT NULL,
+        chapter_id TEXT NOT NULL,
+        visualizacoes INTEGER NOT NULL DEFAULT 1,
+        primeira_em BIGINT NOT NULL,
+        ultima_em BIGINT NOT NULL,
+        PRIMARY KEY (user_id, comic_id, chapter_id)
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_leituras_ultima ON leituras(ultima_em)',
 ];

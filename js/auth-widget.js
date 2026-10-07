@@ -804,6 +804,15 @@
         pedir('/api/reader/progress', { comicId, chapterId, page, zoom, completed }, saindo ? { keepalive: true } : {}).catch(() => {});
     }
 
+    /** Conta uma visualização do capítulo (só a equipe vê). Uma vez por capítulo a cada carregamento da página; o servidor limita a 1 a cada 10 min. */
+    const vistos = new Set();
+    function registrarVisualizacao(comicId, chapterId) {
+        const chave = `${comicId}/${chapterId}`;
+        if (!estado.usuario || vistos.has(chave)) return;
+        vistos.add(chave);
+        pedir('/api/reader/view', { comicId, chapterId }).catch(() => {});
+    }
+
     const progressoDe = (comicId, chapterId) =>
         estado.dados?.progress?.find((p) => p.comicId === comicId && p.chapterId === chapterId) || null;
 
@@ -833,6 +842,7 @@
         anunciarConquista,
         verificarColecoes,
         salvarLeitura,
+        registrarVisualizacao,
         progressoDe,
     };
     window.EnzoConta = api;

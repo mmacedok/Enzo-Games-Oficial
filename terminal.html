@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linha de comando — Enzo Games</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#030603">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <!-- Painel do admin: visual próprio (terminal), sem o css do gibi. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=VT323&display=swap" rel="stylesheet">
+    <script src="js/movimento.js?v=2"></script>
+    <link rel="stylesheet" href="css/admin.css?v=rev1001d">
+    <link rel="stylesheet" href="css/admin-hacker.css?v=13">
+    <script>if (top !== self) document.documentElement.classList.add('embutido');</script>
+</head>
+<body>
+    <div class="crt">
+        <header class="barra">
+            <span class="barra-luzes" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="barra-titulo">enzo-games :: /admin</span>
+            <span class="barra-relogio" id="relogio"></span>
+        </header>
+
+        <div class="corpo">
+            <aside class="painel" id="painel" aria-label="Estado do sistema">
+                <pre class="logo" aria-hidden="true">
+ ___ _  _ _______
+| __| \| |_  / _ \
+| _|| .` |/ / (_) |
+|___|_|\_/___\___/ </pre>
+                <pre class="ascii-mascote" id="ascii-mascote" aria-hidden="true"></pre>
+                <p class="painel-sub">degustação noturna · sysadmin</p>
+                <div id="numeros" class="numeros"></div>
+                <nav class="atalhos" id="atalhos" aria-label="Comandos rápidos"></nav>
+            </aside>
+
+            <main class="terminal" id="terminal">
+                <details class="dashboard" id="dashboard" open>
+                    <summary><span>01 / CENTRAL DE COMANDO</span><span class="dashboard-hint">clique para recolher · terminal abaixo</span><span class="dashboard-mobile-pulse" id="dashboard-mobile-pulse" aria-hidden="true"></span></summary>
+                    <div class="dashboard-grid" id="dashboard-grid"></div>
+                    <pre class="dashboard-sinal" id="dashboard-sinal" aria-hidden="true"></pre>
+                </details>
+                <div class="saida" id="saida" role="log" aria-live="polite"></div>
+                <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+                <form class="prompt" id="prompt" autocomplete="off">
+                    <label for="entrada" class="prompt-ps" id="ps">root@enzo:~$</label>
+                    <input id="entrada" class="prompt-entrada" spellcheck="false" autocapitalize="off" aria-label="Comando">
+                </form>
+            </main>
+
+            <aside class="deck" id="deck" aria-label="Radar de acessos ao vivo"></aside>
+        </div>
+    </div>
+
+    <script src="js/images.generated.js?v=rev0927a"></script>
+    <script src="js/lancamentos.js?v=2"></script>
+    <script src="js/conquistas.js?v=4"></script>
+    <script src="js/baralho-dados.js?v=rev1004a"></script>
+    <script src="js/api-cliente.js?v=rev0926e"></script>
+    <script src="js/admin-fx.js?v=5"></script>
+    <script src="js/admin-deck.js?v=4"></script>
+    <script src="js/admin-upload.js?v=1"></script>
+    <script src="js/admin.js?v=rev1007a"></script>
+</body>
+</html>

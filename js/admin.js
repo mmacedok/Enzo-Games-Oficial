@@ -1804,7 +1804,8 @@
         entrada.disabled = false;
         entrada.focus();
         atualizarPrompt();
-        await rodar(estado.mod ? 'launch' : 'status');
+        const doHash = decodeURIComponent((location.hash.match(/cmd=(.*)$/) || [])[1] || '');
+        await rodar(doHash || (estado.mod ? 'launch' : 'status'));
         notificar(`✔ acesso concedido. bem-vindo, ${eu.user.firstName}. Clique nos números, nomes e botões; "/" foca o prompt.`, 'ok');
     }
 

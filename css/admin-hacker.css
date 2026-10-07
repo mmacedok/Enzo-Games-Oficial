@@ -438,3 +438,7 @@ body.modo-mod #numeros, body.modo-mod #deck, body.modo-mod #ascii-mascote { disp
     .central-acao small { display: none; }
     .central-numero strong { font-size: 22px; }
 }
+
+/* Dentro de uma janela do sistema (admin.html): só o terminal, sem barra, painéis nem central. */
+.embutido .barra, .embutido .painel, .embutido .deck, .embutido .dashboard, .embutido .fita { display: none !important; }
+.embutido .corpo { grid-template-columns: 1fr; }
