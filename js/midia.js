@@ -3,11 +3,12 @@
 //
 // - Músicas (assets/audio/musicas.json, as mesmas da Discografia): discos de vinil 3D
 //   ainda lacrados no plástico. Clicar toca a música inteira: o disco sai da capa girando.
-// - Vídeos (assets/midia/videos.json): fitas cassete em pé na prateleira. Clicar puxa a
-//   fita para fora e ela aparece deitada, com o título na etiqueta; clicar nela abre o vídeo.
+// - Vídeos (assets/midia/videos.json): fitas cassete em pé na prateleira. Clicar faz a fita
+//   voar (mostrando título e arte) para dentro do projetor, que projeta o vídeo na tela de cima.
 //   Sem vídeos ainda: duas fitas "EM BREVE".
 //
-// assets/midia/videos.json: [{ "id", "titulo", "video": "assets/midia/videos/x.mp4", "cor": "#ff8a1e" }]
+// assets/midia/videos.json: [{ "id", "titulo", "video": "assets/midia/videos/x.mp4",
+//                              "arte": "assets/midia/videos/x.webp" (quadrada), "cor": "#ff8a1e" }]
 // As peças desenhadas (vinil, plástico, fita) ficam em assets/midia/; sem elas, o CSS desenha tudo.
 // ============================================================================
 (function () {
@@ -15,6 +16,7 @@
     const PECAS = [
         ['tem-disco', 'vinil-disco'], ['tem-plastico', 'vinil-plastico'], ['tem-adesivo', 'vinil-adesivo'],
         ['tem-fita', 'cassete-frente'], ['tem-lombada', 'cassete-lombada'], ['tem-brilho', 'cassete-caixa-brilho'],
+        ['tem-projetor', 'projetor-corpo'], ['tem-rolo', 'projetor-rolo'],
     ];
     const EM_BREVE = [
         { id: 'em-breve-1', titulo: 'EM BREVE', cor: '#ff8a1e' },
@@ -144,69 +146,201 @@
         });
     }
 
-    // ------------------------------------------------------------ fitas
-    let palco = null;
-    let fitaFora = null;
+    // ------------------------------------------------------------ fitas + projetor
+    // Clicar numa fita: ela sai da prateleira, voa para o meio da tela mostrando título e arte,
+    // entra no projetor (canto superior direito da prateleira), os rolos giram e o vídeo
+    // aparece na tela de cima, com os controles normais de vídeo. O projetor tem
+    // fita anterior / tocar-pausar / próxima fita.
+    const ARTE_PADRAO = 'assets/midia/fita-arte-em-breve.png';
+    const cinema = { lista: [], lombadas: [], atual: -1, ocupado: false };
 
-    function guardarFita() {
-        if (!fitaFora) return;
-        fitaFora.classList.remove('fita--fora');
-        fitaFora.setAttribute('aria-expanded', 'false');
-        fitaFora = null;
-        palco.hidden = true;
-        palco.replaceChildren();
-    }
-
-    function abrirVideo(video) {
-        const dialogo = criar('dialog', 'fita-video');
-        const player = criar('video');
-        player.src = video.video;
-        player.controls = true;
-        player.autoplay = true;
-        player.playsInline = true;
-        const fechar = criar('button', 'fita-video-fechar', 'Fechar');
-        fechar.type = 'button';
-        fechar.addEventListener('click', () => dialogo.close());
-        dialogo.addEventListener('close', () => { player.pause(); dialogo.remove(); });
-        dialogo.append(player, fechar);
-        document.body.appendChild(dialogo);
-        window.EnzoMusicas?.parar();
-        dialogo.showModal();
-    }
-
-    /** Fita deitada (vista de frente) com o título na etiqueta. */
+    /** Fita de frente (a que voa): etiqueta com arte e título. */
     function fitaFrente(video) {
-        const temVideo = Boolean(video.video);
-        const fita = criar(temVideo ? 'button' : 'div', 'fita-frente');
-        if (temVideo) {
-            fita.type = 'button';
-            fita.setAttribute('aria-label', `Assistir ${video.titulo}`);
-            fita.addEventListener('click', () => abrirVideo(video));
-        }
+        const fita = criar('div', 'fita-frente');
         fita.style.setProperty('--fita-cor', video.cor || '#ff8a1e');
         const etiqueta = criar('span', 'fita-etiqueta');
-        etiqueta.append(criar('span', 'fita-titulo', video.titulo), criar('span', 'fita-lado', temVideo ? 'LADO A · ▶ ASSISTIR' : 'NOVIDADE CHEGANDO'));
+        const arte = criar('span', 'fita-arte');
+        arte.style.backgroundImage = `url("${encodeURI(video.arte || ARTE_PADRAO)}")`;
+        const textos = criar('span', 'fita-textos');
+        textos.append(criar('span', 'fita-titulo', video.titulo), criar('span', 'fita-lado', video.video ? 'LADO A' : 'NOVIDADE CHEGANDO'));
+        etiqueta.append(arte, textos);
         fita.append(criar('span', 'fita-carretel fita-carretel--e'), criar('span', 'fita-carretel fita-carretel--d'), etiqueta, criar('span', 'fita-brilho'));
         return fita;
     }
 
-    function fitaLombada(video) {
+    function fitaLombada(video, indice) {
         const botao = criar('button', 'fita');
         botao.type = 'button';
-        botao.setAttribute('aria-expanded', 'false');
-        botao.setAttribute('aria-label', `Tirar a fita ${video.titulo} da prateleira`);
+        botao.setAttribute('aria-label', `Colocar a fita ${video.titulo} no projetor`);
         botao.style.setProperty('--fita-cor', video.cor || '#ff8a1e');
         botao.appendChild(criar('span', 'fita-lombada-titulo', video.titulo));
-        botao.addEventListener('click', () => {
-            if (fitaFora === botao) { guardarFita(); return; }
-            guardarFita();
-            fitaFora = botao;
-            botao.classList.add('fita--fora');
-            botao.setAttribute('aria-expanded', 'true');
-            palco.replaceChildren(fitaFrente(video));
-            palco.hidden = false;
-        });
+        botao.addEventListener('click', () => colocarFita(indice));
         return botao;
+    }
+
+    const centro = (r) => [r.left + r.width / 2, r.top + r.height / 2];
+
+    /** Voo da fita: lombada → meio da tela (de frente) → fenda do projetor. */
+    async function voar(indice) {
+        const de = cinema.lombadas[indice].getBoundingClientRect();
+        const para = cinema.projetor.querySelector('.projetor-fenda').getBoundingClientRect();
+        const voando = fitaFrente(cinema.lista[indice]);
+        voando.classList.add('fita-voando');
+        cinema.cinemaEl.closest('[data-midia]').appendChild(voando); // dentro da seção, para valerem as classes .tem-*
+        const w = voando.getBoundingClientRect().width;
+        const [x0, y0] = centro(de), [x2, y2] = centro(para);
+        const x1 = innerWidth / 2, y1 = innerHeight / 2;
+        const pos = (x, y, giro, escala) => `translate(${x - w / 2}px, ${y}px) translateY(-50%) rotate(${giro}deg) scale(${escala})`;
+        const sEstreita = de.height / w;
+        const animacao = voando.animate([
+            { transform: pos(x0, y0, -90, sEstreita), opacity: 0.6 },
+            { transform: pos(x1, y1, -4, 1), opacity: 1, offset: 0.32 },
+            { transform: pos(x1, y1, 0, 1.04), opacity: 1, offset: 0.62 },
+            { transform: pos(x2, y2, 18, 0.1), opacity: 1, offset: 0.94 },
+            { transform: pos(x2, y2, 18, 0.06), opacity: 0 },
+        ], { duration: 2400, easing: 'cubic-bezier(0.45, 0, 0.25, 1)' });
+        await animacao.finished.catch(() => {});
+        voando.remove();
+    }
+
+    async function colocarFita(indice) {
+        if (cinema.ocupado) return;
+        if (indice === cinema.atual) { alternarVideo(); return; }
+        cinema.ocupado = true;
+        pararTela();
+        cinema.lombadas.forEach((l, i) => l.classList.toggle('fita--fora', i === indice));
+        cinema.projetor.classList.add('projetor--recebendo');
+        const reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduzir) await voar(indice);
+        cinema.projetor.classList.remove('projetor--recebendo');
+        cinema.atual = indice;
+        cinema.ocupado = false;
+        ligarTela(cinema.lista[indice]);
+    }
+
+    function pararTela() {
+        const { video } = cinema;
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+        cinema.tela.classList.remove('midia-tela--ligada', 'midia-tela--video');
+        cinema.feixe.classList.remove('midia-feixe--ligado');
+        rodar(false);
+    }
+
+    /** Liga o projetor e mostra a fita na tela (vídeo ou cartão "em breve"). */
+    function ligarTela(fita) {
+        const { tela, video, espera } = cinema;
+        espera.replaceChildren(fitaCartao(fita));
+        tela.classList.add('midia-tela--ligada');
+        cinema.feixe.classList.add('midia-feixe--ligado');
+        desenharFeixe();
+        if (fita.video) {
+            window.EnzoMusicas?.parar();
+            tela.classList.add('midia-tela--video');
+            video.src = fita.video;
+            video.play().catch(() => rodar(false));
+        } else {
+            rodar(true);
+        }
+    }
+
+    function fitaCartao(fita) {
+        const cartao = criar('div', 'tela-cartao');
+        const arte = criar('img', 'tela-arte');
+        arte.src = fita.arte || ARTE_PADRAO;
+        arte.alt = '';
+        cartao.append(arte, criar('span', 'tela-titulo', fita.titulo), criar('span', 'tela-sub', fita.video ? '' : 'Novidade chegando na Videoteca'));
+        return cartao;
+    }
+
+    function rodar(ligado) {
+        cinema.projetor.classList.toggle('projetor--rodando', ligado);
+        cinema.botaoPlay.textContent = ligado ? '⏸' : '▶';
+        cinema.botaoPlay.setAttribute('aria-label', ligado ? 'Pausar' : 'Tocar');
+    }
+
+    function alternarVideo() {
+        if (cinema.atual < 0) { colocarFita(0); return; }
+        const fita = cinema.lista[cinema.atual];
+        if (!fita.video) { rodar(!cinema.projetor.classList.contains('projetor--rodando')); return; }
+        if (cinema.video.paused) cinema.video.play().catch(() => {});
+        else cinema.video.pause();
+    }
+
+    const trocar = (passo) => {
+        const n = cinema.lista.length;
+        colocarFita(cinema.atual < 0 ? 0 : (cinema.atual + passo + n) % n);
+    };
+
+    /** Projetor (desenhado em CSS até chegarem as peças do Codex) com os três botões. */
+    function montarProjetor() {
+        const p = criar('div', 'projetor');
+        const rolos = criar('span', 'projetor-rolos');
+        rolos.append(criar('span', 'projetor-rolo projetor-rolo--tras'), criar('span', 'projetor-rolo projetor-rolo--frente'));
+        p.append(rolos, criar('span', 'projetor-corpo'), criar('span', 'projetor-lente'), criar('span', 'projetor-fenda'));
+        const botoes = criar('div', 'projetor-botoes');
+        const b = (txt, rotulo, fn) => {
+            const e = criar('button', 'projetor-botao', txt);
+            e.type = 'button';
+            e.setAttribute('aria-label', rotulo);
+            e.addEventListener('click', fn);
+            botoes.appendChild(e);
+            return e;
+        };
+        b('⏮', 'Fita anterior', () => trocar(-1));
+        cinema.botaoPlay = b('▶', 'Tocar', alternarVideo);
+        b('⏭', 'Próxima fita', () => trocar(1));
+        p.appendChild(botoes);
+        return p;
+    }
+
+    // Feixe de luz: polígono da lente até os cantos da tela (fecho convexo).
+    function desenharFeixe() {
+        const { feixe, cinemaEl, tela, projetor } = cinema;
+        const base = cinemaEl.getBoundingClientRect();
+        const t = tela.getBoundingClientRect();
+        const l = projetor.querySelector('.projetor-lente').getBoundingClientRect();
+        const lx = l.left + l.width * 0.25 - base.left, ly = l.top + l.height * 0.25 - base.top;
+        const tx = t.left - base.left, ty = t.top - base.top;
+        const pts = [[lx, ly], [tx, ty], [tx + t.width, ty], [tx + t.width, ty + t.height], [tx, ty + t.height]];
+        feixe.setAttribute('viewBox', `0 0 ${base.width} ${base.height}`);
+        feixe.querySelector('polygon').setAttribute('points', fecho(pts).map((p) => p.map(Math.round).join(',')).join(' '));
+        const g = feixe.querySelector('linearGradient');
+        g.setAttribute('x1', lx); g.setAttribute('y1', ly);
+        g.setAttribute('x2', tx + t.width / 2); g.setAttribute('y2', ty + t.height / 2);
+    }
+
+    function fecho(pontos) {
+        const p = pontos.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+        const cruz = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+        const meia = (lista) => {
+            const h = [];
+            for (const q of lista) {
+                while (h.length >= 2 && cruz(h[h.length - 2], h[h.length - 1], q) <= 0) h.pop();
+                h.push(q);
+            }
+            h.pop();
+            return h;
+        };
+        return meia(p).concat(meia(p.reverse()));
+    }
+
+    function montarCinema(secao, videos) {
+        const cinemaEl = secao.querySelector('[data-midia-cinema]');
+        const tela = secao.querySelector('[data-midia-tela]');
+        const video = tela.querySelector('video');
+        const espera = tela.querySelector('[data-midia-espera]');
+        const feixe = secao.querySelector('[data-midia-feixe]');
+        const estante = secao.querySelector('[data-midia-fitas]');
+        Object.assign(cinema, { cinemaEl, tela, video, espera, feixe, lista: videos });
+        cinema.projetor = montarProjetor();
+        estante.appendChild(cinema.projetor);
+        cinema.lombadas = videos.map((v, i) => estante.appendChild(fitaLombada(v, i)));
+        video.addEventListener('play', () => rodar(true));
+        video.addEventListener('pause', () => rodar(false));
+        video.addEventListener('ended', () => rodar(false));
+        addEventListener('resize', () => { if (cinema.atual >= 0) desenharFeixe(); });
     }
 
     // ------------------------------------------------------------ montagem
@@ -214,8 +348,6 @@
         const secao = document.querySelector('[data-midia]');
         if (!secao) return;
         const estanteVinis = secao.querySelector('[data-midia-vinis]');
-        const estanteFitas = secao.querySelector('[data-midia-fitas]');
-        palco = secao.querySelector('[data-midia-palco]');
 
         // Peças desenhadas: cada uma liga sua classe só se a imagem existir (senão o CSS desenha).
         for (const [classe, nome] of PECAS) {
@@ -231,9 +363,7 @@
         estanteVinis.closest('.midia-bloco').hidden = !faixas.length;
 
         const videos = await fetch(VIDEOS, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
-        for (const v of (Array.isArray(videos) && videos.length ? videos : EM_BREVE)) estanteFitas.appendChild(fitaLombada(v));
-
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') guardarFita(); });
+        montarCinema(secao, Array.isArray(videos) && videos.length ? videos : EM_BREVE);
         secao.hidden = false;
     }
 
