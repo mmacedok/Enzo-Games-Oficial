@@ -3635,6 +3635,8 @@ dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
     height: calc(var(--book-w) * 0.5);
     top: calc(var(--book-h) - var(--book-w) * 0.5 * 0.5234);
     background: url('../assets/estante/prato.png') center / 100% 100% no-repeat;
+    /* Recuado no eixo Z para os cantos do gibi inclinado não afundarem no prato (escala e deslocamento compensam a perspectiva) */
+    transform: translateY(12px) translateZ(-80px) scale(1.05);
 }
 
 /* Fundo do site: rabiscos tom sobre tom (tile 1024×1024 sobre #E65100) por baixo das bolinhas */
