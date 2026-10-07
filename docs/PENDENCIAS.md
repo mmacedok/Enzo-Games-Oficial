@@ -6,7 +6,7 @@
 > item (ex.: `> Henrique: deixa para depois`); o Claude segue isso na próxima atualização.
 > Testes que faltam rodar ficam em [`TESTES-PENDENTES.md`](TESTES-PENDENTES.md) (não repetidos aqui).
 >
-> Última atualização: **2026-10-04**.
+> Última atualização: **2026-10-06**.
 
 **Legenda:**
 - **Quem:**
@@ -19,6 +19,8 @@
 ---
 
 ## 🔴 Agora (prioridade alta)
+- [ ] **Galeria: falta a estátua do Degustador da Noite.** A ferramenta recusou duas gerações da tarefa 10; o card mantém a ficha cinza.
+
 
 - [ ] **Multiplayer mais rápido no ar:** no painel da Cloudflare (Pages → Settings → Functions →
   Placement), testar "Smart" para a API rodar perto do banco Neon. Não deu para conferir a opção
@@ -62,6 +64,8 @@
   deveria abrir em seguida). Nunca testado com conta real, só com o login falso. 🧑 testar no site.
 
 ## 🟡 Decisões em aberto (🧑)
+- [ ] **Galeria:** revisar as descrições curtas do Claude e decidir se Torado entra (sem lore nos MDs).
+
 
 - [ ] **Brilho das capas no celular:** anima o tempo todo (custa um pouco). Manter ou deixar parado?
 - [ ] **Arte crua por link direto:** quem abre o endereço da imagem vê o Cabo Côco sem tarja, e a
@@ -78,7 +82,14 @@
 
 ## ✅ Feito recentemente
 
-- **2026-10-06 — Prateleira de mídia (branch `midia`, sem push):** em `personagens.html`, músicas em vinil 3D lacrado (mesmo movimento dos gibis, disco sai da capa, player com barra/tempo/volume) e vídeos em fitas cassete (deitam com o título na etiqueta). Fita voa para o projetor (arte do Codex, tarefa 08: corpo, rolos girando, brilho da fita, claquete EM BREVE), feixe da lente até a tela. Peças das tarefas 07 e 08 em `assets/midia/`. Em andamento: tarefa 09 do Codex (lombadas por gibi, mesas com toalha xadrez, pratos, fundo de rabiscos em `assets/estante/`). Falta: os vídeos (`assets/midia/videos.json`, hoje 2 fitas "EM BREVE") e o push quando o Henrique pedir.
+- **2026-10-06 — Macarronada Cósmica na home:** vídeo de 31,5 s na Videoteca, fita com arte própria na lombada e na frente; abertura automática com intervalo real de 24 horas por navegador, fechar/Esc e botão de som quando necessário.
+
+- **2026-10-06 — Galeria unida à versão de mídia da home (localhost:3081):** carrossel de molduras, palco com ficha/descrição e 7 estátuas da tarefa 10. Degustador usa a ficha cinza. Fichas clássicas do ZeZoVerso preservadas; sem commit/push desta união.
+
+
+- **2026-10-06 — Escopo dos assets corrigido (branch `midia`, sem commit/push):** tarefas 07/08 na Discoteca/Videoteca da home Enzo Games; tarefa 09 com lombadas da série, mesas, pratos e rabiscos somente na home. Degustador e ZeZoVerso voltam às estantes e fundos anteriores. As lombadas novas dos spin-offs permanecem guardadas, sem aplicação nessas áreas.
+
+- **2026-10-06 — Prateleira de mídia (branch `midia`, sem push):** em `personagens.html`, músicas em vinil 3D lacrado (mesmo movimento dos gibis, disco sai da capa, player com barra/tempo/volume) e vídeos em fitas cassete (deitam com o título na etiqueta). Fita voa para o projetor (arte do Codex, tarefa 08: corpo, rolos girando, brilho da fita, claquete EM BREVE), feixe da lente até a tela. Peças das tarefas 07 e 08 em `assets/midia/`. Tarefa 09 entregue; acabamento aplicado somente à série Enzo Games (pedido do Henrique). Vídeo Macarronada Cósmica adicionado em `assets/midia/videos.json`. Falta o push quando o Henrique pedir.
 
 - **2026-10-04 — Batalha, versão 11:** 3 Auras por turno (máx. 2 por carta), Degustador vira nos dois ataques, Moderador 1 por deck, Chorão raro, Inominável -1 Aura, Drone e Morcego de graça, Piscina cura todos, Mansão com HP extra enquanto está na mesa e notifica com Aura sobrando. Changelog em `docs/BATALHA-CHANGELOG.md`; cartas novas e Resenha só planejadas em `docs/PLANO-CARTAS-NOVAS.md` (7 dúvidas para o Henrique). Pendente: refazer as cartilhas "Como jogar" (dizem 1 Aura por turno) e conferir o equilíbrio ao vivo.
 

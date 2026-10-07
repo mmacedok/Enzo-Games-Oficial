@@ -17,10 +17,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
     <script src="js/movimento.js?v=2"></script>
-    <link rel="stylesheet" href="css/style.css?v=rev1001d">
+    <link rel="stylesheet" href="css/style.css?v=rev1006u">
+    <link rel="stylesheet" href="css/midia.css?v=rev1006video">
+    <link rel="stylesheet" href="css/intro-diaria.css?v=rev1006video">
     <link rel="stylesheet" href="css/images.generated.css?v=1">
 </head>
-<body>
+<body class="enzo-page">
 
     <header class="site-header">
         <h1 class="garfield-classic-logo" title="Enzo Games">
@@ -63,6 +65,33 @@
             </div>
         </section>
 
+        <!-- Prateleira de mídia (js/midia.js): músicas em vinil lacrado, vídeos em fita cassete -->
+        <section class="midia" data-midia aria-label="Músicas e vídeos" hidden>
+            <div class="midia-bloco">
+                <h2 class="section-title section-title--center">Discoteca</h2>
+                <div class="midia-estante midia-estante--vinis" data-midia-vinis></div>
+            </div>
+            <div class="midia-bloco">
+                <h2 class="section-title section-title--center">Videoteca</h2>
+                <div class="midia-cinema" data-midia-cinema>
+                    <div class="midia-tela" data-midia-tela>
+                        <div class="midia-tela-apagada">Escolha uma fita na prateleira</div>
+                        <div class="midia-tela-espera" data-midia-espera></div>
+                        <video class="midia-tela-video" controls playsinline preload="none"></video>
+                    </div>
+                    <svg class="midia-feixe" data-midia-feixe aria-hidden="true" focusable="false">
+                        <defs><linearGradient id="midiaFeixeLuz" gradientUnits="userSpaceOnUse">
+                            <stop offset="0" stop-color="#fff6c8" stop-opacity="0.75"/>
+                            <stop offset="1" stop-color="#fff6c8" stop-opacity="0.08"/>
+                        </linearGradient></defs>
+                        <polygon fill="url(#midiaFeixeLuz)"/>
+                    </svg>
+                    <div class="midia-estante midia-estante--fitas" data-midia-fitas></div>
+                </div>
+            </div>
+        </section>
+
+
         <section class="section jogos-section" id="jogos" aria-labelledby="jogos-title">
             <h2 class="section-title section-title--center" id="jogos-title">Jogos do Enzo Games</h2>
             <div class="jogos-grade" id="jogos-grade" role="group" aria-label="Escolha o jogo"></div>
@@ -83,17 +112,20 @@
         <p class="site-credits">Enzo Games · HQ satírica independente · Macarronada sim, lasanha nunca.</p>
     </footer>
 
-    <script src="js/images.generated.js?v=rev0927a"></script>
+    <script src="js/images.generated.js?v=rev1006u"></script>
     <script src="js/lancamentos.js?v=2"></script>
     <script src="js/site.js?v=rev1001a"></script>
     <script src="js/conquistas.js?v=4"></script>
     <script src="js/baralho-dados.js?v=rev1004a"></script>
     <script src="js/api-cliente.js?v=rev0926e"></script>
-    <script src="js/baralho.js?v=rev0931a"></script>
+    <script src="js/intro-diaria.js?v=rev1006video"></script>
+    <script src="js/baralho.js?v=rev1006video"></script>
     <script src="js/auth-widget.js?v=rev0931j"></script>
     <script src="js/shelf.js?v=rev0926"></script>
     <script src="js/comic-open.js?v=rev0926"></script>
     <script src="js/main.js?v=rev1001d"></script>
+    <script src="js/musicas.js?v=rev1006r"></script>
+    <script src="js/midia.js?v=rev1006video"></script>
     <script src="js/jogos-home.js?v=italos-surfer-capa2"></script>
 </body>
 </html>

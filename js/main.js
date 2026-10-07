@@ -28,6 +28,9 @@
      * firstPage, kicker ("Capítulo 3"), headline (nome da história), issue ("#3"),
      * isNew, spine (texto da lombada) }.
      */
+    // Lombada desenhada (assets/estante/lombada-<gibi>-NN.png); sem o arquivo, a estante usa a lombada de cor.
+    const spineArt = (name, n) => `assets/estante/lombada-${name}-${String(n).padStart(2, "0")}.png`;
+
     function editionsFor(colecao) {
         if (colecao === 'serie') {
             const series = [...state.comics].sort(byReleaseOrder).filter((comic) => !isSpinOff(comic));
@@ -41,6 +44,7 @@
                 issue: `#${index + 1}`,
                 isNew: index === series.length - 1,
                 spine: 'ENZO GAMES',
+                spineImg: spineArt('serie', index + 1),
             }));
         }
         if (colecao === 'zezoverso') {

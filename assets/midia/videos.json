@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "macarronada-cosmica",
+    "titulo": "Macarronada Cósmica",
+    "video": "assets/midia/videos/macarronada-cosmica.mp4",
+    "arte": "assets/midia/videos/macarronada-cosmica-arte.webp",
+    "poster": "assets/midia/videos/macarronada-cosmica-poster.jpg",
+    "cor": "#e65100"
+  }
+]

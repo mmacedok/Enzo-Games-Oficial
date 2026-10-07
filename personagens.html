@@ -16,8 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
     <script src="js/movimento.js?v=2"></script>
-    <link rel="stylesheet" href="css/style.css?v=rev1001d">
-    <link rel="stylesheet" href="css/midia.css?v=rev1006r">
+    <link rel="stylesheet" href="css/style.css?v=rev1006u">
     <link rel="stylesheet" href="css/images.generated.css?v=1">
 </head>
 <body class="characters-page">
@@ -41,81 +40,18 @@
     <main class="container">
         <h1 class="page-title">Galeria de personagens</h1>
 
-        <section class="characters-roster" aria-label="Fichas de personagens">
-            <!-- 1. Enzo Games -->
-            <div class="character-card">
-                <img data-original="assets/Personagens/Enzo games ficha.png" src="assets/web/923569396f52acf1-640.webp" srcset="assets/web/923569396f52acf1-640.webp 640w, assets/web/923569396f52acf1-1280.webp 1280w, assets/web/923569396f52acf1-1696.webp 1696w" sizes="(max-width: 600px) 90vw, 420px" width="1696" height="2528" alt="Enzo Games" loading="eager" decoding="async">
-                <span class="character-name">Enzo Games</span>
-            </div>
+        <p class="galeria-sub">O museu oficial do Enzo Games. Toque numa estátua para ver a ficha.</p>
 
-            <!-- 2. Italolol -->
-            <div class="character-card">
-                <img data-original="assets/Personagens/Italolol.png" src="assets/web/35abbd7f000760a8-640.webp" srcset="assets/web/35abbd7f000760a8-640.webp 640w, assets/web/35abbd7f000760a8-1280.webp 1280w, assets/web/35abbd7f000760a8-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2016" height="2114" alt="Italolol" loading="lazy" decoding="async">
-                <span class="character-name">Italolol</span>
-            </div>
-
-            <!-- 3. Inominavel -->
-            <div class="character-card">
-                <img data-original="assets/Personagens/O Inominavel Ficha.png" src="assets/web/396f3fd71eaad2f7-640.webp" srcset="assets/web/396f3fd71eaad2f7-640.webp 640w, assets/web/396f3fd71eaad2f7-1280.webp 1280w, assets/web/396f3fd71eaad2f7-1344.webp 1344w" sizes="(max-width: 600px) 90vw, 420px" width="1344" height="3100" alt="O Inominável" loading="lazy" decoding="async">
-                <span class="character-name">O Inominável</span>
-            </div>
-
-            <!-- 4. Degustador da noite -->
-            <div class="character-card">
-                <img data-original="assets/Personagens/Degustador da noite Ficha.png" src="assets/web/ae15609878b0c353-640.webp" srcset="assets/web/ae15609878b0c353-640.webp 640w, assets/web/ae15609878b0c353-1280.webp 1280w, assets/web/ae15609878b0c353-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2048" height="2056" alt="Degustador da Noite" loading="lazy" decoding="async">
-                <span class="character-name">Degustador da Noite</span>
-            </div>
-
-            <!-- 5. Ficha banida (bloqueada por senha) -->
-            <div class="character-card" data-locked="true">
-                <div class="crime-scene-overlay"><span>CONTEÚDO BANIDO<small>EM 456 PAÍSES</small></span></div>
-                <img data-original="assets/Personagens/Cabo Côco.png" src="assets/web/c0df924b96103b1d-640.webp" srcset="assets/web/c0df924b96103b1d-640.webp 640w, assets/web/c0df924b96103b1d-1280.webp 1280w, assets/web/c0df924b96103b1d-1750.webp 1750w" sizes="(max-width: 600px) 90vw, 420px" width="1750" height="2432" alt="Ficha banida" data-nome="Cabo Côco" loading="lazy" decoding="async">
-                <span class="character-name">???</span>
-            </div>
-
-            <!-- 6. Superkid -->
-            <div class="character-card">
-                <img data-original="assets/Personagens/Superkid Ficha.png" src="assets/web/77d918b4b1d05682-640.webp" srcset="assets/web/77d918b4b1d05682-640.webp 640w, assets/web/77d918b4b1d05682-1280.webp 1280w, assets/web/77d918b4b1d05682-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2016" height="2086" alt="Superkid" loading="lazy" decoding="async">
-                <span class="character-name">Superkid</span>
-            </div>
-
-            <!-- 7. Hatsune Neves -->
-            <div class="character-card">
-                <img data-original="assets/Personagens/Hatsune Neves Ficha.png" src="assets/web/5cbfeb049ab34406-640.webp" srcset="assets/web/5cbfeb049ab34406-640.webp 640w, assets/web/5cbfeb049ab34406-1280.webp 1280w, assets/web/5cbfeb049ab34406-2000.webp 2000w" sizes="(max-width: 600px) 90vw, 420px" width="2048" height="2056" alt="Hatsune Neves" loading="lazy" decoding="async">
-                <span class="character-name">Hatsune Neves</span>
-            </div>
-        </section>
-
-        <!-- Prateleira de mídia (js/midia.js): músicas em vinil lacrado, vídeos em fita cassete -->
-        <section class="midia" data-midia aria-label="Músicas e vídeos" hidden>
-            <div class="midia-bloco">
-                <h2 class="section-title section-title--center">Discoteca</h2>
-                <div class="midia-estante midia-estante--vinis" data-midia-vinis></div>
-            </div>
-            <div class="midia-bloco">
-                <h2 class="section-title section-title--center">Videoteca</h2>
-                <div class="midia-cinema" data-midia-cinema>
-                    <div class="midia-tela" data-midia-tela>
-                        <div class="midia-tela-apagada">Escolha uma fita na prateleira</div>
-                        <div class="midia-tela-espera" data-midia-espera></div>
-                        <video class="midia-tela-video" controls playsinline preload="none"></video>
-                    </div>
-                    <svg class="midia-feixe" data-midia-feixe aria-hidden="true" focusable="false">
-                        <defs><linearGradient id="midiaFeixeLuz" gradientUnits="userSpaceOnUse">
-                            <stop offset="0" stop-color="#fff6c8" stop-opacity="0.75"/>
-                            <stop offset="1" stop-color="#fff6c8" stop-opacity="0.08"/>
-                        </linearGradient></defs>
-                        <polygon fill="url(#midiaFeixeLuz)"/>
-                    </svg>
-                    <div class="midia-estante midia-estante--fitas" data-midia-fitas></div>
-                </div>
-            </div>
+        <section class="galeria" aria-label="Galeria de personagens">
+            <button type="button" class="galeria-seta galeria-seta--esq" aria-label="Personagens anteriores">‹</button>
+            <div class="galeria-trilho" data-galeria tabindex="0"></div>
+            <button type="button" class="galeria-seta galeria-seta--dir" aria-label="Próximos personagens">›</button>
         </section>
     </main>
 
     <!-- Modal de senha (ficha banida) -->
 
-    <script src="js/images.generated.js?v=rev0927a"></script>
+    <script src="js/images.generated.js?v=rev1006u"></script>
     <script src="js/lancamentos.js?v=2"></script>
     <script src="js/site.js?v=rev1001a"></script>
     <script src="js/conquistas.js?v=4"></script>
@@ -123,8 +59,6 @@
     <script src="js/api-cliente.js?v=rev0926e"></script>
     <script src="js/baralho.js?v=rev0931a"></script>
     <script src="js/auth-widget.js?v=rev0931j"></script>
-    <script src="js/characters.js?v=rev0930zc"></script>
-    <script src="js/musicas.js?v=rev1006r"></script>
-    <script src="js/midia.js?v=rev1006r"></script>
+    <script src="js/characters.js?v=rev1006u"></script>
 </body>
 </html>

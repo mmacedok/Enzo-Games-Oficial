@@ -574,3 +574,12 @@
 @media (prefers-reduced-motion: reduce) {
     .vinil:has(.musica-tocando) .vinil-disco, .projetor--rodando .projetor-rolo, .midia-feixe--ligado, .midia-tela-espera, .tela-arte { animation: none; }
 }
+
+/* Arte própria do filme na lombada e na etiqueta frontal durante o voo. */
+.fita-lombada-arte {
+    position: absolute;
+    top: 12%; left: 15%; width: 70%; aspect-ratio: 1;
+    object-fit: cover; border: 1px solid var(--ink); border-radius: 2px;
+}
+.fita-lombada-titulo { inset: 28% 0 12%; font-size: clamp(.85rem, 2.2vw, 1.05rem); }
+.fita-titulo { white-space: normal; font-size: clamp(.85rem, 3vw, 1.4rem); }

@@ -1,5 +1,5 @@
 // ============================================================================
-// Prateleira de mídia da página de personagens.
+// Prateleira de mídia da página Enzo Games.
 //
 // - Músicas (assets/audio/musicas.json, as mesmas da Discografia): discos de vinil 3D
 //   ainda lacrados no plástico. Clicar toca a música inteira: o disco sai da capa girando.
@@ -173,7 +173,12 @@
         botao.type = 'button';
         botao.setAttribute('aria-label', `Colocar a fita ${video.titulo} no projetor`);
         botao.style.setProperty('--fita-cor', video.cor || '#ff8a1e');
-        botao.appendChild(criar('span', 'fita-lombada-titulo', video.titulo));
+        const arte = criar('img', 'fita-lombada-arte');
+        arte.src = video.arte || ARTE_PADRAO;
+        arte.alt = '';
+        arte.loading = 'lazy';
+        botao.title = video.titulo;
+        botao.append(arte, criar('span', 'fita-lombada-titulo', video.titulo));
         botao.addEventListener('click', () => colocarFita(indice));
         return botao;
     }
@@ -238,6 +243,7 @@
         if (fita.video) {
             window.EnzoMusicas?.parar();
             tela.classList.add('midia-tela--video');
+            video.poster = fita.poster || fita.arte || ARTE_PADRAO;
             video.src = fita.video;
             video.play().catch(() => rodar(false));
         } else {
@@ -345,7 +351,7 @@
 
     // ------------------------------------------------------------ montagem
     async function montar() {
-        const secao = document.querySelector('[data-midia]');
+        const secao = document.querySelector('body.enzo-page [data-midia]');
         if (!secao) return;
         const estanteVinis = secao.querySelector('[data-midia-vinis]');
 

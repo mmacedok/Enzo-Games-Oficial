@@ -2548,6 +2548,22 @@
       }
     ]
   },
+  "assets/Personagens/Felipe Robozão Ficha.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/4f3761a3e9c609b6-640.webp",
+        "bytes": 201068
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/4f3761a3e9c609b6-1080.webp",
+        "bytes": 395266
+      }
+    ]
+  },
   "assets/Personagens/Hatsune Neves Ficha.png": {
     "width": 2048,
     "height": 2056,
@@ -2650,6 +2666,118 @@
         "width": 1750,
         "src": "assets/web/6dd932e4d11148f1-1750.webp",
         "bytes": 490790
+      }
+    ]
+  },
+  "assets/Personagens/estatuas/estatua-banida.png": {
+    "width": 900,
+    "height": 1200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0343932f249a14f9-640.webp",
+        "bytes": 45782
+      },
+      {
+        "width": 900,
+        "src": "assets/web/0343932f249a14f9-900.webp",
+        "bytes": 68944
+      }
+    ]
+  },
+  "assets/Personagens/estatuas/estatua-enzo.png": {
+    "width": 900,
+    "height": 1200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/070f1d834ec42f43-640.webp",
+        "bytes": 52518
+      },
+      {
+        "width": 900,
+        "src": "assets/web/070f1d834ec42f43-900.webp",
+        "bytes": 84052
+      }
+    ]
+  },
+  "assets/Personagens/estatuas/estatua-hatsune-neves.png": {
+    "width": 900,
+    "height": 1200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/63dd3f000fcc2df8-640.webp",
+        "bytes": 44352
+      },
+      {
+        "width": 900,
+        "src": "assets/web/63dd3f000fcc2df8-900.webp",
+        "bytes": 68576
+      }
+    ]
+  },
+  "assets/Personagens/estatuas/estatua-inominavel.png": {
+    "width": 900,
+    "height": 1200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ffb7b5a06dc8c306-640.webp",
+        "bytes": 49270
+      },
+      {
+        "width": 900,
+        "src": "assets/web/ffb7b5a06dc8c306-900.webp",
+        "bytes": 77560
+      }
+    ]
+  },
+  "assets/Personagens/estatuas/estatua-italolol.png": {
+    "width": 900,
+    "height": 1200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/74cbd76e37f82c58-640.webp",
+        "bytes": 42402
+      },
+      {
+        "width": 900,
+        "src": "assets/web/74cbd76e37f82c58-900.webp",
+        "bytes": 66746
+      }
+    ]
+  },
+  "assets/Personagens/estatuas/estatua-robozao.png": {
+    "width": 900,
+    "height": 1200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/dba9ffff5d969a22-640.webp",
+        "bytes": 53570
+      },
+      {
+        "width": 900,
+        "src": "assets/web/dba9ffff5d969a22-900.webp",
+        "bytes": 83686
+      }
+    ]
+  },
+  "assets/Personagens/estatuas/estatua-superkid.png": {
+    "width": 900,
+    "height": 1200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c8c1d0cd2fe1ef32-640.webp",
+        "bytes": 56054
+      },
+      {
+        "width": 900,
+        "src": "assets/web/c8c1d0cd2fe1ef32-900.webp",
+        "bytes": 86786
       }
     ]
   },
@@ -5091,6 +5219,263 @@
       }
     ]
   },
+  "assets/estante/fundo-rabiscos.png": {
+    "width": 1024,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/dda98fdf98805add-640.webp",
+        "bytes": 7778
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/dda98fdf98805add-1024.webp",
+        "bytes": 18586
+      }
+    ]
+  },
+  "assets/estante/lombada-degustador-01.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/227f65ecd98e7b60-80.webp",
+        "bytes": 6810
+      }
+    ]
+  },
+  "assets/estante/lombada-degustador-02.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/025895bf124c44d1-80.webp",
+        "bytes": 7374
+      }
+    ]
+  },
+  "assets/estante/lombada-degustador-03.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/435c2fc89ab15485-80.webp",
+        "bytes": 9310
+      }
+    ]
+  },
+  "assets/estante/lombada-degustador-04.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/569cb24b7e34ba21-80.webp",
+        "bytes": 7402
+      }
+    ]
+  },
+  "assets/estante/lombada-degustador-05.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/a6e51c2b85a1b19a-80.webp",
+        "bytes": 7924
+      }
+    ]
+  },
+  "assets/estante/lombada-degustador-06.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/e6427d19cef8ec98-80.webp",
+        "bytes": 7646
+      }
+    ]
+  },
+  "assets/estante/lombada-degustador-07.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/fd94241cfd9a39ce-80.webp",
+        "bytes": 7284
+      }
+    ]
+  },
+  "assets/estante/lombada-felipe-robozao-01.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/9adb83eab18acd0d-80.webp",
+        "bytes": 10504
+      }
+    ]
+  },
+  "assets/estante/lombada-hatsune-neves-01.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/e0c089b043227e34-80.webp",
+        "bytes": 7654
+      }
+    ]
+  },
+  "assets/estante/lombada-serie-01.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/c6adb86e6bc54faa-80.webp",
+        "bytes": 8192
+      }
+    ]
+  },
+  "assets/estante/lombada-serie-02.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/210214e83a66fa5c-80.webp",
+        "bytes": 6096
+      }
+    ]
+  },
+  "assets/estante/lombada-serie-03.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/adc3f6042c15c607-80.webp",
+        "bytes": 5098
+      }
+    ]
+  },
+  "assets/estante/lombada-serie-04.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/ac9410ada6a0dd40-80.webp",
+        "bytes": 8828
+      }
+    ]
+  },
+  "assets/estante/lombada-serie-05.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/22934dae28b6cf7d-80.webp",
+        "bytes": 8622
+      }
+    ]
+  },
+  "assets/estante/lombada-serie-06.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/8d7d6b2e39262f7c-80.webp",
+        "bytes": 6948
+      }
+    ]
+  },
+  "assets/estante/lombada-serie-07.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/539293e3ec894f4e-80.webp",
+        "bytes": 9768
+      }
+    ]
+  },
+  "assets/estante/lombada-serie-08.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/07d4f3bb1f354038-80.webp",
+        "bytes": 9014
+      }
+    ]
+  },
+  "assets/estante/lombada-superkid-01.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/35e4e6d80211508d-80.webp",
+        "bytes": 8496
+      }
+    ]
+  },
+  "assets/estante/lombada-torado-01.png": {
+    "width": 80,
+    "height": 1184,
+    "variants": [
+      {
+        "width": 80,
+        "src": "assets/web/7448389f420e7a11-80.webp",
+        "bytes": 10258
+      }
+    ]
+  },
+  "assets/estante/mesa-toalha.png": {
+    "width": 1024,
+    "height": 256,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/17fd499ba8da1803-640.webp",
+        "bytes": 41414
+      },
+      {
+        "width": 1024,
+        "src": "assets/web/17fd499ba8da1803-1024.webp",
+        "bytes": 109494
+      }
+    ]
+  },
+  "assets/estante/prato.png": {
+    "width": 768,
+    "height": 256,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/de0a782af3ca636c-640.webp",
+        "bytes": 27536
+      },
+      {
+        "width": 768,
+        "src": "assets/web/de0a782af3ca636c-768.webp",
+        "bytes": 31592
+      }
+    ]
+  },
   "assets/eye.jpg": {
     "width": 1024,
     "height": 1024,
@@ -5232,6 +5617,120 @@
         "width": 1024,
         "src": "assets/web/5d84e752fa1f1e8f-1024.webp",
         "bytes": 386084
+      }
+    ]
+  },
+  "assets/midia/cassete-caixa-brilho.png": {
+    "width": 1200,
+    "height": 760,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d49cd4ed2ac5c2a1-640.webp",
+        "bytes": 44198
+      },
+      {
+        "width": 1200,
+        "src": "assets/web/d49cd4ed2ac5c2a1-1200.webp",
+        "bytes": 67292
+      }
+    ]
+  },
+  "assets/midia/cassete-frente.png": {
+    "width": 1200,
+    "height": 760,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a3a6278cc73822a6-640.webp",
+        "bytes": 53290
+      },
+      {
+        "width": 1200,
+        "src": "assets/web/a3a6278cc73822a6-1200.webp",
+        "bytes": 136906
+      }
+    ]
+  },
+  "assets/midia/cassete-lombada.png": {
+    "width": 160,
+    "height": 1000,
+    "variants": [
+      {
+        "width": 160,
+        "src": "assets/web/b15be222e8a20156-160.webp",
+        "bytes": 28816
+      }
+    ]
+  },
+  "assets/midia/fita-arte-em-breve.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/69273df7576d7173-512.webp",
+        "bytes": 77878
+      }
+    ]
+  },
+  "assets/midia/projetor-corpo.png": {
+    "width": 900,
+    "height": 760,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/27a53ad7111a9f65-640.webp",
+        "bytes": 76198
+      },
+      {
+        "width": 900,
+        "src": "assets/web/27a53ad7111a9f65-900.webp",
+        "bytes": 125416
+      }
+    ]
+  },
+  "assets/midia/projetor-rolo.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/570ce360c4a9be42-512.webp",
+        "bytes": 89784
+      }
+    ]
+  },
+  "assets/midia/vinil-adesivo.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/2b48938309eb9f07-256.webp",
+        "bytes": 17380
+      }
+    ]
+  },
+  "assets/midia/vinil-disco.png": {
+    "width": 600,
+    "height": 600,
+    "variants": [
+      {
+        "width": 600,
+        "src": "assets/web/e3072968c7d505b5-600.webp",
+        "bytes": 70552
+      }
+    ]
+  },
+  "assets/midia/vinil-plastico.png": {
+    "width": 600,
+    "height": 600,
+    "variants": [
+      {
+        "width": 600,
+        "src": "assets/web/97837e318a7c647d-600.webp",
+        "bytes": 38076
       }
     ]
   },

@@ -3589,3 +3589,193 @@ dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
 .disco-tocar:hover, .disco-tocar:focus-visible { filter: brightness(1.08); outline: none; transform: translateY(-1px); }
 .disco-tocar.musica-tocando { background: #ff4fd8; }
 .disco-progresso { --progresso: 0%; position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: linear-gradient(90deg, #ff4fd8 var(--progresso), transparent var(--progresso)); }
+
+/* ------------------------------------------------ estante italiana (assets/estante/, tarefa 09 do Codex)
+   Cada peça só vale se o arquivo existir (js/shelf.js põe .tem-arte / .tem-mesa / .tem-prato); sem ela, o visual antigo continua. */
+.bookcase[data-colecao="serie"] .book-spine.tem-arte {
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.bookcase[data-colecao="serie"] .book-spine.tem-arte span {
+    color: #fff;
+    -webkit-text-stroke: 2px #000;
+    paint-order: stroke fill;
+    text-shadow: none;
+}
+
+/* Mesa: tampo + toalha xadrez (tile 1024×256, tampo nos 64 px de cima) a 75% */
+.bookcase[data-colecao="serie"].tem-mesa .shelf-plank {
+    top: calc(var(--book-h) - 40px);
+    height: 192px;
+    background: url('../assets/estante/mesa-toalha.png') 0 0 / auto 192px repeat-x;
+}
+.bookcase[data-colecao="serie"].tem-mesa .shelf-plank::before,
+.bookcase[data-colecao="serie"].tem-mesa .shelf-plank::after { display: none; }
+.bookcase[data-colecao="serie"].tem-mesa .shelf-row { margin-bottom: 36px; }
+/* A legenda vira um cartão em cima da toalha */
+.bookcase[data-colecao="serie"].tem-mesa .book-caption {
+    position: relative;
+    margin: 78px -6px 0;
+    padding: 6px 8px;
+    background: rgba(255, 251, 240, 0.94);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    text-align: center;
+    color: var(--ink);
+}
+.bookcase[data-colecao="serie"].tem-mesa .book-caption h3 { color: var(--ink); text-shadow: none; }
+.bookcase[data-colecao="serie"].tem-mesa .book-caption small { color: #b3480c; }
+.bookcase[data-colecao="serie"].tem-mesa .shelf-label { display: none; }
+
+/* Prato embaixo do gibi: apoio em 52,34% da altura do prato, que tem 1,5x a largura do gibi e 1/3 de altura */
+.bookcase[data-colecao="serie"].tem-prato .shelf-book::before {
+    left: -25%;
+    width: 150%;
+    height: calc(var(--book-w) * 0.5);
+    top: calc(var(--book-h) - var(--book-w) * 0.5 * 0.5234);
+    background: url('../assets/estante/prato.png') center / 100% 100% no-repeat;
+}
+
+/* Fundo do site: rabiscos tom sobre tom (tile 1024×1024 sobre #E65100) por baixo das bolinhas */
+body.enzo-page {
+    background-image:
+        radial-gradient(rgba(0, 0, 0, 0.28) 15%, transparent 16%),
+        radial-gradient(rgba(0, 0, 0, 0.28) 15%, transparent 16%),
+        url('../assets/estante/fundo-rabiscos.png');
+    background-size: 20px 20px, 20px 20px, 1024px 1024px;
+    background-position: 0 0, 10px 10px, 0 0;
+}
+
+/* ------------------------------------------------ galeria de personagens (museu de estátuas, js/characters.js) */
+.galeria-sub { max-width: 640px; margin: -6px auto 18px; text-align: center; font-weight: 700; color: var(--text-muted); }
+.galeria { position: relative; max-width: 1240px; margin: 0 auto; padding: 0 0 40px; }
+.galeria-trilho {
+    display: flex;
+    gap: 28px;
+    padding: 18px max(16px, calc(50% - 150px)) 30px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 max(16px, calc(50% - 150px));
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+}
+.galeria-trilho::-webkit-scrollbar { display: none; }
+.galeria-trilho:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.estatua {
+    flex: 0 0 auto;
+    width: min(70vw, 300px);
+    padding: 0;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    scroll-snap-align: center;
+    transition: transform 0.35s var(--ease-pop);
+}
+.estatua:hover, .estatua:focus-visible { transform: translateY(-8px); outline: none; }
+.estatua:focus-visible .estatua-moldura { box-shadow: 0 0 0 4px var(--focus), var(--shadow-soft); }
+.estatua--fora { visibility: hidden; }
+.estatua--nega { animation: estatua-nega 0.45s; }
+@keyframes estatua-nega { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+/* moldura dourada de museu, feita em CSS (a imagem é só a estátua no nicho) */
+.estatua-moldura {
+    position: relative;
+    display: block;
+    aspect-ratio: 3 / 4;
+    padding: 14px;
+    background:
+        linear-gradient(135deg, #fff1a8 0%, #d4a017 22%, #8a5a00 48%, #f6d365 70%, #9c6b00 100%);
+    border: 3px solid #3d2600;
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 3px #5c3d00, inset 0 0 0 6px #f6d365, var(--shadow-soft);
+}
+.estatua-moldura img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #2a0f0f;
+    border: 3px solid #3d2600;
+    box-shadow: inset 0 0 20px #000;
+}
+/* estátua ainda não chegou: a ficha em tons de mármore */
+.sem-estatua img { object-fit: cover; object-position: top; filter: grayscale(1) contrast(1.15) brightness(1.08) sepia(0.12); }
+.estatua-banida { inset: 14px; }
+.estatua-banida span { font-size: 1.5rem; }
+.estatua-banida small { display: block; font-size: 0.75em; }
+.estatua-placa {
+    display: block;
+    width: fit-content;
+    max-width: 90%;
+    margin: 12px auto 0;
+    padding: 4px 16px;
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    letter-spacing: 1px;
+    color: #2b1a00;
+    background: linear-gradient(180deg, #ffe58a, #c99a1e);
+    border: 2px solid #3d2600;
+    border-radius: 3px;
+    box-shadow: var(--pop-sm);
+}
+.galeria-seta {
+    position: absolute;
+    top: calc(50% - 40px);
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    padding: 0 0 4px;
+    font: 2.4rem/1 var(--font-heading);
+    color: var(--ink);
+    background: var(--gold);
+    border: var(--stroke);
+    border-radius: 50%;
+    box-shadow: var(--pop);
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+}
+.galeria-seta:hover { transform: scale(1.1); }
+.galeria-seta:disabled { opacity: 0; pointer-events: none; }
+.galeria-seta--esq { left: 6px; }
+.galeria-seta--dir { right: 6px; }
+@media (hover: none) { .galeria-seta { display: none; } }
+
+/* palco: moldura voa para a esquerda, ficha e descrição à direita */
+.viewer-open { overflow: hidden; }
+.galeria-palco {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    overflow-y: auto;
+    background: rgba(10, 4, 4, 0);
+    transition: background 0.4s ease;
+}
+.galeria-palco.aberto { background: rgba(10, 4, 4, 0.9); }
+.galeria-palco-grade {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: clamp(20px, 4vw, 56px);
+    min-height: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 70px clamp(16px, 4vw, 48px) 40px;
+}
+.galeria-alvo { width: min(100%, calc((100dvh - 120px) * 0.75)); justify-self: center; aspect-ratio: 3 / 4; }
+.galeria-voadora { width: 100%; height: 100%; transform-origin: 0 0; }
+.galeria-info { opacity: 0; transform: translateX(30px); transition: opacity 0.4s ease 0.25s, transform 0.4s ease 0.25s; color: var(--text); }
+.galeria-palco.aberto .galeria-info { opacity: 1; transform: none; }
+.galeria-nome { margin: 0 0 8px; font-family: var(--font-heading); font-size: clamp(2rem, 4vw, 3rem); letter-spacing: 1px; color: var(--gold); text-shadow: var(--pop); }
+.galeria-texto { margin: 0 0 18px; font-size: 1.1rem; line-height: 1.5; color: var(--text-muted); }
+.galeria-ficha { display: block; width: fit-content; max-width: 100%; }
+.galeria-ficha img { display: block; width: auto; max-width: 100%; height: auto; max-height: 56dvh; background: #fff; border: var(--stroke); border-radius: var(--radius-sm); box-shadow: var(--pop-lg); }
+.galeria-fechar { position: fixed; top: 14px; right: 14px; z-index: 2; }
+@media (max-width: 760px) {
+    .galeria-palco-grade { grid-template-columns: 1fr; align-items: start; padding-top: 64px; }
+    .galeria-alvo { width: min(72vw, 300px); }
+    .galeria-info { transform: translateY(20px); }
+    .galeria-ficha img { max-height: none; }
+}

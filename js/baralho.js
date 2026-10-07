@@ -1173,7 +1173,10 @@
         const { ok, dados: resposta } = await pedir('/api/baralho/entrada', {});
         if (!ok) { entradaFeita = false; return; }
         try { sessionStorage.setItem(chave, '1'); } catch { /* sem sessionStorage */ }
-        if (resposta?.ganhos?.length) janelaPresentes(resposta);
+        if (resposta?.ganhos?.length) {
+            await window.EnzoIntro?.pronto;
+            janelaPresentes(resposta);
+        }
     }
 
     // Depois do login (js/auth-widget.js): resgata o visitante e mostra os presentes.

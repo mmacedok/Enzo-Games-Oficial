@@ -15,6 +15,21 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     'use strict';
 
+    /** Confere (uma vez por endereço) se uma imagem existe; sem ela o visual antigo continua valendo. */
+    const existentes = new Map();
+    function imagemExiste(url) {
+        if (!existentes.has(url)) {
+            existentes.set(url, new Promise((resolve) => {
+                if (typeof Image === 'undefined') return resolve(false);
+                const img = new Image();
+                img.onload = () => resolve(true);
+                img.onerror = () => resolve(false);
+                img.src = url;
+            }));
+        }
+        return existentes.get(url);
+    }
+
     /** Quantos gibis cabem numa prateleira (mínimo 1). */
     function columnsFor(innerWidth, bookWidth, gap) {
         if (!(innerWidth > 0) || !(bookWidth > 0)) return 1;
@@ -104,6 +119,13 @@
         const spineText = document.createElement('span');
         spineText.textContent = `${entry.spine || 'ENZO GAMES'} ${issue}`;
         spine.appendChild(spineText);
+        if (entry.spineImg) {
+            imagemExiste(entry.spineImg).then((ok) => {
+                if (!ok) return;
+                spine.style.backgroundImage = `url('${entry.spineImg}')`;
+                spine.classList.add('tem-arte');
+            });
+        }
 
         const pages = document.createElement('div');
         pages.className = 'book-face book-pages';
@@ -190,6 +212,13 @@
      */
     function mount(container, entries, { onOpen, onIntent }) {
         container.classList.add('bookcase');
+        // O acabamento italiano pertence somente à série Enzo Games.
+        const italiana = container.dataset.colecao === 'serie';
+        container.classList.remove('tem-mesa', 'tem-prato');
+        if (italiana) {
+            imagemExiste('assets/estante/mesa-toalha.png').then((ok) => container.classList.toggle('tem-mesa', ok));
+            imagemExiste('assets/estante/prato.png').then((ok) => container.classList.toggle('tem-prato', ok));
+        }
         container.replaceChildren();
 
         const books = entries.map((entry) => buildBook(entry, onOpen, onIntent));
