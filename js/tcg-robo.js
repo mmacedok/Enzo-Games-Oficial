@@ -20,13 +20,13 @@
         const ele = estado.jogadores[1 - j];
         if (!ele.ativo) return 0;
         const aura = ele.ativo.aura + R.AURAS_MAX_POR_CARTA_NO_TURNO;
-        return Math.max(0, ...R.combate(ele.ativo.id).ataques.filter((a) => a.custo <= aura).map((a) => (a.dano + 10) * R.ESCALA));
+        return Math.max(0, ...R.ficha(estado, ele.ativo).ataques.filter((a) => a.custo <= aura).map((a) => (a.dano + 10) * R.ESCALA));
     }
 
     function danoPrevisto(estado, j, jogada) {
         const eu = estado.jogadores[j];
         const ele = estado.jogadores[1 - j];
-        const ataque = R.combate(eu.ativo.id).ataques[jogada.ataque];
+        const ataque = R.ficha(estado, eu.ativo).ataques[jogada.ataque];
         const puxa = (ataque.efeitos || []).some((e) => e.tipo === 'puxar');
         const noJogador = jogada.alvo === R.JOGADOR;
         const alvo = noJogador ? null : (ataque.alvo === 'qualquer' ? acharNaMesa(ele, jogada.alvo) : ele.ativo);
@@ -113,12 +113,20 @@
             forca(eu.mao.find((c) => c.uid === b.uid).id) - forca(eu.mao.find((c) => c.uid === a.uid).id));
         if (lutadoresNaMao.length) return lutadoresNaMao[0];
 
+        // Carta complementar: deita atrás do ativo (o seu, se ela ajuda; o dele, se ela atrapalha); senão, no mais forte.
+        const anexos = por('anexar').map((v) => {
+            const alvo = acharNaMesa(eu, v.alvo) || acharNaMesa(estado.jogadores[1 - j], v.alvo);
+            const ativo = alvo === eu.ativo || alvo === estado.jogadores[1 - j].ativo;
+            return { v, nota: (ativo ? 100 : 0) + R.hpMax(estado, alvo) / R.ESCALA - alvo.dano / R.ESCALA };
+        }).sort((a, b) => b.nota - a.nota);
+        if (anexos.length) return anexos[0].v;
+
         const campos = por('campo');
         if (campos.length && (!estado.campo || estado.campo.dono !== j)) return campos[0];
 
         const auras = por('aura');
         if (auras.length && eu.ativo) {
-            const custoMax = Math.max(...R.combate(eu.ativo.id).ataques.map((a) => a.custo));
+            const custoMax = Math.max(...R.ficha(estado, eu.ativo).ataques.map((a) => a.custo));
             const noAtivo = auras.find((a) => a.alvo === eu.ativo.uid);
             if (noAtivo && eu.ativo.aura < custoMax) return noAtivo;
             const reserva = auras.filter((a) => a.alvo !== eu.ativo.uid)

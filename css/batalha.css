@@ -407,6 +407,17 @@ dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: 
 .bt-carta--apagada { filter: grayscale(0.8) brightness(0.6); cursor: not-allowed; }
 .bt-carta--ferida .carta-tcg { filter: brightness(1.6) sepia(1) hue-rotate(-40deg) saturate(4); }
 .bt-carta--atacando { z-index: 20; }
+/* Carta complementar (Resenha): deitada atrás do lutador, aparecendo dos lados e embaixo dele.
+   Mais de uma: cada uma desce um pouco mais (--k). */
+.bt-carta--anexo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    transform: translateY(calc(16% + var(--k, 0) * 9%)) rotate(90deg) scale(0.9);
+    filter: brightness(0.92);
+}
+.bt-carta--anexo:hover, .bt-carta--anexo:focus-visible { filter: none; }
+.bt-carta--com-anexo { z-index: 1; }
 
 /* Verso da Batalha: carta virada pela recarga (e a mão escondida do rival).
    Fundo escuro com a retícula de gibi do site e o logo da capa no meio. O HP fica por cima. */

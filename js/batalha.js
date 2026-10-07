@@ -216,7 +216,19 @@
             }
         }
         if (e.campo?.carta.uid === uid) return { inst: e.campo.carta, jogador: e.campo.dono };
+        // Carta complementar deitada atrás de um lutador: `host` é o lutador.
+        for (const x of e.jogadores) {
+            for (const host of R.naMesa(x)) {
+                const achou = (host.anexos || []).find((a) => a.uid === uid);
+                if (achou) return { inst: achou, jogador: achou.dono, host };
+            }
+        }
         return null;
+    }
+    /** Texto curto do que uma carta complementar faz (para o painel e a dica). */
+    function descricaoAnexo(id) {
+        const ax = R.combate(id)?.anexo;
+        return ax ? ax.texto : '';
     }
     const nomeDoUid = (uid, ...estados) => {
         for (const e of estados) {
@@ -961,7 +973,28 @@
             v.addEventListener('pointerdown', (e) => apertar(e, v, { tipo: 'carta', uid: v.dataset.uid }));
             cartasVivas.set(inst.uid, v);
         }
+        // Carta complementar que muda a aparência do lutador: troca só a frente.
+        const visual = R.ehLutador(inst.id) && estado ? R.ficha(estado, inst).visual : null;
+        const chave = visual ? JSON.stringify(visual) : '';
+        if ((v.dataset.visual || '') !== chave) {
+            v.replaceChild(UI.carta(inst.id, visual), v.firstElementChild);
+            v.dataset.visual = chave;
+        }
         return v;
+    }
+
+    /** Cartas complementares do lutador: deitadas atrás dele, na mesma vaga (antes no DOM = por baixo). */
+    function porAnexos(inst, v, usados) {
+        (inst.anexos || []).forEach((a, k) => {
+            const va = cartaViva(a);
+            usados.add(a.uid);
+            atualizarHud(va, a, false);
+            va.className = 'bt-carta bt-carta--anexo';
+            va.style.setProperty('--k', k);
+            va.title = `${nomeVisivel(a.id)}: ${descricaoAnexo(a.id)}`;
+            v.parentElement.insertBefore(va, v);
+        });
+        v.classList.toggle('bt-carta--com-anexo', !!(inst.anexos || []).length);
     }
 
     function atualizarHud(v, inst, lutando) {
@@ -1052,6 +1085,7 @@
             v.dataset.virada = String(virada);
             onde.appendChild(v);
             if (era?.pai === onde && era.i === i) paradas.add(inst.uid);
+            if (lutando) porAnexos(inst, v, usados);
             return v;
         };
 
@@ -1401,6 +1435,9 @@
     // ---------------------------------------------------------------- cliques
     function clicarCarta(uid) {
         if (!estado || ocupado) return;
+        // Escolhendo um alvo, a carta deitada atrás vale como o lutador da frente.
+        const host = modo && acharInst(estado, uid)?.host;
+        if (host) uid = host.uid;
         if (modo?.tipo === 'alvo') {
             if (modo.alvos.includes(uid)) {
                 const jogada = { ...modo.jogada, alvo: uid };
@@ -1473,6 +1510,17 @@
         if (naMao) {
             if (R.ehLutador(naMao.id)) add('Pôr no banco', { tipo: 'baixar', uid });
             if (R.ehCampo(naMao.id)) add('Jogar este campo', { tipo: 'campo', uid });
+            if (R.ehAnexo(naMao.id)) {
+                // Carta complementar: escolhe atrás de qual lutador ela fica deitada.
+                const alvos = [...R.naMesa(eu), ...R.naMesa(ele)].filter((c) => valida({ tipo: 'anexar', uid, alvo: c.uid })).map((c) => c.uid);
+                add('Deitar atrás de um lutador', { tipo: 'anexar', uid, alvo: '?' }, {
+                    alvos,
+                    fazer: () => {
+                        modo = { tipo: 'alvo', jogada: { tipo: 'anexar', uid }, alvos, texto: `${nomeVisivel(naMao.id)}: escolha o lutador que fica com ela.` };
+                        desenhar();
+                    },
+                });
+            }
             if (estado.campo && R.combate(estado.campo.carta.id).campo.tipo === 'trocarCarta') add('Devolver ao baralho e comprar 1 (Casa do Enzo)', { tipo: 'trocarCarta', uid });
             const restam = R.DEVOLVER_MAO_POR_TURNO - (eu.flags.devolvidasMao || 0);
             add(`Devolver ao baralho (${Math.max(0, restam)} de ${R.DEVOLVER_MAO_POR_TURNO} neste turno)`, { tipo: 'devolverMao', uid });
@@ -1481,7 +1529,7 @@
         const minha = R.naMesa(eu).find((c) => c.uid === uid);
         if (!minha) return acoes;
         add('Prender a Aura aqui', { tipo: 'aura', alvo: uid });
-        const poder = R.combate(minha.id).poder;
+        const poder = R.poderDe(estado, minha);
         if (poder?.ativavel && poder.tipo === 'puxar') {
             // Vem Cá: escolhe no banco do rival quem vira o ativo (ela pode estar em qualquer lugar da mesa)
             const alvos = ele.banco.map((c) => c.uid);
@@ -1498,7 +1546,7 @@
         }
         add(`Devolver ao baralho (volta sem a Aura; 1 da mesa por turno)`, { tipo: 'devolverMesa', uid });
         if (eu.ativo?.uid === uid) {
-            R.combate(minha.id).ataques.forEach((a, i) => {
+            R.ficha(estado, minha).ataques.forEach((a, i) => {
                 const puxa = (a.efeitos || []).some((e) => e.tipo === 'puxar');
                 let alvos = null;
                 if (a.alvo === 'qualquer') {
@@ -1520,22 +1568,28 @@
     function abrirPainel(uid) {
         const achado = acharInst(estado, uid);
         if (!achado) return;
-        const { inst, jogador } = achado;
+        const { inst, jogador, host } = achado;
         const d = def(inst.id);
-        const c = R.combate(inst.id);
+        // Lutador: a ficha de agora (com o que as cartas complementares atrás dele mudam).
+        const c = R.ehLutador(inst.id) ? { ...R.combate(inst.id), ...R.ficha(estado, inst) } : R.combate(inst.id);
         const p = mesa.painel;
         p.replaceChildren();
         p.hidden = false;
         const fechar = botao('bt-painel-fechar', '×', fecharPainel);
         fechar.setAttribute('aria-label', 'Fechar');
         const grande = el('div', 'bt-painel-carta');
-        grande.appendChild(UI.carta(inst.id));
+        grande.appendChild(UI.carta(inst.id, c.visual || null));
         const info = el('div', 'bt-painel-info');
-        info.appendChild(el('h3', '', nomeVisivel(inst.id)));
+        info.appendChild(el('h3', '', c.visual?.nome || nomeVisivel(inst.id)));
 
         const naMesa = R.naMesa(estado.jogadores[jogador]).includes(inst);
         if (c.campo) {
             info.appendChild(el('p', 'bt-painel-campo', `Campo: ${c.campo.texto}`));
+        } else if (c.anexo) {
+            const onde = host ? ` Está atrás de ${nomeVisivel(host.id)}.` : '';
+            const resta = [inst.restam?.usos ? `${inst.restam.usos} ataque${plu(inst.restam.usos)}` : '', inst.restam?.turnos ? `${inst.restam.turnos} turno${plu(inst.restam.turnos)}` : '']
+                .filter(Boolean).join(' ou ');
+            info.appendChild(el('p', 'bt-painel-campo', `${R.TIPOS[d.tipo]?.nome || 'Carta complementar'}: ${c.anexo.texto}${onde}${resta ? ` Sai depois de ${resta}.` : ''}`));
         } else {
             const max = R.hpMax(estado, inst);
             const vida = naMesa ? `${num(max - inst.dano)}/${num(max)}` : num(max);
@@ -1553,15 +1607,22 @@
                 poder.append(el('strong', '', `Poder, ${c.poder.nome}: `), c.poder.texto);
                 info.appendChild(poder);
             }
+            // Cartas complementares deitadas atrás dele.
+            for (const a of inst.anexos || []) {
+                const linhaAnexo = el('p', 'bt-painel-poder bt-painel-anexo');
+                linhaAnexo.append(el('strong', '', `${nomeVisivel(a.id)} (atrás): `), descricaoAnexo(a.id));
+                info.appendChild(linhaAnexo);
+            }
         }
 
-        const acoes = jogador === EU && !ocupado ? acoesDaCarta(uid) : [];
-        const ataquesDasAcoes = new Map(acoes.filter((a) => a.ataque).map((a) => [a.ataque, a]));
+        const acoes = jogador === EU && !ocupado && !host ? acoesDaCarta(uid) : [];
+        // Pelo número do ataque: a ficha cria objetos novos quando uma carta complementar muda os ataques.
+        const ataquesDasAcoes = new Map(acoes.filter((a) => a.ataque).map((a) => [a.jogada.ataque, a]));
         if (c.ataques) {
             const lista = el('div', 'bt-ataques');
             const rival = estado.jogadores[NPC];
             c.ataques.forEach((a, i) => {
-                const acao = ataquesDasAcoes.get(a);
+                const acao = ataquesDasAcoes.get(i);
                 const puxa = (a.efeitos || []).some((e) => e.tipo === 'puxar');
                 const base = a.dano ? a.dano * R.ESCALA : 0;
                 const previsto = acao && acao.previsto !== base && acao.previsto > 0 ? ` → ${num(acao.previsto)}` : '';
@@ -1744,6 +1805,13 @@
                 }
             }
             if (R.ehCampo(naMao.id)) zona(mesa.campo, { tipo: 'campo', uid });
+            if (R.ehAnexo(naMao.id)) {
+                // Carta complementar: solta em cima do lutador (os seus sempre aparecem; os dele, só se ela vale lá).
+                for (const c of [...R.naMesa(eu), ...R.naMesa(ele)]) {
+                    const jogada = { tipo: 'anexar', uid, alvo: c.uid };
+                    if (R.naMesa(eu).includes(c) || valida(jogada)) zona(elDe(c.uid), jogada);
+                }
+            }
             return zonas;
         }
         if (eu.banco.some((c) => c.uid === uid)) {
@@ -1752,7 +1820,7 @@
         }
         if (eu.ativo?.uid === uid) {
             // Ativo até o adversário: ataca. Ataques que acertam qualquer um aceitam o banco também.
-            const podeBanco = R.combate(eu.ativo.id).ataques.some((a) => a.alvo === 'qualquer');
+            const podeBanco = R.ficha(estado, eu.ativo).ataques.some((a) => a.alvo === 'qualquer');
             for (const c of R.naMesa(ele)) {
                 if (c === ele.ativo || podeBanco) zonas.push({ el: elDe(c.uid), atacar: c.uid });
             }
@@ -2567,6 +2635,8 @@
             case 'aura': registrar(`${n(ev.uid)} ganhou Aura (${ev.aura}).`); break;
             case 'campo': registrar(`${quem(ev.jogador)} jogou o campo ${nomeVisivel(ev.id)}.`); break;
             case 'campoSai': registrar(`O campo ${nomeVisivel(ev.id)} saiu da mesa.`); break;
+            case 'anexar': registrar(`${quem(ev.jogador)} deitou ${nomeVisivel(ev.id)} atrás de ${n(ev.alvo)}.`); break;
+            case 'anexoSai': registrar(`${nomeVisivel(ev.id)} saiu de trás de ${n(ev.de)}${ev.motivo === 'usada' ? ' (usada)' : ev.motivo === 'prazo' ? ' (acabou o prazo)' : ''}.`); break;
             case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${ev.alvo === R.JOGADOR ? quem(1 - ev.jogador) : n(ev.alvo)}.`); break;
             case 'dano': registrar(`${n(ev.uid)} levou ${num(ev.valor)}${ev.fonte === 'notificado' ? ' (Notificado)' : ''}.`); break;
             case 'danoJogador': registrar(ev.fonte === 'nocaute'
@@ -3373,6 +3443,26 @@
             case 'campoSai': {
                 const carta = elDe(ev.uid);
                 if (carta) await animar(carta, [{ transform: 'none', opacity: 1 }, { transform: 'scale(.3) rotate(90deg)', opacity: 0 }], { duration: 400, fill: 'forwards' });
+                break;
+            }
+            case 'anexar': {
+                // A carta complementar desliza para trás do lutador e deita.
+                desenhar();
+                const carta = elDe(ev.uid);
+                if (carta) {
+                    await animar(carta, [
+                        { transform: 'translateY(-60px) rotate(0deg) scale(1.2)', opacity: 0 },
+                        { opacity: 1, offset: 0.4 },
+                        { transform: getComputedStyle(carta).transform, opacity: 1 },
+                    ], { duration: 520 });
+                    faiscas(elDe(ev.alvo) || carta, 3);
+                }
+                break;
+            }
+            case 'anexoSai': {
+                const carta = elDe(ev.uid);
+                if (carta) await animar(carta, [{ opacity: 1 }, { opacity: 0, filter: 'brightness(2)' }], { duration: 360, fill: 'forwards' });
+                desenhar();
                 break;
             }
             case 'baixar': {

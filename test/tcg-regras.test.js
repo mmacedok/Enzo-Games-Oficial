@@ -72,8 +72,11 @@ test('toda carta do Baralho tem números de combate coerentes com o tipo', () =>
     for (const c of Baralho.CARTAS) {
         const d = COMBATE[c.id];
         assert.ok(d, `${c.id} sem dados`);
-        if (c.tipo === 'campo') {
+        assert.ok(R.TIPOS[c.tipo], `${c.id}: tipo ${c.tipo} sem modo em R.TIPOS`);
+        if (R.modoDe(c.id) === 'campo') {
             assert.ok(d.campo?.tipo && d.campo.texto, `${c.id}: campo sem efeito`);
+        } else if (R.modoDe(c.id) === 'anexo') {
+            assert.ok(d.anexo && d.anexo.texto, `${c.id}: carta complementar sem anexo/texto`);
         } else {
             assert.ok(d.hp > 0 && d.hp % 10 === 0, `${c.id}: HP`);
             assert.ok(Number.isInteger(d.recuo) && d.recuo >= 0, `${c.id}: recuo`);
