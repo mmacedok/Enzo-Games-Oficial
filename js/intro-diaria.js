@@ -1,6 +1,7 @@
 // Intro do dia: na primeira visita de cada dia, a animação "Macarronada Cósmica" toca por cima do site.
 // Botão discreto de fechar no canto superior direito; também fecha com Esc e quando o vídeo termina.
-// Não aparece para robôs de teste (navigator.webdriver), com ?semintro na URL nem com "reduzir movimento".
+// Clicar no logo "Enzo Games" toca de novo a qualquer hora.
+// A abertura automática não aparece para robôs de teste (navigator.webdriver), com ?semintro na URL nem com "reduzir movimento".
 (function () {
     const CHAVE = 'enzo-intro-dia';
     const VIDEO = 'assets/intro/macarronada-cosmica.mp4';
@@ -8,12 +9,8 @@
     const d = new Date();
     const hoje = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 
-    let visto = null;
-    try { visto = localStorage.getItem(CHAVE); } catch (e) { /* armazenamento bloqueado: mostra mesmo assim */ }
-    if (visto === hoje || navigator.webdriver || new URLSearchParams(location.search).has('semintro')) return;
-    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    try { localStorage.setItem(CHAVE, hoje); } catch (e) { /* idem */ }
-
+    function tocar() {
+    if (document.querySelector('.intro-dia')) return;
     const estilo = document.createElement('style');
     estilo.textContent = `
         .intro-dia { position: fixed; inset: 0; z-index: 2147483000; background: #000; opacity: 0; transition: opacity .45s ease; }
@@ -76,5 +73,21 @@
             return video.play().catch(sair);
         });
     }
-    if (document.body) abrir(); else document.addEventListener('DOMContentLoaded', abrir);
+    abrir();
+    }
+
+    function ligarLogo() {
+        const logo = document.querySelector('.garfield-classic-logo');
+        if (!logo) return;
+        logo.style.cursor = 'pointer';
+        logo.addEventListener('click', tocar);
+    }
+
+    let visto = null;
+    try { visto = localStorage.getItem(CHAVE); } catch (e) { /* armazenamento bloqueado: mostra mesmo assim */ }
+    const automatica = visto !== hoje && !navigator.webdriver && !new URLSearchParams(location.search).has('semintro')
+        && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if (automatica) { try { localStorage.setItem(CHAVE, hoje); } catch (e) { /* idem */ } }
+    function iniciar() { ligarLogo(); if (automatica) tocar(); }
+    if (document.body) iniciar(); else document.addEventListener('DOMContentLoaded', iniciar);
 })();
