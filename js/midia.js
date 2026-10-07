@@ -17,6 +17,22 @@
         ['tem-disco', 'vinil-disco'], ['tem-plastico', 'vinil-plastico'], ['tem-adesivo', 'vinil-adesivo'],
         ['tem-fita', 'cassete-frente'], ['tem-lombada', 'cassete-lombada'], ['tem-brilho', 'cassete-caixa-brilho'],
         ['tem-projetor', 'projetor-corpo'], ['tem-rolo', 'projetor-rolo'],
+        // Estantes próprias (tarefa 13): Discoteca = loja de discos, Videoteca = locadora.
+        ['tem-dparede', 'discoteca/discoteca-parede'], ['tem-dtabua', 'discoteca/discoteca-tabua'],
+        ['tem-dmoldura', 'discoteca/discoteca-moldura'], ['tem-dplaca', 'discoteca/discoteca-placa'],
+        ['tem-vparede', 'videoteca/videoteca-parede'], ['tem-vtabua', 'videoteca/videoteca-tabua'],
+        ['tem-vmoldura', 'videoteca/videoteca-moldura'], ['tem-vplaca', 'videoteca/videoteca-placa'],
+        ['tem-vtela', 'videoteca/videoteca-tela-moldura'], ['tem-vsinal', 'videoteca/videoteca-sem-sinal'],
+    ];
+    // Enfeites soltos: [estante, classe, imagem]. Só aparecem se a imagem existir (e em telas largas, no CSS).
+    const ENFEITES = [
+        ['[data-midia-vinis]', 'disco-caixa', 'discoteca/discoteca-caixa-som'],
+        ['[data-midia-vinis]', 'disco-toca', 'discoteca/discoteca-toca-discos'],
+        ['[data-midia-vinis]', 'disco-cartaz', 'discoteca/discoteca-cartaz'],
+        ['[data-midia-fitas]', 'video-pipoca', 'videoteca/videoteca-pipoca'],
+        ['[data-midia-fitas]', 'video-claquete', 'videoteca/videoteca-claquete'],
+        ['[data-midia-fitas]', 'video-pilha', 'videoteca/videoteca-pilha-fitas'],
+        ['[data-midia-fitas]', 'video-cartaz', 'videoteca/videoteca-cartaz'],
     ];
     const EM_BREVE = [
         { id: 'em-breve-1', titulo: 'EM BREVE', cor: '#ff8a1e' },
@@ -308,13 +324,17 @@
         const t = tela.getBoundingClientRect();
         const l = projetor.querySelector('.projetor-lente').getBoundingClientRect();
         const lx = l.left + l.width * 0.25 - base.left, ly = l.top + l.height * 0.25 - base.top;
-        const tx = t.left - base.left, ty = t.top - base.top;
-        const pts = [[lx, ly], [tx, ty], [tx + t.width, ty], [tx + t.width, ty + t.height], [tx, ty + t.height]];
+        // Com a moldura de cortina, a luz mira só a abertura (x 120→1160, y 90→640 de 1280×720).
+        const aberta = cinemaEl.closest('[data-midia]').classList.contains('tem-vtela');
+        const [ax, ay, aw, ah] = aberta ? [120 / 1280, 90 / 720, 1040 / 1280, 550 / 720] : [0, 0, 1, 1];
+        const tx = t.left - base.left + t.width * ax, ty = t.top - base.top + t.height * ay;
+        const tw = t.width * aw, th = t.height * ah;
+        const pts = [[lx, ly], [tx, ty], [tx + tw, ty], [tx + tw, ty + th], [tx, ty + th]];
         feixe.setAttribute('viewBox', `0 0 ${base.width} ${base.height}`);
         feixe.querySelector('polygon').setAttribute('points', fecho(pts).map((p) => p.map(Math.round).join(',')).join(' '));
         const g = feixe.querySelector('linearGradient');
         g.setAttribute('x1', lx); g.setAttribute('y1', ly);
-        g.setAttribute('x2', tx + t.width / 2); g.setAttribute('y2', ty + t.height / 2);
+        g.setAttribute('x2', tx + tw / 2); g.setAttribute('y2', ty + th / 2);
     }
 
     function fecho(pontos) {
@@ -359,6 +379,17 @@
         for (const [classe, nome] of PECAS) {
             const img = new Image();
             img.onload = () => secao.classList.add(classe);
+            img.src = `assets/midia/${nome}.png`;
+        }
+        for (const [alvo, classe, nome] of ENFEITES) {
+            const img = new Image();
+            img.onload = () => {
+                const e = criar('img', `enfeite enfeite--${classe}`);
+                e.src = img.src;
+                e.alt = '';
+                e.setAttribute('aria-hidden', 'true');
+                secao.querySelector(alvo)?.appendChild(e);
+            };
             img.src = `assets/midia/${nome}.png`;
         }
 

@@ -90,6 +90,7 @@
 
 ## ✅ Feito recentemente
 
+- **2026-10-07 — Estantes próprias da Discoteca e da Videoteca (tarefa 13 do Codex):** loja de discos (parede de madeira, moldura, tábua, placa neon, caixa de som, toca-discos, cartaz) e locadora (parede, moldura de aço, tábua, placa de marquise, cortina de cinema na tela, TV sem sinal, pipoca, claquete, pilha de fitas, cartaz). Tudo em `assets/midia/discoteca` e `assets/midia/videoteca`, ligado por classes `tem-d*`/`tem-v*` em `js/midia.js` e bloco novo no fim de `css/midia.css`, com fallback no CSS antigo. O feixe do projetor mira a abertura da cortina. `discoteca-caixote.png` foi entregue e não está em uso. Enfeites só aparecem a partir de 1100 px.
 - **2026-10-06 — Macarronada Cósmica na home:** vídeo de 31,5 s na Videoteca, fita com arte própria na lombada e na frente; abertura automática com intervalo real de 24 horas por navegador, fechar/Esc e botão de som quando necessário.
 
 - **2026-10-06 — Galeria unida à versão de mídia da home (localhost:3081):** carrossel de molduras, palco com ficha/descrição e 7 estátuas da tarefa 10. Degustador usa a ficha cinza. Fichas clássicas do ZeZoVerso preservadas; sem commit/push desta união.

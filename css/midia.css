@@ -583,3 +583,108 @@
 }
 .fita-lombada-titulo { inset: 28% 0 12%; font-size: clamp(.85rem, 2.2vw, 1.05rem); }
 .fita-titulo { white-space: normal; font-size: clamp(.85rem, 3vw, 1.4rem); }
+
+/* ==========================================================================
+   Estantes próprias (tarefa 13 do Codex, assets/midia/discoteca e /videoteca)
+   Discoteca = loja de discos (madeira, latão, neon laranja). Videoteca = locadora (aço roxo, marquise).
+   Cada bloco só liga quando a imagem existe (classes .tem-d* e .tem-v*, js/midia.js).
+   ========================================================================== */
+/* ---------------------------------------------------------------- Discoteca */
+.tem-dparede .midia-estante--vinis {
+    background:
+        radial-gradient(ellipse at 50% -10%, rgba(255, 196, 120, 0.3), transparent 62%),
+        linear-gradient(rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.42)),
+        url("../assets/midia/discoteca/discoteca-parede.png") 0 0 / 256px 256px;
+}
+.tem-dmoldura .midia-estante--vinis {
+    border: 36px solid transparent;
+    border-image: url("../assets/midia/discoteca/discoteca-moldura.png") 64 / 36px stretch;
+    border-radius: 0;
+    padding-top: 28px;
+}
+.tem-dtabua .midia-estante--vinis { --tabua: 28px; }
+.tem-dtabua .vinil::after {
+    background: url("../assets/midia/discoteca/discoteca-tabua.png") 0 0 / auto 100% repeat-x;
+    border: 0;
+    box-shadow: 0 12px 18px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------------------------------------------------------------- Videoteca */
+.tem-vparede .midia-estante--fitas {
+    background:
+        radial-gradient(ellipse at 70% -10%, rgba(106, 92, 255, 0.28), transparent 62%),
+        url("../assets/midia/videoteca/videoteca-parede.png") 0 0 / 256px 256px;
+}
+.tem-vmoldura .midia-estante--fitas {
+    border: 36px solid transparent;
+    border-image: url("../assets/midia/videoteca/videoteca-moldura.png") 64 / 36px stretch;
+    border-radius: 0;
+}
+.tem-vtabua .midia-estante--fitas { --tabua: 28px; }
+.tem-vtabua .midia-estante--fitas::after {
+    background: url("../assets/midia/videoteca/videoteca-tabua.png") 0 0 / auto 100% repeat-x;
+    border: 0;
+}
+
+/* Tela: cortina de cinema por cima, a tela de verdade aparece pela abertura (x 120→1160, y 90→640 de 1280×720). */
+.tem-vtela .midia-tela {
+    width: min(900px, 100%);
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    overflow: visible;
+}
+.tem-vtela .midia-tela > * { inset: 12.5% 9.375% 11.111% 9.375%; background-color: #15131d; }
+.tem-vtela .midia-tela .midia-tela-video { inset: auto; left: 9.375%; top: 12.5%; width: 81.25%; height: 76.389%; }
+.tem-vtela .midia-tela::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: url("../assets/midia/videoteca/videoteca-tela-moldura.png") center / 100% 100% no-repeat;
+    pointer-events: none;
+}
+.tem-vtela .midia-tela--ligada { box-shadow: none; filter: drop-shadow(0 0 22px rgba(255, 238, 170, 0.5)); }
+
+/* Sem fita escolhida: TV sem sinal, com a frase numa tarja. */
+.midia-tela-apagada span { padding: 4px 12px; }
+.tem-vsinal .midia-tela-apagada { background: url("../assets/midia/videoteca/videoteca-sem-sinal.png") center / cover; animation: tela-tremula 0.18s steps(2) infinite; }
+.tem-vsinal .midia-tela-apagada span { background: rgba(10, 8, 20, 0.82); color: #fff; border: 2px solid var(--ink); border-radius: 4px; text-shadow: 2px 2px 0 var(--ink); }
+
+/* ---------------------------------------------------------------- placas dos títulos */
+.tem-dplaca .midia-bloco:has(.midia-estante--vinis) > .section-title,
+.tem-vplaca .midia-bloco:has(.midia-estante--fitas) > .section-title {
+    position: relative;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    width: min(420px, 94%);
+    aspect-ratio: 4 / 1;
+    margin: 0 auto -26px;
+    padding: 0 clamp(44px, 14vw, 76px);
+    font-size: clamp(1.1rem, 3.6vw, 1.7rem);
+    color: #fff;
+    text-shadow: 2px 2px 0 var(--ink);
+}
+.tem-dplaca .midia-bloco:has(.midia-estante--vinis) > .section-title { background: url("../assets/midia/discoteca/discoteca-placa.png") center / 100% 100% no-repeat; }
+.tem-vplaca .midia-bloco:has(.midia-estante--fitas) > .section-title { background: url("../assets/midia/videoteca/videoteca-placa.png") center / 100% 100% no-repeat; margin-bottom: -18px; }
+
+/* ---------------------------------------------------------------- enfeites (só em telas largas) */
+.enfeite { display: none; position: absolute; z-index: 1; height: auto; pointer-events: none; user-select: none; filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.4)); }
+@media (min-width: 1100px) {
+    .enfeite { display: block; }
+    /* Discoteca: a tábua fica a 40px + var(--v) do topo; as peças pousam nela. */
+    .enfeite--disco-caixa { width: 112px; left: 14px; top: 105px; }
+    .enfeite--disco-toca { width: 150px; right: 10px; top: 106px; }
+    .enfeite--disco-cartaz { width: 70px; left: 20px; top: 8px; rotate: -5deg; }
+    /* Videoteca: abre espaço à esquerda para os enfeites. */
+    .tem-vparede .midia-estante--fitas { padding-left: 330px; }
+    .enfeite--video-pipoca { width: 92px; left: 18px; bottom: 52px; }
+    .enfeite--video-pilha { width: 112px; left: 116px; bottom: 52px; }
+    .enfeite--video-claquete { width: 84px; left: 236px; bottom: 52px; }
+    .enfeite--video-cartaz { width: 78px; left: 24px; top: 12px; rotate: 4deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .tem-vsinal .midia-tela-apagada { animation: none; }
+}
