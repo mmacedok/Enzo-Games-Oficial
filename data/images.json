@@ -2080,6 +2080,358 @@
       }
     ]
   },
+  "assets/Capitulo 9/Capa/CAP9 CAPA.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8e411a3236ce26b7-640.webp",
+        "bytes": 285374
+      },
+      {
+        "width": 941,
+        "src": "assets/web/8e411a3236ce26b7-941.webp",
+        "bytes": 487534
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG1.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/33c2378643988544-640.webp",
+        "bytes": 162384
+      },
+      {
+        "width": 941,
+        "src": "assets/web/33c2378643988544-941.webp",
+        "bytes": 257632
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG10.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8fae42739f4e4c8e-640.webp",
+        "bytes": 249046
+      },
+      {
+        "width": 941,
+        "src": "assets/web/8fae42739f4e4c8e-941.webp",
+        "bytes": 428512
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG11.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0005ae6c6d12b144-640.webp",
+        "bytes": 161708
+      },
+      {
+        "width": 941,
+        "src": "assets/web/0005ae6c6d12b144-941.webp",
+        "bytes": 269636
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG12.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8b2c0e75e51280bc-640.webp",
+        "bytes": 290712
+      },
+      {
+        "width": 941,
+        "src": "assets/web/8b2c0e75e51280bc-941.webp",
+        "bytes": 513198
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG13.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1651aca2d36705fb-640.webp",
+        "bytes": 201332
+      },
+      {
+        "width": 941,
+        "src": "assets/web/1651aca2d36705fb-941.webp",
+        "bytes": 343520
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG14.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/80a72b5f6c30cefe-640.webp",
+        "bytes": 247408
+      },
+      {
+        "width": 941,
+        "src": "assets/web/80a72b5f6c30cefe-941.webp",
+        "bytes": 419578
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG15.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/27972470a608475b-640.webp",
+        "bytes": 257468
+      },
+      {
+        "width": 941,
+        "src": "assets/web/27972470a608475b-941.webp",
+        "bytes": 439042
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG16.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/fd110f8220c6372e-640.webp",
+        "bytes": 254958
+      },
+      {
+        "width": 941,
+        "src": "assets/web/fd110f8220c6372e-941.webp",
+        "bytes": 438004
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG17.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/3713d386439e5b05-640.webp",
+        "bytes": 286774
+      },
+      {
+        "width": 941,
+        "src": "assets/web/3713d386439e5b05-941.webp",
+        "bytes": 472580
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG18.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0873645d519f08af-640.webp",
+        "bytes": 310556
+      },
+      {
+        "width": 941,
+        "src": "assets/web/0873645d519f08af-941.webp",
+        "bytes": 556442
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG19.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/3c9bf9922d98fc1c-640.webp",
+        "bytes": 319824
+      },
+      {
+        "width": 941,
+        "src": "assets/web/3c9bf9922d98fc1c-941.webp",
+        "bytes": 554436
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG2.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/4f48308680bb3424-640.webp",
+        "bytes": 145034
+      },
+      {
+        "width": 941,
+        "src": "assets/web/4f48308680bb3424-941.webp",
+        "bytes": 239478
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG20.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/73e0b7eab2ed02bd-640.webp",
+        "bytes": 264350
+      },
+      {
+        "width": 941,
+        "src": "assets/web/73e0b7eab2ed02bd-941.webp",
+        "bytes": 452404
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG21.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/58709269269db2ab-640.webp",
+        "bytes": 234836
+      },
+      {
+        "width": 941,
+        "src": "assets/web/58709269269db2ab-941.webp",
+        "bytes": 375464
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG3.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f84fe7bae91ada25-640.webp",
+        "bytes": 221632
+      },
+      {
+        "width": 941,
+        "src": "assets/web/f84fe7bae91ada25-941.webp",
+        "bytes": 377288
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG4.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/67bef91eb475a222-640.webp",
+        "bytes": 205626
+      },
+      {
+        "width": 941,
+        "src": "assets/web/67bef91eb475a222-941.webp",
+        "bytes": 348966
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG5.png": {
+    "width": 940,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/43e02ae9dfbcdb88-640.webp",
+        "bytes": 195288
+      },
+      {
+        "width": 940,
+        "src": "assets/web/43e02ae9dfbcdb88-940.webp",
+        "bytes": 336820
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG6.png": {
+    "width": 940,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/06c8b73c862f7126-640.webp",
+        "bytes": 256752
+      },
+      {
+        "width": 940,
+        "src": "assets/web/06c8b73c862f7126-940.webp",
+        "bytes": 416902
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG7.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/3e95d5adcb35894b-640.webp",
+        "bytes": 207246
+      },
+      {
+        "width": 941,
+        "src": "assets/web/3e95d5adcb35894b-941.webp",
+        "bytes": 342202
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG8.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1898c161cbd7f0f3-640.webp",
+        "bytes": 167676
+      },
+      {
+        "width": 941,
+        "src": "assets/web/1898c161cbd7f0f3-941.webp",
+        "bytes": 278830
+      }
+    ]
+  },
+  "assets/Capitulo 9/Paginas/PAG9.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5122b3901be121c0-640.webp",
+        "bytes": 178696
+      },
+      {
+        "width": 941,
+        "src": "assets/web/5122b3901be121c0-941.webp",
+        "bytes": 298450
+      }
+    ]
+  },
   "assets/Cartas/bug-do-discord.png": {
     "width": 1024,
     "height": 1280,
@@ -5922,6 +6274,22 @@
         "width": 512,
         "src": "assets/web/570ce360c4a9be42-512.webp",
         "bytes": 89784
+      }
+    ]
+  },
+  "assets/midia/videos/degustador-cidade-poster.jpg": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1b6c96d8c08e28d8-640.webp",
+        "bytes": 67506
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/1b6c96d8c08e28d8-1280.webp",
+        "bytes": 184516
       }
     ]
   },
