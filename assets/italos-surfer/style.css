@@ -14,3 +14,11 @@
 #touch button .ico{width:26px;height:26px;filter:drop-shadow(0 1px 0 #fff8)}
 #touch button:active{transform:translateY(3px);box-shadow:0 2px 0 #7a4220,inset 0 -2px 0 #0000001f}
 @media(max-width:650px){.map-stamp{right:3vw;bottom:98px;max-width:46vw;padding:9px;transform:rotate(3deg)}.map-stamp b{font-size:17px;margin:6px 0}}
+/* arte nova (tarefa 14): botão, carimbo e ilustrações de pausa e fim */
+.primary{border:14px solid transparent;border-image:url(italos-botao-start.png) 48 fill/14px stretch;background:#fbbf54;box-shadow:none;color:#252634}
+.primary:active{transform:translateY(2px)}
+.map-stamp{border:0;background:url(italos-carimbo.png) center/100% 100% no-repeat;padding:34px 40px;color:#fff1d2;text-align:center}
+#paused .panel::before,#over .panel::before{content:"";display:block;height:150px;margin:-8px 0 8px;background:center/contain no-repeat}
+#paused .panel::before{background-image:url(italos-pause.png)}
+#over .panel::before{background-image:url(italos-gameover.png)}
+@media(max-height:550px){#paused .panel::before,#over .panel::before{display:none}}

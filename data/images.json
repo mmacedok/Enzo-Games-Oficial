@@ -2685,6 +2685,22 @@
       }
     ]
   },
+  "assets/Personagens/estatuas/estatua-degustador.png": {
+    "width": 900,
+    "height": 1200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/3328d62f4332d3e4-640.webp",
+        "bytes": 45366
+      },
+      {
+        "width": 900,
+        "src": "assets/web/3328d62f4332d3e4-900.webp",
+        "bytes": 72054
+      }
+    ]
+  },
   "assets/Personagens/estatuas/estatua-enzo.png": {
     "width": 900,
     "height": 1200,
@@ -5556,6 +5572,77 @@
       }
     ]
   },
+  "assets/icones-app/favicon-48.png": {
+    "width": 48,
+    "height": 48,
+    "variants": [
+      {
+        "width": 48,
+        "src": "assets/web/f012c766b5963a44-48.webp",
+        "bytes": 1906
+      }
+    ]
+  },
+  "assets/icones-app/icone-180.png": {
+    "width": 180,
+    "height": 180,
+    "variants": [
+      {
+        "width": 180,
+        "src": "assets/web/3b654e5fec3ac89c-180.webp",
+        "bytes": 15566
+      }
+    ]
+  },
+  "assets/icones-app/icone-192.png": {
+    "width": 192,
+    "height": 192,
+    "variants": [
+      {
+        "width": 192,
+        "src": "assets/web/fb8b24cb48073ae2-192.webp",
+        "bytes": 17196
+      }
+    ]
+  },
+  "assets/icones-app/icone-512.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/a458e57f92396fb9-512.webp",
+        "bytes": 82926
+      }
+    ]
+  },
+  "assets/icones-app/icone-maskable-512.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/f27798732f9df953-512.webp",
+        "bytes": 72300
+      }
+    ]
+  },
+  "assets/icones-app/og-padrao.png": {
+    "width": 1200,
+    "height": 630,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8e8033bc4f0e0571-640.webp",
+        "bytes": 66278
+      },
+      {
+        "width": 1200,
+        "src": "assets/web/8e8033bc4f0e0571-1200.webp",
+        "bytes": 177926
+      }
+    ]
+  },
   "assets/italo-face-t.png": {
     "width": 470,
     "height": 364,
@@ -5601,6 +5688,50 @@
         "width": 941,
         "src": "assets/web/d0b6ca7b995cd959-941.webp",
         "bytes": 470940
+      }
+    ]
+  },
+  "assets/italos-surfer/italos-botao-start.png": {
+    "width": 384,
+    "height": 128,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/146d8ea072281777-384.webp",
+        "bytes": 8556
+      }
+    ]
+  },
+  "assets/italos-surfer/italos-carimbo.png": {
+    "width": 520,
+    "height": 260,
+    "variants": [
+      {
+        "width": 520,
+        "src": "assets/web/e87549b2f83dbd53-520.webp",
+        "bytes": 21858
+      }
+    ]
+  },
+  "assets/italos-surfer/italos-gameover.png": {
+    "width": 600,
+    "height": 420,
+    "variants": [
+      {
+        "width": 600,
+        "src": "assets/web/0e01fece81b0633f-600.webp",
+        "bytes": 75972
+      }
+    ]
+  },
+  "assets/italos-surfer/italos-pause.png": {
+    "width": 600,
+    "height": 420,
+    "variants": [
+      {
+        "width": 600,
+        "src": "assets/web/d06323a600312e7f-600.webp",
+        "bytes": 70314
       }
     ]
   },
@@ -5663,6 +5794,99 @@
       }
     ]
   },
+  "assets/midia/discoteca/discoteca-caixa-som.png": {
+    "width": 384,
+    "height": 512,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/e5753ae26e76eafb-384.webp",
+        "bytes": 46442
+      }
+    ]
+  },
+  "assets/midia/discoteca/discoteca-caixote.png": {
+    "width": 512,
+    "height": 384,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/13a0c43cbd9fe5fa-512.webp",
+        "bytes": 33252
+      }
+    ]
+  },
+  "assets/midia/discoteca/discoteca-cartaz.png": {
+    "width": 384,
+    "height": 512,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/326364fbf7cc51e4-384.webp",
+        "bytes": 83870
+      }
+    ]
+  },
+  "assets/midia/discoteca/discoteca-moldura.png": {
+    "width": 384,
+    "height": 384,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/3a0ba35b4851219c-384.webp",
+        "bytes": 22946
+      }
+    ]
+  },
+  "assets/midia/discoteca/discoteca-parede.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/bf355a8abaf71047-512.webp",
+        "bytes": 41254
+      }
+    ]
+  },
+  "assets/midia/discoteca/discoteca-placa.png": {
+    "width": 800,
+    "height": 200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ef236e631c0100f0-640.webp",
+        "bytes": 25296
+      },
+      {
+        "width": 800,
+        "src": "assets/web/ef236e631c0100f0-800.webp",
+        "bytes": 35478
+      }
+    ]
+  },
+  "assets/midia/discoteca/discoteca-tabua.png": {
+    "width": 512,
+    "height": 64,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/51bfde9ac4c050b7-512.webp",
+        "bytes": 5274
+      }
+    ]
+  },
+  "assets/midia/discoteca/discoteca-toca-discos.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/b7641cfa6a735e0f-512.webp",
+        "bytes": 51256
+      }
+    ]
+  },
   "assets/midia/fita-arte-em-breve.png": {
     "width": 512,
     "height": 512,
@@ -5698,6 +5922,147 @@
         "width": 512,
         "src": "assets/web/570ce360c4a9be42-512.webp",
         "bytes": 89784
+      }
+    ]
+  },
+  "assets/midia/videos/macarronada-cosmica-poster.jpg": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/cdd3ece24f197322-640.webp",
+        "bytes": 26514
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/cdd3ece24f197322-1280.webp",
+        "bytes": 62040
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-cartaz.png": {
+    "width": 384,
+    "height": 512,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/c3cfef423792a699-384.webp",
+        "bytes": 61316
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-claquete.png": {
+    "width": 384,
+    "height": 384,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/d369c87eb69caccc-384.webp",
+        "bytes": 24090
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-moldura.png": {
+    "width": 384,
+    "height": 384,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/94adf1f7c85bbedf-384.webp",
+        "bytes": 23010
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-parede.png": {
+    "width": 512,
+    "height": 512,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/9b8e236b02316435-512.webp",
+        "bytes": 17750
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-pilha-fitas.png": {
+    "width": 512,
+    "height": 256,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/773998491eb19f42-512.webp",
+        "bytes": 18036
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-pipoca.png": {
+    "width": 384,
+    "height": 384,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/6838f03952b05d43-384.webp",
+        "bytes": 39006
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-placa.png": {
+    "width": 800,
+    "height": 200,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d97ea1eb0aa42c8d-640.webp",
+        "bytes": 25970
+      },
+      {
+        "width": 800,
+        "src": "assets/web/d97ea1eb0aa42c8d-800.webp",
+        "bytes": 35022
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-sem-sinal.png": {
+    "width": 960,
+    "height": 540,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/95d17c18f4095fe4-640.webp",
+        "bytes": 97600
+      },
+      {
+        "width": 960,
+        "src": "assets/web/95d17c18f4095fe4-960.webp",
+        "bytes": 199922
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-tabua.png": {
+    "width": 512,
+    "height": 64,
+    "variants": [
+      {
+        "width": 512,
+        "src": "assets/web/6abd8d79a359aeba-512.webp",
+        "bytes": 4158
+      }
+    ]
+  },
+  "assets/midia/videoteca/videoteca-tela-moldura.png": {
+    "width": 1280,
+    "height": 720,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d82bb5fdec6d7a9b-640.webp",
+        "bytes": 36508
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/d82bb5fdec6d7a9b-1280.webp",
+        "bytes": 109450
       }
     ]
   },
@@ -5779,6 +6144,22 @@
         "width": 280,
         "src": "assets/web/96739b00bd79b687-280.webp",
         "bytes": 12678
+      }
+    ]
+  },
+  "assets/ui/404-enzo-prato-vazio.png": {
+    "width": 900,
+    "height": 700,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/dcf5d291cc659415-640.webp",
+        "bytes": 82382
+      },
+      {
+        "width": 900,
+        "src": "assets/web/dcf5d291cc659415-900.webp",
+        "bytes": 144644
       }
     ]
   },
@@ -5883,6 +6264,39 @@
         "width": 600,
         "src": "assets/web/e54ea8b4b0f113cd-600.webp",
         "bytes": 8658
+      }
+    ]
+  },
+  "assets/ui/botao-hero-degustador.png": {
+    "width": 384,
+    "height": 128,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/de1bdde0a4645c73-384.webp",
+        "bytes": 8228
+      }
+    ]
+  },
+  "assets/ui/botao-hero-serie.png": {
+    "width": 384,
+    "height": 128,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/911414c3c8413eb8-384.webp",
+        "bytes": 9578
+      }
+    ]
+  },
+  "assets/ui/botao-hero-zezoverso.png": {
+    "width": 384,
+    "height": 128,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/4ade7e103c748683-384.webp",
+        "bytes": 17182
       }
     ]
   },
@@ -6249,6 +6663,17 @@
       }
     ]
   },
+  "assets/ui/galeria-placa.png": {
+    "width": 480,
+    "height": 140,
+    "variants": [
+      {
+        "width": 480,
+        "src": "assets/web/ab879a20160d66c0-480.webp",
+        "bytes": 15806
+      }
+    ]
+  },
   "assets/ui/habilidade-buzz.png": {
     "width": 256,
     "height": 256,
@@ -6367,6 +6792,39 @@
         "width": 48,
         "src": "assets/web/adce2b6bef99246e-48.webp",
         "bytes": 1686
+      }
+    ]
+  },
+  "assets/ui/legenda-degustador.png": {
+    "width": 384,
+    "height": 192,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/c81ccce2b7de4644-384.webp",
+        "bytes": 9740
+      }
+    ]
+  },
+  "assets/ui/legenda-serie.png": {
+    "width": 384,
+    "height": 192,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/e0ed488e9dbda217-384.webp",
+        "bytes": 11096
+      }
+    ]
+  },
+  "assets/ui/legenda-zezoverso.png": {
+    "width": 384,
+    "height": 192,
+    "variants": [
+      {
+        "width": 384,
+        "src": "assets/web/bc88ab40f389b5b9-384.webp",
+        "bytes": 14238
       }
     ]
   },
@@ -6663,6 +7121,39 @@
         "width": 256,
         "src": "assets/web/cf0aec8630240296-256.webp",
         "bytes": 15044
+      }
+    ]
+  },
+  "assets/ui/tag-novo-degustador.png": {
+    "width": 320,
+    "height": 96,
+    "variants": [
+      {
+        "width": 320,
+        "src": "assets/web/02a208c452043fa8-320.webp",
+        "bytes": 5988
+      }
+    ]
+  },
+  "assets/ui/tag-novo-serie.png": {
+    "width": 320,
+    "height": 96,
+    "variants": [
+      {
+        "width": 320,
+        "src": "assets/web/e9d4197e0d25545e-320.webp",
+        "bytes": 7156
+      }
+    ]
+  },
+  "assets/ui/tag-novo-zezoverso.png": {
+    "width": 320,
+    "height": 96,
+    "variants": [
+      {
+        "width": 320,
+        "src": "assets/web/b509152124c0fe14-320.webp",
+        "bytes": 7440
       }
     ]
   },

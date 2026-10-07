@@ -3820,6 +3820,29 @@ body.enzo-page {
     border: 2px solid #00e5ff;
     box-shadow: 0 0 14px rgba(0, 229, 255, 0.4), inset 0 0 12px rgba(255, 79, 216, 0.18);
 }
+/* arte pronta (tarefa 14): placa da galeria, legendas, botões e etiquetas por tema */
+.estatua-placa {
+    display: grid; align-content: center; width: 100%; max-width: none; aspect-ratio: 480 / 140; margin: 6px 0 0; padding: 9.4% 14% 0;
+    font-size: clamp(0.85rem, 1.5vw, 1.15rem); line-height: 1.05; text-align: center; text-wrap: balance; color: #ffd978;
+    text-shadow: 1px 1px 0 #1c1204; background: url('../assets/ui/galeria-placa.png') center / 100% 100% no-repeat; border: 0; border-radius: 0; box-shadow: none;
+    filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.35));
+}
+.bookcase[data-colecao="serie"].tem-mesa .book-caption,
+.theme-degustador .book-caption, .theme-zezoverso .book-caption {
+    margin-inline: -10px; padding: 8px 10px; border: 22px solid transparent; border-radius: 0; box-shadow: none; background: none;
+}
+.bookcase[data-colecao="serie"].tem-mesa .book-caption { border-image: url('../assets/ui/legenda-serie.png') 56 fill / 22px stretch; }
+.theme-degustador .book-caption { border-image: url('../assets/ui/legenda-degustador.png') 56 fill / 22px stretch; }
+.theme-zezoverso .book-caption { border-image: url('../assets/ui/legenda-zezoverso.png') 56 fill / 22px stretch; }
+.hero .btn, .hero-banner .btn { border: 16px solid transparent; border-radius: 0; padding: 2px 14px; background: none; box-shadow: none; overflow: visible; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3)); }
+.hero .btn::after, .hero-banner .btn::after { display: none; }
+.hero .btn { border-image: url('../assets/ui/botao-hero-serie.png') 48 fill / 16px stretch; color: var(--ink); text-shadow: none; }
+.theme-degustador .hero .btn, .theme-degustador .hero-banner .btn { border-image: url('../assets/ui/botao-hero-degustador.png') 48 fill / 16px stretch; color: #fff; text-shadow: 2px 2px 0 var(--ink); background: none; }
+.theme-zezoverso .hero .btn, .theme-zezoverso .hero-banner .btn { border-image: url('../assets/ui/botao-hero-zezoverso.png') 48 fill / 16px stretch; color: var(--ink); background: none; }
+.hero .btn:hover, .hero-banner .btn:hover { background: none; filter: brightness(1.12) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3)); }
+.hero-kicker { padding: 14px 40px; min-width: 200px; text-align: center; background: url('../assets/ui/tag-novo-serie.png') center / 100% 100% no-repeat; border: 0; outline: 0; box-shadow: none; transform: none; color: var(--ink); text-shadow: none; }
+.theme-degustador .hero-kicker { background: url('../assets/ui/tag-novo-degustador.png') center / 100% 100% no-repeat; color: #fff; text-shadow: 1px 1px 0 var(--ink); }
+.theme-zezoverso .hero-kicker { background: url('../assets/ui/tag-novo-zezoverso.png') center / 100% 100% no-repeat; color: #aef6ff; text-shadow: 0 0 6px #00e5ff; }
 /* celular: o controle de volume e a barra da Discoteca ganham área de toque */
 @media (max-width: 520px) {
     .vinil-player-linha { grid-template-columns: auto 1fr; }

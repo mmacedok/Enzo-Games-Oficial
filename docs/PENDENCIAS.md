@@ -6,7 +6,7 @@
 > item (ex.: `> Henrique: deixa para depois`); o Claude segue isso na próxima atualização.
 > Testes que faltam rodar ficam em [`TESTES-PENDENTES.md`](TESTES-PENDENTES.md) (não repetidos aqui).
 >
-> Última atualização: **2026-10-06**.
+> Última atualização: **2026-10-07**.
 
 **Legenda:**
 - **Quem:**
@@ -19,7 +19,7 @@
 ---
 
 ## 🔴 Agora (prioridade alta)
-- [ ] **Galeria: falta a estátua do Degustador da Noite.** A ferramenta recusou duas gerações da tarefa 10; o card mantém a ficha cinza.
+- [ ] **Leitor:** dropdown de capítulos e selo "LACRADO" ainda faltam. 🤖
 
 
 - [ ] **Cartas complementares (Resenha) — motor pronto, faltam as cartas** (branch `tcg-anexos`, REGRAS_VERSAO 12,
@@ -89,6 +89,7 @@
 ---
 
 ## ✅ Feito recentemente
+- **2026-10-07 — Glow up (tarefa 14 do Codex):** estátua do Degustador, placa da galeria, 404 ilustrada, legendas/botões/etiquetas por tema, telas e botão do Italo's Surfer, favicon, `apple-touch-icon`, `manifest.webmanifest` e `og:image`.
 
 - **2026-10-07 — Galeria de personagens na home:** a galeria de estátuas agora é uma seção (`#personagens`) logo abaixo de "Jogos do Enzo Games" em `index.html`; `personagens.html` continua existindo para links antigos.
 - **2026-10-07 — Glow up de UI (varredura do Gemini, tarefa 32):** pack de ícones SVG (`assets/ui/icones/`, `css/icones.css`, classe `.ico ico-<nome>`) no lugar de setas e emojis (voltar, carrossel, zoom do leitor, player da Discoteca e da Videoteca, Italo's Surfer com D-pad arcade); página 404 ilustrada (`404.html`, `server.js`); capas das músicas corrigidas (404 de `css/assets/`); botões, etiquetas e legendas por tema (CSS). Pendente: tarefa 14 do Codex (22 imagens: estátua do Degustador sem arma, placa da galeria, 404, legendas, botões, Italo, ícones do app) e depois ligar no código. Batalha: os emojis são só reserva (já usa arte), não mexi. O "overflow" da galeria no celular é o carrossel de rolagem, por desenho.
