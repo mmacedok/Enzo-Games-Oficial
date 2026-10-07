@@ -95,6 +95,15 @@
         abrir('terminal', { url });
     }
 
+    let perfilAtual = null;
+    /** Abre (ou reaproveita) a janela Perfil na conta `id`. */
+    function abrirPerfil(id) {
+        perfilAtual = id;
+        const j = janelas.get('perfil');
+        if (j) { focar(j); window.OsEquipe.perfil(j.corpo, id); return; }
+        abrir('perfil');
+    }
+
     function quadroTerminal(url) {
         const f = el('iframe'); f.src = url; f.title = 'Linha de comando';
         return f;
@@ -103,7 +112,7 @@
     const APPS = [
         { id: 'visao', nome: 'Visão geral', emoji: '📊', icone: 'ic-visao-geral', w: 860, h: 600, mod: true, render: appVisao },
         { id: 'leitores', nome: 'Leitores', emoji: '👥', icone: 'ic-leitores', w: 900, h: 620, mod: true, render: appLeitores },
-        { id: 'lancamentos', nome: 'Lançamentos', emoji: '🚀', icone: 'ic-lancamentos', w: 960, h: 640, mod: true, cru: true, render: () => quadroTerminal('terminal.html#cmd=launch') },
+        { id: 'lancamentos', nome: 'Lançamentos', emoji: '🚀', icone: 'ic-lancamentos', w: 960, h: 640, mod: true, render: (corpo) => window.OsEquipe.lancamentos(corpo, estado.mod) },
         { id: 'upload', nome: 'Upload', emoji: '☁️', icone: 'ic-upload', w: 980, h: 660, render: (corpo) => window.OsGibis.upload(corpo) },
         { id: 'gibis', nome: 'Gibis', emoji: '📚', icone: 'ic-gibis', w: 1000, h: 680, render: (corpo) => window.OsGibis.gibis(corpo) },
         { id: 'contas', nome: 'Contas', emoji: '🪪', icone: 'ic-contas', w: 900, h: 620, render: appContas },
@@ -113,9 +122,10 @@
         { id: 'placares', nome: 'Placares', emoji: '🎮', icone: 'ic-jogos', w: 820, h: 580, render: appPlacares },
         { id: 'historico', nome: 'Histórico', emoji: '📜', icone: 'ic-log', w: 820, h: 580, mod: true, render: appHistorico },
         { id: 'terminal', nome: 'Terminal', emoji: '⌨️', icone: 'ic-terminal', w: 900, h: 600, cru: true, render: (corpo, ctx) => quadroTerminal(ctx?.url || 'terminal.html') },
+        { id: 'perfil', nome: 'Perfil', emoji: '🪪', icone: 'ic-contas', w: 880, h: 640, oculto: true, render: (corpo) => window.OsEquipe.perfil(corpo, perfilAtual) },
         { id: 'aparencia', nome: 'Aparência', emoji: '🎨', icone: 'ic-aparencia', w: 720, h: 500, mod: true, render: appAparencia },
     ];
-    const appsVisiveis = () => APPS.filter((a) => !estado.mod || a.mod);
+    const appsVisiveis = () => APPS.filter((a) => !a.oculto && (!estado.mod || a.mod));
     const acharApp = (id) => APPS.find((a) => a.id === id);
 
     // ---- Visão geral
@@ -192,7 +202,7 @@
                 el('div', 'suave', `${n(d.total)} visualizações em ${n(d.leituras.length)} capítulos`),
             ])]);
             const acoes = el('div', 'ferramentas', [botao('← Leitores', voltar)]);
-            if (!estado.mod) acoes.append(botao('Abrir conta (terminal)', () => abrirTerminal(`open ${d.id}`)));
+            if (!estado.mod) acoes.append(botao('Abrir perfil', () => abrirPerfil(d.id)));
             const t = d.leituras.length ? tabela([
                 { t: 'Capítulo', v: (x) => `${bonito(x.comicId)} · ${bonito(x.chapterId)}` },
                 { t: 'Views', v: (x) => el('span', 'pessoa', [el('b', '', n(x.visualizacoes)), (() => { const b = el('span', 'barrinha'); const i = el('i'); i.style.width = `${(x.visualizacoes / maximo) * 100}%`; b.append(i); return b; })()]) },
@@ -219,7 +229,7 @@
                     { t: 'Cargo', v: (u) => (u.role === 'banned' ? el('span', 'selo-cargo ruim', 'banida') : u.cargo ? el('span', 'selo-cargo', u.cargo) : '') },
                     { t: 'Conquistas', num: true, some: true, v: (u) => n(u.conquistas) },
                     { t: 'Último acesso', v: (u) => quando(u.ultimoLogin) },
-                ], d.users, (u) => abrirTerminal(`open ${u.id}`)) : el('p', 'vazio', 'Nenhuma conta.'),
+                ], d.users, (u) => abrirPerfil(u.id)) : el('p', 'vazio', 'Nenhuma conta.'),
                 d.maisPaginas ? el('p', 'suave', 'Há mais contas: refine a busca.') : '');
             } catch (x) { falhou(lista, x); }
         }
@@ -231,7 +241,7 @@
         carregando(corpo);
         const d = await api('/api/admin/equipe');
         const cartoes = d.equipe.map((m) => el('div', 'cartao', [el('div', 'ficha', [avatar(m, true), el('div', '', [el('h2', '', m.name), el('span', 'selo-cargo', m.cargo), el('div', 'suave', `visto ${quando(m.ultimoLogin)}`)])]),
-            botao('Abrir conta', () => abrirTerminal(`open ${m.id}`))]));
+            botao('Abrir perfil', () => abrirPerfil(m.id))]));
         corpo.replaceChildren(el('div', 'grade', cartoes.length ? cartoes : [el('p', 'vazio', 'Ninguém na equipe ainda.')]),
             el('p', 'suave', d.souDono ? 'Para dar ou tirar cargo: abra a conta da pessoa no programa Contas e use os botões de cargo (ou o comando "team" no Terminal).' : 'Só o dono dá ou tira o cargo de admin.'));
     }
@@ -446,6 +456,6 @@
         abrir(acharApp(pedido) && appsVisiveis().some((a) => a.id === pedido) ? pedido : 'visao');
     }
 
-    window.EnzoOS = { abrir, abrirTerminal, util: { el, botao, api, tabela, n } };
+    window.EnzoOS = { abrir, abrirTerminal, abrirPerfil, util: { el, botao, api, tabela, n } };
     boot();
 })();

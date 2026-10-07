@@ -204,3 +204,18 @@ input, select { font: inherit; color: inherit; }
 .up-modal-info { color: var(--texto); }
 .up-modal-barra { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 @media (max-width: 720px) { .comparar { flex-direction: column; } .comparar img { max-height: 38vh; } }
+
+/* Lançamentos e Perfil */
+.lanc-lista { display: grid; gap: 10px; }
+.lanc-cartao.escondido { border-left: 3px solid var(--ruim); }
+.lanc-cartao.agendado { border-left: 3px solid var(--acento); }
+.lanc-cartao.no-ar { border-left: 3px solid var(--bom); }
+.lanc-topo { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; }
+.lanc-capa { width: 54px; height: 76px; object-fit: cover; border-radius: 6px; flex: none; background: rgba(0, 0, 0, .3); }
+.lanc-texto { display: grid; gap: 3px; min-width: 0; justify-items: start; }
+.lanc-painel { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--linha); }
+.lanc-pergunta { margin: 0 0 8px; font-weight: 600; }
+.lanc-check { display: block; margin: 8px 0; font-size: 13px; }
+select.campo { flex: 0 1 180px; }
+.msg.ruim { border-color: var(--ruim); color: var(--ruim); }
+a.btn { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }

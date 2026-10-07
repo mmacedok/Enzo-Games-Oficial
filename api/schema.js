@@ -21,6 +21,9 @@ module.exports = [
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS censura_liberada BOOLEAN NOT NULL DEFAULT FALSE',
     // cargo da equipe: 'moderador' | 'admin' (o dono vem de ADMIN_EMAILS; ver api/cargos.js)
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS cargo TEXT',
+    // nome que a equipe escolheu para a conta (o login do Google não sobrescreve); nome_google guarda o original
+    'ALTER TABLE users ADD COLUMN IF NOT EXISTS nome_google TEXT',
+    'ALTER TABLE users ADD COLUMN IF NOT EXISTS nome_editado BOOLEAN NOT NULL DEFAULT FALSE',
     'CREATE INDEX IF NOT EXISTS idx_users_last_login ON users(last_login_at DESC)',
     'CREATE INDEX IF NOT EXISTS idx_users_created ON users(created_at)',
     // id = HMAC-SHA256 do token do cookie: vazar o banco não entrega sessões.

@@ -139,7 +139,7 @@ const rotas = [
             const busca = String(ctx.url.searchParams.get('q') || '').trim().slice(0, 80);
             const filtro = busca ? `%${busca.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
             const linhas = await ctx.db.query(
-                `SELECT u.id, u.display_name, u.email, u.role, u.cargo, u.avatar_url, u.fala, u.censura_liberada, u.created_at, u.last_login_at,
+                `SELECT u.id, u.display_name, u.nome_google, u.nome_editado, u.email, u.role, u.cargo, u.avatar_url, u.fala, u.censura_liberada, u.created_at, u.last_login_at,
                         COALESCE(a.conquistas, 0) AS conquistas, COALESCE(a.secretos, 0) AS secretos,
                         COALESCE(s.partidas, 0) AS partidas
                    FROM users u
@@ -154,7 +154,7 @@ const rotas = [
                 [filtro, POR_PAGINA + 1, pagina * POR_PAGINA, busca]);
             return {
                 users: linhas.slice(0, POR_PAGINA).map((l) => ({
-                    id: l.id, name: l.display_name, email: l.email, role: l.role, avatarUrl: l.avatar_url || null,
+                    id: l.id, name: l.display_name, nomeOriginal: l.nome_google || l.display_name, nomeEditado: l.nome_editado === true, email: l.email, role: l.role, avatarUrl: l.avatar_url || null,
                     fala: l.fala || null, censuraLiberada: l.censura_liberada === true,
                     criadoEm: Number(l.created_at), ultimoLogin: Number(l.last_login_at),
                     conquistas: Number(l.conquistas), secretos: Number(l.secretos), partidas: Number(l.partidas),
@@ -186,7 +186,8 @@ const rotas = [
             // require aqui dentro: api/baralho.js também usa este arquivo.
             const baralho = await require('./baralho.js').estado(ctx.db, id);
             return {
-                id: u.id, name: u.display_name, email: u.email, role: u.role, avatarUrl: u.avatar_url || null,
+                id: u.id, name: u.display_name, nomeOriginal: u.nome_google || u.display_name, nomeEditado: u.nome_editado === true,
+                email: u.email, role: u.role, avatarUrl: u.avatar_url || null,
                 fala: u.fala || null, censuraLiberada: u.censura_liberada === true,
                 criadoEm: Number(u.created_at), ultimoLogin: Number(u.last_login_at),
                 admin: ehAdmin(ctx.config, u), cargo: cargoDe(ctx.config, u), sessoes: Number(sessoes),
@@ -253,6 +254,23 @@ const rotas = [
             if (role === 'banned') await ctx.db.query('DELETE FROM sessions WHERE user_id = $1', [alvo.id]);
             if (alvo.role !== role) await registrar(ctx, role === 'banned' ? 'ban' : 'unban', alvo.id);
             return { role };
+        },
+    },
+    {
+        // Muda o nome que aparece no site (o nome do Google fica guardado). { nome: '' } ou null volta ao nome original.
+        metodo: 'POST', caminho: new RegExp(`^/api/admin/users/${SEGMENTO}/nome$`), admin: true,
+        async executar(ctx) {
+            const alvo = await exigirUsuario(ctx, ctx.params[0]);
+            const { nome } = await ctx.corpo();
+            if (nome !== null && nome !== undefined && typeof nome !== 'string') throw new HttpError(400, 'nome inválido');
+const novo = String(nome ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
+            const [u] = await ctx.db.query('SELECT display_name, nome_google FROM users WHERE id = $1', [alvo.id]);
+            const original = u.nome_google || u.display_name;
+            const [r] = novo
+                ? await ctx.db.query('UPDATE users SET display_name = $2, nome_google = $3, nome_editado = TRUE WHERE id = $1 RETURNING display_name', [alvo.id, novo, original])
+                : await ctx.db.query('UPDATE users SET display_name = $2, nome_google = $2, nome_editado = FALSE WHERE id = $1 RETURNING display_name', [alvo.id, original]);
+            if (r.display_name !== u.display_name) await registrar(ctx, 'nome', alvo.id, `${u.display_name} → ${r.display_name}`);
+            return { name: r.display_name, original, editado: Boolean(novo) };
         },
     },
     {

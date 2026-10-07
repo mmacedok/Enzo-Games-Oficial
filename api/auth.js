@@ -123,7 +123,8 @@ const rotas = [
             const [usuario] = await ctx.db.query(
                 `INSERT INTO users (id, google_id, email, display_name, avatar_url, created_at, last_login_at)
                  VALUES ($1, $2, $3, $4, $5, $6, $6)
-                 ON CONFLICT (google_id) DO UPDATE SET email = EXCLUDED.email, display_name = EXCLUDED.display_name,
+                 ON CONFLICT (google_id) DO UPDATE SET email = EXCLUDED.email, nome_google = EXCLUDED.display_name,
+                     display_name = CASE WHEN users.nome_editado THEN users.display_name ELSE EXCLUDED.display_name END,
                      avatar_url = EXCLUDED.avatar_url, last_login_at = EXCLUDED.last_login_at
                  RETURNING *`,
                 [crypto.randomUUID(), String(dados.sub), String(dados.email || ''), nome, avatar, agora]);
