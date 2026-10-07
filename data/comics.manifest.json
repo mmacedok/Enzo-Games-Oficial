@@ -99,6 +99,18 @@
           "title": "Origem"
         }
       }
+    },
+    "dougxbox": {
+      "id": "dougxbox",
+      "title": "DougXbox",
+      "description": "O Besterol começa",
+      "order": 150,
+      "featured": false,
+      "chapters": {
+        "1": {
+          "title": "O Besterol começa"
+        }
+      }
     }
   },
   "censorship": {

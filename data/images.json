@@ -4806,6 +4806,274 @@
       }
     ]
   },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Capa/capa.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8dd21680cc337606-640.webp",
+        "bytes": 197232
+      },
+      {
+        "width": 941,
+        "src": "assets/web/8dd21680cc337606-941.webp",
+        "bytes": 351990
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-01.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8ab3f0d479101c4a-640.webp",
+        "bytes": 100654
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/8ab3f0d479101c4a-1280.webp",
+        "bytes": 306652
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/8ab3f0d479101c4a-1536.webp",
+        "bytes": 413028
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-02.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e78246193d89225d-640.webp",
+        "bytes": 87486
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/e78246193d89225d-1280.webp",
+        "bytes": 248464
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/e78246193d89225d-1536.webp",
+        "bytes": 323222
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-03.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b257e2c216ba062c-640.webp",
+        "bytes": 72738
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/b257e2c216ba062c-1280.webp",
+        "bytes": 213154
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/b257e2c216ba062c-1536.webp",
+        "bytes": 274244
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-04.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6d9c593d9d29388d-640.webp",
+        "bytes": 92730
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/6d9c593d9d29388d-1280.webp",
+        "bytes": 272224
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/6d9c593d9d29388d-1536.webp",
+        "bytes": 349984
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-05.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6fdda216bdf32750-640.webp",
+        "bytes": 98480
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/6fdda216bdf32750-1280.webp",
+        "bytes": 298812
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/6fdda216bdf32750-1536.webp",
+        "bytes": 397728
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-06.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/76540fdac24a262f-640.webp",
+        "bytes": 84072
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/76540fdac24a262f-1280.webp",
+        "bytes": 251620
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/76540fdac24a262f-1536.webp",
+        "bytes": 333098
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-07.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f5c282cb8306f231-640.webp",
+        "bytes": 89918
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/f5c282cb8306f231-1280.webp",
+        "bytes": 264642
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/f5c282cb8306f231-1536.webp",
+        "bytes": 349236
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-08.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/cd6f75f8f16002d9-640.webp",
+        "bytes": 101422
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/cd6f75f8f16002d9-1280.webp",
+        "bytes": 303306
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/cd6f75f8f16002d9-1536.webp",
+        "bytes": 405020
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-09.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/dfc30763b051f053-640.webp",
+        "bytes": 98478
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/dfc30763b051f053-1280.webp",
+        "bytes": 297442
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/dfc30763b051f053-1536.webp",
+        "bytes": 397008
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-10.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ed7a81549961638c-640.webp",
+        "bytes": 104756
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/ed7a81549961638c-1280.webp",
+        "bytes": 307644
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/ed7a81549961638c-1536.webp",
+        "bytes": 409570
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-11.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6a77dc30031c3649-640.webp",
+        "bytes": 113114
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/6a77dc30031c3649-1280.webp",
+        "bytes": 336174
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/6a77dc30031c3649-1536.webp",
+        "bytes": 449256
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-12.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6e279875659a119f-640.webp",
+        "bytes": 118576
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/6e279875659a119f-1280.webp",
+        "bytes": 374690
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/6e279875659a119f-1536.webp",
+        "bytes": 506146
+      }
+    ]
+  },
   "assets/Spin Offs/Felipe Robozao/Capitulo 1/Capa/capa.png": {
     "width": 941,
     "height": 1672,
