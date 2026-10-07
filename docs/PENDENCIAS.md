@@ -19,7 +19,6 @@
 ---
 
 ## 🔴 Agora (prioridade alta)
-- [ ] **Leitor:** dropdown de capítulos e selo "LACRADO" ainda faltam. 🤖
 
 
 - [ ] **Cartas complementares (Resenha) — motor pronto, faltam as cartas** (branch `tcg-anexos`, REGRAS_VERSAO 12,
@@ -89,6 +88,7 @@
 ---
 
 ## ✅ Feito recentemente
+- **2026-10-07 — Leitor:** dropdown próprio de capítulos (lista em tira de gibi, capítulo atual marcado, teclado) e selo LACRADO nos capítulos sem progresso na conta (só com login). Estátua do Degustador conferida: colher de pau certa. Falta olhar no celular, páginas do Degustador e telas de pausa/fim do Italo.
 - **2026-10-07 — Glow up (tarefa 14 do Codex):** estátua do Degustador, placa da galeria, 404 ilustrada, legendas/botões/etiquetas por tema, telas e botão do Italo's Surfer, favicon, `apple-touch-icon`, `manifest.webmanifest` e `og:image`.
 
 - **2026-10-07 — Galeria de personagens na home:** a galeria de estátuas agora é uma seção (`#personagens`) logo abaixo de "Jogos do Enzo Games" em `index.html`; `personagens.html` continua existindo para links antigos.

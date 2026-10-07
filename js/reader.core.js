@@ -92,6 +92,60 @@
             }
             ui.chapterSelect.appendChild(group);
         }
+        buildChapterPanel();
+    }
+
+    // Lista própria de capítulos (o <select> fica por baixo, guardando o valor e o carregamento).
+    // Capítulo ainda sem progresso na conta ganha o selo LACRADO (só quando há login).
+    function buildChapterPanel() {
+        const label = ui.chapterSelect.closest('.tira-recordatorio');
+        if (!label) return;
+        let panel = label.querySelector('.capitulos-painel');
+        if (!panel) {
+            panel = document.createElement('div');
+            panel.className = 'capitulos-painel';
+            panel.hidden = true;
+            panel.setAttribute('role', 'listbox');
+            label.appendChild(panel);
+        }
+        panel.innerHTML = '';
+        const account = conta();
+        const logged = !!account?.usuario;
+        for (const group of ui.chapterSelect.querySelectorAll('optgroup')) {
+            if (group.querySelectorAll('option').length > 1) {
+                const head = document.createElement('div');
+                head.className = 'capitulos-grupo';
+                head.textContent = group.label;
+                panel.appendChild(head);
+            }
+            for (const option of group.querySelectorAll('option')) {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'capitulos-item';
+                item.setAttribute('role', 'option');
+                item.dataset.value = option.value;
+                item.setAttribute('aria-selected', String(option.selected));
+                if (option.selected) item.classList.add('atual');
+                const text = document.createElement('span');
+                text.textContent = option.textContent;
+                item.appendChild(text);
+                let ids = [];
+                try { ids = JSON.parse(option.value); } catch {}
+                if (logged && !option.selected && ids.length === 2 && !account.progressoDe?.(ids[0], ids[1])) {
+                    item.appendChild(Object.assign(document.createElement('span'), { className: 'selo-lacrado', textContent: 'LACRADO' }));
+                }
+                panel.appendChild(item);
+            }
+        }
+    }
+
+    function setChapterPanel(open) {
+        const label = ui.chapterSelect.closest('.tira-recordatorio');
+        const panel = label?.querySelector('.capitulos-painel');
+        if (!panel) return;
+        panel.hidden = !open;
+        label.setAttribute('aria-expanded', String(open));
+        if (open) panel.querySelector('.atual')?.scrollIntoView({ block: 'nearest' });
     }
 
     function buildPageImage(url, index) {
@@ -466,6 +520,7 @@
         if (!account?.usuario || !state.comic) return;
         // Edições lidas antes desta conquista existir também contam.
         account.verificarColecoes?.(state.db);
+        buildChapterPanel();
         const chapter = state.comic.chapters?.[state.chapterIndex];
         const key = chapter && `${state.comic.id}/${chapter.id}`;
         if (!key || state.restoredKey === key) return;
@@ -492,6 +547,40 @@
             const [comicId, chapterId] = value;
             loadComic(comicId, chapterId, 'push');
         });
+
+        const recordatorio = ui.chapterSelect.closest('.tira-recordatorio');
+        if (recordatorio) {
+            recordatorio.tabIndex = 0;
+            recordatorio.setAttribute('role', 'button');
+            recordatorio.setAttribute('aria-haspopup', 'listbox');
+            recordatorio.setAttribute('aria-expanded', 'false');
+            ui.chapterSelect.tabIndex = -1;
+            const painel = () => recordatorio.querySelector('.capitulos-painel');
+            recordatorio.addEventListener('click', (event) => {
+                event.preventDefault();
+                const item = event.target.closest('.capitulos-item');
+                if (item) {
+                    setChapterPanel(false);
+                    ui.chapterSelect.value = item.dataset.value;
+                    ui.chapterSelect.dispatchEvent(new Event('change'));
+                    return;
+                }
+                if (event.target.closest('.capitulos-painel')) return;
+                setChapterPanel(painel()?.hidden !== false);
+            });
+            recordatorio.addEventListener('keydown', (event) => {
+                if (event.target !== recordatorio) return;
+                if (['Enter', ' ', 'ArrowDown'].includes(event.key)) { event.preventDefault(); setChapterPanel(true); painel()?.querySelector('.capitulos-item')?.focus(); }
+            });
+            recordatorio.querySelector('.capitulos-painel')?.addEventListener('keydown', (event) => {
+                const items = [...event.currentTarget.querySelectorAll('.capitulos-item')];
+                const i = items.indexOf(document.activeElement);
+                if (event.key === 'ArrowDown') { event.preventDefault(); items[Math.min(i + 1, items.length - 1)]?.focus(); }
+                else if (event.key === 'ArrowUp') { event.preventDefault(); items[Math.max(i - 1, 0)]?.focus(); }
+            });
+            recordatorio.addEventListener('keydown', (event) => { if (event.key === 'Escape') { setChapterPanel(false); recordatorio.focus(); } });
+            document.addEventListener('click', (event) => { if (!recordatorio.contains(event.target)) setChapterPanel(false); });
+        }
 
         ui.zoomInBtn?.addEventListener('click', () => changeZoom(ZOOM_STEP));
         ui.zoomOutBtn?.addEventListener('click', () => changeZoom(-ZOOM_STEP));
