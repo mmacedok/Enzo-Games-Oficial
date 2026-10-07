@@ -7,6 +7,7 @@
 // ============================================================================
 const crypto = require('node:crypto');
 const { HttpError, montarCookie } = require('./http.js');
+const { ehAdmin, cargoDe } = require('./cargos.js');
 
 const COOKIE = 'sid';
 const DIA = 24 * 60 * 60 * 1000;
@@ -139,7 +140,7 @@ const rotas = [
         metodo: 'GET', caminho: '/api/auth/me',
         // admin: abre o link do painel (admin.html); a API confere de novo em cada rota.
         executar: (ctx) => (ctx.usuario
-            ? { loggedIn: true, user: usuarioPublico(ctx.usuario), admin: ctx.config.admins.has(String(ctx.usuario.email).toLowerCase()) }
+            ? { loggedIn: true, user: usuarioPublico(ctx.usuario), admin: ehAdmin(ctx.config, ctx.usuario), cargo: cargoDe(ctx.config, ctx.usuario) }
             : { loggedIn: false }),
     },
     {
@@ -165,7 +166,7 @@ const rotas = [
             ctx.acessoUsuario = linha.id;
             return {
                 loggedIn: true, user: usuarioPublico(linha), lembrar: await criarLembrete(ctx, linha.id),
-                admin: ctx.config.admins.has(String(linha.email).toLowerCase()),
+                admin: ehAdmin(ctx.config, linha), cargo: cargoDe(ctx.config, linha),
             };
         },
     },

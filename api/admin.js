@@ -37,10 +37,13 @@ function lerAdmins(valor) {
     return new Set(String(valor || '').split(/[,;\s]+/).map((e) => e.trim().toLowerCase()).filter(Boolean));
 }
 
-const ehAdmin = (config, usuario) => Boolean(usuario?.email) && config.admins.has(String(usuario.email).toLowerCase());
+const { CARGOS, ehDono, ehAdmin, ehModerador, cargoDe } = require('./cargos.js');
+
+// Ações do admin_log que o moderador pode ver.
+const ACOES_DO_MODERADOR = ['publish', 'schedule', 'unpublish', 'upload'];
 
 async function exigirUsuario(ctx, id) {
-    const [usuario] = await ctx.db.query('SELECT id, display_name, email, role FROM users WHERE id = $1', [exigirUuid(id, 'conta não encontrada')]);
+    const [usuario] = await ctx.db.query('SELECT id, display_name, email, role, cargo FROM users WHERE id = $1', [exigirUuid(id, 'conta não encontrada')]);
     if (!usuario) throw new HttpError(404, 'conta não encontrada');
     return usuario;
 }
@@ -51,13 +54,15 @@ async function registrar(ctx, acao, alvo, detalhe = null) {
         [crypto.randomUUID(), ctx.usuario.id, acao, alvo, detalhe === null ? null : String(detalhe).slice(0, 200), ctx.agora()]);
 }
 
-async function ultimasAcoes(db, limite) {
+/** `so`: lista de ações permitidas (o moderador só vê as de lançamento); null = todas. */
+async function ultimasAcoes(db, limite, so = null) {
     const linhas = await db.query(
         `SELECT l.acao, l.alvo, l.detalhe, l.created_at, a.display_name AS admin, u.display_name AS alvo_nome
            FROM admin_log l
            LEFT JOIN users a ON a.id = l.admin_id
            LEFT JOIN users u ON u.id = l.alvo
-          ORDER BY l.created_at DESC, l.id LIMIT $1`, [limite]);
+          WHERE $2::text IS NULL OR l.acao = ANY(string_to_array($2, ','))
+          ORDER BY l.created_at DESC, l.id LIMIT $1`, [limite, so ? so.join(',') : null]);
     return linhas.map((l) => ({
         acao: l.acao, alvo: l.alvo, alvoNome: l.alvo_nome || null, detalhe: l.detalhe,
         admin: l.admin || '?', em: Number(l.created_at),
@@ -134,7 +139,7 @@ const rotas = [
             const busca = String(ctx.url.searchParams.get('q') || '').trim().slice(0, 80);
             const filtro = busca ? `%${busca.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
             const linhas = await ctx.db.query(
-                `SELECT u.id, u.display_name, u.email, u.role, u.avatar_url, u.fala, u.censura_liberada, u.created_at, u.last_login_at,
+                `SELECT u.id, u.display_name, u.email, u.role, u.cargo, u.avatar_url, u.fala, u.censura_liberada, u.created_at, u.last_login_at,
                         COALESCE(a.conquistas, 0) AS conquistas, COALESCE(a.secretos, 0) AS secretos,
                         COALESCE(s.partidas, 0) AS partidas
                    FROM users u
@@ -153,7 +158,7 @@ const rotas = [
                     fala: l.fala || null, censuraLiberada: l.censura_liberada === true,
                     criadoEm: Number(l.created_at), ultimoLogin: Number(l.last_login_at),
                     conquistas: Number(l.conquistas), secretos: Number(l.secretos), partidas: Number(l.partidas),
-                    admin: ehAdmin(ctx.config, l),
+                    admin: ehAdmin(ctx.config, l), cargo: cargoDe(ctx.config, l),
                 })),
                 pagina,
                 maisPaginas: linhas.length > POR_PAGINA,
@@ -184,7 +189,7 @@ const rotas = [
                 id: u.id, name: u.display_name, email: u.email, role: u.role, avatarUrl: u.avatar_url || null,
                 fala: u.fala || null, censuraLiberada: u.censura_liberada === true,
                 criadoEm: Number(u.created_at), ultimoLogin: Number(u.last_login_at),
-                admin: ehAdmin(ctx.config, u), sessoes: Number(sessoes),
+                admin: ehAdmin(ctx.config, u), cargo: cargoDe(ctx.config, u), sessoes: Number(sessoes),
                 achievements: conquistas.map((c) => ({ id: c.achievement_id, em: Number(c.unlocked_at) })),
                 scores: partidas.map(partida),
                 baralho,
@@ -386,9 +391,48 @@ const rotas = [
         },
     },
     {
-        metodo: 'GET', caminho: '/api/admin/log', admin: true,
-        executar: async (ctx) => ({ log: await ultimasAcoes(ctx.db, 100) }),
+        // O moderador também lê, mas só o que é de lançamento (publicar, agendar, esconder, upload).
+        metodo: 'GET', caminho: '/api/admin/log', moderador: true,
+        executar: async (ctx) => ({ log: await ultimasAcoes(ctx.db, 100, ehAdmin(ctx.config, ctx.usuario) ? null : ACOES_DO_MODERADOR) }),
     },
+    {
+        // Equipe: dono (ADMIN_EMAILS), admins e moderadores.
+        metodo: 'GET', caminho: '/api/admin/equipe', admin: true,
+        async executar(ctx) {
+            const emails = [...ctx.config.admins];
+            const linhas = await ctx.db.query(
+                `SELECT id, display_name, email, avatar_url, cargo, last_login_at FROM users
+                  WHERE cargo IS NOT NULL OR lower(email) = ANY(string_to_array($1, ','))
+                  ORDER BY display_name, id`, [emails.join(',')]);
+            return {
+                equipe: linhas.map((l) => ({
+                    id: l.id, name: l.display_name, email: l.email, avatarUrl: l.avatar_url || null,
+                    cargo: cargoDe(ctx.config, l), ultimoLogin: Number(l.last_login_at),
+                })).filter((m) => m.cargo),
+                souDono: ehDono(ctx.config, ctx.usuario),
+            };
+        },
+    },
+    {
+        // Dá, muda ou tira o cargo. Qualquer admin cria/tira moderador; só o dono cria/tira admin. O dono não muda.
+        metodo: 'POST', caminho: new RegExp(`^/api/admin/users/${SEGMENTO}/cargo$`), admin: true,
+        async executar(ctx) {
+            const alvo = await exigirUsuario(ctx, ctx.params[0]);
+            const { cargo } = await ctx.corpo();
+            if (cargo !== null && !CARGOS.includes(cargo)) throw new HttpError(400, "cargo deve ser 'moderador', 'admin' ou null");
+            if (alvo.id === ctx.usuario.id) throw new HttpError(400, 'você não pode mudar o próprio cargo');
+            if (ehDono(ctx.config, alvo)) throw new HttpError(400, 'o dono (ADMIN_EMAILS) não muda por aqui');
+            if (alvo.role === 'banned') throw new HttpError(400, 'conta banida não pode ter cargo');
+            const mexeEmAdmin = cargo === 'admin' || alvo.cargo === 'admin';
+            if (mexeEmAdmin && !ehDono(ctx.config, ctx.usuario)) throw new HttpError(403, 'só o dono dá ou tira o cargo de admin');
+            if ((alvo.cargo || null) !== cargo) {
+                await ctx.db.query('UPDATE users SET cargo = $2 WHERE id = $1', [alvo.id, cargo]);
+                await registrar(ctx, 'cargo', alvo.id, cargo || 'nenhum');
+            }
+            return { cargo };
+        },
+    },
+
 ];
 
-module.exports = { rotas, lerAdmins, ehAdmin, exigirUsuario, registrar };
+module.exports = { rotas, lerAdmins, ehAdmin, ehDono, ehModerador, cargoDe, exigirUsuario, registrar };

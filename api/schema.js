@@ -19,6 +19,8 @@ module.exports = [
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS fala TEXT',
     // Censura (tarja do Cabo Côco) liberada para esta conta. Só o admin muda, pelo terminal (`censura on|off`).
     'ALTER TABLE users ADD COLUMN IF NOT EXISTS censura_liberada BOOLEAN NOT NULL DEFAULT FALSE',
+    // cargo da equipe: 'moderador' | 'admin' (o dono vem de ADMIN_EMAILS; ver api/cargos.js)
+    'ALTER TABLE users ADD COLUMN IF NOT EXISTS cargo TEXT',
     'CREATE INDEX IF NOT EXISTS idx_users_last_login ON users(last_login_at DESC)',
     'CREATE INDEX IF NOT EXISTS idx_users_created ON users(created_at)',
     // id = HMAC-SHA256 do token do cookie: vazar o banco não entrega sessões.

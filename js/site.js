@@ -24,7 +24,7 @@
         window.EnzoAvisosLancamento = dados?.avisos || [];
         if (new URLSearchParams(location.search).get('previa') === '1') {
             const eu = await fetch('/api/auth/me', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-            if (eu?.admin) return db;
+            if (eu?.admin || eu?.cargo === 'moderador') return db;   // admin e moderador leem escondidos com ?previa=1
         }
         return window.Lancamentos ? window.Lancamentos.filtrar(db, dados || {}) : db;
     };

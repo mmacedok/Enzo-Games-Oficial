@@ -99,6 +99,8 @@ function createApi({ db, env = process.env, verificarGoogle, agora = Date.now, a
             if (rota.login && !ctx.usuario) throw new HttpError(401, 'faça login para continuar');
             // Rotas de admin não existem para quem não é admin.
             if (rota.admin && !admin.ehAdmin(config, ctx.usuario)) throw new HttpError(404, 'rota não encontrada');
+            // Rota do moderador: o admin também entra.
+            if (rota.moderador && !admin.ehAdmin(config, ctx.usuario) && !admin.ehModerador(config, ctx.usuario)) throw new HttpError(404, 'rota não encontrada');
             const dados = await rota.executar(ctx);
             await acessos.registrarAcesso(ctx);
             return json(200, dados, ctx.headers);

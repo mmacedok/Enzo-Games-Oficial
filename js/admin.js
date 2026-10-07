@@ -43,7 +43,11 @@
         secoes: {},         // seções dobráveis abertas/fechadas (lembra entre contas)
         numeros: null,
         apiFalhou: false,
+        cargo: null,        // 'dono' | 'admin' | 'moderador'
+        mod: false,         // moderador: só lançamentos e histórico
     };
+    // Comandos que o moderador pode usar (a API também confere: o resto responde 404 para ele).
+    const COMANDOS_DO_MODERADOR = new Set(['launch', 'log', 'help', 'whoami', 'exit', 'site', 'clear']);
 
     // ---------------------------------------------------------------- servidor
     const pedir = window.EnzoApi.exigir;
@@ -90,7 +94,7 @@
         btVoltar.title = 'voltar para a tela anterior (Esc)';
         btVoltar.addEventListener('click', () => voltar());
         migalhas.appendChild(btVoltar);
-        [['início', 'status'], ...caminho].forEach(([rotulo, cmd], i, todos) => {
+        [['início', estado.mod ? 'launch' : 'status'], ...caminho].forEach(([rotulo, cmd], i, todos) => {
             if (i) migalhas.appendChild(span('migalha-sep', '›'));
             if (cmd && i < todos.length - 1) migalhas.appendChild(botao(rotulo, cmd, { link: true }));
             else migalhas.appendChild(span('migalha-atual', rotulo));
@@ -193,7 +197,7 @@
 
     function atualizarPrompt() {
         const pasta = estado.alvo ? `~/${primeiroNome(estado.alvo.name).toLowerCase()}` : '~';
-        ps.textContent = estado.confirmar ? 'confirmar [s/N]:' : `root@enzo:${pasta}$`;
+        ps.textContent = estado.confirmar ? 'confirmar [s/N]:' : `${estado.mod ? 'mod' : 'root'}@enzo:${pasta}$`;
     }
 
     // ---------------------------------------------------------------- painel lateral
@@ -231,7 +235,29 @@
     function mostrarAtalhos() {
         const nav = $('atalhos');
         nav.replaceChildren(el('p', 'atalhos-titulo', 'atalhos rápidos'));
-        for (const comando of ['status', 'users', 'launch', 'upload', 'scores', 'tcg', 'log', 'help', 'exit']) nav.appendChild(botao(comando, comando));
+        const lista = estado.mod ? ['launch', 'log', 'help', 'exit'] : ['status', 'users', 'launch', 'upload', 'team', 'scores', 'tcg', 'log', 'help', 'exit'];
+        for (const comando of lista) nav.appendChild(botao(comando, comando));
+    }
+
+    // ---------------------------------------------------------------- central de comando
+    const VERBOS_DO_LOG = {
+        publish: 'publicou', schedule: 'agendou', unpublish: 'escondeu', upload: 'enviou', cargo: 'mudou o cargo de',
+        ban: 'baniu', unban: 'desbaniu', kick: 'derrubou', 'early-access': 'deu acesso antecipado a', 'early-revoke': 'tirou o acesso antecipado de',
+    };
+
+    /** Atalhos da central por cargo: [grupo, descrição, cor, [[ícone, título, ajuda, comando]]]. */
+    function gruposDaCentral() {
+        const publicar = [['🚦', 'Lançamentos', 'publica, agenda ou esconde capítulos', 'launch']];
+        const historico = ['📜', 'Histórico', 'quem mudou o quê e quando', 'log'];
+        const ajuda = ['❓', 'Ajuda', 'todos os comandos', 'help'];
+        const site = ['🏠', 'Abrir o site', 'ver como o leitor vê', 'site'];
+        if (estado.mod) return [['GIBIS', 'Publicar capítulos', '#26f3ff', [...publicar, historico]], ['AJUDA', 'Atalhos', '#a78bff', [ajuda, site]]];
+        return [
+            ['GIBIS', 'Publicar capítulos', '#26f3ff', [...publicar, ['📤', 'Upload de capítulos', 'arraste capa e páginas e publique', 'upload']]],
+            ['LEITORES', 'Contas e equipe', '#ff3df0', [['👥', 'Leitores', 'contas, conquistas e cartas', 'users'], ['🛡', 'Equipe e cargos', 'moderadores e admins', 'team'], ['🌐', 'Acessos', 'de onde vêm as visitas', 'ips']]],
+            ['PARTIDAS', 'Ranking e placares', '#5aa8ff', [['⚔️', 'Batalha online', 'histórico das partidas', 'tcg'], ['🏆', 'Placares', 'todos os jogos', 'scores'], ['🐦', 'Flappy', 'ranking do Flappy Enzo', 'scores flappy'], ['🌙', 'Degustação', 'ranking da Degustação', 'scores degustacao']]],
+            ['SISTEMA', 'Estado e ajuda', '#a78bff', [['📊', 'Status', 'números e últimas ações', 'status'], historico, ajuda, site]],
+        ];
     }
 
     function mostrarDashboard() {
@@ -240,24 +266,117 @@
         estado.central = true;
         const grade = $('dashboard-grid');
         grade.replaceChildren();
-        const grupos = [
-            ['SISTEMA', 'Estado e acesso', [['status', 'status'], ['quem sou', 'whoami'], ['histórico', 'log']]],
-            ['LEITORES', 'Contas e conquistas', [['listar leitores', 'users'], ['ajuda', 'help']]],
-            ['GIBIS', 'Publicar capítulos', [['lançamentos', 'launch'], ['upload de capítulos', 'upload']]],
-            ['PARTIDAS', 'Ranking e placares', [['todas', 'scores'], ['Flappy', 'scores flappy'], ['Degustação', 'scores degustacao'], ['Batalha online', 'tcg']]],
-        ];
-        for (const [titulo, descricao, acoes] of grupos) {
-            const grupo = el('section', 'dashboard-grupo');
-            grupo.append(el('h2', '', titulo), el('p', '', descricao));
-            for (const [rotulo, comando] of acoes) {
-                const acao = botao(rotulo, comando);
-                acao.classList.add('dashboard-acao');
-                acao.appendChild(el('span', 'dashboard-comando', comando));
-                grupo.appendChild(acao);
+        grade.classList.add('central');
+
+        const saudacao = el('div', 'central-topo');
+        const nomeEu = primeiroNome(estado.eu?.name || '');
+        saudacao.append(
+            el('h2', 'central-ola', `Olá, ${nomeEu}`),
+            el('span', 'central-cargo', estado.mod ? '🛡 moderador · lançamentos e histórico' : estado.cargo === 'dono' ? '👑 dono' : '⚙ admin'),
+        );
+        const numeros = el('div', 'central-numeros');
+        numeros.id = 'central-numeros';
+        const paineis = el('div', 'central-paineis');
+        const lanc = el('section', 'central-painel central-painel--lanc');
+        lanc.id = 'central-lanc';
+        const ativ = el('section', 'central-painel central-painel--ativ');
+        ativ.id = 'central-ativ';
+        paineis.append(lanc, ativ);
+        grade.append(saudacao, numeros, paineis);
+
+        const acoes = el('div', 'central-acoes');
+        for (const [titulo, descricao, cor, itens] of gruposDaCentral()) {
+            const grupo = el('section', 'central-grupo');
+            grupo.style.setProperty('--g', cor);
+            grupo.append(el('h3', '', titulo), el('p', '', descricao));
+            for (const [icone, nome, ajuda, comando] of itens) {
+                const b = botao('', comando);
+                b.classList.add('central-acao');
+                b.append(el('span', 'central-icone', icone), el('span', 'central-texto', nome), el('small', '', ajuda));
+                grupo.appendChild(b);
             }
-            grade.appendChild(grupo);
+            acoes.appendChild(grupo);
         }
+        grade.appendChild(acoes);
+        atualizarCentral();
     }
+
+    let centralEmCurso = null;
+    /** Preenche (ou refaz) os números e os dois painéis da central com dados de verdade. */
+    function atualizarCentral() {
+        if (!$('central-lanc')) return Promise.resolve();
+        centralEmCurso ??= (async () => {
+            const L = window.Lancamentos;
+            const [catalogo, revelados, log, geral] = await Promise.all([
+                fetch('data/database.json', { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
+                fetch('/api/site/revelados', { cache: 'no-store' }).then((r) => r.json()).catch(() => null),
+                pedir('/api/admin/log').catch(() => null),
+                estado.mod ? Promise.resolve(null) : pedir('/api/admin/overview').catch(() => null),
+            ]);
+
+            // ---- números
+            const numeros = $('central-numeros');
+            const itens = [];
+            let capitulos = [];
+            if (catalogo && revelados && L) {
+                const idx = L.indexar({ ...revelados, meus: [] });
+                for (const comic of catalogo.comics) for (const cap of comic.chapters || []) capitulos.push({ comic, cap, ...L.situacao(comic, cap, idx) });
+                const conta = (e) => capitulos.filter((x) => x.estado === e).length;
+                itens.push(['no ar', conta('no-ar'), 'launch', 'ok'], ['agendados', conta('agendado'), 'launch', 'ambar'], ['escondidos', conta('escondido'), 'launch', 'rosa']);
+            }
+            if (geral) {
+                const n = geral.numeros;
+                itens.unshift(['contas', n.contas, 'users', ''], ['ativos 7d', n.ativos_7d, 'users', ''], ['partidas', n.partidas, 'scores', '']);
+                estado.numeros = n;
+                mostrarNumeros(n);
+            }
+            numeros.replaceChildren(...itens.map(([rotulo, valor, destino, cor]) => {
+                const b = el('button', `central-numero${cor ? ` central-numero--${cor}` : ''}`);
+                b.type = 'button';
+                b.addEventListener('click', () => rodar(destino));
+                b.append(el('strong', '', valor), el('span', '', rotulo));
+                return b;
+            }));
+
+            // ---- lançamentos: o que está agendado e o que ainda está escondido
+            const painel = $('central-lanc');
+            painel.replaceChildren(el('h3', '', '🚦 Lançamentos'));
+            const agendados = capitulos.filter((x) => x.estado === 'agendado').sort((a, b) => a.em - b.em);
+            const escondidos = capitulos.filter((x) => x.estado === 'escondido');
+            const nomeCap = (x) => `${x.comic.title}${x.comic.featured === false ? ` · cap. ${x.cap.id}` : ''}`;
+            const linhaLanc = (x, rotulo, classe) => {
+                const b = el('button', 'central-linha');
+                b.type = 'button';
+                b.addEventListener('click', () => rodar('launch'));
+                b.append(el('span', `central-selo central-selo--${classe}`, rotulo), el('span', 'central-linha-texto', nomeCap(x)));
+                return b;
+            };
+            if (!agendados.length && !escondidos.length) painel.append(el('p', 'central-vazio', capitulos.length ? 'Nada esperando: tudo que existe já está no ar.' : 'Não consegui ler o catálogo.'));
+            for (const x of agendados.slice(0, 4)) painel.append(linhaLanc(x, `abre ${L.formatar(x.em)}`, 'agendado'));
+            for (const x of escondidos.slice(0, 5 - Math.min(agendados.length, 4) + 1)) painel.append(linhaLanc(x, 'escondido', 'escondido'));
+            const resto = agendados.length + escondidos.length - painel.querySelectorAll('.central-linha').length;
+            if (resto > 0) painel.append(el('p', 'central-vazio', `+ ${resto} capítulo(s) na aba lançamentos`));
+            painel.append(Object.assign(botao('abrir lançamentos', 'launch'), { className: 'cmd central-mais' }));
+
+            // ---- atividade recente
+            const pa = $('central-ativ');
+            pa.replaceChildren(el('h3', '', '📜 Atividade recente'));
+            const recentes = (log?.log || []).slice(0, 6);
+            if (!recentes.length) pa.append(el('p', 'central-vazio', 'Nenhuma ação registrada ainda.'));
+            for (const l of recentes) {
+                const alvo = l.alvoNome ? primeiroNome(l.alvoNome) : (l.detalhe || '');
+                const linhaAtiv = el('div', 'central-ativ-linha');
+                linhaAtiv.append(
+                    el('span', 'central-ativ-quando', data(l.em)),
+                    el('span', 'central-ativ-texto', `${primeiroNome(l.admin)} ${VERBOS_DO_LOG[l.acao] || l.acao} ${alvo}`.trim()),
+                );
+                pa.append(linhaAtiv);
+            }
+            pa.append(Object.assign(botao('ver histórico completo', 'log'), { className: 'cmd central-mais' }));
+        })().catch(() => null).finally(() => { centralEmCurso = null; });
+        return centralEmCurso;
+    }
+    window.setInterval(() => { if (!document.hidden && $('dashboard')?.open) atualizarCentral(); }, 60000);
 
     const quadrosAscii = [
         ['  .------.', ' (  o  o  )', '|    __    |', '|   (__)   |', ' (  ||  )', '  [====]'].join('\n'),
@@ -327,6 +446,21 @@
             : botao(`+${n}`, `${comando} ${n}`)));
     }
 
+    const cargoTexto = (cargo) => (cargo === 'dono' ? span('ok', '👑 dono') : cargo === 'admin' ? span('ok', '⚙ admin') : cargo === 'moderador' ? span('aviso', '🛡 moderador') : span('apagado', 'leitor'));
+    /** Botões de cargo da conta aberta. Qualquer admin cria/tira moderador; só o dono mexe em admin (a API confere). */
+    function botoesDeCargo(c, souEu) {
+        if (souEu || c.cargo === 'dono') return [];
+        const dono = estado.cargo === 'dono';
+        const b = [];
+        if (!c.cargo) b.push(botao('🛡 tornar moderador', 'cargo moderador'));
+        if (c.cargo === 'moderador') {
+            if (dono) b.push(botaoSeguro('👑 transformar em admin', 'cargo admin --sim'));
+            b.push(botaoSeguro('tirar cargo', 'cargo nenhum --sim'));
+        }
+        if (c.cargo === 'admin' && dono) b.push(botaoSeguro('rebaixar a moderador', 'cargo moderador --sim'), botaoSeguro('tirar cargo', 'cargo nenhum --sim'));
+        return b;
+    }
+
     function mostrarConta(c) {
         const souEu = c.id === estado.eu.id;
         const banido = c.role === 'banned';
@@ -352,6 +486,7 @@
             ['id', [idCurto(c.id), ' ', copiar]],
             ['e-mail', c.email],
             ['papel', [c.role, ' ', ...(souEu || c.admin ? [] : [banido ? botao('desbanir', 'unban') : botaoSeguro('banir', 'ban --sim')])]],
+            ['cargo', [cargoTexto(c.cargo), ' ', ...botoesDeCargo(c, souEu)]],
             ['censura', [c.censuraLiberada ? span('ok', 'liberada') : span('apagado', 'travada'), ' ', c.censuraLiberada ? botao('travar', 'censura off') : botao('liberar', 'censura on')]],
             ['desde', data(c.criadoEm)],
             ['último login', data(c.ultimoLogin)],
@@ -740,7 +875,7 @@
         const [catalogo, dados, doBanco] = await Promise.all([
             fetch('data/database.json', { cache: 'no-store' }).then((r) => r.json()),
             fetch('/api/site/revelados', { cache: 'no-store' }).then((r) => r.json()),
-            pedir('/api/admin/lancamentos/acessos'),
+            estado.mod ? { acessos: [] } : pedir('/api/admin/lancamentos/acessos'),
         ]);
         // Acesso antecipado do próprio admin não entra na conta: aqui o estado é o que os leitores em geral veem.
         const idx = L.indexar({ ...dados, meus: [] });
@@ -909,7 +1044,8 @@
                 botoes.append(acaoBotao('🚀 publicar agora', () => painel(c, item, 'publicar')),
                     acaoBotao(item.estado === 'agendado' ? '🕒 mudar horário' : '🕒 agendar…', () => painel(c, item, 'agendar')));
                 if (item.estado === 'agendado') botoes.append(acaoBotao('✖ cancelar agendamento', () => aplicar(item, { acao: 'esconder' }, `${nome(item)}: agendamento cancelado, segue escondido.`).catch((e) => erro(e.message)), true));
-                botoes.append(acaoBotao('👥 acesso antecipado', () => painelAcesso(c, item, linhaAcesso)), leitor(item));
+                if (!estado.mod) botoes.append(acaoBotao('👥 acesso antecipado', () => painelAcesso(c, item, linhaAcesso)));
+                botoes.append(leitor(item));
             }
             c.append(topo, botoes);
             return c;
@@ -1045,7 +1181,7 @@
             desc: 'lista os comandos',
             fn() {
                 novaTela('help', [['ajuda', null]]);
-                tabela(['comando', 'o que faz'], Object.entries(COMANDOS).map(([nome, c]) => {
+                tabela(['comando', 'o que faz'], Object.entries(COMANDOS).filter(([nome]) => !estado.mod || COMANDOS_DO_MODERADOR.has(nome)).map(([nome, c]) => {
                     const pedeArgumento = /</.test(c.uso || '');
                     return [botao(c.uso || nome, pedeArgumento ? `${nome} ` : nome, { link: true, preencher: pedeArgumento }), c.desc];
                 }));
@@ -1198,6 +1334,37 @@
                 };
                 if (args.includes('--sim')) await banir();
                 else pedirConfirmacao(`banir ${alvo.name}?`, banir);
+            },
+        },
+        cargo: {
+            uso: 'cargo <moderador|admin|nenhum>',
+            desc: 'dá, muda ou tira o cargo da conta aberta (moderador: só lançamentos e histórico; admin: tudo, só o dono dá)',
+            async fn(args) {
+                const alvo = exigirAlvo();
+                const pedido = (args[0] || '').toLowerCase();
+                if (!['moderador', 'admin', 'nenhum'].includes(pedido)) throw new Error('uso: cargo <moderador|admin|nenhum>.');
+                const novo = pedido === 'nenhum' ? null : pedido;
+                const aplicar = async () => {
+                    await pedir(`/api/admin/users/${alvo.id}/cargo`, { cargo: novo });
+                    ok(novo ? `${primeiroNome(alvo.name)} agora é ${novo}.` : `${primeiroNome(alvo.name)} voltou a ser leitor.`);
+                    await recarregarConta();
+                    atualizarCentral();
+                };
+                if (args.includes('--sim') || novo === 'moderador') await aplicar();
+                else pedirConfirmacao(`${novo ? `tornar ${alvo.name} ${novo}` : `tirar o cargo de ${alvo.name}`}?`, aplicar);
+            },
+        },
+        team: {
+            desc: 'equipe: dono, admins e moderadores (clique num nome para mudar o cargo)',
+            async fn() {
+                const { equipe, souDono } = await pedir('/api/admin/equipe');
+                novaTela('team', [['equipe', null]]);
+                tabela(['nome', 'cargo', 'último login'], equipe.map((m) => [
+                    botao(m.name, `open ${m.id}`, { link: true }), cargoTexto(m.cargo), data(m.ultimoLogin),
+                ]));
+                apagado(souDono
+                    ? 'para dar cargo: abra a conta do leitor (users → nome) e use os botões de cargo. Só você (dono) cria ou tira admin.'
+                    : 'para dar moderador: abra a conta do leitor (users → nome). Só o dono cria ou tira admin.');
             },
         },
         censura: {
@@ -1411,10 +1578,10 @@
             desc: 'quem está no terminal',
             fn() {
                 novaTela('whoami', [['eu', null]]);
-                tabela(['campo', 'valor'], [['nome', estado.eu.name], ['id', estado.eu.id], ['poder', 'root']]);
+                tabela(['campo', 'valor'], [['nome', estado.eu.name], ['id', estado.eu.id], ['cargo', estado.cargo || '—'], ['poder', estado.mod ? 'lançamentos e histórico' : 'root']]);
             },
         },
-        clear: { desc: 'volta ao início', fn: () => COMANDOS.status.fn() },
+        clear: { desc: 'volta ao início', fn: () => (estado.mod ? COMANDOS.launch.fn() : COMANDOS.status.fn()) },
         exit: { desc: 'volta para o site', fn() { location.href = 'index.html'; } },
     };
     // o painel ao vivo (js/admin-deck.js) roda comandos por aqui
@@ -1460,6 +1627,7 @@
         const nome = APELIDOS[primeira.toLowerCase()] || primeira.toLowerCase();
         const comando = COMANDOS[nome];
         if (!comando) { erro(`${primeira}: comando não encontrado. tente "help".`); return; }
+        if (estado.mod && !COMANDOS_DO_MODERADOR.has(nome)) { erro('seu cargo (moderador) só usa os lançamentos e o histórico.'); return; }
         await comando.fn(args, limpo.slice(primeira.length).trim());
     }
 
@@ -1477,6 +1645,7 @@
             } finally {
                 if (lento) clearTimeout(lento);
                 if (feedback.dataset.carregando) notificar('');
+                if (/^(launch|log|team|cargo|upload|unban|ban|reveal)\b/i.test(texto.trim())) atualizarCentral();
             }
         }).catch((e) => {
             erro(e.status === 404 && /rota/.test(e.message) ? 'permissão negada.' : e.message);
@@ -1616,20 +1785,26 @@
             linha(['faça login no site primeiro: ', Object.assign(el('a', '', 'abrir o site'), { href: 'index.html' })]);
             return;
         }
-        if (!eu.admin) {
+        if (!eu.admin && eu.cargo !== 'moderador') {
             linha('ACESSO NEGADO', 'l--gigante l--erro');
             linha(`${primeiroNome(eu.user.name)}, este terminal não é para você.`, 'l--erro');
             linha(['volte para os gibis: ', Object.assign(el('a', '', 'enzo games'), { href: 'index.html' })]);
             return;
         }
         estado.eu = eu.user;
+        estado.cargo = eu.cargo || (eu.admin ? 'admin' : null);
+        estado.mod = eu.cargo === 'moderador';
+        if (estado.mod) {
+            document.body.classList.add('modo-mod');
+            window.EnzoDeck?.desligarLateral?.();
+        }
         mostrarAtalhos();
         mostrarDashboard();
         desenharAscii();
         entrada.disabled = false;
         entrada.focus();
         atualizarPrompt();
-        await rodar('status');
+        await rodar(estado.mod ? 'launch' : 'status');
         notificar(`✔ acesso concedido. bem-vindo, ${eu.user.firstName}. Clique nos números, nomes e botões; "/" foca o prompt.`, 'ok');
     }
 

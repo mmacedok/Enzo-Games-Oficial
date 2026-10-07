@@ -60,7 +60,7 @@ const rotas = [
         },
     },
     {
-        metodo: 'POST', caminho: '/api/admin/lancamentos', admin: true,
+        metodo: 'POST', caminho: '/api/admin/lancamentos', moderador: true,
         async executar(ctx) {
             const { comic, capitulo, acao, em, avisar } = await ctx.corpo();
             exigirCapitulo(comic, capitulo);

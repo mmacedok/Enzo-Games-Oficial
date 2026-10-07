@@ -321,14 +321,16 @@
         return { parar };
     }
 
-    window.EnzoDeck = { montar };
+    let bloqueado = false;
+    window.EnzoDeck = { montar, desligarLateral() { bloqueado = true; ativo?.parar(); ativo = null; document.getElementById('deck')?.replaceChildren(); } };
 
     // Coluna da direita (telas largas): monta quando cabe, desmonta quando a tela estreita.
+    let ativo = null;
     const lateral = document.getElementById('deck');
     if (lateral) {
         const largo = window.matchMedia('(min-width: 1180px)');
-        let ativo = null;
         const ajustar = () => {
+            if (bloqueado) return;
             if (largo.matches && !ativo) ativo = montar(lateral);
             else if (!largo.matches && ativo) { ativo.parar(); ativo = null; lateral.replaceChildren(); }
         };
