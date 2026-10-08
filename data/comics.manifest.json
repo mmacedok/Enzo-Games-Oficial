@@ -111,7 +111,8 @@
           "title": "O besterol começa"
         },
         "2": {
-          "title": "“O Vínculo da Bestidade”"
+          "title": "O Vínculo da Bestidade",
+          "hidden": true
         }
       }
     }
