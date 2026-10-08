@@ -115,6 +115,18 @@
           "hidden": true
         }
       }
+    },
+    "italo1o1": {
+      "id": "italo1o1",
+      "title": "Italo1o1",
+      "description": "Neste capítulo emocionante descobrimos a identidade secreta de Italo\"lol\"",
+      "order": 160,
+      "featured": false,
+      "chapters": {
+        "1": {
+          "title": "\"O Suporte Secreto\""
+        }
+      }
     }
   },
   "censorship": {
