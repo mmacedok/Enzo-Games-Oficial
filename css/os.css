@@ -18,11 +18,11 @@ input, select { font: inherit; color: inherit; }
 
 /* ---- papel de parede ---- */
 .papel { position: absolute; inset: 0; background-size: cover; background-position: center; transition: opacity .4s; }
-:root[data-tema="hacker"] .papel { background-image: url(../assets/admin/papel-hacker.png), radial-gradient(ellipse at 50% 40%, #0b2a14 0%, #050a05 70%), repeating-linear-gradient(0deg, rgba(57,255,136,.06) 0 1px, transparent 1px 38px); }
-:root[data-tema="degustador"] .papel { background-image: url(../assets/admin/papel-degustador.png), radial-gradient(circle at 70% 25%, #ff8a1e 0 6%, transparent 7%), linear-gradient(#4b0082, #14061f 70%); }
-:root[data-tema="cacada"] .papel { background-image: url(../assets/admin/papel-cacada.png), radial-gradient(ellipse at 50% 100%, #2c6a82 0%, transparent 60%), linear-gradient(#0a2230, #02080c); }
-:root[data-tema="batalha"] .papel { background-image: url(../assets/admin/papel-batalha.png), radial-gradient(ellipse at 50% 45%, #6e1a24 0%, #1c0509 75%); }
-:root[data-tema="zezoverso"] .papel { background-image: url(../assets/admin/papel-zezoverso.png), radial-gradient(circle at 20% 30%, #7a1c9c 0%, transparent 45%), radial-gradient(circle at 80% 70%, #1c5fa8 0%, transparent 45%), linear-gradient(#090622, #1a0b3d); }
+:root[data-tema="hacker"] .papel { background-image: url(../assets/admin/papel-hacker.webp), radial-gradient(ellipse at 50% 40%, #0b2a14 0%, #050a05 70%), repeating-linear-gradient(0deg, rgba(57,255,136,.06) 0 1px, transparent 1px 38px); }
+:root[data-tema="degustador"] .papel { background-image: url(../assets/admin/papel-degustador.webp), radial-gradient(circle at 70% 25%, #ff8a1e 0 6%, transparent 7%), linear-gradient(#4b0082, #14061f 70%); }
+:root[data-tema="cacada"] .papel { background-image: url(../assets/admin/papel-cacada.webp), radial-gradient(ellipse at 50% 100%, #2c6a82 0%, transparent 60%), linear-gradient(#0a2230, #02080c); }
+:root[data-tema="batalha"] .papel { background-image: url(../assets/admin/papel-batalha.webp), radial-gradient(ellipse at 50% 45%, #6e1a24 0%, #1c0509 75%); }
+:root[data-tema="zezoverso"] .papel { background-image: url(../assets/admin/papel-zezoverso.webp), radial-gradient(circle at 20% 30%, #7a1c9c 0%, transparent 45%), radial-gradient(circle at 80% 70%, #1c5fa8 0%, transparent 45%), linear-gradient(#090622, #1a0b3d); }
 
 /* ---- ícones da área de trabalho ---- */
 .mesa { position: absolute; inset: 0 0 var(--barra) 0; padding: 18px; display: grid; grid-auto-flow: column; grid-template-rows: repeat(auto-fill, 104px); grid-auto-columns: 100px; gap: 6px; align-content: start; justify-content: start; }

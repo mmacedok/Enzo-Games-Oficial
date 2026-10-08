@@ -302,7 +302,7 @@
                 const b = el('button', `papel-opcao${atual() === t.id ? ' ativo' : ''}`);
                 b.type = 'button';
                 const previa = el('div', 'previa');
-                previa.style.backgroundImage = `url(assets/admin/papel-${t.id}.png), linear-gradient(135deg, var(--fundo), var(--acento))`;
+                previa.style.backgroundImage = `url(assets/admin/papel-${t.id}.webp), linear-gradient(135deg, var(--fundo), var(--acento))`;
                 if (t.id !== atual()) previa.dataset.tema = t.id;
                 b.append(previa, el('b', '', t.nome), el('span', '', t.desc));
                 b.addEventListener('click', () => { aplicarTema(t.id); desenhar(); });
