@@ -265,11 +265,21 @@
         // Paralaxe: o ponto de fuga da estante acompanha o mouse.
         let shelfRect = null;
         const measureShelf = () => { shelfRect = container.getBoundingClientRect(); };
+        let moveFrame = 0;
+        let lastX = 0;
         const onMove = (event) => {
-            if (!shelfRect) measureShelf();
-            container.style.setProperty('--vx', `${(((event.clientX - shelfRect.left) / shelfRect.width) * 100).toFixed(1)}%`);
+            lastX = event.clientX;
+            if (moveFrame) return; // um estilo por quadro, não por evento do mouse
+            moveFrame = requestAnimationFrame(() => {
+                moveFrame = 0;
+                if (!shelfRect) measureShelf();
+                container.style.setProperty('--vx', `${(((lastX - shelfRect.left) / shelfRect.width) * 100).toFixed(1)}%`);
+            });
         };
-        const onLeave = () => container.style.removeProperty('--vx');
+        const onLeave = () => {
+            if (moveFrame) { cancelAnimationFrame(moveFrame); moveFrame = 0; }
+            container.style.removeProperty('--vx');
+        };
         const onScroll = () => { shelfRect = null; };
         if (finePointer() && !reducedMotion()) {
             container.addEventListener('pointerenter', measureShelf);
@@ -283,6 +293,7 @@
             destroy() {
                 observer.disconnect();
                 cancelAnimationFrame(layoutFrame);
+                if (moveFrame) cancelAnimationFrame(moveFrame);
                 for (const cancel of holos) cancel?.();
                 container.removeEventListener('pointerenter', measureShelf);
                 window.removeEventListener('resize', measureShelf);

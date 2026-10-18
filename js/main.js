@@ -96,18 +96,19 @@
             return;
         }
         const coverImg = source.querySelector('img');
+        let abrir = true;
         try {
-            await window.EnzoOpen.fly({
+            abrir = await window.EnzoOpen.fly({
                 source,
                 coverSrc: coverImg?.currentSrc || siteImageUrl(edition.cover),
                 coverSource: edition.cover,
+                title: edition.comic.title || '',
                 pageSrc: window.EnzoOpen.largeImageUrl(edition.firstPage),
             });
         } catch (error) {
             console.error('Falha na animação de abrir o gibi:', error);
-        } finally {
-            location.href = url;
         }
+        if (abrir) location.href = url; // false: a pessoa fechou o gibi no meio (Esc, X ou fundo)
     }
 
     function preloadFirstPage(edition) {

@@ -647,10 +647,12 @@
             });
         }, { passive: true });
         // Leitor já mexeu na página: não pula mais para a página salva na conta.
-        for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown']) {
+        for (const type of ['wheel', 'touchstart', 'pointerdown']) {
             ui.viewport.addEventListener(type, () => { state.interacted = true; }, { passive: true });
         }
-        document.addEventListener('keydown', () => { state.interacted = true; });
+        document.addEventListener('keydown', (event) => {
+            if (/^(Arrow|Page|Home$|End$| $)/.test(event.key)) state.interacted = true; // só teclas de navegação (Tab não conta)
+        });
         // Saindo da página (ou trocando de aba): grava a página atual na conta.
         window.addEventListener('pagehide', () => { clearTimeout(saveTimer); saveProgress(true); });
         document.addEventListener('visibilitychange', () => { if (document.hidden) { clearTimeout(saveTimer); saveProgress(true); } });

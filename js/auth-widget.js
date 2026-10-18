@@ -68,8 +68,8 @@
         return null;
     }
 
-    async function carregarConta() {
-        let eu = await pedir('/api/auth/me');
+    async function carregarConta(euPedido) {
+        let eu = await (euPedido || pedir('/api/auth/me'));
         if (!eu.dados?.loggedIn) {
             const volta = await restaurarSessao();
             if (volta) eu = { dados: { loggedIn: true, user: volta.user, admin: volta.admin } };
@@ -85,12 +85,14 @@
 
     const pronto = (async () => {
         try {
+            const euPedido = pedir('/api/auth/me'); // em paralelo com a config: tira 1 ida e volta do caminho
+            const euSeguro = euPedido.catch(() => ({ ok: false, dados: null })); // rede caiu: segue como convidado e ainda convida
             const config = await pedir('/api/auth/config');
             if (!config.ok) return api;
             estado.disponivel = true;
             estado.loginAtivo = Boolean(config.dados?.enabled && config.dados.clientId);
             estado.clientId = config.dados?.clientId || null;
-            if (estado.loginAtivo) await carregarConta();
+            if (estado.loginAtivo) await carregarConta(euSeguro);
             if (estado.loginAtivo && !estado.usuario) convidarNaChegada();
         } catch { /* sem API (site estático): segue como convidado */ }
         return api;
