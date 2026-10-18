@@ -3987,3 +3987,7 @@ body.enzo-page {
     .comic-fly-tools { bottom: 112px; }
     .comic-fly-hint { font-size: 0.8rem; }
 }
+
+/* Os temas (body.theme-zezoverso > *, body.theme-degustador > *) forçavam position: relative em todo filho
+   do body e quebravam o voo do gibi nessas páginas (o palco ficava sem tamanho, no fim da página). */
+body > div.comic-fly { position: fixed; inset: 0; z-index: 99990; }
