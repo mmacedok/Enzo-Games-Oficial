@@ -6,7 +6,7 @@
 > item (ex.: `> Henrique: deixa para depois`); o Claude segue isso na próxima atualização.
 > Testes que faltam rodar ficam em [`TESTES-PENDENTES.md`](TESTES-PENDENTES.md) (não repetidos aqui).
 >
-> Última atualização: **2026-10-07**.
+> Última atualização: **2026-10-28**.
 
 **Legenda:**
 - **Quem:**
@@ -88,6 +88,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-10-28: Capítulo 10 (Quarta-feira de Cinzas, capa + 37 páginas) no site; a home abre o lançamento na frente uma vez por aba (`?semgibi` desliga); abertura de vídeo diária removida (vídeos só na Videoteca).
 - **2026-10-07 · Arte do Enzo OS (tarefa 16 do Codex) integrada:** 14 ícones, ícone de alerta e de comentários, mascote e 5 papéis de parede em `assets/admin/` (papéis convertidos para webp, ~250 KB cada em vez de ~2,5 MB).
 - **2026-10-07 · Lançamentos e Perfil nativos no Enzo OS + nome editável:** Lançamentos virou programa do sistema (publicar, agendar, esconder, acesso antecipado; `js/os-equipe.js`). Contas, Equipe e Leitores abrem o **Perfil** numa janela do sistema (nome, cargo, banir, derrubar sessões, censura, fala, conquistas em lote, leituras, partidas, acessos). O admin troca o nome que aparece no site (`POST /api/admin/users/:id/nome`; colunas novas `nome_google` e `nome_editado`; o login do Google não desfaz a troca; "Voltar ao original" restaura). Cartas e baralho de uma conta continuam no Terminal (botão no Perfil).
 - **2026-10-07 · Gibis e Upload no Enzo OS:** programa **Gibis** (estante de todos os gibis e capítulos; troca página ou capa uma a uma, ou várias de uma vez pelo número no nome, num commit só; rota `POST /api/admin/gibis/trocar`, só admin). O programa **Upload** agora é nativo do sistema (mesma lógica do `js/admin-upload.js`, visual novo). Falta a arte `ic-contas.png` na tarefa 16 do Codex.

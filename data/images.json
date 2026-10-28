@@ -1390,6 +1390,619 @@
       }
     ]
   },
+  "assets/Capitulo 10/Capa/CAP10 CAPA.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/4ba9d9f440beb850-640.webp",
+        "bytes": 270314
+      },
+      {
+        "width": 941,
+        "src": "assets/web/4ba9d9f440beb850-941.webp",
+        "bytes": 494030
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG1.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1132100950db49b5-640.webp",
+        "bytes": 281310
+      },
+      {
+        "width": 941,
+        "src": "assets/web/1132100950db49b5-941.webp",
+        "bytes": 488846
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG10.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d1236129e5a561e2-640.webp",
+        "bytes": 201784
+      },
+      {
+        "width": 941,
+        "src": "assets/web/d1236129e5a561e2-941.webp",
+        "bytes": 363032
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG11.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/569616c8618f48cc-640.webp",
+        "bytes": 216682
+      },
+      {
+        "width": 941,
+        "src": "assets/web/569616c8618f48cc-941.webp",
+        "bytes": 403770
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG12.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b865354937d35e51-640.webp",
+        "bytes": 248278
+      },
+      {
+        "width": 941,
+        "src": "assets/web/b865354937d35e51-941.webp",
+        "bytes": 464054
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG13.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ab25584402009eb8-640.webp",
+        "bytes": 249782
+      },
+      {
+        "width": 941,
+        "src": "assets/web/ab25584402009eb8-941.webp",
+        "bytes": 457704
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG14.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d3904affebb63cf4-640.webp",
+        "bytes": 199282
+      },
+      {
+        "width": 941,
+        "src": "assets/web/d3904affebb63cf4-941.webp",
+        "bytes": 360862
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG15.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0fa623daf5c98f27-640.webp",
+        "bytes": 173946
+      },
+      {
+        "width": 941,
+        "src": "assets/web/0fa623daf5c98f27-941.webp",
+        "bytes": 300726
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG16.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8c0baa768618061d-640.webp",
+        "bytes": 292996
+      },
+      {
+        "width": 941,
+        "src": "assets/web/8c0baa768618061d-941.webp",
+        "bytes": 535812
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG17.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/39f4f4196b461c23-640.webp",
+        "bytes": 302950
+      },
+      {
+        "width": 941,
+        "src": "assets/web/39f4f4196b461c23-941.webp",
+        "bytes": 558070
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG18.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/fcf998e37efacf96-640.webp",
+        "bytes": 260740
+      },
+      {
+        "width": 941,
+        "src": "assets/web/fcf998e37efacf96-941.webp",
+        "bytes": 467504
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG19.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/7c10593e61bd958b-640.webp",
+        "bytes": 246718
+      },
+      {
+        "width": 941,
+        "src": "assets/web/7c10593e61bd958b-941.webp",
+        "bytes": 410832
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG2.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ed41432a6a136088-640.webp",
+        "bytes": 240626
+      },
+      {
+        "width": 941,
+        "src": "assets/web/ed41432a6a136088-941.webp",
+        "bytes": 420384
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG20.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f8df931902f83a69-640.webp",
+        "bytes": 271572
+      },
+      {
+        "width": 941,
+        "src": "assets/web/f8df931902f83a69-941.webp",
+        "bytes": 496570
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG21.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e84b260eb0334056-640.webp",
+        "bytes": 226042
+      },
+      {
+        "width": 941,
+        "src": "assets/web/e84b260eb0334056-941.webp",
+        "bytes": 412284
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG22.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/60aa7efec2934824-640.webp",
+        "bytes": 248314
+      },
+      {
+        "width": 941,
+        "src": "assets/web/60aa7efec2934824-941.webp",
+        "bytes": 446446
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG23.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/32978e3838e9056a-640.webp",
+        "bytes": 226380
+      },
+      {
+        "width": 941,
+        "src": "assets/web/32978e3838e9056a-941.webp",
+        "bytes": 398536
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG24.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/180b42f8d0c52942-640.webp",
+        "bytes": 362662
+      },
+      {
+        "width": 941,
+        "src": "assets/web/180b42f8d0c52942-941.webp",
+        "bytes": 669228
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG25.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5a348653c30478da-640.webp",
+        "bytes": 233232
+      },
+      {
+        "width": 941,
+        "src": "assets/web/5a348653c30478da-941.webp",
+        "bytes": 410084
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG26.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d9aa563c980291c5-640.webp",
+        "bytes": 262852
+      },
+      {
+        "width": 941,
+        "src": "assets/web/d9aa563c980291c5-941.webp",
+        "bytes": 464838
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG27.png": {
+    "width": 940,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/96731f7878d2bcba-640.webp",
+        "bytes": 297826
+      },
+      {
+        "width": 940,
+        "src": "assets/web/96731f7878d2bcba-940.webp",
+        "bytes": 544788
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG28.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/18054a294b02a254-640.webp",
+        "bytes": 271976
+      },
+      {
+        "width": 941,
+        "src": "assets/web/18054a294b02a254-941.webp",
+        "bytes": 497752
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG29.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/22f1bdddc7b54525-640.webp",
+        "bytes": 199602
+      },
+      {
+        "width": 941,
+        "src": "assets/web/22f1bdddc7b54525-941.webp",
+        "bytes": 361102
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG3.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6ebd13fc6ac00179-640.webp",
+        "bytes": 154872
+      },
+      {
+        "width": 941,
+        "src": "assets/web/6ebd13fc6ac00179-941.webp",
+        "bytes": 278740
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG30.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/480eb44d662db191-640.webp",
+        "bytes": 237914
+      },
+      {
+        "width": 941,
+        "src": "assets/web/480eb44d662db191-941.webp",
+        "bytes": 419436
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG31.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/46007d1ca6ede89d-640.webp",
+        "bytes": 243726
+      },
+      {
+        "width": 941,
+        "src": "assets/web/46007d1ca6ede89d-941.webp",
+        "bytes": 437042
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG32.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a8cc99a3efef57be-640.webp",
+        "bytes": 256844
+      },
+      {
+        "width": 941,
+        "src": "assets/web/a8cc99a3efef57be-941.webp",
+        "bytes": 460296
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG33.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f5bb04745ade110d-640.webp",
+        "bytes": 234998
+      },
+      {
+        "width": 941,
+        "src": "assets/web/f5bb04745ade110d-941.webp",
+        "bytes": 425796
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG34.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ec1f598eb411794e-640.webp",
+        "bytes": 285930
+      },
+      {
+        "width": 941,
+        "src": "assets/web/ec1f598eb411794e-941.webp",
+        "bytes": 524942
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG35.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/dc79d3350348dae5-640.webp",
+        "bytes": 276704
+      },
+      {
+        "width": 941,
+        "src": "assets/web/dc79d3350348dae5-941.webp",
+        "bytes": 507922
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG36.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/5c1c1c4b2b4156f8-640.webp",
+        "bytes": 275378
+      },
+      {
+        "width": 941,
+        "src": "assets/web/5c1c1c4b2b4156f8-941.webp",
+        "bytes": 485016
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG37.png": {
+    "width": 1448,
+    "height": 1086,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/06f1bca9a2fd3ef6-640.webp",
+        "bytes": 115392
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/06f1bca9a2fd3ef6-1280.webp",
+        "bytes": 388096
+      },
+      {
+        "width": 1448,
+        "src": "assets/web/06f1bca9a2fd3ef6-1448.webp",
+        "bytes": 475282
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG4.png": {
+    "width": 1080,
+    "height": 1920,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e37ec62f5db35b42-640.webp",
+        "bytes": 1372
+      },
+      {
+        "width": 1080,
+        "src": "assets/web/e37ec62f5db35b42-1080.webp",
+        "bytes": 3776
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG5.png": {
+    "width": 748,
+    "height": 2103,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b5c1644eaf0d5fca-640.webp",
+        "bytes": 304452
+      },
+      {
+        "width": 748,
+        "src": "assets/web/b5c1644eaf0d5fca-748.webp",
+        "bytes": 390344
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG6.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f019c449ae359e04-640.webp",
+        "bytes": 239346
+      },
+      {
+        "width": 941,
+        "src": "assets/web/f019c449ae359e04-941.webp",
+        "bytes": 430268
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG7.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e29989ac5ca3320c-640.webp",
+        "bytes": 219134
+      },
+      {
+        "width": 941,
+        "src": "assets/web/e29989ac5ca3320c-941.webp",
+        "bytes": 405988
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG8.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f98bc68f32eb646d-640.webp",
+        "bytes": 249098
+      },
+      {
+        "width": 941,
+        "src": "assets/web/f98bc68f32eb646d-941.webp",
+        "bytes": 457790
+      }
+    ]
+  },
+  "assets/Capitulo 10/Paginas/PAG9.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/e05a3f5a03676fc9-640.webp",
+        "bytes": 273860
+      },
+      {
+        "width": 941,
+        "src": "assets/web/e05a3f5a03676fc9-941.webp",
+        "bytes": 483010
+      }
+    ]
+  },
   "assets/Capitulo 1/Capa/Capa CAP1.png": {
     "width": 1536,
     "height": 2752,
@@ -4812,265 +5425,533 @@
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/8dd21680cc337606-640.webp",
-        "bytes": 197232
+        "src": "assets/web/1a41c5286d4824e2-640.webp",
+        "bytes": 199650
       },
       {
         "width": 941,
-        "src": "assets/web/8dd21680cc337606-941.webp",
-        "bytes": 351990
+        "src": "assets/web/1a41c5286d4824e2-941.webp",
+        "bytes": 345156
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-01.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG1.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/8ab3f0d479101c4a-640.webp",
-        "bytes": 100654
+        "src": "assets/web/c4ef7076960efe2a-640.webp",
+        "bytes": 98092
       },
       {
         "width": 1280,
-        "src": "assets/web/8ab3f0d479101c4a-1280.webp",
-        "bytes": 306652
+        "src": "assets/web/c4ef7076960efe2a-1280.webp",
+        "bytes": 284940
       },
       {
         "width": 1536,
-        "src": "assets/web/8ab3f0d479101c4a-1536.webp",
-        "bytes": 413028
+        "src": "assets/web/c4ef7076960efe2a-1536.webp",
+        "bytes": 362446
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-02.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG10.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/e78246193d89225d-640.webp",
-        "bytes": 87486
+        "src": "assets/web/2fa8e6b19a04ee75-640.webp",
+        "bytes": 102594
       },
       {
         "width": 1280,
-        "src": "assets/web/e78246193d89225d-1280.webp",
-        "bytes": 248464
+        "src": "assets/web/2fa8e6b19a04ee75-1280.webp",
+        "bytes": 285124
       },
       {
         "width": 1536,
-        "src": "assets/web/e78246193d89225d-1536.webp",
-        "bytes": 323222
+        "src": "assets/web/2fa8e6b19a04ee75-1536.webp",
+        "bytes": 356588
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-03.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG11.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/b257e2c216ba062c-640.webp",
-        "bytes": 72738
+        "src": "assets/web/2bb93d860079257c-640.webp",
+        "bytes": 105064
       },
       {
         "width": 1280,
-        "src": "assets/web/b257e2c216ba062c-1280.webp",
-        "bytes": 213154
+        "src": "assets/web/2bb93d860079257c-1280.webp",
+        "bytes": 268648
       },
       {
         "width": 1536,
-        "src": "assets/web/b257e2c216ba062c-1536.webp",
-        "bytes": 274244
+        "src": "assets/web/2bb93d860079257c-1536.webp",
+        "bytes": 328436
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-04.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG12.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/6d9c593d9d29388d-640.webp",
-        "bytes": 92730
+        "src": "assets/web/a608cf0c2b34efcc-640.webp",
+        "bytes": 115234
       },
       {
         "width": 1280,
-        "src": "assets/web/6d9c593d9d29388d-1280.webp",
-        "bytes": 272224
+        "src": "assets/web/a608cf0c2b34efcc-1280.webp",
+        "bytes": 320482
       },
       {
         "width": 1536,
-        "src": "assets/web/6d9c593d9d29388d-1536.webp",
-        "bytes": 349984
+        "src": "assets/web/a608cf0c2b34efcc-1536.webp",
+        "bytes": 407070
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-05.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG2.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/6fdda216bdf32750-640.webp",
-        "bytes": 98480
+        "src": "assets/web/8ad2411c9a667e47-640.webp",
+        "bytes": 85690
       },
       {
         "width": 1280,
-        "src": "assets/web/6fdda216bdf32750-1280.webp",
-        "bytes": 298812
+        "src": "assets/web/8ad2411c9a667e47-1280.webp",
+        "bytes": 234466
       },
       {
         "width": 1536,
-        "src": "assets/web/6fdda216bdf32750-1536.webp",
-        "bytes": 397728
+        "src": "assets/web/8ad2411c9a667e47-1536.webp",
+        "bytes": 293480
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-06.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG3.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/76540fdac24a262f-640.webp",
-        "bytes": 84072
+        "src": "assets/web/925789ea001188a5-640.webp",
+        "bytes": 70230
       },
       {
         "width": 1280,
-        "src": "assets/web/76540fdac24a262f-1280.webp",
-        "bytes": 251620
+        "src": "assets/web/925789ea001188a5-1280.webp",
+        "bytes": 198504
       },
       {
         "width": 1536,
-        "src": "assets/web/76540fdac24a262f-1536.webp",
-        "bytes": 333098
+        "src": "assets/web/925789ea001188a5-1536.webp",
+        "bytes": 258374
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-07.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG4.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/f5c282cb8306f231-640.webp",
-        "bytes": 89918
+        "src": "assets/web/da4d16e3f6bf1dcf-640.webp",
+        "bytes": 90874
       },
       {
         "width": 1280,
-        "src": "assets/web/f5c282cb8306f231-1280.webp",
-        "bytes": 264642
+        "src": "assets/web/da4d16e3f6bf1dcf-1280.webp",
+        "bytes": 252034
       },
       {
         "width": 1536,
-        "src": "assets/web/f5c282cb8306f231-1536.webp",
-        "bytes": 349236
+        "src": "assets/web/da4d16e3f6bf1dcf-1536.webp",
+        "bytes": 323280
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-08.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG5.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/cd6f75f8f16002d9-640.webp",
-        "bytes": 101422
+        "src": "assets/web/56832b4d195415da-640.webp",
+        "bytes": 91886
       },
       {
         "width": 1280,
-        "src": "assets/web/cd6f75f8f16002d9-1280.webp",
-        "bytes": 303306
+        "src": "assets/web/56832b4d195415da-1280.webp",
+        "bytes": 251742
       },
       {
         "width": 1536,
-        "src": "assets/web/cd6f75f8f16002d9-1536.webp",
-        "bytes": 405020
+        "src": "assets/web/56832b4d195415da-1536.webp",
+        "bytes": 315428
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-09.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG6.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/dfc30763b051f053-640.webp",
-        "bytes": 98478
+        "src": "assets/web/e9667de86180fedf-640.webp",
+        "bytes": 83514
       },
       {
         "width": 1280,
-        "src": "assets/web/dfc30763b051f053-1280.webp",
-        "bytes": 297442
+        "src": "assets/web/e9667de86180fedf-1280.webp",
+        "bytes": 237182
       },
       {
         "width": 1536,
-        "src": "assets/web/dfc30763b051f053-1536.webp",
-        "bytes": 397008
+        "src": "assets/web/e9667de86180fedf-1536.webp",
+        "bytes": 305304
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-10.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG7.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/ed7a81549961638c-640.webp",
-        "bytes": 104756
+        "src": "assets/web/1ac53e0e631eb583-640.webp",
+        "bytes": 91402
       },
       {
         "width": 1280,
-        "src": "assets/web/ed7a81549961638c-1280.webp",
-        "bytes": 307644
+        "src": "assets/web/1ac53e0e631eb583-1280.webp",
+        "bytes": 258488
       },
       {
         "width": 1536,
-        "src": "assets/web/ed7a81549961638c-1536.webp",
-        "bytes": 409570
+        "src": "assets/web/1ac53e0e631eb583-1536.webp",
+        "bytes": 334970
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-11.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG8.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/6a77dc30031c3649-640.webp",
-        "bytes": 113114
+        "src": "assets/web/3936d1da55702b62-640.webp",
+        "bytes": 100454
       },
       {
         "width": 1280,
-        "src": "assets/web/6a77dc30031c3649-1280.webp",
-        "bytes": 336174
+        "src": "assets/web/3936d1da55702b62-1280.webp",
+        "bytes": 284672
       },
       {
         "width": 1536,
-        "src": "assets/web/6a77dc30031c3649-1536.webp",
-        "bytes": 449256
+        "src": "assets/web/3936d1da55702b62-1536.webp",
+        "bytes": 360016
       }
     ]
   },
-  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/pagina-12.png": {
+  "assets/Spin Offs/DougXbox/Capitulo 1/Paginas/PAG9.png": {
     "width": 1536,
     "height": 1024,
     "variants": [
       {
         "width": 640,
-        "src": "assets/web/6e279875659a119f-640.webp",
-        "bytes": 118576
+        "src": "assets/web/ec98b72ab47fe0a1-640.webp",
+        "bytes": 95316
       },
       {
         "width": 1280,
-        "src": "assets/web/6e279875659a119f-1280.webp",
-        "bytes": 374690
+        "src": "assets/web/ec98b72ab47fe0a1-1280.webp",
+        "bytes": 273976
       },
       {
         "width": 1536,
-        "src": "assets/web/6e279875659a119f-1536.webp",
-        "bytes": 506146
+        "src": "assets/web/ec98b72ab47fe0a1-1536.webp",
+        "bytes": 350170
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Capa/capa.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/7bfda99c192c708b-640.webp",
+        "bytes": 258784
+      },
+      {
+        "width": 941,
+        "src": "assets/web/7bfda99c192c708b-941.webp",
+        "bytes": 474274
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG1.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8f77425321f00ae9-640.webp",
+        "bytes": 111108
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/8f77425321f00ae9-1280.webp",
+        "bytes": 319728
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/8f77425321f00ae9-1536.webp",
+        "bytes": 416608
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG10.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ceb1d98c8b42c645-640.webp",
+        "bytes": 111642
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/ceb1d98c8b42c645-1280.webp",
+        "bytes": 331614
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/ceb1d98c8b42c645-1536.webp",
+        "bytes": 442026
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG11.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6fab9147e297d314-640.webp",
+        "bytes": 108294
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/6fab9147e297d314-1280.webp",
+        "bytes": 309882
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/6fab9147e297d314-1536.webp",
+        "bytes": 401928
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG12.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/4ea463524f93f6ad-640.webp",
+        "bytes": 96014
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/4ea463524f93f6ad-1280.webp",
+        "bytes": 261474
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/4ea463524f93f6ad-1536.webp",
+        "bytes": 326392
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG2.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b4619e1d50beeb33-640.webp",
+        "bytes": 114380
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/b4619e1d50beeb33-1280.webp",
+        "bytes": 326958
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/b4619e1d50beeb33-1536.webp",
+        "bytes": 419736
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG3.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/539398a6b29f0143-640.webp",
+        "bytes": 105830
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/539398a6b29f0143-1280.webp",
+        "bytes": 308946
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/539398a6b29f0143-1536.webp",
+        "bytes": 404080
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG4.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1ce3327fd499b9ca-640.webp",
+        "bytes": 94824
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/1ce3327fd499b9ca-1280.webp",
+        "bytes": 281250
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/1ce3327fd499b9ca-1536.webp",
+        "bytes": 359284
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG5.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/dd9423e2ccce70a2-640.webp",
+        "bytes": 97836
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/dd9423e2ccce70a2-1280.webp",
+        "bytes": 291470
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/dd9423e2ccce70a2-1536.webp",
+        "bytes": 377482
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG6.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/449c172b9b66ce4d-640.webp",
+        "bytes": 89284
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/449c172b9b66ce4d-1280.webp",
+        "bytes": 268424
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/449c172b9b66ce4d-1536.webp",
+        "bytes": 345922
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG7.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/7a45ecde74652ea2-640.webp",
+        "bytes": 98440
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/7a45ecde74652ea2-1280.webp",
+        "bytes": 290928
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/7a45ecde74652ea2-1536.webp",
+        "bytes": 373208
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG8.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1e67bc37cd9c2aa3-640.webp",
+        "bytes": 105470
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/1e67bc37cd9c2aa3-1280.webp",
+        "bytes": 300398
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/1e67bc37cd9c2aa3-1536.webp",
+        "bytes": 382172
+      }
+    ]
+  },
+  "assets/Spin Offs/DougXbox/Capitulo 2/Paginas/PAG9.png": {
+    "width": 1536,
+    "height": 1024,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ea3cc6575527791d-640.webp",
+        "bytes": 116842
+      },
+      {
+        "width": 1280,
+        "src": "assets/web/ea3cc6575527791d-1280.webp",
+        "bytes": 333180
+      },
+      {
+        "width": 1536,
+        "src": "assets/web/ea3cc6575527791d-1536.webp",
+        "bytes": 428704
       }
     ]
   },
@@ -5474,6 +6355,598 @@
       }
     ]
   },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Capa/capa.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0daa632af58bf0a5-640.webp",
+        "bytes": 234996
+      },
+      {
+        "width": 941,
+        "src": "assets/web/0daa632af58bf0a5-941.webp",
+        "bytes": 411132
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG1.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/aa016640772d4a89-640.webp",
+        "bytes": 183948
+      },
+      {
+        "width": 941,
+        "src": "assets/web/aa016640772d4a89-941.webp",
+        "bytes": 315028
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG10.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/b218770675e2b60d-640.webp",
+        "bytes": 229588
+      },
+      {
+        "width": 941,
+        "src": "assets/web/b218770675e2b60d-941.webp",
+        "bytes": 393034
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG11.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/3cdf7ab3becb7381-640.webp",
+        "bytes": 223774
+      },
+      {
+        "width": 941,
+        "src": "assets/web/3cdf7ab3becb7381-941.webp",
+        "bytes": 408318
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG12.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/14d5917fc3c40131-640.webp",
+        "bytes": 215218
+      },
+      {
+        "width": 941,
+        "src": "assets/web/14d5917fc3c40131-941.webp",
+        "bytes": 373308
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG13.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/3ed1eedb3218cbf4-640.webp",
+        "bytes": 189224
+      },
+      {
+        "width": 941,
+        "src": "assets/web/3ed1eedb3218cbf4-941.webp",
+        "bytes": 315740
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG14.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/726197342b45739c-640.webp",
+        "bytes": 214192
+      },
+      {
+        "width": 941,
+        "src": "assets/web/726197342b45739c-941.webp",
+        "bytes": 375548
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG15.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/8b9c34e8ade41c7c-640.webp",
+        "bytes": 209880
+      },
+      {
+        "width": 941,
+        "src": "assets/web/8b9c34e8ade41c7c-941.webp",
+        "bytes": 378224
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG16.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/59cfd595c252e34c-640.webp",
+        "bytes": 205386
+      },
+      {
+        "width": 941,
+        "src": "assets/web/59cfd595c252e34c-941.webp",
+        "bytes": 352634
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG17.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/83d856478a40ff87-640.webp",
+        "bytes": 186004
+      },
+      {
+        "width": 941,
+        "src": "assets/web/83d856478a40ff87-941.webp",
+        "bytes": 322952
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG18.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/676f3c79c1c01f40-640.webp",
+        "bytes": 211846
+      },
+      {
+        "width": 941,
+        "src": "assets/web/676f3c79c1c01f40-941.webp",
+        "bytes": 381126
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG19.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/d9c9de39286a173b-640.webp",
+        "bytes": 278986
+      },
+      {
+        "width": 941,
+        "src": "assets/web/d9c9de39286a173b-941.webp",
+        "bytes": 490742
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG2.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/26d5699ea094e9a2-640.webp",
+        "bytes": 189294
+      },
+      {
+        "width": 941,
+        "src": "assets/web/26d5699ea094e9a2-941.webp",
+        "bytes": 320764
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG20.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1b56721180e1e5df-640.webp",
+        "bytes": 221048
+      },
+      {
+        "width": 941,
+        "src": "assets/web/1b56721180e1e5df-941.webp",
+        "bytes": 397382
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG21.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/0a3efa6b8eef92f3-640.webp",
+        "bytes": 195824
+      },
+      {
+        "width": 941,
+        "src": "assets/web/0a3efa6b8eef92f3-941.webp",
+        "bytes": 313658
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG22.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/826b63c83a1e53e6-640.webp",
+        "bytes": 251846
+      },
+      {
+        "width": 941,
+        "src": "assets/web/826b63c83a1e53e6-941.webp",
+        "bytes": 460326
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG23.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/bc084d741b92ee4f-640.webp",
+        "bytes": 218858
+      },
+      {
+        "width": 941,
+        "src": "assets/web/bc084d741b92ee4f-941.webp",
+        "bytes": 407086
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG24.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/83205678fc23aab8-640.webp",
+        "bytes": 239846
+      },
+      {
+        "width": 941,
+        "src": "assets/web/83205678fc23aab8-941.webp",
+        "bytes": 424180
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG25.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/34b00e9df2ff197b-640.webp",
+        "bytes": 248434
+      },
+      {
+        "width": 941,
+        "src": "assets/web/34b00e9df2ff197b-941.webp",
+        "bytes": 452414
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG26.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ef22e211e9e54fec-640.webp",
+        "bytes": 204750
+      },
+      {
+        "width": 941,
+        "src": "assets/web/ef22e211e9e54fec-941.webp",
+        "bytes": 355650
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG27.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/31e29e5e83cc0d3e-640.webp",
+        "bytes": 243602
+      },
+      {
+        "width": 941,
+        "src": "assets/web/31e29e5e83cc0d3e-941.webp",
+        "bytes": 421502
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG28.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/90849614484754ef-640.webp",
+        "bytes": 217298
+      },
+      {
+        "width": 941,
+        "src": "assets/web/90849614484754ef-941.webp",
+        "bytes": 368976
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG29.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/995526175536de0f-640.webp",
+        "bytes": 206364
+      },
+      {
+        "width": 941,
+        "src": "assets/web/995526175536de0f-941.webp",
+        "bytes": 343898
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG3.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a68e54da29b54fa8-640.webp",
+        "bytes": 197264
+      },
+      {
+        "width": 941,
+        "src": "assets/web/a68e54da29b54fa8-941.webp",
+        "bytes": 357226
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG30.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/6a14e6481d0adc59-640.webp",
+        "bytes": 202912
+      },
+      {
+        "width": 941,
+        "src": "assets/web/6a14e6481d0adc59-941.webp",
+        "bytes": 344572
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG31.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/231de46c3447fedf-640.webp",
+        "bytes": 222744
+      },
+      {
+        "width": 941,
+        "src": "assets/web/231de46c3447fedf-941.webp",
+        "bytes": 392046
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG32.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/fa2e5cd1beb5fcd1-640.webp",
+        "bytes": 219816
+      },
+      {
+        "width": 941,
+        "src": "assets/web/fa2e5cd1beb5fcd1-941.webp",
+        "bytes": 377192
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG33.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c761cc6a947cb226-640.webp",
+        "bytes": 195712
+      },
+      {
+        "width": 941,
+        "src": "assets/web/c761cc6a947cb226-941.webp",
+        "bytes": 333598
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG34.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/a365c2fce87b96ea-640.webp",
+        "bytes": 308892
+      },
+      {
+        "width": 941,
+        "src": "assets/web/a365c2fce87b96ea-941.webp",
+        "bytes": 560298
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG35.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/54df7be6889c9fd4-640.webp",
+        "bytes": 262706
+      },
+      {
+        "width": 941,
+        "src": "assets/web/54df7be6889c9fd4-941.webp",
+        "bytes": 456716
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG36.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ff38bb0b737f10f1-640.webp",
+        "bytes": 284888
+      },
+      {
+        "width": 941,
+        "src": "assets/web/ff38bb0b737f10f1-941.webp",
+        "bytes": 525758
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG4.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/1d625c78c2fd87af-640.webp",
+        "bytes": 248808
+      },
+      {
+        "width": 941,
+        "src": "assets/web/1d625c78c2fd87af-941.webp",
+        "bytes": 460654
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG5.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/ace544b734bec122-640.webp",
+        "bytes": 266192
+      },
+      {
+        "width": 941,
+        "src": "assets/web/ace544b734bec122-941.webp",
+        "bytes": 484140
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG6.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/c9514e0907af9545-640.webp",
+        "bytes": 210334
+      },
+      {
+        "width": 941,
+        "src": "assets/web/c9514e0907af9545-941.webp",
+        "bytes": 357924
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG7.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/567b54335deb9241-640.webp",
+        "bytes": 242878
+      },
+      {
+        "width": 941,
+        "src": "assets/web/567b54335deb9241-941.webp",
+        "bytes": 418866
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG8.png": {
+    "width": 941,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/cc52c9296a3cf876-640.webp",
+        "bytes": 205446
+      },
+      {
+        "width": 941,
+        "src": "assets/web/cc52c9296a3cf876-941.webp",
+        "bytes": 333162
+      }
+    ]
+  },
+  "assets/Spin Offs/Italo1o1/Capitulo 1/Paginas/PAG9.png": {
+    "width": 940,
+    "height": 1672,
+    "variants": [
+      {
+        "width": 640,
+        "src": "assets/web/f112df7ea4a22a1f-640.webp",
+        "bytes": 171646
+      },
+      {
+        "width": 940,
+        "src": "assets/web/f112df7ea4a22a1f-940.webp",
+        "bytes": 309122
+      }
+    ]
+  },
   "assets/Spin Offs/Superkid/Capitulo 1/Capa/capa.png": {
     "width": 941,
     "height": 1672,
@@ -5599,6 +7072,182 @@
         "width": 941,
         "src": "assets/web/b063b470bfb6bead-941.webp",
         "bytes": 524362
+      }
+    ]
+  },
+  "assets/admin/ic-acessos.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/780f18f31d4c07e7-128.webp",
+        "bytes": 8462
+      }
+    ]
+  },
+  "assets/admin/ic-alerta.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/8975ad86c524848c-128.webp",
+        "bytes": 4870
+      }
+    ]
+  },
+  "assets/admin/ic-aparencia.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/afd686af76b969c8-128.webp",
+        "bytes": 5494
+      }
+    ]
+  },
+  "assets/admin/ic-batalha.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/f54397a9bf83a616-128.webp",
+        "bytes": 5900
+      }
+    ]
+  },
+  "assets/admin/ic-comentarios.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/c769f71dc222e613-128.webp",
+        "bytes": 4194
+      }
+    ]
+  },
+  "assets/admin/ic-contas.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/912b16d662213f6d-128.webp",
+        "bytes": 3644
+      }
+    ]
+  },
+  "assets/admin/ic-equipe.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/9939bcd955980865-128.webp",
+        "bytes": 6944
+      }
+    ]
+  },
+  "assets/admin/ic-gibis.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/849b87565fc3216e-128.webp",
+        "bytes": 5864
+      }
+    ]
+  },
+  "assets/admin/ic-jogos.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/1b7de899d6da1c33-128.webp",
+        "bytes": 3860
+      }
+    ]
+  },
+  "assets/admin/ic-lancamentos.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/a9aa6e4436399078-128.webp",
+        "bytes": 5428
+      }
+    ]
+  },
+  "assets/admin/ic-leitores.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/d6393718b02415aa-128.webp",
+        "bytes": 4552
+      }
+    ]
+  },
+  "assets/admin/ic-log.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/822ba2e90bdb0d59-128.webp",
+        "bytes": 4120
+      }
+    ]
+  },
+  "assets/admin/ic-terminal.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/4c64c4a4443870ec-128.webp",
+        "bytes": 4256
+      }
+    ]
+  },
+  "assets/admin/ic-upload.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/db12b86dbc71b6e8-128.webp",
+        "bytes": 5462
+      }
+    ]
+  },
+  "assets/admin/ic-visao-geral.png": {
+    "width": 128,
+    "height": 128,
+    "variants": [
+      {
+        "width": 128,
+        "src": "assets/web/9590fb0226de8259-128.webp",
+        "bytes": 3892
+      }
+    ]
+  },
+  "assets/admin/mascote-terminal.png": {
+    "width": 256,
+    "height": 256,
+    "variants": [
+      {
+        "width": 256,
+        "src": "assets/web/787e37a0ffae1caa-256.webp",
+        "bytes": 20784
       }
     ]
   },

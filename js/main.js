@@ -208,6 +208,31 @@
         });
     }
 
+    // Na chegada à home, o lançamento voa da estante para a frente da tela uma vez por aba
+    // (voltar do leitor não repete). `?semgibi` desliga.
+    // Os presentes e o convite de visitante (js/baralho.js) esperam o gibi sair da frente.
+    const CHAVE_CHEGADA = 'enzo-gibi-chegada';
+    let chegadaFeita = false;
+    let liberarChegada = () => {};
+    if (document.querySelector('#hero-comic') && document.querySelector('.bookcase[data-colecao="serie"]')) {
+        window.EnzoIntro = { pronto: new Promise((resolve) => { liberarChegada = resolve; }) };
+    }
+    function abrirNaChegada(edition, heroSection) {
+        if (chegadaFeita) return;
+        chegadaFeita = true;
+        let abrir = !new URLSearchParams(location.search).has('semgibi');
+        try {
+            if (sessionStorage.getItem(CHAVE_CHEGADA)) abrir = false;
+            else if (abrir) sessionStorage.setItem(CHAVE_CHEGADA, '1');
+        } catch { /* sem armazenamento: abre mesmo assim */ }
+        if (!abrir) { liberarChegada(); return; }
+        requestAnimationFrame(() => {
+            const source = heroSection.querySelector('.hero-cover-wrapper');
+            if (!source) { liberarChegada(); return; }
+            openEdition(edition, source).finally(liberarChegada);
+        });
+    }
+
     const estantes = () => [...document.querySelectorAll('.bookcase[data-colecao]')];
     let montadas = [];
 
@@ -224,6 +249,8 @@
             if (indice === 0 && heroSection) {
                 const latest = editions[editions.length - 1] || null;
                 heroSection.replaceChildren(latest ? buildHero(latest, colecao) : buildComingSoon());
+                if (latest && colecao === 'serie') abrirNaChegada(latest, heroSection);
+                else liberarChegada();
             }
             if (editions.length === 0) {
                 const empty = document.createElement('p');
@@ -305,6 +332,7 @@
         } catch (error) {
             console.error('Erro ao carregar banco de dados:', error);
             renderError(error);
+            liberarChegada();
         }
     }
 

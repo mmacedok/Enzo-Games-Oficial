@@ -93,7 +93,8 @@
             estado.loginAtivo = Boolean(config.dados?.enabled && config.dados.clientId);
             estado.clientId = config.dados?.clientId || null;
             if (estado.loginAtivo) await carregarConta(euSeguro);
-            if (estado.loginAtivo && !estado.usuario) convidarNaChegada();
+            // O gibi da chegada (js/main.js) sai da frente antes do convite.
+            if (estado.loginAtivo && !estado.usuario) { await window.EnzoIntro?.pronto; convidarNaChegada(); }
         } catch { /* sem API (site estático): segue como convidado */ }
         return api;
     })();
