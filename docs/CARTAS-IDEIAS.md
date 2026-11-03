@@ -379,5 +379,18 @@ As descrições abaixo combinam as fichas oficiais da **`Enzo Games art bible`**
 1. Chorão e Cabo Côco são cartas diferentes.
 2. O Feiticeiro de Terno saiu da coleção (sem carta, sem arte).
 3. Campos têm moldura própria (feita: papel de mapa, placa de madeira com pregos, janela com rosa dos ventos; classe `.carta-tcg--campo`).
-4. Capas dos pacotes com as cartas novas: Estacionamento (Cara de Coração, Estacionamento Noturno, Drone Vigia), Toradolândia (Stand do Joinha, Toradolândia, Sombra do Degustador), Piscina (Degustador, Piscina de Macarronada, Enzo Games).
+4. Capas dos pacotes com as cartas novas: Estacionamento (Cara de Coração, Estacionamento Noturno, Drone Vigia), Toradolândia (Stand do Joinha, Toradolândia, Sombra do Degustador), Piscina (Degustador, Piscina de Macarronada, Enzo Games), Pedra Mole (Itallo de Viego, PMLDM na capa central, Pedra Mole).
+
+---
+
+## Boosters e Embalagens de Pacotes
+
+### #B04 Pacote da Pedra Mole — `pedra-mole` · booster · 900 créditos
+- **Cartas:** 5 cartas (chances: comum 40%, raro 35%, épico 19%, lendário 6% · garantia: épico)
+- **Cores da Embalagem:** `#c2185b` (magenta), `#f72585` (rosa-choque), `#1a001a` (preto profundo).
+- **Leque de Cartas da Capa:** `['itallo-de-viego', 'pmldm', 'pedra-mole']`
+- **Capa Principal em Destaque:** **`pmldm`** (PMLDM — carta #041).
+- **Descrição visual da embalagem:** Embalagem metalizada de booster pack de cartas colecionáveis no estilo vintage de gibi/Balatro, pontas serrilhadas no topo e na base com brilho foil prateado e holográfico, fundo cósmico em degradê magenta e rosa-choque com névoa mística. No centro da capa, em destaque absoluto ocupando o primeiro plano e rompendo a moldura com energia arcana, está a personagem **PMLDM** (garota jovem de pele bem branca, cabelo vermelho-carmim vivo com franja reta, óculos pretos redondos, corpo levemente violão, orelhas plumadas e penas afiadas de luz vermelha e violeta flutuando entre os dedos inspirada na Xayah de League of Legends, usando corrente dourada grossa no pescoço e pose épica de heroína de gibi).
+- **Prompt:** `Ilustração de embalagem de booster pack colecionável de cartas TCG estilo tira de jornal vintage (Garfield, Jim Davis), traço à mão com contorno de nanquim grosso e expressivo, cores quentes e saturadas com magenta, rosa-choque e preto cósmico, textura leve de papel de gibi e retícula de pontos. Embalagem retangular vertical com pontas serrilhadas e brilho metálico foil. No centro da capa em destaque absoluto: garota jovem de pele bem branca, cabelo vermelho vivo com franja, óculos redondos pretos, capuz com orelhas plumadas e penas afiadas brilhantes flutuando entre as mãos no estilo guerreira vastaya, com corrente dourada no pescoço e pose épica de heroína de capa de gibi, cercada por partículas de luz mágica e raios arcanos. Fundo cheio com degradê de energia rosa e roxa. SEM NENHUM TEXTO, letra, número ou balão na imagem.` + lendário.
+
 5. Cabo Côco: lendário com chance fixa de 0,5% por carta (`chanceFixa`), sempre coberto pela tarja de cena do crime até a senha "copo de lágrimas".

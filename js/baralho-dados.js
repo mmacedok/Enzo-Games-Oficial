@@ -234,6 +234,11 @@
             capa: ['degustador-da-noite', 'piscina-de-macarronada', 'enzo-games'], cores: ['#e0301e', '#ff9900', '#2a0804'],
             preco: { creditos: 900 },
             chances: { comum: 40, raro: 35, epico: 19, lendario: 6 }, garantia: 'epico' },
+        { id: 'pedra-mole', nome: 'Pacote da Pedra Mole', cartas: 5,
+            capa: ['itallo-de-viego', 'pmldm', 'pedra-mole'], cores: ['#c2185b', '#f72585', '#1a001a'],
+            preco: { creditos: 900 },
+            chances: { comum: 40, raro: 35, epico: 19, lendario: 6 }, garantia: 'epico',
+            descricaoArte: 'Embalagem metalizada de booster pack em magenta e rosa-choque com pontas serrilhadas; no centro da capa em destaque absoluto está a personagem PMLDM (garota de pele bem branca, cabelo vermelho com franja, óculos redondos e penas mágicas da Xayah) ladeada por Itallo de Viego e Pedra Mole.' },
     ]);
 
     /** Créditos por ponto em cada partida verificada (sem limite diário). */

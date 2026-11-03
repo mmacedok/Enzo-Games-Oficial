@@ -1355,3 +1355,14 @@ test('Cartas Avulsas: Tiago Cássio, PMLDM (Ezreal) e Pidão do Vape', () => {
     assert.equal(R.ficha(eVape, eVape.jogadores[0].ativo).imuneBanco, true);
     assert.equal(R.ficha(eVape, eVape.jogadores[0].ativo).imuneEstados, true);
 });
+
+test('Booster da Pedra Mole: modelo de 900 créditos com PMLDM na capa central', () => {
+    const Baralho = require('../js/baralho-dados.js');
+    const p = Baralho.pacote('pedra-mole');
+    assert.ok(p, 'pacote pedra-mole deve existir');
+    assert.equal(p.preco.creditos, 900, 'custa 900 créditos');
+    assert.equal(p.cartas, 5, 'contém 5 cartas');
+    assert.equal(p.garantia, 'epico', 'garantia de carta épica ou melhor');
+    assert.equal(p.capa[1], 'pmldm', 'PMLDM deve estar no centro da capa');
+    assert.deepEqual(p.chances, { comum: 40, raro: 35, epico: 19, lendario: 6 });
+});

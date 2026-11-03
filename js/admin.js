@@ -21,6 +21,11 @@
         toradolandia: 'toradolandia',
         pis: 'piscina-de-macarronada',
         'piscina-de-macarronada': 'piscina-de-macarronada',
+        ped: 'pedra-mole',
+        'pedra-mole': 'pedra-mole',
+        pmldm: 'pedra-mole',
+        res: 'pedra-mole',
+        resenha: 'pedra-mole',
     };
     const calmo = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
