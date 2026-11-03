@@ -265,6 +265,15 @@
             cartas: ['bug-do-discord', 'bug-do-discord', 'notificacao-morcego', 'notificacao-morcego', 'emoji-pistola',
                 'emoji-pistola', 'drone-vigia', 'drone-vigia', 'moderador-do-ban', 'marreteiro-do-coracao', 'cara-de-coracao',
                 'cara-de-coracao', 'estacionamento-noturno', 'estacionamento-noturno', 'toradolandia'] },
+        { id: 'pedra-mole', nome: 'Turma da Pedra Mole', texto: 'Golpes da Pedra Mole, buffs de Ezreal e a fúria do Viego.',
+            capa: ['itallo-de-viego', 'pmldm', 'pedra-mole'],
+            cartas: ['pmldm', 'itallo-de-viego', 'itallo-de-viego', 'pedra-mole', 'pedra-mole',
+                'tiago-cassio', 'tiago-cassio', 'pidao-do-vape', 'pidao-do-vape', 'calibra-o-smite',
+                'calibra-o-smite', 'cade-meu-jungle', 'cade-meu-jungle', 'dar-ff', 'hoje-e-quarta-feira'] },
+        { id: 'superkid-novo', nome: 'Superkid & Butico', texto: 'Júlia, Teemo, Hanna, Mariana, Caiam e Douglas.',
+            capa: ['julia', 'teemo', 'hanna'],
+            cartas: ['julia', 'teemo', 'hanna', 'hanna', 'mariana', 'mariana', 'caiam', 'caiam',
+                'douglas', 'douglas', 'lavras-mg', 'lavras-mg', 'clubexx', 'clubexx', 'chorao'] },
     ];
 
     return congelar({ COMBATE, DECKS_PRONTOS });

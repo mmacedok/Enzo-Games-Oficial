@@ -55,9 +55,9 @@ app.get(/^\/([a-z0-9-]+)\.html$/, (req, res, next) => {
     const file = path.join(__dirname, `${req.params[0]}.html`);
     if (!fs.existsSync(file)) return next();
     res.setHeader('Cache-Control', 'no-cache');
-    res.sendFile(file);
+    res.sendFile(file, { dotfiles: 'allow' });
 });
-app.get('/', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'index.html')); });
+app.get('/', (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'index.html'), { dotfiles: 'allow' }); });
 // API (login, recordes, progresso): o mesmo código da Netlify Function (api/handler.js).
 // Banco local em data/local-db/ (PGlite), aberto só na primeira consulta.
 // ENZO_DB=memoria usa um banco temporário na memória (testes).
@@ -111,12 +111,12 @@ app.use('/api', (req, res, next) => (req.path === '/admin/upload/arquivo' ? corp
     }
 });
 for (const file of ['database.json', 'images.json']) {
-    app.get(`/data/${file}`, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(DATA_DIR, file)); });
+    app.get(`/data/${file}`, (req, res) => { res.setHeader('Cache-Control', 'no-cache'); res.sendFile(path.join(DATA_DIR, file), { dotfiles: 'allow' }); });
 }
 // Página (navegador pedindo HTML): 404 ilustrada. Arquivo de imagem/dado ou API: texto curto.
 app.use((req, res) => {
     const arquivo = /\.(?:png|webp|jpe?g|gif|svg|ico|js|css|json|mp3|mp4|woff2?|txt|xml)$/i.test(req.path);
-    if (req.method === 'GET' && !arquivo && req.accepts('html')) return res.status(404).sendFile(path.join(__dirname, '404.html'));
+    if (req.method === 'GET' && !arquivo && req.accepts('html')) return res.status(404).sendFile(path.join(__dirname, '404.html'), { dotfiles: 'allow' });
     res.status(404).type('text').send('Página ou arquivo não encontrado.');
 });
 
