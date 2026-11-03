@@ -20,11 +20,13 @@ const DECK = [
 let contador = 0;
 function inst(j, spec) {
     const s = typeof spec === 'string' ? { id: spec } : spec;
-    return {
+    const res = {
         uid: s.uid || `${j}-t${contador++}`, id: s.id, dano: s.dano || 0, aura: s.aura || 0,
         estados: { notificado: false, iludido: false, silenciado: 0, ...(s.estados || {}) },
         escudo: s.escudo || null,
     };
+    if (s.transformado) res.transformado = s.transformado;
+    return res;
 }
 /**
  * Monta uma mesa pronta no meio da partida: `vez` joga o turno `turno`.
@@ -1358,6 +1360,25 @@ test('Cartas Avulsas: Tiago Cássio, PMLDM (Ezreal) e Pidão do Vape', () => {
     assert.equal(fSuperItalo.reducao, 10, 'Super Italo reduz 200 de dano');
     assert.equal(fSuperItalo.dano, 10, 'Super Italo ganha +200 de dano');
     assert.equal(fSuperItalo.hp, 140, 'Super Italo tem HP aumentado para 2.800');
+
+    // Super Italo (Ezreal) ataca com Super Disparo Místico e causa dano em área (splashItallo) em toda a mesa inimiga
+    let eSuper = mesa({
+        eu: { ativo: { id: 'pmldm', aura: 1, transformado: 'ezreal' } },
+        ele: { ativo: { id: 'degustador-da-noite', dano: 0 }, banco: ['o-inominavel', 'julia'] },
+    });
+    eSuper = jogar(eSuper, { tipo: 'atacar', ataque: 0 }).estado; // Super Disparo Místico: 30 base + 10 buff = 40 (800)
+    assert.equal(eSuper.jogadores[1].ativo.dano, 40 * R.ESCALA, 'Ativo adversário recebeu 800 de dano do Super Italo');
+    assert.equal(eSuper.jogadores[1].banco[0].dano, 40 * R.ESCALA, 'Banco inimigo 1 recebeu 800 de splash do Super Italo');
+    assert.equal(eSuper.jogadores[1].banco[1].dano, 40 * R.ESCALA, 'Banco inimigo 2 recebeu 800 de splash do Super Italo');
+
+    // PMLDM no banco faz Itallo bater em área
+    let ePMLDMBanco = mesa({
+        eu: { ativo: { id: 'italolol', aura: 1 }, banco: ['pmldm'] },
+        ele: { ativo: { id: 'degustador-da-noite', dano: 0 }, banco: ['o-inominavel'] },
+    });
+    ePMLDMBanco = jogar(ePMLDMBanco, { tipo: 'atacar', ataque: 0 }).estado; // 20 de dano (400)
+    assert.equal(ePMLDMBanco.jogadores[1].ativo.dano, 20 * R.ESCALA, 'Ativo adversário recebeu dano do Itallo');
+    assert.equal(ePMLDMBanco.jogadores[1].banco[0].dano, 20 * R.ESCALA, 'Banco adversário recebeu splash do PMLDM no banco');
 });
 
 test('Booster da Pedra Mole: modelo de 900 créditos com PMLDM na capa central', () => {

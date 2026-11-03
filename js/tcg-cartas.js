@@ -163,7 +163,7 @@
         'pmldm': { hp: 120, recuo: 2, tags: ['itallo'],
             aoEntrar: [{ tipo: 'buscarPorTag', tag: 'itallo', qtd: 2 }],
             poder: { nome: 'Dano em Área', tipo: 'splashItallo', ativavel: false,
-                texto: 'No banco: todo dano causado por um Itallo seu atinge o time inimigo inteiro.' },
+                texto: 'No banco: todo dano de Itallo atinge o time inimigo inteiro. Pós-transformação (Super Italo), ele mesmo atinge o time inimigo inteiro em área.' },
             ataques: [
                 { nome: 'Despertar Ezreal', custo: 3, dano: 30, efeitos: [{ tipo: 'transformarEzreal' }] },
                 { nome: 'Plumas Carmesim', custo: 1, dano: 20 },
