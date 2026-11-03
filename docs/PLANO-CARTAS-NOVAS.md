@@ -1,124 +1,72 @@
 # Plano — cartas novas e mecânicas novas da Batalha dos Torados
 
-Origem: a lista que o Henrique colou em 2026-10-04 (ideias dele, do Enzo e do "Anuah"). A parte que **muda carta ou regra que já
-existe** entrou na versão 11 (ver `docs/BATALHA-CHANGELOG.md`). Este plano cobre o que **ainda não existe**: 14 cartas novas e
-2 mecânicas novas. Nada daqui está no jogo ainda.
+Origem: a lista que o Henrique colou em 2026-10-04 (ideias dele, do Enzo e do "Anuah"), consolidada e implementada com as definições finais de regras e descrições visuais do Enzo.
 
-## 1. Mecânicas novas (precisam do motor antes das cartas)
+## 1. Mecânicas novas (implementadas em `js/tcg-regras.js`)
 
-| # | Mecânica | O que a lista pede | Trabalho no motor (`js/tcg-regras.js`) |
+| # | Mecânica | O que a lista pede | Implementação no motor (`js/tcg-regras.js`) |
 |---|---|---|---|
-| M1 | **Zona de Resenha** ("campo na horizontal") | Cartas deitadas ao lado de um personagem, valendo só para ele. Duas famílias: *campos* com habilidade aplicada só àquele personagem, e *Resenhas*, que só afetam o personagem em que estão ativas; o efeito é queimado ao entrar ou ao usar | Novo tipo de carta `resenha`; cada instância na mesa ganha `resenhas: []`; jogada `anexar` (da mão para um personagem seu); gancho "ao entrar" e "ao usar"; sai junto com o personagem; visão do jogador/online e tela (carta deitada sob a carta) |
-| M2 | **Entidade** | Carta que fica no banco por um número de turnos e age no fim de cada turno (Lavras MG) | Novo tipo `entidade` com contador de turnos e gatilho de fim de turno; não ocupa vaga de lutador, não leva dano |
-| M3 | **Carta permanente / passiva de banco** | Efeito contínuo enquanto está no banco (Mariana, PMLDM) | Parecido com o poder `bonusDoBanco` do Stand do Joinha; generalizar para "protege aliado" e "dano espalha" |
-| M4 | **Roubar / emprestar Aura** | Hanna rouba 1 Aura do rival; Tiago Cássio rouba toda a Aura por 1 turno e devolve; Pidão do Vape rouba de quem emprestou | Campo `auraEmprestada` com dono e turno de devolução; carta com Aura roubada não ataca naquele turno (regra do Tiago) |
-| M5 | **Transformação** | PMLDM vira "Itallo Ezreal" (40/0/100) | Troca o `id` da instância mantendo Aura/dano ou carta de combate temporária; a arte tem uma 2ª versão |
-| M6 | **Buscar no baralho** | Itallo de Viego chama um Enzo Games; Júlia ativa Lavras MG; Pedir Skin coloca um Superkid; PMLDM puxa 2 Itallos para a mão | Ação "tirar do baralho" (e embaralhar depois), com a carta entrando virada, no campo ou na mão |
-| M7 | **Dano espalhado / dano em todos** | PMLDM: dano do Itallo vai também para todo o banco do rival; 1 Aura: 600 em todos | Passo extra em `executarAtaque` (respeitando "inafetado" do Ezreal) |
-| M8 | **Metade do dano / efeito até o fim do próximo turno** | Calibra o Smite | Estado `danoMetade` com prazo, como o escudo |
-| M9 | **Tags** | "Carta com a tag Degustador da Noite" (São João do B) | Campo `tags: []` em `js/tcg-cartas.js` (Degustador, Sombra, etc.) |
+| M1 | **Zona de Resenha** ("campo na horizontal") | Cartas deitadas ao lado de um personagem, valendo só para ele. Duas famílias: *campos* com habilidade aplicada só àquele personagem, e *Resenhas*, que só afetam o personagem em que estão ativas; o efeito é queimado ao entrar ou ao usar | Tipo `resenha`; cada instância na mesa tem `anexos: []`; jogada `anexar` (`onde` + `alvo`); modos `unico` (queima ao entrar) e `continuo` (persiste ou queima após uso via `queimaAoUsar`) |
+| M2 | **Entidade** | Carta que fica no banco por um número de turnos e age no fim de cada turno (Lavras MG) | `turnosEmCampo: 2` + gatilho em `efeitoDeFimDeTurno`: Superkid vira (`virado = 1`) e ganha +1 Aura; após 2 turnos vai para o descarte |
+| M3 | **Carta permanente / passiva de banco** | Efeito contínuo enquanto está no banco (Mariana, PMLDM, Caiam, Teemo) | Passivas checadas no banco: Mariana protege Superkid de Hit Kill (sobrevive com 20 de vida) e de dano de efeito; PMLDM espalha dano de ataque de qualquer Itallo para todo o banco rival; Caiam trava o campo (`campoTravado`); Teemo envenena nos ataques de Degustador |
+| M4 | **Roubar / emprestar Aura** | Hanna rouba 1 Aura do rival; Tiago Cássio rouba toda a Aura por 1 turno e devolve; Pidão do Vape rouba de quem emprestou | `roubarAuraParaSuperkid` (Hanna), `agiotagemDeAura` com rastreamento de `auraEmprestada` e devolução no início do turno seguinte (Tiago Cássio), e `puxaozinhoVape` com dano pulmonar progressivo (200, 400, 600...) |
+| M5 | **Transformação** | PMLDM vira "Itallo Lendário de EZREAL 40/0/100" | `transformarEzreal`: altera `transformado = 'itallo-ezreal'`, concede imunidade no banco e contra condições especiais, e substitui os ataques por *Barragem Arcana* (1 Aura: 600 em todos) e *Truque Final* (4 Aura: sacrifica-se e destrói 2 cartas do rival) |
+| M6 | **Buscar no baralho** | Itallo de Viego chama um Enzo Games; Júlia ativa Lavras MG; Pedir Skin coloca um Superkid; PMLDM puxa 2 Itallos para a mão; Caiam busca São João do Butico | Efeitos `invocarDoBaralhoVirado`, `invocarDoBaralhoBanco`, `pedirSkinSuperkid`, `buscarCartasParaMao`, `ativarCampoDoBaralho` |
+| M7 | **Dano espalhado / dano em todos** | PMLDM: dano do Itallo vai também para todo o banco do rival; 1 Aura: 600 em todos; Teemo: 100 em todos + veneno | Tratado em `executarAtaque` e nos efeitos `danoEmTodos` e `campoMinadoTeemo` (respeitando imunidades de Mariana e Itallo Ezreal) |
+| M8 | **Metade do dano / efeito até o fim do próximo turno** | Calibra o Smite (Anuah) | Estado `danoMetade` no ativo do rival com duração até o fim do próximo turno dele |
+| M9 | **Tags** | "Carta com a tag Degustador da Noite" / "São João do Butico" | `tags: ['degustador', 'sao-joao-do-butico']` em `js/tcg-cartas.js` + gatilho no campo `sao-joao-do-butico` ao voltar da mesa para o baralho |
 
-Ordem sugerida: M9 (trivial) → M3 → M8 → M6 → M4 → M7 → M2 → M5 → **M1 por último** (é a maior: motor, visão online e tela).
+---
 
-**Atualização 2026-10-05 (v12):** a M1 (Resenha) ficou pronta no motor, na tela e no robô, sem carta ainda: jogada `anexar`,
-`COMBATE[id].anexo` (ver o cabeçalho de `js/tcg-cartas.js`). A M9 (tags) também (`tags` em qualquer carta, `R.tagsDe`). A
-aparência alternativa (`anexo.visual`) já cobre parte da M5. O resto do motor ficou pronto para tipos novos: `TIPOS`/`MODOS`,
-`ficha()`, `EFEITOS` e `BONUS_DANO` em `js/tcg-regras.js`.
+## 2. As 18 novas cartas implementadas (`#025` a `#042`)
 
-## 2. As cartas (texto da lista, com a leitura que o Claude fez)
-
-`id` = nome do arquivo da arte (`assets/Cartas/<id>.png`). Raridade entre colchetes é **sugestão** quando a lista não diz.
-
-### Arquétipo do Superkid
-| Carta | id | Tipo / raridade | Texto original | Leitura |
+| # | Carta | id | Tipo / Raridade | Resumo de Jogo |
 |---|---|---|---|---|
-| Hanna | `hanna` | personagem [Raro] | "Quando ela entra, rouba uma aura do oponente e coloca no Superkid" | Ao baixar: tira 1 Aura de uma carta do rival e põe no Superkid (M4) |
-| Mariana | `mariana` | personagem **Épica** | "Carta permanente: no banco, o Superkid não pode tomar hit kill nem danos por efeito" | No banco, o Superkid não é nocauteado de um golpe só e ignora dano de efeito (veneno, contra-ataque, dano em si) (M3) |
-| Júlia | `julia` | personagem **Lendária** | "Quando entra, ativa Lavras MG direto do deck. Não pode estar no campo ao mesmo tempo que o Superkid" | Ao baixar: busca Lavras MG (M6, M2); regra de exclusão com o Superkid |
-| Lavras MG | `lavras-mg` | **entidade** [Épica] | "Fica no banco por 2 turnos. No fim de cada turno, o Superkid se torna e farma mais 1 Aura" | Entidade com 2 turnos (M2): no fim de cada turno do dono, +1 Aura no Superkid |
-| Pedir Skin | `pedir-skin` | ataque do Superkid (não é carta) | "Ataque de 2 Auras: 1.200 de dano, ela volta pro deck, coloca um Superkid com 1 Aura no campo ativo" | Novo ataque do Superkid: 1.200 de dano; o Superkid volta ao baralho e outro Superkid entra como ativo com 1 Aura (M6) |
+| 025 | Calibra o Smite | `calibra-o-smite` | Resenha (Magia) · Raro | Gasta 1 Aura sua: se o ativo do oponente tiver exatamente 600 de vida, é destruído sem causar dano de nocaute ao jogador |
+| 026 | Calibra o Smite (Anuah) | `calibra-o-smite-anuah` | Resenha (Magia) · Épico | Gasta 2 Auras dos seus personagens: o ativo do oponente causa metade do dano até o fim do próximo turno dele |
+| 027 | Cadê meu Jungle | `cade-meu-jungle` | Resenha (Magia) · Raro | Gasta 2 Auras suas: devolve 1 carta do banco do oponente limpa para a mão dele |
+| 028 | Dar FF | `dar-ff` | Resenha (Magia) · Comum | Gasta 1 Aura sua: cura 600. Se os dois jogadores usarem Dar FF em sequência, ambos tomam 1.000 de dano direto na vida |
+| 029 | Hoje é Quarta-feira | `hoje-e-quarta-feira` | Resenha (Magia) · Raro | Vai pro descarte: descarta até 2 cartas da mão para comer macarronada, troca seu ativo por um do banco e o oponente ganha +1 Aura no próximo turno |
+| 030 | Itallo de Viego 20/0 | `itallo-de-viego` | Resenha · Épico | Ao entrar, invoca um Enzo Games do baralho para o banco (virado). Concede ataque de 2 Auras: 200 de dano e libera o próximo ataque aliado para atingir o banco |
+| 031 | Eu vou ir aí na Pedra Mole te matar | `pedra-mole` | Resenha · Raro | Se controlar um Enzo Games virado e qualquer Itallo, desvira o Enzo Games e dá +200 de dano a ele neste turno (queima após o uso) |
+| 032 | Hanna | `hanna` | Personagem · Raro | Ao entrar, rouba 1 Aura do oponente e coloca no seu Superkid. Ataque (1 Aura): 400 |
+| 033 | Mariana | `mariana` | Personagem · Épico | Passiva no banco: Superkid é imune a Hit Kill (sobrevive com 20 de vida) e não recebe dano de efeitos. Ataque (2 Auras): 800 |
+| 034 | Júlia | `julia` | Personagem · Lendário | Não entra junto com Superkid. Ao entrar, coloca Lavras MG direto do baralho no banco. Ataque *Pedir Skin pro Superkid* (2 Auras): 1.200 de dano, volta pro baralho e coloca Superkid no ativo com 1 Aura |
+| 035 | Lavras MG | `lavras-mg` | Goon (Entidade) · Raro | Fica no banco por 2 turnos. No fim de cada turno seu, o Superkid vira e farma +1 Aura |
+| 036 | Clubexx... | `clubexx` | Campo · Raro | 1x por turno, cada jogador pode mover 1 Aura de um Superkid seu para outra carta no banco sem gastar o limite do turno |
+| 037 | Douglas | `douglas` | Personagem · Raro | Só entra com o campo São João do Butico ativo. Poder *Herege*: se tiver Degustador, compra 2 cartas. Ataque (2 Auras): 400 de dano e troca com um Degustador do banco, que ganha Escudo de Parênteses (600) |
+| 038 | Caiam | `caiam` | Personagem · Raro | Ao entrar, busca o campo São João do Butico do baralho. No banco, o campo não pode ser trocado. Ataque (1 Aura): 200 de dano e busca até 2 cartas de São João do Butico para a mão |
+| 039 | Teemo | `teemo` | Personagem · Lendário | Vida baixa (1.000). Passiva no banco: ataques do seu Degustador envenenam (1.000 ao longo de 4 turnos: 250/turno; se voltar pro baralho envenenado, o dono leva metade do restante na vida). Ataque (3 Auras): 100 em todos os inimigos e envenena todos |
+| 040 | Tiago Cássio | `tiago-cassio` | Personagem · Épico | Ataque (1 Aura): 260 de dano (calibrado para a escala de 6.000 HP), rouba toda a Aura do alvo por 1 turno (devolve no próximo) e vira. Ataque (6 Auras próprias): 6.000 de dano direto na vida do oponente |
+| 041 | PMLDM | `pmldm` | Personagem · Lendário | Ao entrar, busca 2 cartas Itallo do baralho para a mão. No banco, dano de Itallo atinge todo o time inimigo. Ataque (3 Auras): 600 de dano e transforma-se no *Itallo Lendário de EZREAL 40/0/100* |
+| 042 | Pidão do Vape | `pidao-do-vape` | Goon · Comum | Poder (1x por turno): rouba 1 Aura do ativo inimigo para si ou para o banco, sofrendo dano pulmonar progressivo (200, 400, 600...). Ataque (1 Aura): 400 |
 
-### Arquétipo do Italo
-| Carta | id | Tipo / raridade | Texto original | Leitura |
-|---|---|---|---|---|
-| Itallo de Viego 20/0 | `italo-de-viego` | **Resenha** [Raro] | "Quando entra em campo, joga um Enzo Games do deck no campo, virado. Ataque de 2 Auras: 200 de dano e o próximo dano de um aliado consegue atacar o banco" | Resenha (M1) com gatilho de entrada (M6) e um ataque que libera o próximo golpe aliado para o banco |
-| Eu vou ir aí na Pedra Mole te matar | `pedra-mole` | **Resenha** [Raro] | "Se você controla um Enzo Games virado e qualquer carta Itallo, desvira o Enzo Games e ele causa +200 de dano nesse turno" | Resenha (M1) com condição; desvira o Enzo e dá +200 |
-| PMLDM | `pmldm` | personagem **Lendária** | "Ao entrar, adiciona 2 cartas Itallo do deck à mão. Passiva: dano do Itallo com o PMLDM no banco vai no time inteiro. Ataque 3 Auras: vira Itallo Ezreal 40/0/100 (inafetado no banco e a condições especiais; 1 Aura: 600 em todos; 4 Aura: se mata e mata 2 cartas do rival)" | M3, M5, M6, M7. A forma Ezreal precisa de arte própria (`pmldm-ezreal`) |
+---
 
-### Outras
-| Carta | id | Tipo / raridade | Texto original | Leitura |
-|---|---|---|---|---|
-| Tiago Cássio | `tiago-cassio` | personagem **Épica** | "1 Aura: 13 de dano, rouba toda a Aura de um inimigo por 1 turno (vira ao bater) e devolve depois. 6 Aura: 6.000 de dano direto na vida do jogador. Nunca ataca com Aura roubada" | M4. O golpe de 6 Aura **mata sozinho** (a vida inicial é 6.000): precisa de decisão (ver Dúvidas) |
-| Hoje é Quarta-feira | `hoje-e-quarta-feira` | **magia** [Rara] | "Vai pro cemitério; você pode descartar 2 cartas para ir comer macarronada; o oponente pode pôr 1 Aura a mais no próximo turno; quem usou troca um do banco com o ativo" | Tipo novo `magia` (carta de uso único). Leitura em 3 partes, ver Dúvidas |
-| Clubexx | `clubexx` | **campo** [Raro] | "1 vez por turno, cada jogador pode tirar 1 Aura de um Superkid dele e pôr em outra carta do banco (não gasta o limite de Aura do turno)" | Campo novo (M4 simples) |
-| Pidão do Vape | `pidao-do-vape` | personagem/goon [Raro] | "Rouba 1 Aura de quem emprestou, para si ou para outro do banco. Dano pulmonar: 1ª Aura 200, 2ª 400, 3ª 600..." | M4; contador de Auras roubadas por turno e dano em si crescente |
-| Calibra o Smite | `calibra-o-smite` | **magia** [Rara] | "Gasta 2 Auras de personagens seus; o ativo do oponente só dá metade do dano até o fim do próximo turno dele" | M8 |
-| São João do B | `sao-joao-do-b` | **campo** ou ajuste do São João do Butico [Comum] | "Cartas com a tag Degustador da Noite, ao voltar pro deck, põem uma energia em outra carta Degustador na base" | M9. Ver Dúvidas: é carta nova ou mudança do São João do Butico? |
+## 5. Plano de arte e Descrições Visuais Completas (para geração das imagens)
 
-## 3. Dúvidas para o Henrique (o que eu assumi na versão 11 e o que trava as cartas novas)
+Formato igual ao das cartas existentes: **PNG 1024×1280 (4:5), sem transparência, sem texto/balões**, personagem centralizado no quadro (`foco: '50% 30%'`), estilo tira de jornal vintage / HQ com contorno de nanquim grosso e cores saturadas (ver bloco de estilo e prompts completos em `docs/CARTAS-IDEIAS.md`). Destino: `assets/Cartas/<id>.png`.
 
-Assumido na versão 11 (diga se estiver errado e eu corrijo):
-1. **"Acumular até 3 de Aura, só 2 por carta"** → li como: **3 Auras por turno, no máximo 2 na mesma carta**. Se a ideia era outra
-   (por exemplo, guardar Aura sobrando para turnos seguintes), me diga.
-2. **"Degustador não vira com o 2º ataque"** → o **Escudo de Parênteses passou a deixar a carta virada** por 1 turno, como o Vírgula-rangue.
-3. **Mansão**: "perdem a vida ganha a não ser que isso os tire de jogo" → os goons perdem o HP extra quando ela sai, **mas ficam com 1 de vida em vez de cair**.
-   Se a intenção era ao contrário (caem), é só tirar uma linha.
-4. **"Notifica se tiver 1 Aura a mais"** → vale para qualquer goon atacando com Aura **maior** que o custo, mesmo no ataque que não gasta Aura. Notifica o ativo do adversário.
-5. **Piscina**: cura 400 de cada carta (ativo e banco) a cada turno; ficou bem mais forte, conferir no jogo.
+Todas as referências visuais foram consolidadas a partir da **`Enzo Games art bible`** (`Documentacao/Personagens/`) e das descrições canônicas fornecidas pelo Enzo:
 
-Para fazer as cartas novas:
-1. **Tiago Cássio 6 Aura = 6.000 de dano direto** mata o jogador de uma vez (vida inicial 6.000). É isso mesmo? O golpe no jogador com o ativo dele na mesa sofre a proteção de 35%; vale para este?
-2. **Hoje é Quarta-feira**: as três partes são um efeito só, ou "descartar 2 para comer macarronada" é opcional e muda o resto?
-3. **Itallo de Viego** e **Pedra Mole** são "Resenha": a Resenha fica *embaixo* de um personagem (deitada) ou é uma carta solta de ataque? E "20/0" é nome (como o "0/14/2" do ItaloLOL) ou número?
-4. **Mariana / PMLDM / Júlia**: ocupam vaga do banco (3 vagas) ou ficam fora dele?
-5. **Raridades** em colchetes acima: confirme ou troque. Lendárias entram na regra "1 cópia por deck".
-6. **São João do B**: carta nova ou texto novo do São João do Butico?
-7. Anuah (autor da 2ª parte da lista): confirmar os nomes **Pidão do Vape**, **Clubexx** e **Calibra o Smite**.
-
-## 4. Fases
-
-| Fase | O que | Quem |
-|---|---|---|
-| 0 | Henrique responde as dúvidas acima | Henrique |
-| 1 | M9, M3, M8: Mariana, Calibra o Smite, tags, ataque novo do Superkid sem a parte de buscar | Claude (motor) + DeepSeek (testes) |
-| 2 | M4/M6/M7: Hanna, Tiago Cássio, Pidão do Vape, Clubexx, PMLDM (sem Ezreal) | Claude |
-| 3 | M2/M5: Lavras MG, Júlia, forma Ezreal | Claude |
-| 4 | M1 Resenha: Itallo de Viego, Pedra Mole (motor, online, tela) | Claude + Gemini (QA de tela) |
-| 5 | Arte (pode ir em paralelo desde a fase 0): ver seção 5 | Codex pela ponte |
-| 6 | Entrar nos pacotes (`js/baralho-dados.js`: `numero`, `raridade`, `peso`, `tcg`), decks prontos novos (Superkid, Itallo), simulador (`node tools/tcg-simular.mjs 2000 normal`: 16–22 turnos, quem começa 48–55%, toda carta entre 40% e 60%), `REGRAS_VERSAO`, cache-bust, changelog | Claude + Gemini |
-
-Cada carta nova precisa, no mínimo: `id` + texto em `js/baralho-dados.js`, números em `js/tcg-cartas.js`, arte, teste em
-`test/tcg-regras.test.js`, linha no changelog e no `docs/BATALHA-DOS-TORADOS.md`.
-
-## 5. Plano de arte (para a ponte do Codex)
-
-Formato igual ao das cartas que existem: **PNG 1024×1280, sem transparência**, personagem em destaque, recorte seguro no centro-alto
-(a carta usa `foco: '50% 30%'`), mesmo estilo de gibi das artes de `assets/Cartas/`. Destino: `assets/Cartas/<id>.png`.
-Antes de gerar, o Claude escreve a tarefa em `E:\AI Workshop\Codex\Bridge\tarefas\NN-cartas-novas.md` com o manifesto e roda
-`node conferir.cjs`. **Falta de referência é o que trava**: para cada personagem real/amigo, o Henrique manda uma foto ou ficha.
-
-| Arquivo | Personagem | Referência que já existe | Falta |
+| Arquivo | Carta | Referência Base (Art Bible / Assets) | Descrição Visual Canônica para Geração da Arte |
 |---|---|---|---|
-| `hanna.png` | Hanna | — | referência (ficha ou foto) |
-| `mariana.png` | Mariana | — | referência |
-| `julia.png` | Júlia | — | referência |
-| `lavras-mg.png` | Lavras MG (entidade: a cidade/lugar) | — | descrição do visual |
-| `italo-de-viego.png` | Itallo de Viego 20/0 | `assets/Cartas/italolol.png`, `assets/Personagens/Italolol.png` | estilo "Viego" (fantasia/armadura?) |
-| `pedra-mole.png` | Pedra Mole (cena) | `enzo-games.png` + `italolol.png` | descrição da cena |
-| `pmldm.png` e `pmldm-ezreal.png` | PMLDM e forma Itallo Ezreal | `italolol.png` | descrição (o que é PMLDM?) |
-| `tiago-cassio.png` | Tiago Cássio | — | referência |
-| `hoje-e-quarta-feira.png` | cena da quarta-feira com macarronada | `piscina-de-macarronada.png` | descrição |
-| `clubexx.png` | campo Clubexx (balada) | `mansao-do-inominavel.png` (estilo de campo) | descrição |
-| `pidao-do-vape.png` | Pidão do Vape | — | descrição |
-| `calibra-o-smite.png` | Calibra o Smite (magia) | — | descrição |
-| `sao-joao-do-b.png` | São João do B | `sao-joao-do-butico.png` | decisão da dúvida 6 |
-| Cartilhas "Como jogar" 1 e 2 | refazer com 3 Auras por turno | `assets/Batalha/como-jogar-1.png` e `-2.png` | só pedir (Codex) |
-
-Prompt-base (cada carta troca só a linha do personagem): "Ilustração em estilo de gibi/HQ brasileiro, linhas grossas, cores saturadas,
-personagem em plano médio no centro-alto, fundo simples com cor que combine com a raridade (comum cinza, raro azul, épico roxo,
-lendário dourado), sem texto, sem moldura, 1024×1280."
-
-## 6. Próximo passo recomendado
-
-Responder as dúvidas 1 a 7 (principalmente o Tiago Cássio e a Resenha) e mandar as referências de arte. Com isso o Claude
-começa pela fase 1 e já deixa a tarefa do Codex pronta.
+| `calibra-o-smite.png` | Calibra o Smite (#025) | Ícone clássico de *Smite* (LoL) | Raio celestial dourado-alaranjado em formato de mão elétrica gigante caindo verticalmente sobre um monstro da selva com a vida no limite (600), pulverizando-o sem espalhar dano ao redor. |
+| `calibra-o-smite-anuah.png` | Calibra o Smite - Anuah (#026) | *Smite* Azul/Desafiador + Orbes de Aura | Dois orbes de Aura dourada dos aliados sendo canalizados num raio azul-cobalto e violeta que atinge o inimigo e prende seus braços com correntes translúcidas de exaustão, reduzindo seu impacto pela metade. |
+| `cade-meu-jungle.png` | Cadê meu Jungle (#027) | `ITALOLOL-01` + Grompe / Pings `?` | Cena cômica na selva/rio: um sapo verde gigante mal-humorado num tronco enquanto um redemoinho puxa um lutador do banco adversário pelo colarinho para fora do campo, cercado por pontos de interrogação amarelos (`?`) flutuando. |
+| `dar-ff.png` | Dar FF (#028) | Placa de rendição `/ff` (4 verdes, 1 vermelho) | Painel com 4 luzes verdes e 1 vermelha: uma mão enfaixada recebendo brilho de cura (+600) aperta um botão vermelho gigante enquanto a outra abana uma bandeirinha branca, com dinamites prestes a explodir para os dois lados se acionado em sequência. |
+| `hoje-e-quarta-feira.png` | Hoje é Quarta-feira (#029) | `ENZO-01_Enzo_Games_Principal` + `piscina-de-macarronada.png` | Enzo Games (gato laranja baixo e balofo, listras pretas, barba/bigode curtos, tatuagem Maori e smartwatch preto no braço) jogando 2 cartas para trás por cima do ombro enquanto devora feliz uma travessa gigante de macarronada numa quarta-feira, com outro aliado pulando do banco para a frente. |
+| `itallo-de-viego.png` | Itallo de Viego 20/0 (#030) | `ITALOLOL-01_ItaloLOL_Principal` + Viego (LoL) + `ENZO-01` | ItaloLOL (cãozinho amarelo `<1m`, orelhas marrons caídas, óculos redondos, topete preto e rosa-magenta, corrente dourada) vestido como Viego (O Rei Destruído): jaqueta preta aberta, coroa espectral verde-água acima do topete, espada Zweihander espectral verde e Névoa Negra invocando um Enzo Games deitado/virado ao fundo. |
+| `pedra-mole.png` | Eu vou ir aí na Pedra Mole te matar (#031) | `ENZO-01_Enzo_Games_Principal` + `ITALOLOL-01_ItaloLOL_Principal` | **Enzo Games tentando esganar o ItaloLOL:** Enzo Games (gato laranja baixo e gorducho, olhos em fúria, tatuagem Maori e smartwatch) avançando e apertando com as duas mãos o pescoço do ItaloLOL (cãozinho amarelo de orelhas caídas, topete preto/rosa e óculos redondos tortos, olhos esbugalhados e língua de fora). |
+| `hanna.png` | Hanna (#032) | Personagem nova + Aura do `SUPERKID-01` | **Jornalista morena extremamente gananciosa:** mulher morena de cabelos castanho-escuros longos, blazer de repórter e crachá de imprensa, olhar e sorriso extremamente gananciosos e ambiciosos, segurando um microfone numa mão e puxando avidamente uma esfera de Aura dourada do oponente com a outra para entregá-la ao Superkid. |
+| `mariana.png` | Mariana (#033) | Inspirada em `encantadora` (`feiticeira-01..04.png`) | **Inspirada na Encantadora, porém morena de cabelo cacheado e maligna no sentido de iludir:** feiticeira/manipuladora morena de cabelos cacheados volumosos escuros, manto escuro com detalhes dourados, olhar sedutor, calculista e enganador, conjurando fios de névoa rosa-escura e corações sombrios que formam uma barreira protetora ao redor do Superkid. |
+| `julia.png` | Júlia (#034) | Inspirada em `SUPERKID-01_SuperKid_Padrao` | **Inspirada no visual do Superkid, mas com cabelo rosa curto:** garota super-heroína de cabelo rosa curto estilizado vestindo o traje clássico do Superkid (túnica azul-royal com frisos dourados, capa vermelha esvoaçante, cinto vermelho com fivela dourada e botas vermelhas), disparando energia dourada e abrindo um portal para Lavras MG ao fundo. |
+| `lavras-mg.png` | Lavras MG (#035) | Inspirada em Metrópolis (Superman) | **Cidade inspirada em Metrópolis:** visão épica e reluzente de Lavras-MG como a Metrópolis do Superman, com arranha-céus art déco dourados e azuis, prédio central coroado por um globo dourado gigante, trem moderno em trilhos elevados e colunas de Aura amarela subindo das avenidas para o céu. |
+| `clubexx.png` | Clubexx... (#036) | Estilo de campo + `SUPERKID-01` | **Local projetado para farmar aura:** fachada e pista de um clube noturno de ostentação iluminado por holofotes dourados e luzes neon azuis/roxas, espelhos, fumaça dramática no chão, ventiladores para esvoaçar capas e pedestais iluminados onde personagens ficam de braços cruzados concentrando Aura. |
+| `douglas.png` | Douglas (#037) | `DOUGXBOX-01` e `DOUGXBOX-02` (Art Bible) + `sao-joao-do-butico.png` | Jovem adulto de pele morena clara, rosto anguloso sem barba, sobrancelhas pretas grossas e cabelo preto espetado com franja diagonal, vestindo o colete verde-escuro de gola alta da Tropa Box sobre traje preto com emblemas brancos e protetores de antebraço, segurando o controle preto com 2 pilhas AA brilhando em verde no morro de São João do Butico. |
+| `caiam.png` | Caiam (#038) | Personagem novo + `sao-joao-do-butico.png` | **Amigo de óculos, cabelo curto e branco, camisa vermelha com estrela branca no centro, gritando e zangado:** jovem usando óculos de grau, cabelo curto branco platinado, vestindo camisa vermelha viva com uma estrela branca grande no centro do peito, gritando furioso com veias na testa e punhos cerrados, guardando a entrada de São João do Butico. |
+| `teemo.png` | Teemo (#039) | Chapéu de `DEGUSTADOR-01` + Teemo (LoL) | Pequeno texugo/yordle explorador peludo usando o icônico gorro verde de escoteiro com óculos vermelhos na testa e lenço vermelho, sorriso travesso de olhos fechados, soprando uma zarabatana de bambu cercado por cogumelos roxos e verdes explodindo em fumaça venenosa violeta nas vielas de São João do Butico. |
+| `tiago-cassio.png` | Tiago Cássio (#040) | Inspirado em `CHORAO-01_Chorao_Principal` (Art Bible) | **Inspirado no Chorão:** homem adulto muito gordo e corpulento, grande barriga saliente, rosto largo avermelhado, nariz bulboso, cabelo preto curto nas laterais com topo ralo e barba por fazer, em pose intimidadora de agiota/cobrador de Aura, sugando todas as orbes de Aura do inimigo com uma mão e carregando 6 esferas colossais de energia na outra. |
+| `pmldm.png` | PMLDM (#041) | Personagem nova + Xayah (LoL) + acessórios `ITALOLOL-01` | **Menina de cabelo vermelho com franja, pele bem branca, aspectos inspirados na Xayah de LoL, corpo levemente violão, óculos preto redondo e acessórios que lembram o ItaloLOL:** garota pálida de cabelo vermelho-carmim com franja reta, silhueta levemente violão, óculos pretos redondos, capuz/orelhas plumadas e penas afiadas flutuando nos dedos estilo Xayah, usando corrente dourada grossa no pescoço, detalhes preto/rosa e chaveiro do cãozinho amarelo ItaloLOL. |
+| `pmldm-ezreal.png` | Forma Itallo Lendário de EZREAL 40/0/100 (#041-B) | `ITALOLOL-01` + `pmldm.png` + Ezreal (LoL) | Forma transformada: ItaloLOL (cãozinho amarelo de orelhas caídas, óculos redondos e topete preto/rosa) levitando com penas vermelhas da PMLDM ao redor e empunhando a Manopla Arcana dourada de Ezreal que dispara feixes dourados místicos para todos os lados dentro de uma redoma de imunidade. |
+| `pidao-do-vape.png` | Pidão do Vape (#042) | Referência ao pod/vape de `SUPERKID-01` | Capanga folgado de moletom esticando a mão com cara de pidão para dar um puxãozinho num vape/pod eletrônico colorido que suga uma orbe de Aura dourada, enquanto segura o peito com a outra mão tossindo fumaça escura de dano pulmonar progressivo. |
