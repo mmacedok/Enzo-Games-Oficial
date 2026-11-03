@@ -102,6 +102,10 @@ imagem. Todo ataque ainda ganha o `fx-impacto` quando acerta.
 | O Inominável | Poder: Besteira no Discord | `fx-balao-discord.png` (peça) | balão de mensagem sai do Inominável e gruda no ativo do adversário, que fica Notificado |
 | Superkid | Farmar Aura | `fx-aura-coluna.png` (peça) | coluna de luz dourada sobe em volta do Superkid e uma orbe de Aura entra nele |
 | Superkid | Aura de 67 Segundos | `fx-relogio.png` (peça), `fx-aura-coluna.png` | o relógio aparece girando os ponteiros rápido atrás dele e o golpe sai com a coluna de aura inclinada até o alvo |
+| Júlia | Pedir Skin pro Superkid | `fx-portal-skin.png` (peça), `fx-aura-coluna.png` | portal místico de Lavras MG abre atrás dela, feixes de luz cósmica caem no alvo e Júlia recarrega o Superkid |
+| Teemo | Campo Minado | `fx-cogumelo.png` (peça), `fx-fumaca-roxa.png` (folha 4) | chuva de cogumelos roxos e verdes cobre o campo inimigo e explode em nuvens densas de veneno |
+| PMLDM | Plumas Carmesim | `fx-pena.png` (peça 256) | plumas afiadas carmesim voam em arco até o alvo e explodem em faíscas mágicas |
+| PMLDM | Despertar Ezreal (Super Itallo) | `fx-penas-espiral.png` (peça), `fx-pena.png` (peça), `fx-disparo-arcano.png` (peça) | vórtice de penas vermelhas e violetas gira em alta velocidade ao redor da carta, clarão místico na tela e ela se transforma no Super Itallo com ataques arcanos em leque |
 
 **Prompts:**
 - **`fx-almondega.png`**: `Uma almôndega de carne suculenta, redonda, com molho de tomate escorrendo e

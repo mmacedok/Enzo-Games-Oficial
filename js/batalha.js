@@ -3098,6 +3098,54 @@
                 await vooImg('fx-aura-coluna', at, alvo, { tam: .8, alto: 1.3, dur: 460 });
             },
         },
+        'julia': {
+            'Pedir Skin pro Superkid': async (at, alvo) => {
+                await peca('fx-portal-skin', at, { tam: 1.5, girar: 360, dur: 750 });
+                await chuva('fx-estrela', alvo, 8, { tam: .5, espalhar: 1.6, dur: 400 });
+                await vooImg('fx-aura-coluna', at, alvo, { tam: 1.0, alto: 1.4, dur: 450 });
+                await poeira(at, 1.2);
+            },
+        },
+        'teemo': {
+            'Campo Minado': async (at, alvo) => {
+                await chuva('fx-cogumelo', alvo, 6, { tam: .6, espalhar: 2.2, dur: 380 });
+                await folha('fx-fumaca-roxa', alvo, { tam: 1.9, filtro: 'hue-rotate(210deg) saturate(1.7)' });
+                await faiscas(alvo, 5);
+            },
+        },
+        'pmldm': {
+            'Plumas Carmesim': async (at, alvo) => {
+                await vooImg('fx-pena', at, alvo, { tam: .75, arco: 80, girar: 2, dur: 400 });
+                await chuva('fx-pena', alvo, 5, { tam: .38, espalhar: 1.4, dur: 320 });
+                await faiscas(alvo, 4);
+            },
+            'Despertar Ezreal': async (at, alvo) => {
+                const escuro = escurecer(1100);
+                await volta('fx-pena', at, 8, { tam: .55, raio: 1.15, girar: 360, dur: 750 });
+                await peca('fx-penas-espiral', at, { tam: 1.5, girar: 720, dur: 850 });
+                await flash();
+                await Promise.all([escuro, faiscas(at, 7)]);
+            },
+            'Super Disparo Místico 40/0/100': async (at, alvo) => {
+                await peca('fx-disparo-arcano', at, { tam: 1.4, girar: 45, dur: 550 });
+                await chuva('fx-disparo-arcano', alvo, 5, { tam: .65, espalhar: 2.0, dur: 350 });
+                await faiscas(alvo, 6);
+            },
+            'Super Au! Aura!': async (at, alvo) => {
+                for (let i = 0; i < 3; i++) {
+                    peca('fx-au', at, { tam: 1.1 + i * .35, dx: 45 + i * 35, dur: 520 });
+                    await esperar(80);
+                }
+                await vooImg('fx-au', at, alvo, { tam: 1.3, dur: 400 });
+            },
+            'Barragem Incendiária 40/0/100': async (at, alvo) => {
+                const escuro = escurecer(1300);
+                await peca('fx-disparo-arcano', at, { tam: 1.8, dur: 850 });
+                await folha('fx-explosao-macarronada', alvo, { tam: 1.8 });
+                await flash();
+                await escuro;
+            },
+        },
 
         // ---- Épicos e raros --------------------------------------------------
         'chorao': {

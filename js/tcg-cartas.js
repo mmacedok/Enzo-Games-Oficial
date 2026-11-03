@@ -166,6 +166,7 @@
                 texto: 'No banco: todo dano causado por um Itallo seu atinge o time inimigo inteiro.' },
             ataques: [
                 { nome: 'Despertar Ezreal', custo: 3, dano: 30, efeitos: [{ tipo: 'transformarEzreal' }] },
+                { nome: 'Plumas Carmesim', custo: 1, dano: 20 },
             ] },
         'pidao-do-vape': { hp: 70, recuo: 1,
             poder: { nome: 'Puxãozinho', tipo: 'roubarAuraVape', ativavel: true,

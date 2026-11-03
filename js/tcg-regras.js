@@ -272,12 +272,16 @@
             dano: 0, reducao: 0, tags: tagsDe(inst.id), visual: null, metadeDano: false };
         if (inst.transformado === 'ezreal') {
             f.ataques = [
-                { nome: 'Disparo Místico em Área', custo: 1, dano: 30, efeitos: [{ tipo: 'danoTodosInimigos', valor: 30 }] },
+                { nome: 'Super Disparo Místico 40/0/100', custo: 1, dano: 30, efeitos: [{ tipo: 'danoTodosInimigos', valor: 30 }] },
+                { nome: 'Super Au! Aura!', custo: 1, dano: 40 },
                 { nome: 'Barragem Incendiária 40/0/100', custo: 4, dano: 0, efeitos: [{ tipo: 'sacrificarEDestruir2' }] },
             ];
-            f.visual = { arte: 'pmldm', nome: 'Itallo Lendário de EZREAL 40/0/100', raridade: 'lendario' };
+            f.visual = { arte: 'pmldm-ezreal', nome: 'Super Itallo Lendário de EZREAL 40/0/100', raridade: 'lendario' };
             f.imuneBanco = true;
             f.imuneEstados = true;
+            f.reducao = 10;
+            f.dano = 10;
+            f.hp = (f.hp || 120) + 20;
         }
         const anexos = inst.anexos || [];
         if (!anexos.length) return f;

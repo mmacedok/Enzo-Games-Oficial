@@ -1352,8 +1352,12 @@ test('Cartas Avulsas: Tiago Cássio, PMLDM (Ezreal) e Pidão do Vape', () => {
     assert.equal(eVape.jogadores[0].banco[0].dano, 10 * R.ESCALA, '1ª tragada causou 200 de dano pulmonar');
     eVape = jogar(eVape, { tipo: 'atacar', ataque: 0 }).estado;
     assert.equal(eVape.jogadores[0].ativo.transformado, 'ezreal', 'PMLDM transformou em Ezreal 40/0/100');
-    assert.equal(R.ficha(eVape, eVape.jogadores[0].ativo).imuneBanco, true);
-    assert.equal(R.ficha(eVape, eVape.jogadores[0].ativo).imuneEstados, true);
+    const fSuperItalo = R.ficha(eVape, eVape.jogadores[0].ativo);
+    assert.equal(fSuperItalo.imuneBanco, true);
+    assert.equal(fSuperItalo.imuneEstados, true);
+    assert.equal(fSuperItalo.reducao, 10, 'Super Italo reduz 200 de dano');
+    assert.equal(fSuperItalo.dano, 10, 'Super Italo ganha +200 de dano');
+    assert.equal(fSuperItalo.hp, 140, 'Super Italo tem HP aumentado para 2.800');
 });
 
 test('Booster da Pedra Mole: modelo de 900 créditos com PMLDM na capa central', () => {
