@@ -43,7 +43,7 @@
             ataques: [
                 { nome: 'Arquivo Confidencial', custo: 2, dano: 60, efeitos: [{ tipo: 'curarSi', valor: 20 }] },
             ] },
-        'degustador-da-noite': { hp: 130, recuo: 1, ataques: [
+        'degustador-da-noite': { hp: 130, recuo: 1, tags: ['degustador', 'sao-joao-do-butico'], ataques: [
             { nome: 'Vírgula-rangue', custo: 1, dano: 20, alvo: 'qualquer', recarga: 1 },
             { nome: 'Escudo de Parênteses', custo: 3, dano: 90, recarga: 1, efeitos: [{ tipo: 'escudo', valor: 30 }] },
         ] },
@@ -53,7 +53,7 @@
             ataques: [
                 { nome: 'Bala Dourada', custo: 2, dano: 60, alvo: 'qualquer', recarga: 1 },
             ] },
-        'superkid': { hp: 130, recuo: 2, ataques: [
+        'superkid': { hp: 130, recuo: 2, tags: ['superkid'], ataques: [
             { nome: 'Farmar Aura', custo: 1, dano: 0, efeitos: [{ tipo: 'auraSi', valor: 1 }] },
             { nome: 'Aura de 67 Segundos', custo: 2, dano: 20, efeitos: [{ tipo: 'bonusPorAura', valor: 20 }] },
         ] },
@@ -63,7 +63,7 @@
             poder: { nome: 'Vou te Processar!', tipo: 'contraAtaque', ativavel: false, valor: 20,
                 texto: 'Quem ataca o Chorão leva 20 de volta.' },
             ataques: [{ nome: 'Birra', custo: 2, dano: 50 }] },
-        'sombra-do-degustador': { hp: 90, recuo: 0, ataques: [
+        'sombra-do-degustador': { hp: 90, recuo: 0, tags: ['degustador', 'sao-joao-do-butico'], ataques: [
             { nome: 'Teemo no Top', custo: 1, dano: 20, efeitos: [{ tipo: 'estado', estado: 'notificado' }] },
             { nome: 'Fumaça Roxa', custo: 2, dano: 50 },
         ] },
@@ -75,7 +75,7 @@
             ataques: [
                 { nome: 'Porta do Quarto', custo: 2, dano: 30, efeitos: [{ tipo: 'escudo', valor: 20 }] },
             ] },
-        'italolol': { hp: 90, recuo: 1, ataques: [
+        'italolol': { hp: 90, recuo: 1, tags: ['itallo'], ataques: [
             { nome: 'Au! Aura!', custo: 1, dano: 20 },
             { nome: '0/14/2', custo: 2, dano: 70, efeitos: [{ tipo: 'danoSi', valor: 30 }] },
         ] },
@@ -115,19 +115,135 @@
                 texto: '1 vez por turno: olha a mão do adversário.' },
             ataques: [{ nome: 'Facho', custo: 0, dano: 20 }] },
 
+        // ---- Novas Cartas de Lutadores (Arquétipos e Avulsas) ----------------
+        'hanna': { hp: 80, recuo: 1, tags: ['superkid'],
+            aoEntrar: [{ tipo: 'roubarAuraParaSuperkid', valor: 1 }],
+            ataques: [
+                { nome: 'Olhar Frio', custo: 1, dano: 20 },
+            ] },
+        'mariana': { hp: 100, recuo: 1, tags: ['superkid'],
+            poder: { nome: 'Proteção Permanente', tipo: 'protegerSuperkid', ativavel: false,
+                texto: 'Enquanto estiver no banco, o seu Superkid é imune a Hit Kill e não recebe dano de efeitos.' },
+            ataques: [
+                { nome: 'Empurrão', custo: 2, dano: 40 },
+            ] },
+        'julia': { hp: 120, recuo: 1, tags: ['superkid'],
+            proibidoCom: ['superkid'],
+            aoEntrar: [{ tipo: 'invocarDoDeck', carta: 'lavras-mg' }],
+            ataques: [
+                { nome: 'Pedir Skin pro Superkid', custo: 2, dano: 60, efeitos: [{ tipo: 'trocarPorSuperkidDoDeck', aura: 1 }] },
+            ] },
+        'lavras-mg': { hp: 70, recuo: 2, tags: ['superkid'], turnosNaMesa: 2,
+            ataques: [
+                { nome: 'Trem de Minas', custo: 1, dano: 10 },
+            ] },
+        'douglas': { hp: 90, recuo: 1, tags: ['sao-joao-do-butico'], exigeCampo: 'sao-joao-do-butico',
+            poder: { nome: 'Herege', tipo: 'comprarSeDegustador', ativavel: true, valor: 2,
+                texto: '1 vez por turno: se você tiver um Degustador na mesa, compra 2 cartas.' },
+            ataques: [
+                { nome: 'Revezamento', custo: 2, dano: 20, efeitos: [{ tipo: 'trocarPorDegustadorComEscudo', escudo: 30 }] },
+            ] },
+        'caiam': { hp: 80, recuo: 1, tags: ['sao-joao-do-butico'],
+            aoEntrar: [{ tipo: 'buscarCampoDoDeck', carta: 'sao-joao-do-butico' }],
+            poder: { nome: 'Guarda do Butico', tipo: 'travarCampo', ativavel: false,
+                texto: 'Enquanto estiver no banco, o campo não pode ser trocado nem descartado.' },
+            ataques: [
+                { nome: 'Convocar', custo: 1, dano: 10, efeitos: [{ tipo: 'buscarPorTag', tag: 'sao-joao-do-butico', qtd: 2 }] },
+            ] },
+        'teemo': { hp: 50, recuo: 1, tags: ['sao-joao-do-butico'],
+            poder: { nome: 'Veneno do Butico', tipo: 'venenoTeemoBanco', ativavel: false,
+                texto: 'No banco: todo dano do seu Degustador envenena o inimigo (1.000 de dano ao longo de 4 turnos; se voltar pro baralho envenenado, o jogador leva metade do dano restante).' },
+            ataques: [
+                { nome: 'Campo Minado', custo: 3, dano: 5, efeitos: [{ tipo: 'envenenarTodosTeemo', danoTodos: 5 }] },
+            ] },
+        'tiago-cassio': { hp: 100, recuo: 2, ataques: [
+            { nome: 'Agiotagem de Aura', custo: 1, dano: 13, recarga: 1, efeitos: [{ tipo: 'roubarTodaAura', turnos: 1 }] },
+            { nome: 'Cobrança Final', custo: 6, dano: 300, semAuraRoubada: true, efeitos: [{ tipo: 'danoDiretoJogador', valor: 300 }] },
+        ] },
+        'pmldm': { hp: 120, recuo: 2, tags: ['itallo'],
+            aoEntrar: [{ tipo: 'buscarPorTag', tag: 'itallo', qtd: 2 }],
+            poder: { nome: 'Dano em Área', tipo: 'splashItallo', ativavel: false,
+                texto: 'No banco: todo dano causado por um Itallo seu atinge o time inimigo inteiro.' },
+            ataques: [
+                { nome: 'Despertar Ezreal', custo: 3, dano: 30, efeitos: [{ tipo: 'transformarEzreal' }] },
+            ] },
+        'pidao-do-vape': { hp: 70, recuo: 1,
+            poder: { nome: 'Puxãozinho', tipo: 'roubarAuraVape', ativavel: true,
+                texto: '1 vez por turno: rouba 1 Aura do adversário e leva dano pulmonar progressivo (200, 400, 600...).' },
+            ataques: [
+                { nome: 'Baforada', custo: 1, dano: 20 },
+            ] },
+
+        // ---- Magias e Resenhas (tipo `resenha` / modo `anexo`) ---------------
+        'calibra-o-smite': { anexo: {
+            texto: 'Gasta 1 Aura sua: se o ativo do adversário tiver exatamente 600 de vida, ele é destruído sem causar dano à vida do jogador.',
+            em: { lado: 'dele', lugar: 'ativo' },
+            custoAuraJogador: 1,
+            exigeVidaExata: 30,
+            soAoEntrar: true,
+            aoEntrar: [{ tipo: 'smiteSemNocaute' }],
+        } },
+        'calibra-o-smite-anuah': { anexo: {
+            texto: 'Gasta 2 Auras dos seus personagens: o ativo do adversário causa apenas metade do dano até o final do próximo turno dele.',
+            em: { lado: 'dele', lugar: 'ativo' },
+            custoAuraJogador: 2,
+            turnos: 2,
+            metadeDano: true,
+        } },
+        'cade-meu-jungle': { anexo: {
+            texto: 'Gasta 2 Auras suas: devolve uma carta do banco do adversário para a mão dele.',
+            em: { lado: 'dele', lugar: 'banco' },
+            custoAuraJogador: 2,
+            soAoEntrar: true,
+            aoEntrar: [{ tipo: 'voltarParaMao' }],
+        } },
+        'dar-ff': { anexo: {
+            texto: 'Gasta 1 Aura sua: cura 600. Se os dois jogadores usarem Dar FF um depois do outro, ambos levam 1.000 de dano.',
+            em: { lado: 'meu' },
+            custoAuraJogador: 1,
+            soAoEntrar: true,
+            aoEntrar: [{ tipo: 'darFF', cura: 30, danoMutuo: 50 }],
+        } },
+        'hoje-e-quarta-feira': { anexo: {
+            texto: 'Descarta até 2 cartas da mão, o adversário ganha +1 Aura no próximo turno e troca seu ativo por um do banco.',
+            em: { lado: 'meu', lugar: 'banco' },
+            soAoEntrar: true,
+            aoEntrar: [{ tipo: 'quartaFeira' }],
+        } },
+        'itallo-de-viego': { tags: ['itallo'], anexo: {
+            texto: 'Ao entrar, joga um Enzo Games do baralho para a mesa (entra virado). Dá o ataque Rei Destruído (2 Aura): 200 de dano e o próximo ataque aliado pode acertar o banco.',
+            em: { lado: 'meu' },
+            tags: ['itallo'],
+            aoEntrar: [{ tipo: 'invocarDoDeck', carta: 'enzo-games', virado: true }],
+            ataques: [
+                { nome: 'Rei Destruído', custo: 2, dano: 10, efeitos: [{ tipo: 'liberarAtaqueBanco' }] },
+            ],
+        } },
+        'pedra-mole': { anexo: {
+            texto: 'Se você controlar um Enzo Games virado e qualquer carta Itallo, desvira o Enzo Games e ele ganha +200 de dano neste turno.',
+            em: { lado: 'meu', cartas: ['enzo-games'] },
+            exigeVirado: true,
+            exigeAliadoTag: 'itallo',
+            dano: 10,
+            turnos: 1,
+            aoEntrar: [{ tipo: 'desvirarSi' }],
+        } },
+
         // ---- Campos (ficam na mesa e valem para os dois) --------------------
         'piscina-de-macarronada': { campo: { tipo: 'curaInicio', valor: 20,
             texto: 'Quando quem a joga a põe na mesa, cura 20 de cada carta dele na mesa (ativo e banco) no mesmo turno; depois, no começo de cada turno, cura 20 de cada carta de quem vai jogar.' } },
         'toradolandia': { campo: { tipo: 'compraExtra', limiteMao: 3,
             texto: 'Quem começa o turno com 3 cartas ou menos na mão compra 1 a mais.' } },
         'mansao-do-inominavel': { campo: { tipo: 'mansao', veneno: 20, hpGoon: 20,
-            texto: 'Notificado tira 20 em vez de 10. Goons têm +20 HP enquanto ela estiver na mesa (se ela sair, perdem o HP extra, mas nunca caem por isso). Goon que ataca com 1 Aura a mais do que o ataque pede notifica o ativo do adversário.' } },
+            texto: 'Notificado tira 20 em vez de 10. Goons ganham +20 HP permanente na mesa (não perdem se a Mansão sair). Goon que ataca com 1 Aura a mais do que o ataque pede notifica o ativo do adversário.' } },
         'estacionamento-noturno': { campo: { tipo: 'recuoGratisGoon',
             texto: 'Goons recuam de graça.' } },
         'casa-do-enzo-games': { campo: { tipo: 'trocarCarta',
             texto: '1 vez por turno, cada jogador pode devolver 1 carta da mão ao baralho para comprar 1.' } },
-        'sao-joao-do-butico': { campo: { tipo: 'protegeBanco',
-            texto: 'Comporta secreta: ataques não acertam o banco.' } },
+        'sao-joao-do-butico': { tags: ['sao-joao-do-butico'], campo: { tipo: 'protegeBanco',
+            texto: 'Comporta secreta: ataques não acertam o banco. Degustadores que voltam para o baralho colocam +1 Aura em outro Degustador no banco.' } },
+        'clubexx': { campo: { tipo: 'moverAuraSuperkid',
+            texto: '1 vez por turno, cada jogador pode tirar 1 Aura de um Superkid que controla e mover para outra carta no banco.' } },
     };
 
 

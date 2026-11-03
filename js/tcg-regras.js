@@ -163,7 +163,7 @@
         return { uid, id, dano: 0, aura: 0, estados: { notificado: false, iludido: false, silenciado: 0, virada: 0 }, escudo: null, anexos: [] };
     }
     function flagsDoTurno() {
-        return { auras: AURAS_POR_TURNO, auraEm: {}, reforco: 0, campo: false, recuo: false, trocarCarta: false, poderes: [], devolvidasMao: 0, devolvidasMesa: 0 };
+        return { auras: AURAS_POR_TURNO, auraEm: {}, reforco: 0, campo: false, recuo: false, trocarCarta: false, moverAuraSuperkid: false, poderes: [], devolvidasMao: 0, devolvidasMesa: 0, bonusDanoTurno: {} };
     }
 
     /** Cartas que um deck pode ter banidas pelo adversário: só as que não são lendárias. */
@@ -266,10 +266,19 @@
      *   tags          tags a mais
      *   visual        { arte, nome, raridade }: muda como a carta aparece (arte = id de uma arte de assets/Cartas)
      */
-    function ficha(estado, inst) {
+        function ficha(estado, inst) {
         const base = combate(inst.id) || {};
         const f = { hp: base.hp || 0, recuo: base.recuo || 0, ataques: base.ataques || [], poder: base.poder || null,
-            dano: 0, reducao: 0, tags: tagsDe(inst.id), visual: null };
+            dano: 0, reducao: 0, tags: tagsDe(inst.id), visual: null, metadeDano: false };
+        if (inst.transformado === 'ezreal') {
+            f.ataques = [
+                { nome: 'Disparo Místico em Área', custo: 1, dano: 30, efeitos: [{ tipo: 'danoTodosInimigos', valor: 30 }] },
+                { nome: 'Barragem Incendiária 40/0/100', custo: 4, dano: 0, efeitos: [{ tipo: 'sacrificarEDestruir2' }] },
+            ];
+            f.visual = { arte: 'pmldm', nome: 'Itallo Lendário de EZREAL 40/0/100', raridade: 'lendario' };
+            f.imuneBanco = true;
+            f.imuneEstados = true;
+        }
         const anexos = inst.anexos || [];
         if (!anexos.length) return f;
         let ataques = f.ataques;
@@ -284,6 +293,7 @@
             f.dano += ax.dano || 0;
             f.reducao += ax.reducao || 0;
             custo += ax.custo || 0;
+            if (ax.metadeDano) f.metadeDano = true;
             if (ax.trocaAtaques) ataques = ax.trocaAtaques;
             if (ax.ataques) extras.push(...ax.ataques);
             if (ax.efeitosAtaque) efeitosExtras.push(...ax.efeitosAtaque);
@@ -300,14 +310,30 @@
     const poderDe = (estado, inst) => ficha(estado, inst).poder;
 
     function hpMax(estado, inst) {
-        const base = ficha(estado, inst).hp;
+        const base = ficha(estado, inst).hp + (inst.hpPermanente || 0);
         const campo = efeitoCampo(estado);
-        return (base + (campo?.tipo === 'mansao' && tipoDe(inst.id) === 'goon' ? campo.hpGoon : 0)) * ESCALA;
+        const extraCampo = (campo?.tipo === 'mansao' && tipoDe(inst.id) === 'goon' && !inst.hpPermanente) ? campo.hpGoon : 0;
+        return (base + extraCampo) * ESCALA;
     }
     function custoRecuo(estado, inst) {
         const campo = efeitoCampo(estado);
         if (campo?.tipo === 'recuoGratisGoon' && tipoDe(inst.id) === 'goon') return 0;
         return ficha(estado, inst).recuo;
+    }
+
+    /** Total de Auras nas cartas da mesa de um jogador, e desconto das primeiras Auras encontradas. */
+    const totalAuraMesa = (jogador) => naMesa(jogador).reduce((s, c) => s + (c.aura || 0), 0);
+    function gastarAuraMesa(jogador, qtd, eventos) {
+        let falta = qtd;
+        for (const c of naMesa(jogador)) {
+            if (falta <= 0) break;
+            const tira = Math.min(c.aura || 0, falta);
+            if (tira > 0) {
+                c.aura -= tira;
+                falta -= tira;
+                eventos.push({ tipo: 'aura', uid: c.uid, valor: -tira, aura: c.aura, fonte: 'custo' });
+            }
+        }
     }
 
     /**
@@ -318,17 +344,26 @@
      */
     function erroDoAnexo(estado, j, ax, alvo) {
         const em = ax.em || {};
+        const eu = estado.jogadores[j];
         const dono = estado.jogadores.findIndex((jg) => naMesa(jg).includes(alvo));
         const lado = em.lado || 'meu';
         if (lado === 'meu' && dono !== j) return 'essa carta vai atrás de um lutador seu';
         if (lado === 'dele' && dono === j) return 'essa carta vai atrás de um lutador do adversário';
-        if ((alvo.anexos || []).length >= (ax.maxNoLutador || ANEXOS_POR_LUTADOR)) return 'esse lutador já tem uma carta atrás dele';
+        if (!ax.soAoEntrar && (alvo.anexos || []).length >= (ax.maxNoLutador || ANEXOS_POR_LUTADOR)) return 'esse lutador já tem uma carta atrás dele';
         const ehAtivo = estado.jogadores[dono].ativo === alvo;
         if (em.lugar === 'ativo' && !ehAtivo) return 'essa carta só vai atrás do ativo';
         if (em.lugar === 'banco' && ehAtivo) return 'essa carta só vai atrás de quem está no banco';
         if (em.tipos && !em.tipos.includes(tipoDe(alvo.id))) return 'essa carta não combina com esse lutador';
         if (em.cartas && !em.cartas.includes(alvo.id)) return 'essa carta não combina com esse lutador';
         if (em.tags && !em.tags.some((t) => ficha(estado, alvo).tags.includes(t))) return 'essa carta não combina com esse lutador';
+        if (ax.custoAuraJogador && totalAuraMesa(eu) < ax.custoAuraJogador) return `precisa de ${ax.custoAuraJogador} Aura nas suas cartas`;
+        if (ax.exigeVidaExata !== undefined && (hpMax(estado, alvo) - alvo.dano) !== ax.exigeVidaExata * ESCALA) {
+            return `o alvo precisa ter exatamente ${ax.exigeVidaExata * ESCALA} de vida`;
+        }
+        if (ax.exigeVirado && !virada(estado, alvo)) return 'o alvo precisa estar virado';
+        if (ax.exigeAliadoTag && !naMesa(eu).some((c) => ficha(estado, c).tags.includes(ax.exigeAliadoTag))) {
+            return `precisa ter uma carta ${ax.exigeAliadoTag} na sua mesa`;
+        }
         return null;
     }
     const silenciado = (estado, inst) => inst.estados.silenciado >= estado.turno;
@@ -338,11 +373,13 @@
     const qtd = (lista) => (Array.isArray(lista) ? lista.length : Number(lista) || 0);
     const acharNaMao = (jogador, uid) => jogador.mao.find((c) => c.uid === uid) || null;
     const acharNaMesa = (jogador, uid) => naMesa(jogador).find((c) => c.uid === uid) || null;
-    /** Cabo Côco no ativo do adversário impede jogar campos. */
+    /** Cabo Côco no ativo do adversário ou Caiam no banco impede jogar/trocar campos. */
     const camposBanidos = (estado, j) => {
         const ativo = estado.jogadores[outro(j)].ativo;
         return !!ativo && poderDe(estado, ativo)?.tipo === 'banirCampos';
     };
+    const campoTravado = (estado) => estado.jogadores.some((jg) => jg.banco.some((c) => poderDe(estado, c)?.tipo === 'travarCampo'));
+    const superkidProtegido = (estado, dono) => estado.jogadores[dono]?.banco.some((c) => poderDe(estado, c)?.tipo === 'protegerSuperkid');
     /** Quem começa não ataca no 1º turno. */
     const podeAtacarNoTurno = (estado) => estado.turno > 1;
 
@@ -371,12 +408,16 @@
         }
         const bonusBanco = eu.banco.map((c) => poderDe(estado, c)).filter((p) => p?.tipo === 'bonusDoBanco');
         if (dano > 0 && bonusBanco.length) dano += Math.max(...bonusBanco.map((p) => p.valor));
-        // Carta complementar atrás do atacante que soma no dano.
-        const extra = atacante ? ficha(estado, atacante).dano : 0;
+        // Carta complementar atrás do atacante ou bônus do turno que soma no dano.
+        const fAtacante = atacante ? ficha(estado, atacante) : null;
+        const extra = (fAtacante ? fAtacante.dano : 0) + (atacante ? (eu.flags?.bonusDanoTurno?.[atacante.uid] || 0) : 0);
         if (dano > 0 && extra) dano = Math.max(0, dano + extra);
         dano *= ESCALA;
+        if (fAtacante?.metadeDano) dano = Math.floor(dano / 2);
         if (alvo === JOGADOR) {
-            if (estado.jogadores[outro(j)].ativo) dano = Math.floor(dano * PROTECAO_ATIVO);
+            if (estado.jogadores[outro(j)].ativo && !(ataque.efeitos || []).some((e) => e.tipo === 'danoDiretoJogador')) {
+                dano = Math.floor(dano * PROTECAO_ATIVO);
+            }
             return Math.max(0, dano);
         }
         // Carta complementar atrás do alvo que segura parte do golpe.
@@ -432,6 +473,16 @@
                 const c = acharNaMao(eu, jogada.uid);
                 if (!c || !ehLutador(c.id)) return 'só personagens e goons vão para o banco';
                 if (eu.ativo && eu.banco.length >= VAGAS_BANCO) return 'o banco está cheio';
+                const cb = combate(c.id);
+                if (cb?.soBanco && !eu.ativo) return 'essa carta só vai para o banco';
+                if (cb?.exigeCampo && estado.campo?.carta.id !== cb.exigeCampo) return 'precisa do campo exigido na mesa';
+                const proibido = (a, b) => {
+                    const p = combate(a)?.proibidoCom;
+                    return Array.isArray(p) ? p.includes(b) : p === b;
+                };
+                if (naMesa(eu).some((x) => proibido(c.id, x.id) || proibido(x.id, c.id))) {
+                    return 'não pode ficar na mesa junto com essa carta';
+                }
                 return null;
             }
             case 'anexar': {
@@ -455,6 +506,7 @@
                 if (f.campo) return 'só 1 campo por turno';
                 if (estado.campo?.carta.id === c.id) return 'esse campo já está na mesa';
                 if (camposBanidos(estado, j)) return 'Conteúdo Banido: o ativo do adversário não deixa jogar campos';
+                if (estado.campo && campoTravado(estado)) return 'Guarda do Butico: Caiam no banco não deixa trocar o campo';
                 return null;
             }
             case 'recuar': {
@@ -476,12 +528,29 @@
                 if (virada(estado, c)) return 'carta virada (recarga) não usa poder';
                 if (poder.tipo === 'notificarAtivo' && !ele.ativo) return 'o adversário não tem ativo';
                 if (poder.tipo === 'comprar' && !qtd(eu.deck)) return 'seu deck acabou';
+                if (poder.tipo === 'comprarSeDegustador') {
+                    if (!naMesa(eu).some((x) => ficha(estado, x).tags.includes('degustador'))) return 'precisa de um Degustador na sua mesa';
+                    if (!qtd(eu.deck)) return 'seu deck acabou';
+                }
+                if (poder.tipo === 'roubarAuraVape') {
+                    if (!naMesa(ele).some((x) => x.aura > 0)) return 'o adversário não tem Aura na mesa';
+                    if (jogada.alvo !== undefined && !acharNaMesa(eu, jogada.alvo)) return 'escolha quem recebe a Aura na sua mesa';
+                }
                 if (poder.tipo === 'puxar') {
                     if (!ele.ativo) return 'o adversário não tem ativo';
                     if (!ele.banco.length) return 'o adversário não tem ninguém no banco';
                     if (!ele.banco.some((x) => x.uid === jogada.alvo)) return 'escolha quem vem do banco dele';
                 }
                 if (poder.tipo === 'espiarMao' && !qtd(ele.mao)) return 'a mão do adversário está vazia';
+                return null;
+            }
+            case 'moverAuraSuperkid': {
+                if (efeitoCampo(estado)?.tipo !== 'moverAuraSuperkid') return 'só no campo Clubexx';
+                if (f.moverAuraSuperkid) return 'só 1 vez por turno';
+                const sk = naMesa(eu).find((x) => x.id === 'superkid' && x.aura > 0);
+                if (!sk) return 'precisa de um Super Kid com Aura';
+                const alvo = eu.banco.find((x) => x.uid === jogada.alvo && x !== sk);
+                if (!alvo) return 'escolha outra carta no seu banco';
                 return null;
             }
             case 'trocarCarta': {
@@ -509,15 +578,20 @@
                 if (silenciado(estado, atacante)) return 'Silenciado não ataca';
                 if (virada(estado, atacante)) return 'carta virada (recarga) não ataca';
                 if (atacante.aura < ataque.custo) return `precisa de ${ataque.custo} de Aura`;
+                if (ataque.semAuraRoubada && (atacante.aura - (atacante.auraRoubada || 0)) < ataque.custo) {
+                    return 'não pode usar Aura roubada nesse ataque';
+                }
                 const puxa = (ataque.efeitos || []).some((e) => e.tipo === 'puxar');
                 // Qualquer ataque pode ir no jogador, mesmo com o ativo dele na mesa (o Puxar não:
                 // ele só serve para trazer alguém do banco).
                 if (jogada.alvo === JOGADOR) return puxa ? 'esse ataque não acerta o jogador' : null;
                 if (!ele.ativo) return 'o adversário não tem ativo: ataque o jogador';
-                if (ataque.alvo === 'qualquer') {
+                const alvoQualquer = ataque.alvo === 'qualquer' || (eu.proximoAtaqueBanco && jogada.alvo !== undefined);
+                if (alvoQualquer) {
                     const alvo = acharNaMesa(ele, jogada.alvo);
                     if (!alvo) return 'escolha o alvo';
                     if (alvo !== ele.ativo && efeitoCampo(estado)?.tipo === 'protegeBanco') return 'São João do Butico protege o banco';
+                    if (alvo !== ele.ativo && ficha(estado, alvo).imuneBanco) return 'esse alvo é imune a ataques no banco';
                 } else if (puxa && ele.banco.length) {
                     if (!ele.banco.some((c) => c.uid === jogada.alvo)) return 'escolha quem vem do banco dele';
                 } else if (jogada.alvo !== undefined && jogada.alvo !== ele.ativo.uid) {
@@ -545,27 +619,61 @@
         inst.estados.iludido = false;
         inst.estados.silenciado = 0;
     }
+    function limparExtrasInstancia(inst) {
+        delete inst.dono;
+        delete inst.restam;
+        delete inst.hpPermanente;
+        delete inst.transformado;
+        delete inst.turnosRestantes;
+        delete inst.venenoTeemo;
+        delete inst.auraRoubada;
+        delete inst.emprestimosAura;
+        delete inst.roubosVape;
+    }
     function paraDescarte(jogador, inst) {
         inst.dano = 0;
         inst.aura = 0;
         inst.escudo = null;
         limparEstados(inst);
         inst.estados.virada = 0;   // a recarga não sai no banco (é do ataque), só no descarte
-        delete inst.dono;
-        delete inst.restam;
+        limparExtrasInstancia(inst);
         jogador.descarte.push(inst);
     }
     /** Devolve a carta ao baralho do dono, limpa (sem dano, Aura nem estados), e embaralha. */
-    function paraOBaralho(estado, jogador, inst) {
+    function paraOBaralho(estado, jogador, inst, eventos = []) {
+        const naMesaAntes = naMesa(jogador).includes(inst);
+        const eraDegustador = ficha(estado, inst).tags.includes('degustador');
+        const idxDono = estado.jogadores.indexOf(jogador);
+        if (inst.venenoTeemo > 0 && idxDono >= 0) {
+            const danoRestante = Math.floor((inst.venenoTeemo * 250) / 2);
+            ferirJogador(estado, idxDono, danoRestante, eventos, 'venenoTeemo');
+        }
+        if ((naMesaAntes || eraDegustador) && eraDegustador && efeitoCampo(estado)?.tipo === 'protegeBanco') {
+            const outroDeg = jogador.banco.find((c) => c !== inst && ficha(estado, c).tags.includes('degustador'));
+            if (outroDeg) {
+                outroDeg.aura++;
+                eventos.push({ tipo: 'aura', uid: outroDeg.uid, valor: 1, aura: outroDeg.aura, fonte: 'campo' });
+            }
+        }
         inst.dano = 0;
         inst.aura = 0;
         inst.escudo = null;
         limparEstados(inst);
         inst.estados.virada = 0;
-        delete inst.dono;
-        delete inst.restam;
+        limparExtrasInstancia(inst);
         jogador.deck.push(inst);
         embaralhar(estado, jogador.deck);
+    }
+
+    /** Mansão do Inominável dá +400 de vida permanente aos goons na mesa (só sai se a carta sair de jogo). */
+    function aplicarMansaoPermanente(estado) {
+        const campo = efeitoCampo(estado);
+        if (campo?.tipo !== 'mansao') return;
+        for (const jg of estado.jogadores) {
+            for (const inst of naMesa(jg)) {
+                if (tipoDe(inst.id) === 'goon') inst.hpPermanente = campo.hpGoon;
+            }
+        }
     }
 
     /**
@@ -573,8 +681,10 @@
      * lutador estava de pé, ele fica com 1 de vida em vez de cair (como na saída da Mansão).
      */
     function soltarAnexo(estado, host, anexo, eventos, motivo) {
+        const idx = (host.anexos || []).indexOf(anexo);
+        if (idx < 0) return;
         const vivo = host.dano < hpMax(estado, host);
-        host.anexos.splice(host.anexos.indexOf(anexo), 1);
+        host.anexos.splice(idx, 1);
         const dono = anexo.dono;
         paraDescarte(estado.jogadores[dono], anexo);
         eventos.push({ tipo: 'anexoSai', jogador: dono, uid: anexo.uid, id: anexo.id, de: host.uid, motivo });
@@ -603,6 +713,15 @@
     }
     function darDano(estado, inst, valor, eventos, fonte) {
         if (valor <= 0) return;
+        const dono = estado.jogadores.findIndex((jg) => naMesa(jg).includes(inst));
+        if (dono >= 0 && inst.id === 'superkid' && superkidProtegido(estado, dono)) {
+            if (fonte !== 'ataque') {
+                eventos.push({ tipo: 'imune', uid: inst.uid, fonte });
+                return;
+            }
+            const max = hpMax(estado, inst);
+            if (inst.dano === 0 && valor >= max) valor = max - ESCALA;
+        }
         inst.dano += valor;
         eventos.push({ tipo: 'dano', uid: inst.uid, valor, fonte, dano: inst.dano, hp: hpMax(estado, inst) });
     }
@@ -696,6 +815,33 @@
         eu.flags = flagsDoTurno();
         // Aura de Reforço: quem joga em segundo ganha +1 Aura no 1º turno, só para o banco.
         if (estado.turno === 2) { eu.flags.auras = AURAS_POR_TURNO + 1; eu.flags.reforco = 1; }
+        if (eu.auraExtraProximoTurno > 0) {
+            eu.flags.auras += eu.auraExtraProximoTurno;
+            eu.auraExtraProximoTurno = 0;
+        }
+        // Tiago Cássio: devolve a Aura roubada após 1 turno.
+        for (const jg of estado.jogadores) {
+            for (const inst of naMesa(jg)) {
+                if (!inst.emprestimosAura?.length) continue;
+                const restantes = [];
+                for (const emp of inst.emprestimosAura) {
+                    if (estado.turno >= emp.devolverNoTurno) {
+                        const devolve = Math.min(inst.aura, emp.qtd);
+                        inst.aura -= devolve;
+                        inst.auraRoubada = Math.max(0, (inst.auraRoubada || 0) - emp.qtd);
+                        const donoOrig = acharNaMesa(estado.jogadores[0], emp.deUid) || acharNaMesa(estado.jogadores[1], emp.deUid);
+                        if (donoOrig && devolve > 0) {
+                            donoOrig.aura += devolve;
+                            eventos.push({ tipo: 'devolverAura', de: inst.uid, para: donoOrig.uid, valor: devolve });
+                        }
+                    } else {
+                        restantes.push(emp);
+                    }
+                }
+                if (restantes.length) inst.emprestimosAura = restantes;
+                else delete inst.emprestimosAura;
+            }
+        }
         eu.espiada = null;
         eventos.push({ tipo: 'turno', jogador: j, turno: estado.turno });
         const campo = efeitoCampo(estado);
@@ -705,13 +851,37 @@
         if (extra) comprar(estado, j, eventos, 'campo');
     }
 
-    /** Entre um turno e outro: Notificado tira HP dos ativos dos dois lados. */
+    /** Entre um turno e outro: Notificado, Veneno do Teemo e Lavras MG agem. */
     function fimDeTurno(estado, eventos) {
         eventos.push({ tipo: 'fimTurno', jogador: estado.vez, turno: estado.turno });
         const campo = efeitoCampo(estado);
         const veneno = campo?.tipo === 'mansao' ? campo.veneno * ESCALA : VENENO;
         for (const eu of estado.jogadores) {
             if (eu.ativo?.estados.notificado) darDano(estado, eu.ativo, veneno, eventos, 'notificado');
+            for (const inst of naMesa(eu)) {
+                if (inst.venenoTeemo > 0) {
+                    darDano(estado, inst, 250, eventos, 'venenoTeemo');
+                    inst.venenoTeemo--;
+                    if (inst.venenoTeemo <= 0) delete inst.venenoTeemo;
+                }
+            }
+        }
+        // Lavras MG: no final de cada turno do dono, o Super Kid vira e ganha +1 Aura; dura 2 turnos.
+        const jogadorVez = estado.jogadores[estado.vez];
+        for (const lavras of jogadorVez.banco.filter((c) => c.id === 'lavras-mg')) {
+            const sk = naMesa(jogadorVez).find((c) => c.id === 'superkid');
+            if (sk) {
+                sk.estados.virada = estado.turno + 2;
+                sk.aura++;
+                eventos.push({ tipo: 'lavras', uid: sk.uid, aura: sk.aura });
+            }
+            lavras.turnosRestantes = (lavras.turnosRestantes ?? 2) - 1;
+            if (lavras.turnosRestantes <= 0) {
+                jogadorVez.banco.splice(jogadorVez.banco.indexOf(lavras), 1);
+                largarAnexos(estado, lavras, eventos, 'prazo');
+                paraDescarte(jogadorVez, lavras);
+                eventos.push({ tipo: 'expira', uid: lavras.uid, id: lavras.id });
+            }
         }
         // Cartas complementares com prazo (`turnos`): conta um turno de quem as jogou.
         for (const jg of estado.jogadores) {
@@ -735,6 +905,10 @@
     const EFEITOS = {
         estado({ estado, eventos, ele, alvo }, ef) {
             if (!alvo || alvo !== ele.ativo) return;   // estados só pegam no ativo
+            if (ficha(estado, alvo).imuneEstados) {
+                eventos.push({ tipo: 'imune', uid: alvo.uid, estado: ef.estado });
+                return;
+            }
             if (ef.estado === 'silenciado') {
                 // Quem acabou de ficar Silenciado não pode ser silenciado de novo no turno seguinte
                 // (senão dois Moderadores travam o ativo do outro para sempre).
@@ -776,7 +950,8 @@
             eventos.push({ tipo: 'troca', jogador: outro(j), sai: antigo.uid, entra: puxado.uid, motivo: 'puxar' });
         },
         descartarCampo({ estado, eventos }) {
-            if (!estado.campo) return;
+            if (!estado.campo || campoTravado(estado)) return;
+            aplicarMansaoPermanente(estado);
             const vivosAntes = vivosNaMesa(estado);
             const { carta, dono } = estado.campo;
             paraDescarte(estado.jogadores[dono], carta);
@@ -784,7 +959,220 @@
             segurarAposCampo(estado, vivosAntes);
             eventos.push({ tipo: 'campoSai', id: carta.id, uid: carta.uid });
         },
+        custoAuraMesa({ eu, eventos }, ef) {
+            gastarAuraMesa(eu, ef.valor, eventos);
+        },
+        smiteSemNocaute({ estado, eventos, j, ele, alvo }) {
+            if (!alvo || alvo !== ele.ativo) return;
+            if (alvo.id === 'superkid' && superkidProtegido(estado, outro(j))) {
+                eventos.push({ tipo: 'imune', uid: alvo.uid });
+                return;
+            }
+            ele.ativo = null;
+            paraDescarte(ele, alvo);
+            largarAnexos(estado, alvo, eventos, 'destruido');
+            eventos.push({ tipo: 'destruido', jogador: outro(j), uid: alvo.uid, id: alvo.id });
+        },
+        voltarParaMao({ estado, eventos, j, ele, alvo }) {
+            if (!alvo || !ele.banco.includes(alvo)) return;
+            ele.banco.splice(ele.banco.indexOf(alvo), 1);
+            largarAnexos(estado, alvo, eventos, 'devolvida');
+            alvo.dano = 0;
+            alvo.aura = 0;
+            alvo.escudo = null;
+            limparEstados(alvo);
+            alvo.estados.virada = 0;
+            limparExtrasInstancia(alvo);
+            ele.mao.push(alvo);
+            eventos.push({ tipo: 'voltarMao', jogador: outro(j), uid: alvo.uid, id: alvo.id });
+        },
+        darFF({ estado, eventos, j, si, fonte }) {
+            const cura = Math.min(30 * ESCALA, si.dano);
+            if (cura > 0) {
+                si.dano -= cura;
+                eventos.push({ tipo: 'cura', uid: si.uid, valor: cura, fonte });
+            }
+            if (estado.ultimoDarFF && estado.ultimoDarFF.jogador !== j && estado.ultimoDarFF.turno >= estado.turno - 1) {
+                ferirJogador(estado, 0, 50 * ESCALA, eventos, 'darFF');
+                ferirJogador(estado, 1, 50 * ESCALA, eventos, 'darFF');
+                estado.ultimoDarFF = null;
+            } else {
+                estado.ultimoDarFF = { jogador: j, turno: estado.turno };
+            }
+        },
+        quartaFeira({ estado, eventos, j, eu, ele, si }) {
+            let descartou = 0;
+            for (let k = 0; k < 2 && eu.mao.length > 0; k++) {
+                const desc = eu.mao.shift();
+                paraDescarte(eu, desc);
+                descartou++;
+                eventos.push({ tipo: 'descarte', jogador: j, uid: desc.uid, id: desc.id, motivo: 'quartaFeira' });
+            }
+            if (descartou > 0) curarMesa(eu, 10 * ESCALA, eventos);
+            ele.auraExtraProximoTurno = (ele.auraExtraProximoTurno || 0) + 1;
+            const idx = eu.banco.indexOf(si);
+            if (idx >= 0 && eu.ativo) {
+                const antigo = eu.ativo;
+                eu.banco[idx] = antigo;
+                limparEstados(antigo);
+                eu.ativo = si;
+                eventos.push({ tipo: 'troca', jogador: j, sai: antigo.uid, entra: si.uid, motivo: 'quartaFeira' });
+            }
+        },
+        invocarDoDeck({ estado, eventos, j, eu }, ef) {
+            if (!Array.isArray(eu.deck) || (eu.ativo && eu.banco.length >= VAGAS_BANCO)) return;
+            const idx = eu.deck.findIndex((c) => c.id === ef.carta);
+            if (idx < 0) return;
+            const carta = eu.deck.splice(idx, 1)[0];
+            if (ef.virado) carta.estados.virada = estado.turno + 2;
+            if (combate(carta.id)?.turnosNaMesa) carta.turnosRestantes = combate(carta.id).turnosNaMesa;
+            if (!eu.ativo) eu.ativo = carta;
+            else eu.banco.push(carta);
+            aplicarMansaoPermanente(estado);
+            eventos.push({ tipo: 'invocar', jogador: j, uid: carta.uid, id: carta.id });
+        },
+        roubarAuraParaSuperkid({ eventos, eu, ele }, ef) {
+            const sk = naMesa(eu).find((c) => c.id === 'superkid');
+            const vitima = naMesa(ele).find((c) => c.aura > 0);
+            if (sk && vitima) {
+                const qtdRoubada = Math.min(vitima.aura, ef.valor || 1);
+                vitima.aura -= qtdRoubada;
+                sk.aura += qtdRoubada;
+                eventos.push({ tipo: 'roubarAura', de: vitima.uid, para: sk.uid, valor: qtdRoubada });
+            }
+        },
+        buscarCampoDoDeck({ estado, eventos, j, eu }, ef) {
+            if (!Array.isArray(eu.deck) || camposBanidos(estado, j)) return;
+            const idx = eu.deck.findIndex((c) => c.id === ef.carta);
+            if (idx < 0 || estado.campo?.carta.id === ef.carta) return;
+            const novoCampo = eu.deck.splice(idx, 1)[0];
+            aplicarMansaoPermanente(estado);
+            const vivosAntes = vivosNaMesa(estado);
+            if (estado.campo) {
+                paraDescarte(estado.jogadores[estado.campo.dono], estado.campo.carta);
+                eventos.push({ tipo: 'campoSai', id: estado.campo.carta.id, uid: estado.campo.carta.uid });
+            }
+            estado.campo = { carta: novoCampo, dono: j };
+            aplicarMansaoPermanente(estado);
+            segurarAposCampo(estado, vivosAntes);
+            eventos.push({ tipo: 'campo', jogador: j, uid: novoCampo.uid, id: novoCampo.id });
+        },
+        liberarAtaqueBanco({ eu, eventos }) {
+            eu.proximoAtaqueBanco = true;
+            eventos.push({ tipo: 'liberarAtaqueBanco' });
+        },
+        desvirarSi({ eventos, eu, si }) {
+            si.estados.virada = 0;
+            eu.flags.bonusDanoTurno = eu.flags.bonusDanoTurno || {};
+            eu.flags.bonusDanoTurno[si.uid] = (eu.flags.bonusDanoTurno[si.uid] || 0) + 10;
+            eventos.push({ tipo: 'desvirar', uid: si.uid });
+        },
+        trocarPorSuperkidDoDeck({ estado, eventos, j, eu, si }) {
+            if (eu.ativo !== si) return;
+            let sk = null;
+            if (Array.isArray(eu.deck)) {
+                const idx = eu.deck.findIndex((c) => c.id === 'superkid');
+                if (idx >= 0) sk = eu.deck.splice(idx, 1)[0];
+            }
+            if (!sk) {
+                const idxMao = eu.mao.findIndex((c) => c.id === 'superkid');
+                if (idxMao >= 0) sk = eu.mao.splice(idxMao, 1)[0];
+            }
+            largarAnexos(estado, si, eventos, 'devolvida');
+            paraOBaralho(estado, eu, si, eventos);
+            if (sk) {
+                sk.aura = (sk.aura || 0) + 1;
+                eu.ativo = sk;
+                eventos.push({ tipo: 'invocar', jogador: j, uid: sk.uid, id: sk.id, ativo: true });
+            } else {
+                eu.ativo = null;
+            }
+        },
+        trocarPorDegustadorComEscudo({ estado, eventos, j, eu, si }) {
+            const deg = eu.banco.find((c) => c.id === 'degustador-da-noite') || eu.banco.find((c) => ficha(estado, c).tags.includes('degustador'));
+            if (deg && eu.ativo === si) {
+                eu.banco[eu.banco.indexOf(deg)] = si;
+                limparEstados(si);
+                eu.ativo = deg;
+                deg.escudo = { valor: 30 * ESCALA, ate: estado.turno + 1 };
+                eventos.push({ tipo: 'troca', jogador: j, sai: si.uid, entra: deg.uid, motivo: 'ataque' });
+                eventos.push({ tipo: 'escudo', uid: deg.uid, valor: deg.escudo.valor });
+            }
+        },
+        buscarPorTag({ eventos, j, eu }, ef) {
+            if (!Array.isArray(eu.deck)) return;
+            for (let k = 0; k < (ef.qtd || 1); k++) {
+                const idx = eu.deck.findIndex((c) => tagsDe(c.id).includes(ef.tag));
+                if (idx < 0) break;
+                const carta = eu.deck.splice(idx, 1)[0];
+                eu.mao.push(carta);
+                eventos.push({ tipo: 'compra', jogador: j, uid: carta.uid, id: carta.id, motivo: 'busca' });
+            }
+        },
+        envenenarTodosTeemo({ estado, eventos, ele, alvo }, ef) {
+            for (const c of ele.banco) {
+                if (!ficha(estado, c).imuneBanco) {
+                    darDano(estado, c, ef.danoTodos * ESCALA, eventos, 'ataque');
+                }
+            }
+            for (const c of naMesa(ele)) {
+                if (!ficha(estado, c).imuneEstados) {
+                    c.venenoTeemo = 4;
+                    eventos.push({ tipo: 'venenoTeemo', uid: c.uid, turnos: 4 });
+                }
+            }
+        },
+        roubarTodaAura({ estado, eventos, ele, si, alvo }) {
+            const vitima = alvo || ele.ativo;
+            if (!vitima || !vitima.aura) return;
+            const qtdRoubada = vitima.aura;
+            vitima.aura = 0;
+            si.aura += qtdRoubada;
+            si.auraRoubada = (si.auraRoubada || 0) + qtdRoubada;
+            si.emprestimosAura = si.emprestimosAura || [];
+            si.emprestimosAura.push({ deUid: vitima.uid, qtd: qtdRoubada, devolverNoTurno: estado.turno + 2 });
+            eventos.push({ tipo: 'roubarAura', de: vitima.uid, para: si.uid, valor: qtdRoubada });
+        },
+        danoDiretoJogador({ si }) {
+            // A aura nunca sobra no ataque final de Tiago Cássio.
+            si.aura = 0;
+            si.auraRoubada = 0;
+            delete si.emprestimosAura;
+        },
+        transformarEzreal({ eventos, si }) {
+            si.transformado = 'ezreal';
+            limparEstados(si);
+            delete si.venenoTeemo;
+            eventos.push({ tipo: 'transformar', uid: si.uid, forma: 'ezreal' });
+        },
+        danoTodosInimigos({ estado, eventos, ele, alvo }, ef) {
+            for (const c of naMesa(ele)) {
+                if (c !== alvo && !ficha(estado, c).imuneBanco) {
+                    darDano(estado, c, ef.valor * ESCALA, eventos, 'ataque');
+                }
+            }
+        },
+        sacrificarEDestruir2({ estado, eventos, j, ele, si }) {
+            let destruidas = 0;
+            for (const c of naMesa(ele)) {
+                if (destruidas >= 2) break;
+                if (c.id === 'superkid' && superkidProtegido(estado, outro(j))) continue;
+                c.dano = hpMax(estado, c);
+                destruidas++;
+            }
+            si.dano = hpMax(estado, si);
+            eventos.push({ tipo: 'sacrificio', uid: si.uid });
+        },
     };
+
+    function aoBaixarLutador(estado, j, inst, eventos) {
+        const eu = estado.jogadores[j];
+        const ele = estado.jogadores[outro(j)];
+        aplicarMansaoPermanente(estado);
+        const cb = combate(inst.id);
+        const ctx = { estado, eventos, j, eu, ele, si: inst, alvo: inst, jogada: null, fonte: 'entrada' };
+        for (const ef of cb?.aoEntrar || []) EFEITOS[ef.tipo]?.(ctx, ef);
+    }
 
     function executarAtaque(estado, jogada, eventos) {
         const j = jogada.jogador;
@@ -792,10 +1180,11 @@
         const ele = estado.jogadores[outro(j)];
         const atacante = eu.ativo;
         const ataque = ficha(estado, atacante).ataques[jogada.ataque];
-        // Alvo: o jogador (vida), uma carta qualquer (alvo 'qualquer') ou o ativo dele.
-        // Gancho futuro: cartas que "entram no meio" do golpe no jogador trocariam `alvo` aqui.
-        const noJogador = jogada.alvo === JOGADOR;
-        const alvo = noJogador ? null : (ataque.alvo === 'qualquer' ? acharNaMesa(ele, jogada.alvo) : ele.ativo);
+        const efeitos = ataque.efeitos || [];
+        // Alvo: o jogador (vida), uma carta qualquer (alvo 'qualquer' ou ataqueBanco liberado) ou o ativo dele.
+        const noJogador = jogada.alvo === JOGADOR || efeitos.some((e) => e.tipo === 'danoDiretoJogador');
+        const usaAlvoLivre = ataque.alvo === 'qualquer' || (eu.proximoAtaqueBanco && jogada.alvo !== undefined);
+        const alvo = noJogador ? null : (usaAlvoLivre ? acharNaMesa(ele, jogada.alvo) : ele.ativo);
         eventos.push({ tipo: 'ataque', jogador: j, uid: atacante.uid, ataque: jogada.ataque, nome: ataque.nome, alvo: noJogador ? JOGADOR : alvo.uid });
 
         if (atacante.estados.iludido && !moeda(estado, eventos, 'iludido')) {
@@ -811,10 +1200,10 @@
             eventos.push({ tipo: 'virada', uid: atacante.uid, ate: atacante.estados.virada });
         }
 
-        const efeitos = ataque.efeitos || [];
         const temMoeda = efeitos.some((e) => e.tipo === 'moeda');
         const resultadoMoeda = temMoeda ? moeda(estado, eventos, 'ataque') : undefined;
         const dano = calcularDano(estado, j, ataque, noJogador ? JOGADOR : alvo, { resultadoMoeda });
+        if (eu.proximoAtaqueBanco) delete eu.proximoAtaqueBanco;
         let derrubou = false;
         if (noJogador) {
             ferirJogador(estado, outro(j), dano, eventos, 'ataque');
@@ -828,6 +1217,22 @@
             if (dano > 0 && contra?.tipo === 'contraAtaque') {
                 eventos.push({ tipo: 'poder', uid: alvo.uid, nome: contra.nome });
                 darDano(estado, atacante, contra.valor * ESCALA, eventos, 'contraAtaque');
+            }
+            const tagsAtacante = ficha(estado, atacante).tags;
+            // Teemo no banco: todo dano de Degustador envenena o alvo por 4 turnos (1.000 de dano).
+            if (dano > 0 && tagsAtacante.includes('degustador') && eu.banco.some((c) => poderDe(estado, c)?.tipo === 'venenoTeemoBanco')) {
+                if (!ficha(estado, alvo).imuneEstados) {
+                    alvo.venenoTeemo = 4;
+                    eventos.push({ tipo: 'venenoTeemo', uid: alvo.uid, turnos: 4 });
+                }
+            }
+            // PMLDM no banco: todo dano de Itallo atinge o time inimigo inteiro.
+            if (dano > 0 && tagsAtacante.includes('itallo') && eu.banco.some((c) => poderDe(estado, c)?.tipo === 'splashItallo')) {
+                for (const c of naMesa(ele)) {
+                    if (c !== alvo && !ficha(estado, c).imuneBanco) {
+                        darDano(estado, c, dano, eventos, 'splashItallo');
+                    }
+                }
             }
         }
 
@@ -919,10 +1324,13 @@
                 if (!eu.ativo) {
                     eu.ativo = inst;
                     eventos.push({ tipo: 'baixar', jogador: j, uid: inst.uid, id: inst.id, ativo: true });
+                    aoBaixarLutador(estado, j, inst, eventos);
                     return;
                 }
+                if (inst.id === 'lavras-mg') inst.turnosRestantes = 2;
                 eu.banco.push(inst);
                 eventos.push({ tipo: 'baixar', jogador: j, uid: inst.uid, id: inst.id });
+                aoBaixarLutador(estado, j, inst, eventos);
                 return;
             }
 
@@ -931,6 +1339,7 @@
                 const inst = tirarDaMao(eu, jogada.uid);
                 const host = acharNaMesa(eu, jogada.alvo) || acharNaMesa(ele, jogada.alvo);
                 const ax = combate(inst.id).anexo;
+                if (ax.custoAuraJogador) gastarAuraMesa(eu, ax.custoAuraJogador, eventos);
                 inst.dono = j;
                 inst.restam = { usos: ax.usos || 0, turnos: ax.turnos || 0 };   // 0 = sem prazo
                 (host.anexos = host.anexos || []).push(inst);
@@ -956,6 +1365,7 @@
 
             case 'campo': {
                 const inst = tirarDaMao(eu, jogada.uid);
+                aplicarMansaoPermanente(estado);
                 const vivosAntes = vivosNaMesa(estado);
                 if (estado.campo) {
                     const antigo = estado.campo;
@@ -965,6 +1375,7 @@
                 estado.campo = { carta: inst, dono: j };
                 eu.flags.campo = true;
                 eventos.push({ tipo: 'campo', jogador: j, uid: inst.uid, id: inst.id });
+                aplicarMansaoPermanente(estado);
                 // Piscina de Macarronada: quem joga o campo já é curado neste mesmo turno (depois vem a cura de começo de turno).
                 const efeito = combate(inst.id).campo;
                 if (efeito?.tipo === 'curaInicio') curarMesa(eu, efeito.valor * ESCALA, eventos);
@@ -1006,8 +1417,19 @@
                     eventos.push({ tipo: 'troca', jogador: outro(j), sai: antigo.uid, entra: puxado.uid, motivo: 'puxar' });
                     inst.estados.virada = estado.turno + 2;
                     eventos.push({ tipo: 'virada', uid: inst.uid, ate: inst.estados.virada, motivo: 'poder' });
-                } else if (poder.tipo === 'comprar') {
+                } else if (poder.tipo === 'comprar' || poder.tipo === 'comprarSeDegustador') {
                     for (let n = 0; n < poder.valor; n++) comprar(estado, j, eventos, 'poder');
+                } else if (poder.tipo === 'roubarAuraVape') {
+                    const vitima = naMesa(ele).find((c) => c.aura > 0);
+                    const recebedor = acharNaMesa(eu, jogada.alvo) || inst;
+                    if (vitima) {
+                        vitima.aura--;
+                        recebedor.aura++;
+                        inst.roubosVape = (inst.roubosVape || 0) + 1;
+                        eventos.push({ tipo: 'roubarAura', de: vitima.uid, para: recebedor.uid, valor: 1 });
+                        darDano(estado, inst, inst.roubosVape * ((poder.danoBase || 10) * ESCALA), eventos, 'vape');
+                        verificarNocautes(estado, eventos);
+                    }
                 } else if (poder.tipo === 'espiarMao') {
                     eu.espiada = ele.mao.map((c) => c.id);
                     eventos.push({ tipo: 'espiar', jogador: j, ids: eu.espiada.slice(), privado: true });
@@ -1015,10 +1437,20 @@
                 return;
             }
 
+            case 'moverAuraSuperkid': {
+                const sk = naMesa(eu).find((x) => x.id === 'superkid' && x.aura > 0);
+                const alvo = eu.banco.find((x) => x.uid === jogada.alvo && x !== sk);
+                sk.aura--;
+                alvo.aura++;
+                eu.flags.moverAuraSuperkid = true;
+                eventos.push({ tipo: 'moverAura', de: sk.uid, para: alvo.uid });
+                return;
+            }
+
             case 'trocarCarta': {
                 // Casa do Enzo Games: devolve 1 da mão ao baralho e compra 1 (não conta no limite de 2).
                 const inst = tirarDaMao(eu, jogada.uid);
-                paraOBaralho(estado, eu, inst);
+                paraOBaralho(estado, eu, inst, eventos);
                 eu.flags.trocarCarta = true;
                 eventos.push({ tipo: 'devolver', jogador: j, uid: inst.uid, id: inst.id, de: 'mao', motivo: 'casa' });
                 comprar(estado, j, eventos, 'campo');
@@ -1027,7 +1459,7 @@
 
             case 'devolverMao': {
                 const inst = tirarDaMao(eu, jogada.uid);
-                paraOBaralho(estado, eu, inst);
+                paraOBaralho(estado, eu, inst, eventos);
                 eu.flags.devolvidasMao = (eu.flags.devolvidasMao || 0) + 1;
                 eventos.push({ tipo: 'devolver', jogador: j, uid: inst.uid, id: inst.id, de: 'mao' });
                 return;
@@ -1039,16 +1471,12 @@
                 const eraAtivo = eu.ativo === inst;
                 if (eraAtivo) eu.ativo = null;
                 else eu.banco.splice(eu.banco.indexOf(inst), 1);
-                paraOBaralho(estado, eu, inst);
+                paraOBaralho(estado, eu, inst, eventos);
                 eu.flags.devolvidasMesa = (eu.flags.devolvidasMesa || 0) + 1;
                 eventos.push({ tipo: 'devolver', jogador: j, uid: inst.uid, id: inst.id, de: 'mesa' });
                 // As cartas complementares atrás dela não voltam ao baralho: vão para o descarte de quem as jogou.
                 largarAnexos(estado, inst, eventos, 'devolvida');
-                // Sem ativo e com banco: escolhe o novo ativo e o turno continua.
-                if (eraAtivo && eu.banco.length) {
-                    estado.pendentes.push({ jogador: j, tipo: 'novoAtivo' });
-                    eventos.push({ tipo: 'escolherAtivo', jogador: j });
-                }
+                verificarNocautes(estado, eventos);
                 return;
             }
 
@@ -1124,12 +1552,15 @@
                 }
                 candidatas.push({ tipo: 'devolverMesa', jogador: j, uid: c.uid });
             }
-            for (const c of eu.banco) candidatas.push({ tipo: 'recuar', jogador: j, para: c.uid });
+            for (const c of eu.banco) {
+                candidatas.push({ tipo: 'recuar', jogador: j, para: c.uid });
+                candidatas.push({ tipo: 'moverAuraSuperkid', jogador: j, alvo: c.uid });
+            }
             if (eu.ativo) {
                 ficha(estado, eu.ativo).ataques.forEach((ataque, i) => {
                     const puxa = (ataque.efeitos || []).some((e) => e.tipo === 'puxar');
                     candidatas.push({ tipo: 'atacar', jogador: j, ataque: i, alvo: JOGADOR });
-                    if (ataque.alvo === 'qualquer') {
+                    if (ataque.alvo === 'qualquer' || eu.proximoAtaqueBanco) {
                         for (const alvo of naMesa(ele)) candidatas.push({ tipo: 'atacar', jogador: j, ataque: i, alvo: alvo.uid });
                     } else if (puxa && ele.banco.length) {
                         for (const alvo of ele.banco) candidatas.push({ tipo: 'atacar', jogador: j, ataque: i, alvo: alvo.uid });
