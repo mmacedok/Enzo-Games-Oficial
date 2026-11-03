@@ -70,11 +70,15 @@
 }
 .bt-deck:hover, .bt-rival:hover:not(:disabled) { transform: translateY(-3px) rotate(-1deg); box-shadow: 6px 7px 0 var(--ink); }
 .bt-deck--ativo { background: var(--halftone), var(--caption); transform: rotate(-1deg); outline: 4px solid var(--orange); outline-offset: 2px; }
-.bt-deck-leque { display: flex; justify-content: center; width: 100%; height: 108px; margin-bottom: 4px; }
-.bt-deck-leque .carta-tcg { width: 64px; flex: none; box-shadow: 2px 2px 0 var(--ink); }
-.bt-deck-leque .carta-tcg:nth-child(1) { transform: rotate(-12deg) translate(14px, 8px); }
-.bt-deck-leque .carta-tcg:nth-child(2) { z-index: 1; }
-.bt-deck-leque .carta-tcg:nth-child(3) { transform: rotate(12deg) translate(-14px, 8px); }
+/* Leque de 3 cartas (deck sem caixa desenhada): sobreposto para caber no card sem estourar a grade. */
+.bt-deck, .bt-deck-item { min-width: 0; }
+.bt-deck-leque { display: flex; justify-content: center; align-items: center; width: 100%; height: 132px; margin-bottom: 0; }
+.bt-deck-leque .carta-tcg { width: 56px; flex: none; box-shadow: 2px 2px 0 var(--ink); }
+.bt-deck-leque .carta-tcg + .carta-tcg { margin-left: -18px; }
+.bt-deck-leque .carta-tcg:nth-child(1) { transform: rotate(-12deg) translateY(8px); }
+.bt-deck-leque .carta-tcg:nth-child(2) { z-index: 1; transform: translateY(-4px); }
+.bt-deck-leque .carta-tcg:nth-child(3) { transform: rotate(12deg) translateY(8px); }
+.bt-deck:hover .bt-deck-leque, .bt-deck--ativo .bt-deck-leque { transform: rotate(-4deg) scale(1.06); transition: transform 0.2s ease; }
 .bt-deck-nome { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 400; letter-spacing: 0.5px; }
 .bt-deck-texto { font-size: 0.9rem; font-weight: 700; }
 .bt-deck-item { display: grid; gap: 10px; align-content: start; }
