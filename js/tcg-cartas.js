@@ -217,7 +217,7 @@
         'itallo-de-viego': { hp: 90, recuo: 1, tags: ['itallo'],
             aoEntrar: [{ tipo: 'invocarDoDeck', carta: 'enzo-games', virado: true }],
             ataques: [
-                { nome: 'Rei Destruído', custo: 2, dano: 10, efeitos: [{ tipo: 'liberarAtaqueBanco' }] },
+                { nome: 'Rei Destruído', custo: 2, dano: 10, efeitos: [{ tipo: 'proximoAtaqueEmArea' }] },
             ] },
         'pedra-mole': { anexo: {
             texto: 'Se você controlar um Enzo Games virado e qualquer carta Itallo, desvira o Enzo Games e ele ganha +200 de dano neste turno.',

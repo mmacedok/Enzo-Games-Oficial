@@ -3,6 +3,13 @@
 Cada entrada é uma versão de regras (`REGRAS_VERSAO` em `js/tcg-regras.js`). Partida online de versão antiga é
 encerrada sem resultado; o jogador recarrega a página.
 
+## Versão 15 — Rei Destruído atinge o time inimigo inteiro
+
+| Antes | Agora |
+|---|---|
+| Rei Destruído (Itallo de Viego, 2 Aura, 200) deixava o próximo ataque aliado *escolher* uma carta do banco (a tela nem oferecia a escolha, então não funcionava para os aliados) | Depois do dano, o **próximo ataque de outra carta aliada** (no turno seguinte) atinge o **time inimigo inteiro**: dano cheio no alvo e **metade em cada carta do banco**. Ex.: Enzo Games dá 2.400 no ativo e 1.200 em cada do banco |
+| Efeito `liberarAtaqueBanco`, flag `proximoAtaqueBanco` | Efeito `proximoAtaqueEmArea`, flag `proximoAtaqueEmArea = { origem }`. O próprio Itallo atacando de novo não gasta a condição. O campo São João do Butico (protege o banco) e o splash do PMLDM não somam com ela |
+
 ## Versão 14 — Aura por personagem, Itallo de Viego vira unidade, Júlia busca no descarte
 
 | Parte | Antes | Agora |

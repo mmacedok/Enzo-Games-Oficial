@@ -28,7 +28,7 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 14;
+    const REGRAS_VERSAO = 15;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
     /** Auras que se prende por turno. Em cada turno, só 1 por personagem (v14); a exceção é o 1º turno de quem joga em segundo. */
@@ -604,8 +604,7 @@
                 // ele só serve para trazer alguém do banco).
                 if (jogada.alvo === JOGADOR) return puxa ? 'esse ataque não acerta o jogador' : null;
                 if (!ele.ativo) return 'o adversário não tem ativo: ataque o jogador';
-                const alvoQualquer = ataque.alvo === 'qualquer' || (eu.proximoAtaqueBanco && jogada.alvo !== undefined);
-                if (alvoQualquer) {
+                if (ataque.alvo === 'qualquer') {
                     const alvo = acharNaMesa(ele, jogada.alvo);
                     if (!alvo) return 'escolha o alvo';
                     if (alvo !== ele.ativo && efeitoCampo(estado)?.tipo === 'protegeBanco') return 'São João do Butico protege o banco';
@@ -1079,9 +1078,10 @@
             segurarAposCampo(estado, vivosAntes);
             eventos.push({ tipo: 'campo', jogador: j, uid: novoCampo.uid, id: novoCampo.id });
         },
-        liberarAtaqueBanco({ eu, eventos }) {
-            eu.proximoAtaqueBanco = true;
-            eventos.push({ tipo: 'liberarAtaqueBanco' });
+        /** Itallo de Viego (Rei Destruído): o próximo ataque de OUTRO aliado atinge o time inimigo inteiro (ativo cheio, banco pela metade). */
+        proximoAtaqueEmArea({ eu, si, eventos }) {
+            eu.proximoAtaqueEmArea = { origem: si.uid };
+            eventos.push({ tipo: 'ataqueEmArea', uid: si.uid });
         },
         desvirarSi({ eventos, eu, si }) {
             si.estados.virada = 0;
@@ -1208,10 +1208,11 @@
         const atacante = eu.ativo;
         const ataque = ficha(estado, atacante).ataques[jogada.ataque];
         const efeitos = ataque.efeitos || [];
-        // Alvo: o jogador (vida), uma carta qualquer (alvo 'qualquer' ou ataqueBanco liberado) ou o ativo dele.
+        // Alvo: o jogador (vida), uma carta qualquer (alvo 'qualquer') ou o ativo dele.
         const noJogador = jogada.alvo === JOGADOR || efeitos.some((e) => e.tipo === 'danoDiretoJogador');
-        const usaAlvoLivre = ataque.alvo === 'qualquer' || (eu.proximoAtaqueBanco && jogada.alvo !== undefined);
-        const alvo = noJogador ? null : (usaAlvoLivre ? acharNaMesa(ele, jogada.alvo) : ele.ativo);
+        const alvo = noJogador ? null : (ataque.alvo === 'qualquer' ? acharNaMesa(ele, jogada.alvo) : ele.ativo);
+        // Ataque em área liberado pelo Itallo de Viego: vale para o próximo ataque de outra carta (o próprio Itallo não gasta).
+        const emArea = !!eu.proximoAtaqueEmArea && eu.proximoAtaqueEmArea.origem !== atacante.uid;
         eventos.push({ tipo: 'ataque', jogador: j, uid: atacante.uid, ataque: jogada.ataque, nome: ataque.nome, alvo: noJogador ? JOGADOR : alvo.uid });
 
         if (atacante.estados.iludido && !moeda(estado, eventos, 'iludido')) {
@@ -1230,7 +1231,7 @@
         const temMoeda = efeitos.some((e) => e.tipo === 'moeda');
         const resultadoMoeda = temMoeda ? moeda(estado, eventos, 'ataque') : undefined;
         const dano = calcularDano(estado, j, ataque, noJogador ? JOGADOR : alvo, { resultadoMoeda });
-        if (eu.proximoAtaqueBanco) delete eu.proximoAtaqueBanco;
+        if (emArea) delete eu.proximoAtaqueEmArea;
         let derrubou = false;
         if (noJogador) {
             ferirJogador(estado, outro(j), dano, eventos, 'ataque');
@@ -1263,6 +1264,15 @@
                         darDano(estado, c, dano, eventos, 'splashItallo');
                     }
                 }
+            }
+            // Rei Destruído: o alvo leva o dano cheio e todas as outras cartas inimigas levam a metade
+            // (não vale com o campo que protege o banco, e não soma com o splash do PMLDM, que já bate em todos).
+            if (emArea && dano > 0 && !temSplash && efeitoCampo(estado)?.tipo !== 'protegeBanco') {
+                const metade = Math.floor(dano / 2);
+                for (const c of naMesa(ele)) {
+                    if (c !== alvo && !ficha(estado, c).imuneBanco) darDano(estado, c, metade, eventos, 'areaItallo');
+                }
+                eventos.push({ tipo: 'areaAplicada', uid: atacante.uid, metade });
             }
         }
 
@@ -1590,7 +1600,7 @@
                 ficha(estado, eu.ativo).ataques.forEach((ataque, i) => {
                     const puxa = (ataque.efeitos || []).some((e) => e.tipo === 'puxar');
                     candidatas.push({ tipo: 'atacar', jogador: j, ataque: i, alvo: JOGADOR });
-                    if (ataque.alvo === 'qualquer' || eu.proximoAtaqueBanco) {
+                    if (ataque.alvo === 'qualquer') {
                         for (const alvo of naMesa(ele)) candidatas.push({ tipo: 'atacar', jogador: j, ataque: i, alvo: alvo.uid });
                     } else if (puxa && ele.banco.length) {
                         for (const alvo of ele.banco) candidatas.push({ tipo: 'atacar', jogador: j, ataque: i, alvo: alvo.uid });

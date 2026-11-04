@@ -2734,6 +2734,8 @@
             case 'campo': registrar(`${quem(ev.jogador)} jogou o campo ${nomeVisivel(ev.id)}.`); break;
             case 'campoSai': registrar(`O campo ${nomeVisivel(ev.id)} saiu da mesa.`); break;
             case 'anexar': registrar(`${quem(ev.jogador)} deitou ${nomeVisivel(ev.id)} atrás de ${n(ev.alvo)}.`); break;
+            case 'ataqueEmArea': registrar(`${n(ev.uid)}: o próximo ataque de outro aliado atinge o time inimigo inteiro.`); break;
+            case 'areaAplicada': registrar(`Ataque em área: o banco do rival levou ${ev.metade} de dano em cada carta (metade).`); break;
             case 'moverAura': registrar(`Clubexx: 1 Aura passou de ${n(ev.de)} para ${n(ev.para)}.`); break;
             case 'anexoSai': registrar(`${nomeVisivel(ev.id)} saiu de trás de ${n(ev.de)}${ev.motivo === 'usada' ? ' (usada)' : ev.motivo === 'prazo' ? ' (acabou o prazo)' : ''}.`); break;
             case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${ev.alvo === R.JOGADOR ? quem(1 - ev.jogador) : n(ev.alvo)}.`); break;

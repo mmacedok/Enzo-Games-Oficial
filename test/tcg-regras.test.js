@@ -1428,3 +1428,47 @@ test('Júlia: Pedir Skin pro Superkid também busca o Superkid no descarte', () 
     assert.equal(eu.descarte.some((c) => c.id === 'superkid'), false, 'saiu do descarte');
     assert.ok(eu.deck.some((c) => c.id === 'julia'), 'Júlia voltou para o baralho');
 });
+
+test('Rei Destruído (Itallo de Viego): o próximo ataque de outro aliado atinge o time inimigo inteiro, banco pela metade', () => {
+    // 1) O ataque do Itallo dá 200 e deixa a condição armada.
+    let e = mesa({
+        eu: { ativo: { id: 'itallo-de-viego', aura: 2 }, banco: [{ id: 'enzo-games', aura: 3 }] },
+        ele: { ativo: 'enzo-games', banco: ['enzo-games', 'enzo-games'] },
+    });
+    const itallo = EU(e).ativo.uid;
+    e = jogar(e, { tipo: 'atacar', ataque: 0 }).estado;
+    assert.equal(e.jogadores[1].ativo.dano, 10 * R.ESCALA, 'Rei Destruído causa 200 no ativo');
+    assert.equal(e.jogadores[0].proximoAtaqueEmArea.origem, itallo, 'a condição ficou armada');
+    assert.ok(e.jogadores[1].banco.every((c) => c.dano === 0), 'o próprio Rei Destruído não bate no banco');
+
+    // 2) O próximo ataque de OUTRA carta (Enzo Games, 2.400) bate cheio no ativo e metade (1.200) em cada carta do banco.
+    let f = mesa({
+        eu: { ativo: { id: 'enzo-games', aura: 3 }, banco: ['itallo-de-viego'] },
+        ele: { ativo: 'enzo-games', banco: ['enzo-games', 'enzo-games'] },
+    });
+    f.jogadores[0].proximoAtaqueEmArea = { origem: EU(f).banco[0].uid };
+    f = jogar(f, { tipo: 'atacar', ataque: 1 }).estado;
+    assert.equal(f.jogadores[1].ativo.dano, 120 * R.ESCALA, 'ativo leva 2.400');
+    assert.deepEqual(f.jogadores[1].banco.map((c) => c.dano), [60 * R.ESCALA, 60 * R.ESCALA], 'cada carta do banco leva 1.200');
+    assert.equal(f.jogadores[0].proximoAtaqueEmArea, undefined, 'a condição foi usada');
+
+    // 3) O Itallo atacando de novo não gasta a condição dele mesmo.
+    let g = mesa({
+        eu: { ativo: { id: 'itallo-de-viego', aura: 2 } },
+        ele: { ativo: 'enzo-games', banco: ['enzo-games'] },
+    });
+    g.jogadores[0].proximoAtaqueEmArea = { origem: EU(g).ativo.uid };
+    g = jogar(g, { tipo: 'atacar', ataque: 0 }).estado;
+    assert.ok(g.jogadores[0].proximoAtaqueEmArea, 'continua armada');
+    assert.equal(g.jogadores[1].banco[0].dano, 0, 'sem dano no banco');
+
+    // 4) Com o campo que protege o banco, o banco não leva nada.
+    let h = mesa({
+        eu: { ativo: { id: 'enzo-games', aura: 3 }, banco: ['itallo-de-viego'] },
+        ele: { ativo: 'enzo-games', banco: ['enzo-games'] },
+        campo: 'sao-joao-do-butico',
+    });
+    h.jogadores[0].proximoAtaqueEmArea = { origem: EU(h).banco[0].uid };
+    h = jogar(h, { tipo: 'atacar', ataque: 1 }).estado;
+    assert.equal(h.jogadores[1].banco[0].dano, 0, 'São João do Butico protege o banco');
+});
