@@ -213,6 +213,12 @@
             descricaoArte: 'Capanga folgado de moletom esticando a mão com cara de pidão para puxar o vapor de um vape/pod eletrônico colorido que suga uma esfera de Aura dourada, enquanto segura o peito com a outra mão tossindo fumaça escura de dano pulmonar progressivo.',
             frase: 'Deixa eu dar só um puxãozinho?',
             tcg: 'Vida 1.400 · Recuo 1 Aura\nPoder Puxãozinho (1 vez por turno): rouba 1 Aura do ativo do adversário para ele ou para alguém do seu banco, mas sofre dano pulmonar progressivo (200 no 1º roubo, 400 no 2º, 600 no 3º...).\nBaforada (1 Aura): 400 de dano.' },
+        { id: 'toramento', numero: 43, nome: 'Toramento', tipo: 'personagem', raridade: 'lendario', peso: 1,
+            arte: 'assets/Cartas/toramento.png', foco: '50% 30%',
+            descricaoArte: 'O candidato do Partido Liberal Toramento em traje formal impecável (terno cinza, flor lilás na lapela e camisa social aberta), erguendo o cartaz "VOTE 24" com bandeira heráldica amarela e azul ao fundo, leque de cartas de baralho e fichas de cassino douradas.',
+            frase: 'Rapaziada do sexo e cartas, unidos seremos mais fortes.',
+            tcg: 'Vida 2.600 · Recuo 2 Aura\nPoder União do Sexo e Cartas: enquanto Toramento estiver em campo (ativo ou banco), toda vez que você compra uma carta do baralho, o lutador ativo recupera 400 de vida pelo vigor renovado.\nPapo de Político (2 Aura): 1.000 de dano. Deixa o ativo adversário Iludido.\nVOTE 24 (3 Aura): 2.000 de dano (recarga 1 turno). Se nocautear o alvo, rouba 1 Aura da mesa adversária.' },
+
     ]);
 
     /**

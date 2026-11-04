@@ -618,6 +618,18 @@
         if (!carta) { eventos.push({ tipo: 'deckVazio', jogador: j }); return; }
         eu.mao.push(carta);
         eventos.push({ tipo: 'compra', jogador: j, uid: carta.uid, id: carta.id, motivo });
+
+        // Toramento: União do Sexo e Cartas (comprar cartas restaura vigor do ativo)
+        if (eu.ativo && eu.ativo.dano > 0) {
+            const temToramento = naMesa(eu).some((c) => !silenciado(estado, c) && poderDe(estado, c)?.tipo === 'uniaoSexoCartas');
+            if (temToramento) {
+                const cura = Math.min(20 * ESCALA, eu.ativo.dano);
+                if (cura > 0) {
+                    eu.ativo.dano -= cura;
+                    eventos.push({ tipo: 'cura', uid: eu.ativo.uid, valor: cura, fonte: 'toramento' });
+                }
+            }
+        }
     }
     function limparEstados(inst) {
         inst.estados.notificado = false;
@@ -1127,6 +1139,15 @@
                 }
             }
         },
+        roubarAuraAoNocautear({ estado, eventos, ele, si, derrubou }) {
+            if (!derrubou) return;
+            const vitima = naMesa(ele).find((c) => c.aura > 0);
+            if (vitima) {
+                vitima.aura -= 1;
+                si.aura += 1;
+                eventos.push({ tipo: 'roubarAura', de: vitima.uid, para: si.uid, valor: 1 });
+            }
+        },
         roubarTodaAura({ estado, eventos, ele, si, alvo }) {
             const vitima = alvo || ele.ativo;
             if (!vitima || !vitima.aura) return;
@@ -1251,7 +1272,7 @@
             eventos.push({ tipo: 'estado', uid: ele.ativo.uid, estado: 'notificado', fonte: 'mansao' });
         }
 
-        const ctx = { estado, eventos, j, eu, ele, si: atacante, alvo, jogada, fonte: 'ataque' };
+        const ctx = { estado, eventos, j, eu, ele, si: atacante, alvo, jogada, fonte: 'ataque', derrubou };
         for (const ef of efeitos) EFEITOS[ef.tipo]?.(ctx, ef);
         // Cartas complementares com `usos`: cada ataque do lutador gasta um.
         if (acharNaMesa(eu, atacante.uid)) gastarAnexos(estado, atacante, 'usos', eventos);

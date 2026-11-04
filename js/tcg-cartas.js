@@ -175,6 +175,14 @@
                 { nome: 'Baforada', custo: 1, dano: 20 },
             ] },
 
+                'toramento': { hp: 130, recuo: 2, tags: ['toramento', 'politico'],
+            poder: { nome: 'União do Sexo e Cartas', tipo: 'uniaoSexoCartas', ativavel: false,
+                texto: 'Enquanto Toramento estiver em campo (ativo ou banco), toda vez que você compra uma carta do baralho, seu lutador ativo recupera 400 de vida (20 HP) pelo vigor renovado.' },
+            ataques: [
+                { nome: 'Papo de Político', custo: 2, dano: 50, efeitos: [{ tipo: 'estado', estado: 'iludido' }] },
+                { nome: 'VOTE 24', custo: 3, dano: 100, recarga: 1, efeitos: [{ tipo: 'roubarAuraAoNocautear' }] },
+            ] },
+
         // ---- Magias e Resenhas (tipo `resenha` / modo `anexo`) ---------------
         'calibra-o-smite': { anexo: {
             texto: 'Gasta 1 Aura sua: se o ativo do adversário tiver exatamente 600 de vida, ele é destruído sem causar dano à vida do jogador.',

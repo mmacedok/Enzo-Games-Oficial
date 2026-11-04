@@ -2694,6 +2694,7 @@
             case 'campo': registrar(`${quem(ev.jogador)} jogou o campo ${nomeVisivel(ev.id)}.`); break;
             case 'campoSai': registrar(`O campo ${nomeVisivel(ev.id)} saiu da mesa.`); break;
             case 'anexar': registrar(`${quem(ev.jogador)} deitou ${nomeVisivel(ev.id)} atrás de ${n(ev.alvo)}.`); break;
+            case 'roubarAura': registrar(`${n(ev.para)} roubou ${ev.valor} Aura de ${n(ev.de)}.`); break;
             case 'anexoSai': registrar(`${nomeVisivel(ev.id)} saiu de trás de ${n(ev.de)}${ev.motivo === 'usada' ? ' (usada)' : ev.motivo === 'prazo' ? ' (acabou o prazo)' : ''}.`); break;
             case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${ev.alvo === R.JOGADOR ? quem(1 - ev.jogador) : n(ev.alvo)}.`); break;
             case 'dano': registrar(`${n(ev.uid)} levou ${num(ev.valor)}${ev.fonte === 'notificado' ? ' (Notificado)' : ''}.`); break;

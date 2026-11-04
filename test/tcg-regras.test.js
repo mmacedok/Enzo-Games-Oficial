@@ -1391,3 +1391,54 @@ test('Booster da Pedra Mole: modelo de 900 créditos com PMLDM na capa central',
     assert.equal(p.capa[1], 'pmldm', 'PMLDM deve estar no centro da capa');
     assert.deepEqual(p.chances, { comum: 40, raro: 35, epico: 19, lendario: 6 });
 });
+
+test('Carta Lendária Toramento: União do Sexo e Cartas cura ao comprar, Papo de Político ilude, VOTE 24 rouba aura no nocaute', () => {
+    const Baralho = require('../js/baralho-dados.js');
+    const c = Baralho.carta('toramento');
+    assert.ok(c, 'carta toramento deve existir');
+    assert.equal(c.raridade, 'lendario');
+    const combate = COMBATE['toramento'];
+    assert.ok(combate);
+    assert.equal(combate.hp, 130);
+    assert.equal(combate.recuo, 2);
+    assert.equal(combate.poder.tipo, 'uniaoSexoCartas');
+
+    // Testar passiva: comprar cartas cura o lutador ativo
+    const deckToramento = ['toramento', ...DECK.slice(1)];
+    let p = R.criarPartida({ semente: 42, decks: [deckToramento, DECK] });
+    p.fase = 'jogo';
+    p.turno = 2;
+    p.vez = 0;
+    p.jogadores[0].ativo = { uid: 'tor-1', id: 'toramento', dano: 600, aura: 3, estados: { notificado: false, iludido: false, silenciado: 0, virada: 0 }, anexos: [] };
+    p.jogadores[0].banco = [];
+    p.jogadores[0].deck = [{ uid: 'c-1', id: 'cara-de-coracao' }];
+    p.jogadores[0].mao = [];
+
+    // Passar o turno do jogador 0
+    let res = R.aplicar(p, { tipo: 'passar', jogador: 0 });
+    // Passar o turno do jogador 1 -> turno 3 volta para o jogador 0, que compra c-1 e ativa a cura de Toramento
+    res = R.aplicar(res.estado, { tipo: 'passar', jogador: 1 });
+    assert.equal(res.estado.jogadores[0].ativo.dano, 200, 'ativo curou 400 vida ao comprar carta');
+
+    // Testar Ataque 1: Papo de Político (deixa iludido)
+    res.estado.jogadores[0].ativo.aura = 5;
+    res.estado.jogadores[1].ativo = { uid: 'adv-1', id: 'cara-de-coracao', dano: 0, aura: 2, estados: { notificado: false, iludido: false, silenciado: 0, virada: 0 }, anexos: [] };
+    const resAtq1 = R.aplicar(res.estado, { tipo: 'atacar', jogador: 0, ataque: 0 });
+    assert.equal(resAtq1.estado.jogadores[1].ativo.estados.iludido, true, 'alvo ficou iludido');
+
+    // Testar Ataque 2: VOTE 24 (rouba 1 aura ao nocautear)
+    let p2 = R.criarPartida({ semente: 99, decks: [deckToramento, DECK] });
+    p2.fase = 'jogo';
+    p2.turno = 2;
+    p2.vez = 0;
+    p2.jogadores[0].ativo = { uid: 'tor-2', id: 'toramento', dano: 0, aura: 3, estados: { notificado: false, iludido: false, silenciado: 0, virada: 0 }, anexos: [] };
+    p2.jogadores[0].banco = [];
+    // Cara de Coração tem 60 HP (1.200 de vida). Dano inicial de 50*20=1.000 deixa com 200 de vida restante. VOTE 24 causa 2.000 de dano -> nocaute certo!
+    p2.jogadores[1].ativo = { uid: 'adv-2', id: 'cara-de-coracao', dano: 50 * R.ESCALA, aura: 2, estados: { notificado: false, iludido: false, silenciado: 0, virada: 0 }, anexos: [] };
+    p2.jogadores[1].banco = [];
+    const resNocaute = R.aplicar(p2, { tipo: 'atacar', jogador: 0, ataque: 1 });
+    const evRoubo = resNocaute.eventos.find(e => e.tipo === 'roubarAura');
+    assert.ok(evRoubo, 'evento roubarAura gerado ao nocautear com VOTE 24');
+    assert.equal(evRoubo.valor, 1);
+    assert.equal(resNocaute.estado.jogadores[0].ativo.aura, 4, 'toramento recebeu a aura roubada (tinha 3, gastou 3 no ataque e roubou 1)');
+});
