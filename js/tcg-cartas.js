@@ -214,15 +214,11 @@
             soAoEntrar: true,
             aoEntrar: [{ tipo: 'quartaFeira' }],
         } },
-        'itallo-de-viego': { tags: ['itallo'], anexo: {
-            texto: 'Ao entrar, joga um Enzo Games do baralho para a mesa (entra virado). Dá o ataque Rei Destruído (2 Aura): 200 de dano e o próximo ataque aliado pode acertar o banco.',
-            em: { lado: 'meu' },
-            tags: ['itallo'],
+        'itallo-de-viego': { hp: 90, recuo: 1, tags: ['itallo'],
             aoEntrar: [{ tipo: 'invocarDoDeck', carta: 'enzo-games', virado: true }],
             ataques: [
                 { nome: 'Rei Destruído', custo: 2, dano: 10, efeitos: [{ tipo: 'liberarAtaqueBanco' }] },
-            ],
-        } },
+            ] },
         'pedra-mole': { anexo: {
             texto: 'Se você controlar um Enzo Games virado e qualquer carta Itallo, desvira o Enzo Games e ele ganha +200 de dano neste turno.',
             em: { lado: 'meu', cartas: ['enzo-games'] },

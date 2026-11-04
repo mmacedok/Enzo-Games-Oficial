@@ -15,11 +15,11 @@
     const forca = (id) => R.combate(id).hp + 2 * maiorAtaque(id);
     const acharNaMesa = (jogador, uid) => R.naMesa(jogador).find((c) => c.uid === uid);
 
-    /** Pior dano que o ativo do adversário consegue dar no próximo turno dele (+2 Auras). */
+    /** Pior dano que o ativo do adversário consegue dar no próximo turno dele (+1 Aura por carta; +2 se for o turno do 2º jogador). */
     function ameaca(estado, j) {
         const ele = estado.jogadores[1 - j];
         if (!ele.ativo) return 0;
-        const aura = ele.ativo.aura + R.AURAS_MAX_POR_CARTA_NO_TURNO;
+        const aura = ele.ativo.aura + R.auraMaxNaCarta(estado.turno + 1);
         return Math.max(0, ...R.ficha(estado, ele.ativo).ataques.filter((a) => a.custo <= aura).map((a) => (a.dano + 10) * R.ESCALA));
     }
 

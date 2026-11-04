@@ -25,7 +25,7 @@ Os números das cartas vêm de `js/tcg-cartas.js` (multiplicados por 20) e os te
 Compra 1 carta. Depois, em qualquer ordem:
 
 - **Baixar** um lutador (banco até 3; sem ativo, a carta entra direto como ativo).
-- **Prender até 3 Auras** por turno, no máximo **2 na mesma carta** (a 3ª vai para outra). A Aura fica presa na carta; atacar não gasta a Aura.
+- **Prender até 3 Auras** por turno, **1 por personagem** (a outra vai para outra carta). Só no 1º turno de quem joga em segundo dá para pôr **2 no mesmo personagem**. A Aura fica presa na carta; atacar não gasta a Aura.
 - **Jogar 1 campo** (substitui o campo que estiver na mesa; vale para os dois lados).
 - **Recuar 1 vez** (paga a Aura do recuo).
 - **Usar poderes** (1 vez por carta por turno, nos poderes que se ativam).

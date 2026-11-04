@@ -181,7 +181,7 @@ test('Aura de Reforço: quem joga em segundo ganha +1 Aura no 1º turno, só par
     assert.equal(e.turno, 2);
     const ativo = EU(e).ativo.uid;
     const banco = EU(e).banco[0].uid;
-    // 3 Auras do turno + 1 de Reforço (essa só vale no banco); no máximo 2 na mesma carta.
+    // 3 Auras do turno + 1 de Reforço (essa só vale no banco). Só neste turno (o 1º de quem joga em segundo) dá para pôr 2 na mesma carta.
     e = jogar(e, { tipo: 'aura', alvo: ativo }).estado;
     e = jogar(e, { tipo: 'aura', alvo: ativo }).estado;
     invalida(() => jogar(e, { tipo: 'aura', alvo: ativo }), 'no máximo 2 Auras');
@@ -195,13 +195,16 @@ test('Aura de Reforço: quem joga em segundo ganha +1 Aura no 1º turno, só par
     f = jogar(f, { tipo: 'aura', alvo: EU(f).banco[0].uid }).estado;
     f = jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }).estado;
     assert.equal(EU(f).ativo.aura + EU(f).banco[0].aura, 2);
-    // Turno 3 volta a ser 3 Auras, no máximo 2 na mesma carta (a 3ª vai para outra).
+    // Turno 3 em diante: 3 Auras, mas só 1 por personagem em cada turno (v14).
     f = jogar(f, { tipo: 'passar' }).estado;
     f = jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }).estado;
-    f = jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }).estado;
-    invalida(() => jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }), 'no máximo 2 Auras');
+    invalida(() => jogar(f, { tipo: 'aura', alvo: EU(f).ativo.uid }), 'só 1 Aura por personagem');
     f = jogar(f, { tipo: 'aura', alvo: EU(f).banco[0].uid }).estado;
-    invalida(() => jogar(f, { tipo: 'aura', alvo: EU(f).banco[0].uid }), 'já prendeu');
+    invalida(() => jogar(f, { tipo: 'aura', alvo: EU(f).banco[0].uid }), 'só 1 Aura por personagem');
+    assert.equal(R.auraMaxNaCarta(2), 2, 'só o turno 2 permite 2 Auras na mesma carta');
+    assert.equal(R.auraMaxNaCarta(1), 1);
+    assert.equal(R.auraMaxNaCarta(3), 1);
+    assert.equal(R.auraMaxNaCarta(4), 1);
 });
 
 test('só joga na sua vez; baixar vai para o banco (3 vagas)', () => {
@@ -1267,13 +1270,16 @@ test('Cartas Itallo: Itallo de Viego 20/0 e Eu vou ir ai na pedra mole te matar'
         eu: { ativo: { id: 'italolol', aura: 2 }, mao: ['itallo-de-viego', 'pedra-mole'], deck: ['enzo-games'] },
         ele: { ativo: 'drone-vigia', banco: ['bug-do-discord'] },
     });
-    e = jogar(e, { tipo: 'anexar', uid: EU(e).mao[0].uid, alvo: EU(e).ativo.uid }).estado;
+    assert.equal(R.jogadaDaCarta('itallo-de-viego'), 'baixar', 'Itallo de Viego é uma unidade, não uma resenha');
+    assert.ok(R.ehLutador('itallo-de-viego'));
+    e = jogar(e, { tipo: 'baixar', uid: EU(e).mao[0].uid }).estado;
+    assert.ok(EU(e).banco.some((c) => c.id === 'itallo-de-viego'), 'Itallo de Viego foi para o banco');
     const enzo = EU(e).banco.find((c) => c.id === 'enzo-games');
     assert.ok(enzo, 'invocou Enzo Games do deck');
     assert.ok(R.virada(e, enzo), 'Enzo Games entrou virado');
     // Pedra Mole desvira Enzo Games e dá +200 de dano neste turno
     e = jogar(e, { tipo: 'anexar', uid: EU(e).mao[0].uid, alvo: enzo.uid }).estado;
-    assert.ok(!R.virada(e, EU(e).banco[0]), 'Enzo Games desvirou');
+    assert.ok(!R.virada(e, EU(e).banco.find((c) => c.uid === enzo.uid)), 'Enzo Games desvirou');
     assert.equal(EU(e).flags.bonusDanoTurno[enzo.uid], 10, '+200 de dano no turno');
 });
 
@@ -1405,4 +1411,20 @@ test('Hoje é quarta-feira: o jogador escolhe quais cartas descartar', () => {
     e = jogar(e, { tipo: 'anexar', uid: q, alvo, descartes: [c] }).estado;
     assert.deepEqual(EU(e).mao.map((x) => x.uid), [a, b], 'só a escolhida saiu da mão');
     assert.ok(EU(e).descarte.some((x) => x.uid === c), 'a escolhida foi para o descarte');
+});
+
+test('Júlia: Pedir Skin pro Superkid também busca o Superkid no descarte', () => {
+    let e = mesa({
+        eu: { ativo: { id: 'julia', aura: 2 } },
+        ele: { ativo: 'drone-vigia' },
+    });
+    EU(e).deck = [];
+    EU(e).mao = [];
+    EU(e).descarte = [{ uid: 'sk-descarte', id: 'superkid', dano: 0, aura: 0, estados: { notificado: false, iludido: false, silenciado: 0, virada: 0 }, escudo: null, anexos: [] }];
+    e = jogar(e, { tipo: 'atacar', ataque: 0 }).estado;
+    const eu = e.jogadores[0];   // o ataque passou a vez: lemos sempre o jogador 0
+    assert.equal(eu.ativo?.id, 'superkid', 'o Superkid veio do descarte para o ativo');
+    assert.equal(eu.ativo.aura, 1, 'entra com 1 Aura');
+    assert.equal(eu.descarte.some((c) => c.id === 'superkid'), false, 'saiu do descarte');
+    assert.ok(eu.deck.some((c) => c.id === 'julia'), 'Júlia voltou para o baralho');
 });

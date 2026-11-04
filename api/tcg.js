@@ -187,7 +187,8 @@ async function gravar(ctx, p, novo, { jogador, jogada, eventos, automatica, praz
          INSERT INTO tcg_jogadas (partida_id, n, jogador, jogada, eventos, automatica, criado_em)
          SELECT id, versao, $11, $12, $13, $14, $10 FROM up RETURNING n`,
         [p.id, p.versao, JSON.stringify(novo), prazo, estouros[0], estouros[1],
-            status, novo.vencedor, novo.motivo, agora,
+            // A coluna é INTEGER: empate ('empate') vira NULL (o estado guardado em JSON continua com o valor certo).
+            status, Number.isInteger(novo.vencedor) ? novo.vencedor : null, novo.motivo, agora,
             jogador, JSON.stringify(jogada), JSON.stringify(eventos), automatica]);
     if (!linhas.length) return false;
     p.estado = novo;

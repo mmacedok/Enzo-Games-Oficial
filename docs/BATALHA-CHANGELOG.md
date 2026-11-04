@@ -3,6 +3,18 @@
 Cada entrada é uma versão de regras (`REGRAS_VERSAO` em `js/tcg-regras.js`). Partida online de versão antiga é
 encerrada sem resultado; o jogador recarrega a página.
 
+## Versão 14 — Aura por personagem, Itallo de Viego vira unidade, Júlia busca no descarte
+
+| Parte | Antes | Agora |
+|---|---|---|
+| Aura por turno | 3 Auras, até **2 na mesma carta** | 3 Auras, só **1 por personagem** em cada turno. **Exceção:** no turno em que você começa como 2º jogador (turno 2) e só nele, dá para pôr 2 no mesmo personagem. `R.auraMaxNaCarta(turno)` |
+| Itallo de Viego 20/0 | Resenha (deitava atrás de um lutador) | **Unidade** (personagem, Épica, 1.800 de vida, recuo 1, tag `itallo`): ao entrar traz um Enzo Games do baralho (virado); *Rei Destruído* (2 Aura, 200) libera o próximo ataque aliado para acertar o banco |
+| Júlia — Pedir Skin pro Superkid | Superkid do baralho ou da mão | Do baralho, da mão **ou do descarte** |
+| Online | Empate encerrava a partida com erro 500 (coluna `vencedor` é inteira) | Empate grava `NULL` na coluna; o estado em JSON continua com `'empate'` |
+| Robô | Ameaça do ativo rival com +2 Auras | +1 Aura por carta (+2 só se o próximo turno for o 2) |
+
+Os números de vida e recuo do Itallo (90 / 1) são uma primeira escolha: ajuste em `js/tcg-cartas.js` se precisar.
+
 ## Versão 13 — Temporada 1 (18 cartas novas e ajustes)
 
 Primeira temporada (`TEMPORADAS`, id `s1`). Partidas online da versão 12 são encerradas sem resultado.

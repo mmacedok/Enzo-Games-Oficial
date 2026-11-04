@@ -28,12 +28,15 @@
     const { COMBATE } = TcgCartas;
 
     /** Sobe quando uma regra muda: online, navegador e servidor precisam estar na mesma versão. */
-    const REGRAS_VERSAO = 13;
+    const REGRAS_VERSAO = 14;
     const TAMANHO_DECK = 15;
     const MAX_COPIAS = 2;
-    /** Auras que se prende por turno, e no máximo quantas na mesma carta (a 3ª tem de ir para outra). */
+    /** Auras que se prende por turno. Em cada turno, só 1 por personagem (v14); a exceção é o 1º turno de quem joga em segundo. */
     const AURAS_POR_TURNO = 3;
-    const AURAS_MAX_POR_CARTA_NO_TURNO = 2;
+    const AURAS_MAX_POR_CARTA_NO_TURNO = 1;
+    /** Só no turno 2 (o 1º turno de quem começa em segundo) dá para pôr 2 Auras no mesmo personagem. */
+    const AURAS_MAX_NO_TURNO_DO_SEGUNDO = 2;
+    const auraMaxNaCarta = (turno) => (turno === 2 ? AURAS_MAX_NO_TURNO_DO_SEGUNDO : AURAS_MAX_POR_CARTA_NO_TURNO);
     const MAX_COPIAS_LENDARIO = 1;
     /** Deck customizado (montado com a coleção da conta): no máximo 2 cartas lendárias no total. */
     const MAX_LENDARIAS_CUSTOM = 2;
@@ -511,7 +514,8 @@
                 const alvo = acharNaMesa(eu, jogada.alvo);
                 if (!alvo) return 'a Aura vai para uma carta sua na mesa';
                 if (alvo === eu.ativo && f.auras <= f.reforco) return 'a Aura de Reforço vai para o banco';
-                if ((f.auraEm?.[alvo.uid] || 0) >= AURAS_MAX_POR_CARTA_NO_TURNO) return `no máximo ${AURAS_MAX_POR_CARTA_NO_TURNO} Auras na mesma carta por turno`;
+                const maxNaCarta = auraMaxNaCarta(estado.turno);
+                if ((f.auraEm?.[alvo.uid] || 0) >= maxNaCarta) return maxNaCarta === 1 ? 'só 1 Aura por personagem em cada turno (a outra vai para outra carta)' : `no máximo ${maxNaCarta} Auras na mesma carta neste turno`;
                 return null;
             }
             case 'campo': {
@@ -1096,6 +1100,11 @@
                 const idxMao = eu.mao.findIndex((c) => c.id === 'superkid');
                 if (idxMao >= 0) sk = eu.mao.splice(idxMao, 1)[0];
             }
+            // Também dá para buscar o Superkid no descarte (v14). A carta já foi limpa quando foi para lá.
+            if (!sk) {
+                const idxDescarte = eu.descarte.findIndex((c) => c.id === 'superkid');
+                if (idxDescarte >= 0) sk = eu.descarte.splice(idxDescarte, 1)[0];
+            }
             largarAnexos(estado, si, eventos, 'devolvida');
             paraOBaralho(estado, eu, si, eventos);
             if (sk) {
@@ -1655,7 +1664,7 @@
     return {
         TAMANHO_DECK, MAX_COPIAS, MAX_COPIAS_LENDARIO, MAX_LENDARIAS_CUSTOM, MAO_INICIAL, VAGAS_BANCO, LIMITE_TURNOS,
         ESCALA, VIDA_INICIAL, DANO_NOCAUTE, JOGADOR, PROTECAO_ATIVO, DEVOLVER_MAO_POR_TURNO, DEVOLVER_MESA_POR_TURNO,
-        REGRAS_VERSAO, AURAS_POR_TURNO, AURAS_MAX_POR_CARTA_NO_TURNO, JogadaInvalida, BANIDAS_POR_JOGADOR, banivel, quantasBanir,
+        REGRAS_VERSAO, AURAS_POR_TURNO, AURAS_MAX_POR_CARTA_NO_TURNO, AURAS_MAX_NO_TURNO_DO_SEGUNDO, auraMaxNaCarta, JogadaInvalida, BANIDAS_POR_JOGADOR, banivel, quantasBanir,
         validarDeck, criarPartida, aplicar, jogadasValidas, motivoInvalida, visaoDe, eventosPara, quemDeve, repetir,
         rodadaDe, RODADAS_MAX, hpMax, custoRecuo, calcularDano, danoNocaute, ehLutador, ehCampo, combate, tipoDe, naMesa, silenciado, virada,
         TIPOS, MODOS, ANEXOS_POR_LUTADOR, modoDe, jogadaDaCarta, ehAnexo, tagsDe, ficha, poderDe, erroDoAnexo, EFEITOS, BONUS_DANO,
