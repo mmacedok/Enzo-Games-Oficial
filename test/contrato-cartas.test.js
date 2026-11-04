@@ -162,3 +162,11 @@ test('carta de temporada escondida some de tudo e não pode ser usada', () => {
     const noAr = B.TODAS_AS_CARTAS.filter((c) => B.temporadaNoAr(B.temporadaDaCarta(c.id)));
     assert.deepEqual(B.CARTAS.map((c) => c.id), noAr.map((c) => c.id));
 });
+
+test('todo efeito visual (fx-...) usado em js/batalha.js tem imagem em assets/Batalha/efeitos', () => {
+    const nomes = new Set([...ler('js/batalha.js').matchAll(/'(fx-[a-z0-9-]+)'/g)].map((m) => m[1]));
+    for (const nome of nomes) {
+        const ok = existe(`assets/Batalha/efeitos/${nome}.png`) || existe(`assets/Batalha/efeitos/${nome}-1.png`);
+        assert.ok(ok, `js/batalha.js usa o efeito "${nome}" mas não existe assets/Batalha/efeitos/${nome}.png (nem ${nome}-1.png). Gere a imagem ou use um efeito que exista`);
+    }
+});

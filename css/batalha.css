@@ -70,11 +70,15 @@
 }
 .bt-deck:hover, .bt-rival:hover:not(:disabled) { transform: translateY(-3px) rotate(-1deg); box-shadow: 6px 7px 0 var(--ink); }
 .bt-deck--ativo { background: var(--halftone), var(--caption); transform: rotate(-1deg); outline: 4px solid var(--orange); outline-offset: 2px; }
-.bt-deck-leque { display: flex; justify-content: center; width: 100%; height: 108px; margin-bottom: 4px; }
-.bt-deck-leque .carta-tcg { width: 64px; flex: none; box-shadow: 2px 2px 0 var(--ink); }
-.bt-deck-leque .carta-tcg:nth-child(1) { transform: rotate(-12deg) translate(14px, 8px); }
-.bt-deck-leque .carta-tcg:nth-child(2) { z-index: 1; }
-.bt-deck-leque .carta-tcg:nth-child(3) { transform: rotate(12deg) translate(-14px, 8px); }
+/* Leque de 3 cartas (deck sem caixa desenhada): sobreposto para caber no card sem estourar a grade. */
+.bt-deck, .bt-deck-item { min-width: 0; }
+.bt-deck-leque { display: flex; justify-content: center; align-items: center; width: 100%; height: 132px; margin-bottom: 0; }
+.bt-deck-leque .carta-tcg { width: 56px; flex: none; box-shadow: 2px 2px 0 var(--ink); }
+.bt-deck-leque .carta-tcg + .carta-tcg { margin-left: -18px; }
+.bt-deck-leque .carta-tcg:nth-child(1) { transform: rotate(-12deg) translateY(8px); }
+.bt-deck-leque .carta-tcg:nth-child(2) { z-index: 1; transform: translateY(-4px); }
+.bt-deck-leque .carta-tcg:nth-child(3) { transform: rotate(12deg) translateY(8px); }
+.bt-deck:hover .bt-deck-leque, .bt-deck--ativo .bt-deck-leque { transform: rotate(-4deg) scale(1.06); transition: transform 0.2s ease; }
 .bt-deck-nome { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 400; letter-spacing: 0.5px; }
 .bt-deck-texto { font-size: 0.9rem; font-weight: 700; }
 .bt-deck-item { display: grid; gap: 10px; align-content: start; }
@@ -141,6 +145,8 @@ dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: 
     --w-mao: calc(min(clamp(74px, 22vw, 150px), 13vh) * var(--k, 1));
     --w-campo: calc(min(clamp(52px, 14vw, 104px), 9vh) * var(--k, 1));
     --gap: clamp(5px, 1.3vw, 12px);
+    /* Altura do slot de Resenha acoplado a cada lutador (fica FORA da carta, nunca em cima do HP). */
+    --dock: calc(18px * var(--k, 1));
     position: relative;
     display: grid;
     grid-template-rows: auto auto 1fr auto auto;
@@ -213,7 +219,7 @@ dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: 
     align-items: end;
     justify-content: center;
     column-gap: var(--gap);
-    row-gap: 6px;
+    row-gap: calc(var(--dock) + 10px);
 }
 .bt-lado--eu { grid-template-areas: "ativo b1 b2 b3" "info info info info"; align-items: start; }
 .bt-lado .bt-info { grid-area: info; justify-self: center; width: min(520px, calc(100vw - 28px)); }
@@ -299,24 +305,91 @@ dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: 
 .bt-vaga--ativo::before {
     content: 'ATIVO';
     position: absolute;
-    inset: auto 0 -1.1em;
+    inset: -1.2em 0 auto;
     font-family: var(--font-heading);
     font-size: 0.7rem;
     letter-spacing: 1px;
     text-align: center;
     opacity: 0.55;
 }
-.bt-lado--npc .bt-vaga--ativo::before { inset: -1.2em 0 auto; }
+.bt-lado--npc .bt-vaga--ativo::before { inset: auto 0 -1.1em; }
+
+/* ------------------------------------------------------------------ centro */
+/* Mini-slot horizontal acoplado a cada lutador (Zona de Resenha deitada) */
+.bt-vaga--ativo::after,
+.bt-vaga--banco::after {
+    content: 'RESENHA';
+    position: absolute;
+    inset: auto 4% calc(-1 * var(--dock) - 3px) 4%;
+    height: var(--dock);
+    border: 1.5px dashed rgba(255, 171, 145, 0.45);
+    background: rgba(255, 171, 145, 0.05);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-size: 0.55rem;
+    letter-spacing: 0.8px;
+    color: #ffab91;
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.2s, border-color 0.2s;
+}
+.bt-lado--npc .bt-vaga--ativo::after,
+.bt-lado--npc .bt-vaga--banco::after {
+    inset: calc(-1 * var(--dock) - 3px) 4% auto 4%;
+}
+.bt-vaga:has(.bt-carta--anexo)::after {
+    display: none;
+}
+.bt-vaga--campo::after,
+.bt-vaga--resenha::after {
+    display: none !important;
+}
 
 /* ------------------------------------------------------------------ centro */
 .bt-centro {
     display: grid;
-    grid-template-columns: var(--w-campo) 1fr;
+    grid-template-columns: var(--w-campo) var(--w-campo) 1fr;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     padding-inline: 4px;
 }
 .bt-vaga--campo { width: var(--w-campo); }
+.bt-vaga--resenha {
+    width: var(--w-campo);
+    border: 2px dashed rgba(255, 171, 145, 0.65);
+    background: rgba(191, 54, 12, 0.08);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.bt-vaga--resenha .bt-vaga-rotulo {
+    color: #ffab91;
+    font-size: 0.68rem;
+    line-height: 1.15;
+    text-align: center;
+    padding: 2px 4px;
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+}
+.bt-vaga--resenha.bt-zona {
+    box-shadow: 0 0 0 3px #ff9e80, 0 0 18px rgba(255, 110, 64, 0.6);
+    border-color: #ff6e40 !important;
+}
+.bt-vaga--resenha.bt-zona.bt-zona--sobre {
+    box-shadow: 0 0 0 5px #ff6e40, 0 0 28px #ff3d00;
+    transform: scale(1.08);
+}
+.bt-carta--magia-ativa {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    box-shadow: 0 0 20px rgba(255, 171, 145, 0.8), 0 0 35px rgba(255, 110, 64, 0.6);
+    border-radius: 8px;
+    pointer-events: none;
+}
 .bt-vaga-rotulo {
     position: absolute;
     inset: 0;
@@ -414,11 +487,13 @@ dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: 
     position: absolute;
     inset: 0;
     z-index: 0;
-    transform: translateY(calc(16% + var(--k, 0) * 9%)) rotate(90deg) scale(0.9);
+    transform: translateY(calc(60% + var(--k, 0) * 22%)) rotate(90deg) scale(0.46);
     filter: brightness(0.92);
 }
 .bt-carta--anexo:hover, .bt-carta--anexo:focus-visible { filter: none; }
 .bt-carta--com-anexo { z-index: 1; }
+/* Do lado do rival o slot fica em cima: a carta de resenha sai por cima do lutador. */
+.bt-lado--npc .bt-carta--anexo { transform: translateY(calc(-60% - var(--k, 0) * 22%)) rotate(90deg) scale(0.46); }
 
 /* Verso da Batalha: carta virada pela recarga (e a mão escondida do rival).
    Fundo escuro com a retícula de gibi do site e o logo da capa no meio. O HP fica por cima. */
@@ -1096,10 +1171,10 @@ dialog.bt-regras::backdrop { background: rgba(0, 0, 0, 0.6); }
 /* Deitado e baixo: barra lateral mais larga (nome numa linha) e dica ao lado do efeito do campo. */
 @media (max-height: 500px) and (min-width: 640px) and (min-aspect-ratio: 5 / 4) {
     .bt-mesa { --w-lateral: clamp(150px, 27vw, 260px); }
-    .bt-centro { grid-template-columns: var(--w-campo) auto minmax(0, 1fr); }
-    .bt-centro .bt-dica { grid-column: 2; grid-row: 1; }
-    .bt-centro .bt-relogio { grid-column: 2; grid-row: 2; }
-    .bt-centro .bt-campo-texto { grid-column: 3; grid-row: 1; }
+    .bt-centro { grid-template-columns: var(--w-campo) var(--w-campo) auto minmax(0, 1fr); }
+    .bt-centro .bt-dica { grid-column: 3; grid-row: 1; }
+    .bt-centro .bt-relogio { grid-column: 3; grid-row: 2; }
+    .bt-centro .bt-campo-texto { grid-column: 4; grid-row: 1; }
 }
 
 /* Cartilhas do "Como jogar" (imagens 9:16). */

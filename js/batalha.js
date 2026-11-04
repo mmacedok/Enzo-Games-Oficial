@@ -863,12 +863,23 @@
 
         m.centro = el('div', 'bt-centro');
         m.campo = el('div', 'bt-vaga bt-vaga--campo');
+        m.resenha = el('div', 'bt-vaga bt-vaga--campo bt-vaga--resenha');
+        m.resenha.addEventListener('click', () => {
+            const eu = estado?.jogadores?.[EU];
+            if (!eu || !minhaVez()) return;
+            const magias = eu.mao.filter((c) => R.ehAnexo(c.id));
+            if (!magias.length) {
+                dica('Você não tem cartas de Resenha ou Spells na mão.');
+            } else {
+                dica('Arraste uma Resenha ou Spell da sua mão até esta zona para jogar!');
+            }
+        });
         m.campoTexto = el('p', 'bt-campo-texto');
         m.dica = el('p', 'bt-dica');
         m.dica.setAttribute('aria-live', 'polite');
         m.relogio = el('p', 'bt-relogio');
         m.relogio.hidden = true;
-        m.centro.append(m.campo, m.dica, m.relogio, m.campoTexto);
+        m.centro.append(m.campo, m.resenha, m.dica, m.relogio, m.campoTexto);
 
         m.acoes = el('div', 'bt-acoes');
         m.aura = botao('bt-aura', null, () => {
@@ -1139,6 +1150,11 @@
         if (campoId) por(visao.campo.carta, mesa.campo, false);
         else mesa.campo.appendChild(el('span', 'bt-vaga-rotulo', 'Campo'));
         trocarFundo(campoId);
+
+        // Zona Central de Resenha / Spells
+        mesa.resenha.replaceChildren();
+        mesa.resenha.appendChild(el('span', 'bt-vaga-rotulo', 'Resenha / Spells'));
+        mesa.resenha.title = 'Zona Central de Resenha e Spells: solte magias de uso único ou resenhas aqui para jogar';
 
         // Mão do NPC (costas) e a sua.
         // Depois da Câmera do Drone Vigia, a mão do NPC fica virada para cima até o fim do seu turno.
@@ -1538,15 +1554,28 @@
             if (R.ehLutador(naMao.id)) add('Pôr no banco', { tipo: 'baixar', uid });
             if (R.ehCampo(naMao.id)) add('Jogar este campo', { tipo: 'campo', uid });
             if (R.ehAnexo(naMao.id)) {
-                // Carta complementar: escolhe atrás de qual lutador ela fica deitada.
+                const ax = R.combate(naMao.id)?.anexo;
+                const ehMagia = ax?.soAoEntrar || ax?.magia;
                 const alvos = [...R.naMesa(eu), ...R.naMesa(ele)].filter((c) => valida({ tipo: 'anexar', uid, alvo: c.uid })).map((c) => c.uid);
-                add('Deitar atrás de um lutador', { tipo: 'anexar', uid, alvo: '?' }, {
-                    alvos,
-                    fazer: () => {
-                        modo = { tipo: 'alvo', jogada: { tipo: 'anexar', uid }, alvos, texto: `${nomeVisivel(naMao.id)}: escolha o lutador que fica com ela.` };
-                        desenhar();
-                    },
-                });
+                const rotulo = ehMagia ? `Jogar Magia: ${nomeVisivel(naMao.id)}` : `Equipar Resenha: ${nomeVisivel(naMao.id)}`;
+                if (ehMagia && alvos.length === 1) {
+                    add(rotulo, { tipo: 'anexar', uid, alvo: alvos[0] });
+                } else {
+                    add(rotulo, { tipo: 'anexar', uid, alvo: '?' }, {
+                        alvos,
+                        fazer: () => {
+                            modo = {
+                                tipo: 'alvo',
+                                jogada: { tipo: 'anexar', uid },
+                                alvos,
+                                texto: ehMagia
+                                    ? `${nomeVisivel(naMao.id)}: escolha o alvo da magia.`
+                                    : `${nomeVisivel(naMao.id)}: escolha o lutador que recebe a Resenha.`
+                            };
+                            desenhar();
+                        },
+                    });
+                }
             }
             if (estado.campo && R.combate(estado.campo.carta.id).campo.tipo === 'trocarCarta') add('Devolver ao baralho e comprar 1 (Casa do Enzo)', { tipo: 'trocarCarta', uid });
             const restam = R.DEVOLVER_MAO_POR_TURNO - (eu.flags.devolvidasMao || 0);
@@ -1836,10 +1865,38 @@
             }
             if (R.ehCampo(naMao.id)) zona(mesa.campo, { tipo: 'campo', uid });
             if (R.ehAnexo(naMao.id)) {
-                // Carta complementar: solta em cima do lutador (os seus sempre aparecem; os dele, só se ela vale lá).
+                const ax = R.combate(naMao.id)?.anexo;
+                const ehMagia = ax?.soAoEntrar || ax?.magia;
+                const alvosValidos = [...R.naMesa(eu), ...R.naMesa(ele)].filter((c) => valida({ tipo: 'anexar', uid, alvo: c.uid })).map((c) => c.uid);
+
+                // Zona Central de Resenha / Spells
+                if (alvosValidos.length === 1) {
+                    zona(mesa.resenha, { tipo: 'anexar', uid, alvo: alvosValidos[0] });
+                } else if (alvosValidos.length > 1) {
+                    zonas.push({
+                        el: mesa.resenha,
+                        escolherAlvo: () => {
+                            modo = {
+                                tipo: 'alvo',
+                                jogada: { tipo: 'anexar', uid },
+                                alvos: alvosValidos,
+                                texto: ehMagia
+                                    ? `${nomeVisivel(naMao.id)}: escolha o alvo da magia.`
+                                    : `${nomeVisivel(naMao.id)}: escolha o lutador que recebe a Resenha.`
+                            };
+                            desenhar();
+                        }
+                    });
+                } else {
+                    const m = motivo({ tipo: 'anexar', uid, alvo: '?' });
+                    zonas.push({ el: mesa.resenha, motivo: m || 'nenhum alvo válido no momento' });
+                }
+
+                // Lutadores na mesa (soltando na carta ou no slot acoplado)
                 for (const c of [...R.naMesa(eu), ...R.naMesa(ele)]) {
                     const jogada = { tipo: 'anexar', uid, alvo: c.uid };
-                    if (R.naMesa(eu).includes(c) || valida(jogada)) zona(elDe(c.uid), jogada);
+                    const elAlvo = elDe(c.uid)?.parentElement || elDe(c.uid);
+                    if (R.naMesa(eu).includes(c) || valida(jogada)) zona(elAlvo, jogada);
                 }
             }
             return zonas;
@@ -1921,6 +1978,7 @@
         if (z.preparo) escolherPreparo(origem.uid, z.preparo);
         else if (z.motivo) balao(z.el, z.motivo, 'erro');
         else if (z.atacar) soltarAtaque(z.atacar, z.el);
+        else if (z.escolherAlvo) z.escolherAlvo();
         else if (z.jogada) executar(z.jogada);
     }
 
@@ -3487,10 +3545,23 @@
                 break;
             }
             case 'anexar': {
-                // A carta complementar desliza para trás do lutador e deita.
                 desenhar();
                 const carta = elDe(ev.uid);
-                if (carta) {
+                const ax = R.combate(ev.id)?.anexo;
+                if (ax?.soAoEntrar && mesa.resenha) {
+                    // Magia de uso único: anima surgindo na Zona Central de Resenha / Spells
+                    const tempCarta = UI.carta(ev.id);
+                    tempCarta.classList.add('bt-carta', 'bt-carta--magia-ativa');
+                    mesa.resenha.appendChild(tempCarta);
+                    faiscas(mesa.resenha, 5);
+                    await animar(tempCarta, [
+                        { transform: 'scale(0.7) translateY(20px)', opacity: 0 },
+                        { transform: 'scale(1.15)', opacity: 1, offset: 0.6 },
+                        { transform: 'scale(1)', opacity: 1 },
+                    ], { duration: 420 });
+                    await esperar(220);
+                    tempCarta.remove();
+                } else if (carta) {
                     await animar(carta, [
                         { transform: 'translateY(-60px) rotate(0deg) scale(1.2)', opacity: 0 },
                         { opacity: 1, offset: 0.4 },

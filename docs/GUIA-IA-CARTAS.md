@@ -62,7 +62,7 @@ Se o efeito precisa de uma **escolha do jogador** (qual carta descartar, qual al
 - A arte tem de **estar no repositório** em `assets/Cartas/<id>.png` antes de a carta entrar. O contrato confere.
 - `visual.arte` (aparência de uma carta que se transforma) é **um id de carta ou o caminho completo** (`assets/Cartas/x.png`).
   Id inventado vira imagem quebrada.
-- Arte nova pesa ~4 MB. Depois de pôr artes, rode `node atualizar.js` (gera as versões `.webp` leves do catálogo).
+- Arte nova pesa ~4 MB. As versões `.webp` leves e `data/images.json` são **geradas no deploy** (`npm run build:deploy`): não precisa incluir `assets/web/`, `data/images.json` nem `js/images.generated.js` na sua PR (deixe o Henrique gerar).
 - **Não mude `id`, `numero` ou raridade de carta já lançada**: coleções, decks e placar guardam isso.
 
 ## 5. Temporadas (resumo; o passo a passo está em `docs/TEMPORADAS.md`)
