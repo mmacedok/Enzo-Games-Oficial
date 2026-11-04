@@ -50,7 +50,11 @@ Tipo: **peça** = uma imagem parada (512×512, ou 256×256 onde diz); **folha** 
 | `fx-bala-dourada.png` | peça | O Inominável, Bala Dourada | atravessa a mesa do Inominável até o alvo |
 | `fx-balao-discord.png` | peça | O Inominável, poder Besteira no Discord | sai do Inominável e gruda no ativo do adversário |
 | `fx-aura-coluna.png` | peça | Superkid, Farmar Aura e Aura de 67 Segundos | coluna em volta do Superkid |
-| `fx-relogio.png` | peça | Superkid, Aura de 67 Segundos | atrás do Superkid, girando |
+| fx-relogio.png` | peça | Superkid, Aura de 67 Segundos | atrás do Superkid, girando |
+| `fx-pena.png` | peça 256 | PMLDM, Plumas Carmesim e Despertar Ezreal | voa da PMLDM até o alvo em Plumas Carmesim; em volta da PMLDM no Despertar |
+| `fx-penas-espiral.png` | peça | PMLDM, Despertar Ezreal | vórtice de penas vermelhas e violetas girando em torno da carta antes de virar o Super Itallo |
+| `fx-disparo-arcano.png` | peça | PMLDM (Super Itallo de Ezreal), Super Disparo Místico 40/0/100 | feixes e arcos dourados disparados da manopla atingindo a mesa inimiga |
+| `fx-portal-skin.png` | peça | Júlia, Pedir Skin pro Superkid | portal cósmico art déco de Lavras MG abrindo atrás da Júlia com raios de luz |
 
 (O Escudo de Parênteses do Degustador usa o `fx-parentese.png` da leva 1.)
 

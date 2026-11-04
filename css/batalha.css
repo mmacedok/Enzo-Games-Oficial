@@ -400,6 +400,7 @@ dialog.bt-regras.bt-cartas { width: min(720px, calc(100vw - 20px)); max-height: 
 }
 @keyframes bt-pode { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 .bt-carta--alvo { cursor: crosshair; animation: bt-alvo 0.9s ease-in-out infinite; }
+.bt-carta--descartar { cursor: pointer; box-shadow: 0 0 0 4px #ffcc00, 0 0 14px #ffcc00; transform: translateY(-10px); }
 @keyframes bt-alvo {
     0%, 100% { box-shadow: 0 0 0 3px #ff3b30, 0 0 12px #ff3b30; }
     50% { box-shadow: 0 0 0 5px #ff3b30, 0 0 26px #ff3b30; }

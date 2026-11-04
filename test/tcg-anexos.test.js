@@ -38,7 +38,8 @@ function carregar(arquivo, deps) {
     new Function('module', 'require', src)(mod, (p) => deps[path.basename(p)]);
     return mod.exports;
 }
-const Baralho = { ...BaralhoReal, carta: (id) => CARTAS_TESTE[id] || BaralhoReal.carta(id) };
+const Baralho = { ...BaralhoReal, carta: (id) => CARTAS_TESTE[id] || BaralhoReal.carta(id),
+    cartaLiberada: (id) => !!CARTAS_TESTE[id] || BaralhoReal.cartaLiberada(id) };
 const Cartas = { ...CartasReais, COMBATE: { ...CartasReais.COMBATE, ...COMBATE_TESTE } };
 const R = carregar('tcg-regras.js', { 'baralho-dados.js': Baralho, 'tcg-cartas.js': Cartas });
 const Robo = carregar('tcg-robo.js', { 'tcg-regras.js': R });

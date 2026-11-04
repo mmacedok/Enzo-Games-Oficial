@@ -20,11 +20,13 @@ const DECK = [
 let contador = 0;
 function inst(j, spec) {
     const s = typeof spec === 'string' ? { id: spec } : spec;
-    return {
+    const res = {
         uid: s.uid || `${j}-t${contador++}`, id: s.id, dano: s.dano || 0, aura: s.aura || 0,
         estados: { notificado: false, iludido: false, silenciado: 0, ...(s.estados || {}) },
         escudo: s.escudo || null,
     };
+    if (s.transformado) res.transformado = s.transformado;
+    return res;
 }
 /**
  * Monta uma mesa pronta no meio da partida: `vez` joga o turno `turno`.
@@ -375,7 +377,7 @@ test('Toradolândia: com 3 cartas ou menos na mão, compra 1 a mais', () => {
     assert.equal(jogar(cheia, { tipo: 'passar' }).estado.jogadores[1].mao.length, 5);
 });
 
-test('Mansão do Inominável: goons +20 HP, Notificado tira 20; sair da Mansão tira o HP extra mas não nocauteia', () => {
+test('Mansão do Inominável: goons +20 HP permanentes, Notificado tira 20; sair da Mansão mantém o HP extra até sair de jogo', () => {
     const e = mesa({
         eu: { ativo: { id: 'drone-vigia', dano: 65 * R.ESCALA }, mao: ['toradolandia'] },
         ele: { ativo: { id: 'italolol', estados: { notificado: true } } },
@@ -386,7 +388,8 @@ test('Mansão do Inominável: goons +20 HP, Notificado tira 20; sair da Mansão 
     assert.equal(jogar(e, { tipo: 'passar' }).estado.jogadores[1].ativo.dano, 20 * R.ESCALA);
     const r = jogar(e, { tipo: 'campo', uid: EU(e).mao[0].uid });
     assert.ok(!r.eventos.some((ev) => ev.tipo === 'nocaute'), 'sair da Mansão não derruba ninguém');
-    assert.equal(EU(r.estado).ativo.dano, 60 * R.ESCALA - 1, 'fica com 1 de vida');
+    assert.equal(R.hpMax(r.estado, EU(r.estado).ativo), 80 * R.ESCALA, 'HP extra da Mansão fica permanente na mesa');
+    assert.equal(EU(r.estado).ativo.dano, 65 * R.ESCALA);
     assert.equal(r.estado.jogadores[0].vida, R.VIDA_INICIAL);
 });
 
@@ -1069,7 +1072,8 @@ test('300 partidas com jogadas aleatórias: sem erro, cartas nunca somem nem dup
             e = R.aplicar(e, validas[Math.floor(aleatorio() * validas.length)]).estado;
             for (const x of e.jogadores) {
                 const campoMeu = e.campo && e.jogadores[e.campo.dono] === x ? 1 : 0;
-                const total = x.deck.length + x.mao.length + x.banco.length + x.descarte.length + (x.ativo ? 1 : 0) + campoMeu;
+                const anexosMeus = e.jogadores.flatMap((jg) => R.naMesa(jg)).flatMap((c) => c.anexos || []).filter((a) => e.jogadores[a.dono] === x).length;
+                const total = x.deck.length + x.mao.length + x.banco.length + x.descarte.length + (x.ativo ? 1 : 0) + campoMeu + anexosMeus;
                 assert.equal(total, 15, `partida ${p}: cartas somaram ${total}`);
                 for (const c of R.naMesa(x)) assert.ok(c.dano < R.hpMax(e, c), 'carta sem HP ficou na mesa');
                 assert.ok(x.banco.length <= R.VAGAS_BANCO);
@@ -1202,4 +1206,203 @@ test('banimento: o robô bane as cartas mais fortes e a partida inteira fecha', 
 test('rodada: o par de turnos (1 e 2 = rodada 1) e o limite em rodadas', () => {
     assert.deepEqual([1, 2, 3, 4, 29, 30].map(R.rodadaDe), [1, 1, 2, 2, 15, 15]);
     assert.equal(R.RODADAS_MAX, 15);
+});
+
+// ---- Novas cartas e arquétipos (Expansão TCG) -------------------------------------
+test('Magias: Calibra o Smite (1 e Anuah), Cadê meu Jungle, Dar FF e Hoje é quarta-feira', () => {
+    // Calibra o Smite (Opção 1): exige exatamente 600 de vida restante e destrói sem dano na vida do jogador
+    const eSmite = mesa({
+        eu: { ativo: { id: 'drone-vigia', aura: 1 }, mao: ['calibra-o-smite'] },
+        ele: { ativo: { id: 'drone-vigia', dano: 30 * R.ESCALA }, banco: ['italolol'] },
+    });
+    const rSmite = jogar(eSmite, { tipo: 'anexar', uid: EU(eSmite).mao[0].uid, alvo: ELE(eSmite).ativo.uid });
+    assert.equal(EU(rSmite.estado).ativo.aura, 0, 'gastou 1 Aura');
+    assert.equal(ELE(rSmite.estado).descarte[0].id, 'drone-vigia');
+    assert.equal(ELE(rSmite.estado).vida, R.VIDA_INICIAL, 'não causa dano de nocaute na vida do jogador');
+
+    // Calibra o Smite (Anuah): gasta 2 Auras e corta pela metade o dano do ativo inimigo
+    const eAnuah = mesa({
+        eu: { ativo: { id: 'drone-vigia', aura: 2 }, mao: ['calibra-o-smite-anuah'] },
+        ele: { ativo: { id: 'italolol', aura: 1 } },
+    });
+    const sAnuah = jogar(eAnuah, { tipo: 'anexar', uid: EU(eAnuah).mao[0].uid, alvo: ELE(eAnuah).ativo.uid }).estado;
+    assert.equal(EU(sAnuah).ativo.aura, 0, 'gastou 2 Auras');
+    assert.equal(R.calcularDano(sAnuah, 1, R.ficha(sAnuah, ELE(sAnuah).ativo).ataques[0], EU(sAnuah).ativo), 10 * R.ESCALA, 'dano pela metade (200)');
+
+    // Cadê meu Jungle: gasta 2 Auras e devolve carta do banco inimigo para a mão
+    const eJungle = mesa({
+        eu: { ativo: { id: 'drone-vigia', aura: 2 }, mao: ['cade-meu-jungle'] },
+        ele: { ativo: 'drone-vigia', banco: ['italolol'] },
+    });
+    const sJungle = jogar(eJungle, { tipo: 'anexar', uid: EU(eJungle).mao[0].uid, alvo: ELE(eJungle).banco[0].uid }).estado;
+    assert.equal(ELE(sJungle).banco.length, 0);
+    assert.ok(ELE(sJungle).mao.some((c) => c.id === 'italolol'));
+
+    // Dar FF: cura 600; se usado em sequência pelos dois lados, ambos levam 1.000 de dano
+    let eFF = mesa({
+        eu: { ativo: { id: 'italolol', aura: 1, dano: 40 * R.ESCALA }, mao: ['dar-ff'] },
+        ele: { ativo: { id: 'italolol', aura: 1, dano: 40 * R.ESCALA }, mao: ['dar-ff'] },
+    });
+    eFF = jogar(eFF, { tipo: 'anexar', uid: EU(eFF).mao[0].uid, alvo: EU(eFF).ativo.uid }).estado;
+    assert.equal(eFF.jogadores[0].ativo.dano, 10 * R.ESCALA, 'curou 600');
+    eFF = jogar(eFF, { tipo: 'passar' }).estado;
+    eFF = R.aplicar(eFF, { tipo: 'anexar', jogador: 1, uid: eFF.jogadores[1].mao[0].uid, alvo: eFF.jogadores[1].ativo.uid }).estado;
+    assert.equal(eFF.jogadores[0].vida, R.VIDA_INICIAL - 50 * R.ESCALA, 'jogador 0 levou 1.000');
+    assert.equal(eFF.jogadores[1].vida, R.VIDA_INICIAL - 50 * R.ESCALA, 'jogador 1 levou 1.000');
+
+    // Hoje é quarta-feira: descarta 2 cartas, dá +1 Aura ao oponente no próximo turno e troca ativo com o banco
+    let eQuarta = mesa({
+        eu: { ativo: 'drone-vigia', banco: ['italolol'], mao: ['hoje-e-quarta-feira', 'bug-do-discord', 'cara-de-coracao'] },
+        ele: { ativo: 'drone-vigia' },
+    });
+    eQuarta = jogar(eQuarta, { tipo: 'anexar', uid: EU(eQuarta).mao[0].uid, alvo: EU(eQuarta).banco[0].uid }).estado;
+    assert.equal(eQuarta.jogadores[0].ativo.id, 'italolol', 'trocou ativo pelo banco');
+    assert.equal(eQuarta.jogadores[0].mao.length, 0, 'descartou as 2 cartas');
+    eQuarta = jogar(eQuarta, { tipo: 'passar' }).estado;
+    assert.equal(eQuarta.jogadores[1].flags.auras, R.AURAS_POR_TURNO + 1, 'oponente ganhou +1 Aura no turno seguinte');
+});
+
+test('Cartas Itallo: Itallo de Viego 20/0 e Eu vou ir ai na pedra mole te matar', () => {
+    let e = mesa({
+        eu: { ativo: { id: 'italolol', aura: 2 }, mao: ['itallo-de-viego', 'pedra-mole'], deck: ['enzo-games'] },
+        ele: { ativo: 'drone-vigia', banco: ['bug-do-discord'] },
+    });
+    e = jogar(e, { tipo: 'anexar', uid: EU(e).mao[0].uid, alvo: EU(e).ativo.uid }).estado;
+    const enzo = EU(e).banco.find((c) => c.id === 'enzo-games');
+    assert.ok(enzo, 'invocou Enzo Games do deck');
+    assert.ok(R.virada(e, enzo), 'Enzo Games entrou virado');
+    // Pedra Mole desvira Enzo Games e dá +200 de dano neste turno
+    e = jogar(e, { tipo: 'anexar', uid: EU(e).mao[0].uid, alvo: enzo.uid }).estado;
+    assert.ok(!R.virada(e, EU(e).banco[0]), 'Enzo Games desvirou');
+    assert.equal(EU(e).flags.bonusDanoTurno[enzo.uid], 10, '+200 de dano no turno');
+});
+
+test('Arquétipo Super Kid: Hanna, Mariana, Júlia, Lavras MG e Clubexx', () => {
+    // Hanna rouba 1 Aura para o Super Kid; Mariana protege Super Kid de efeitos e Hit Kill; Clubexx move 1 Aura
+    let e = mesa({
+        eu: { ativo: { id: 'superkid', estados: { notificado: true } }, banco: ['mariana'], mao: ['hanna', 'clubexx'] },
+        ele: { ativo: { id: 'o-inominavel', aura: 2 } },
+    });
+    e = jogar(e, { tipo: 'baixar', uid: EU(e).mao[0].uid }).estado;
+    assert.equal(e.jogadores[0].ativo.aura, 1, 'Hanna roubou 1 Aura para o Super Kid');
+    assert.equal(e.jogadores[1].ativo.aura, 1);
+    e = jogar(e, { tipo: 'campo', uid: EU(e).mao[0].uid }).estado;
+    e = jogar(e, { tipo: 'moverAuraSuperkid', alvo: EU(e).banco[0].uid }).estado;
+    assert.equal(e.jogadores[0].ativo.aura, 0);
+    assert.equal(e.jogadores[0].banco[0].aura, 1, 'Clubexx moveu 1 Aura do Super Kid para o banco');
+    // Passa o turno: Mariana protege o Super Kid do dano de Notificado
+    e = jogar(e, { tipo: 'passar' }).estado;
+    assert.equal(e.jogadores[0].ativo.dano, 0, 'Mariana impediu dano de efeito no Super Kid');
+
+    // Júlia invoca Lavras MG ao entrar e não entra junto com Super Kid; ataque traz Super Kid com 1 Aura
+    let eJulia = mesa({
+        eu: { ativo: { id: 'julia', aura: 2 }, mao: ['superkid'], deck: ['superkid', 'lavras-mg'] },
+        ele: { ativo: 'o-inominavel' },
+    });
+    invalida(() => jogar(eJulia, { tipo: 'baixar', uid: EU(eJulia).mao[0].uid }), 'não pode ficar na mesa junto');
+    eJulia = jogar(eJulia, { tipo: 'atacar', ataque: 0 }).estado;
+    assert.equal(eJulia.jogadores[0].ativo.id, 'superkid', 'Júlia voltou pro deck e colocou Super Kid no ativo');
+    assert.equal(eJulia.jogadores[0].ativo.aura, 1, 'Super Kid entrou com 1 Aura');
+});
+
+test('Arquétipo São João do Butico: Caiam, Douglas e Teemo', () => {
+    let e = mesa({
+        eu: { ativo: { id: 'degustador-da-noite', aura: 1 }, mao: ['caiam', 'douglas'], deck: ['sao-joao-do-butico', 'sombra-do-degustador', 'drone-vigia'] },
+        ele: { ativo: 'o-inominavel' },
+    });
+    invalida(() => jogar(e, { tipo: 'baixar', uid: EU(e).mao[1].uid }), 'precisa do campo exigido');
+    e = jogar(e, { tipo: 'baixar', uid: EU(e).mao[0].uid }).estado;
+    assert.equal(e.campo?.carta.id, 'sao-joao-do-butico', 'Caiam buscou São João do Butico do deck');
+    e = jogar(e, { tipo: 'baixar', uid: EU(e).mao[0].uid }).estado;
+    const douglas = EU(e).banco.find((c) => c.id === 'douglas');
+    assert.ok(douglas, 'Douglas entrou com São João do Butico ativo');
+    e = jogar(e, { tipo: 'poder', uid: douglas.uid }).estado;
+    assert.equal(EU(e).mao.length, 2, 'Herege comprou 2 cartas');
+
+    // Teemo no banco envenena quando Degustador dá dano; devolver envenenado ao deck dá metade do dano restante na vida
+    let eTeemo = mesa({
+        eu: { ativo: { id: 'degustador-da-noite', aura: 1 }, banco: ['teemo'] },
+        ele: { ativo: 'o-inominavel', banco: ['drone-vigia'] },
+    });
+    eTeemo = jogar(eTeemo, { tipo: 'atacar', ataque: 0, alvo: ELE(eTeemo).ativo.uid }).estado;
+    // Fim do turno já descontou 1 tick (250) do veneno, restando 3 turnos (750)
+    assert.equal(eTeemo.jogadores[1].ativo.venenoTeemo, 3);
+    assert.equal(eTeemo.jogadores[1].ativo.dano, 20 * R.ESCALA + 250);
+    // Oponente devolve o ativo envenenado ao deck: leva metade de 750 (375) direto na vida
+    eTeemo = R.aplicar(eTeemo, { tipo: 'devolverMesa', jogador: 1, uid: eTeemo.jogadores[1].ativo.uid }).estado;
+    assert.equal(eTeemo.jogadores[1].vida, R.VIDA_INICIAL - 375);
+});
+
+test('Cartas Avulsas: Tiago Cássio, PMLDM (Ezreal) e Pidão do Vape', () => {
+    // Tiago Cássio rouba Aura no 1º ataque e não pode usar Aura roubada no ataque de 6 Auras
+    let eTiago = mesa({
+        eu: { ativo: { id: 'tiago-cassio', aura: 4 } },
+        ele: { ativo: { id: 'o-inominavel', aura: 3 } },
+    });
+    eTiago = jogar(eTiago, { tipo: 'atacar', ataque: 0 }).estado;
+    assert.equal(eTiago.jogadores[0].ativo.aura, 7, 'roubou as 3 Auras');
+    assert.equal(eTiago.jogadores[0].ativo.auraRoubada, 3);
+    assert.equal(eTiago.jogadores[1].ativo.aura, 0);
+
+    // PMLDM transforma em Ezreal e Pidão do Vape causa dano pulmonar progressivo (200, 400...)
+    let eVape = mesa({
+        eu: { ativo: { id: 'pmldm', aura: 3 }, banco: ['pidao-do-vape'] },
+        ele: { ativo: { id: 'o-inominavel', aura: 2 } },
+    });
+    const vapeUid = EU(eVape).banco[0].uid;
+    eVape = jogar(eVape, { tipo: 'poder', uid: vapeUid }).estado;
+    assert.equal(eVape.jogadores[0].banco[0].dano, 10 * R.ESCALA, '1ª tragada causou 200 de dano pulmonar');
+    eVape = jogar(eVape, { tipo: 'atacar', ataque: 0 }).estado;
+    assert.equal(eVape.jogadores[0].ativo.transformado, 'ezreal', 'PMLDM transformou em Ezreal 40/0/100');
+    const fSuperItalo = R.ficha(eVape, eVape.jogadores[0].ativo);
+    assert.equal(fSuperItalo.imuneBanco, true);
+    assert.equal(fSuperItalo.imuneEstados, true);
+    assert.equal(fSuperItalo.reducao, 10, 'Super Italo reduz 200 de dano');
+    assert.equal(fSuperItalo.dano, 10, 'Super Italo ganha +200 de dano');
+    assert.equal(fSuperItalo.hp, 140, 'Super Italo tem HP aumentado para 2.800');
+
+    // Super Italo (Ezreal) ataca com Super Disparo Místico e causa dano em área (splashItallo) em toda a mesa inimiga
+    let eSuper = mesa({
+        eu: { ativo: { id: 'pmldm', aura: 1, transformado: 'ezreal' } },
+        ele: { ativo: { id: 'degustador-da-noite', dano: 0 }, banco: ['o-inominavel', 'julia'] },
+    });
+    eSuper = jogar(eSuper, { tipo: 'atacar', ataque: 0 }).estado; // Super Disparo Místico: 30 base + 10 buff = 40 (800)
+    assert.equal(eSuper.jogadores[1].ativo.dano, 40 * R.ESCALA, 'Ativo adversário recebeu 800 de dano do Super Italo');
+    assert.equal(eSuper.jogadores[1].banco[0].dano, 40 * R.ESCALA, 'Banco inimigo 1 recebeu 800 de splash do Super Italo');
+    assert.equal(eSuper.jogadores[1].banco[1].dano, 40 * R.ESCALA, 'Banco inimigo 2 recebeu 800 de splash do Super Italo');
+
+    // PMLDM no banco faz Itallo bater em área
+    let ePMLDMBanco = mesa({
+        eu: { ativo: { id: 'italolol', aura: 1 }, banco: ['pmldm'] },
+        ele: { ativo: { id: 'degustador-da-noite', dano: 0 }, banco: ['o-inominavel'] },
+    });
+    ePMLDMBanco = jogar(ePMLDMBanco, { tipo: 'atacar', ataque: 0 }).estado; // 20 de dano (400)
+    assert.equal(ePMLDMBanco.jogadores[1].ativo.dano, 20 * R.ESCALA, 'Ativo adversário recebeu dano do Itallo');
+    assert.equal(ePMLDMBanco.jogadores[1].banco[0].dano, 20 * R.ESCALA, 'Banco adversário recebeu splash do PMLDM no banco');
+});
+
+test('Booster da Pedra Mole: modelo de 900 créditos com PMLDM na capa central', () => {
+    const Baralho = require('../js/baralho-dados.js');
+    const p = Baralho.pacote('pedra-mole');
+    assert.ok(p, 'pacote pedra-mole deve existir');
+    assert.equal(p.preco.creditos, 900, 'custa 900 créditos');
+    assert.equal(p.cartas, 5, 'contém 5 cartas');
+    assert.equal(p.garantia, 'epico', 'garantia de carta épica ou melhor');
+    assert.equal(p.capa[1], 'pmldm', 'PMLDM deve estar no centro da capa');
+    assert.deepEqual(p.chances, { comum: 40, raro: 35, epico: 19, lendario: 6 });
+});
+
+test('Hoje é quarta-feira: o jogador escolhe quais cartas descartar', () => {
+    let e = mesa({
+        eu: { ativo: 'drone-vigia', banco: ['italolol'], mao: ['hoje-e-quarta-feira', 'bug-do-discord', 'cara-de-coracao', 'enzo-games'] },
+        ele: { ativo: 'drone-vigia' },
+    });
+    const [q, a, b, c] = EU(e).mao.map((x) => x.uid);
+    const alvo = EU(e).banco[0].uid;
+    assert.ok(R.motivoInvalida(e, { tipo: 'anexar', jogador: 0, uid: q, alvo, descartes: [q] }), 'não descarta a própria magia');
+    assert.ok(R.motivoInvalida(e, { tipo: 'anexar', jogador: 0, uid: q, alvo, descartes: [a, a] }), 'sem repetir carta');
+    assert.ok(R.motivoInvalida(e, { tipo: 'anexar', jogador: 0, uid: q, alvo, descartes: [a, b, c] }), 'no máximo 2');
+    e = jogar(e, { tipo: 'anexar', uid: q, alvo, descartes: [c] }).estado;
+    assert.deepEqual(EU(e).mao.map((x) => x.uid), [a, b], 'só a escolhida saiu da mão');
+    assert.ok(EU(e).descarte.some((x) => x.uid === c), 'a escolhida foi para o descarte');
 });

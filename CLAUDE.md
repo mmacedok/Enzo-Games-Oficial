@@ -16,3 +16,7 @@ de `batalha.html` continuam como estão até ele decidir o contrário.
 ## Outras regras
 - Commit com `git commit -- <arquivos>`: a pasta `animacao/` é de outra conversa, não mexa.
 - Depois de mudar `api/` ou `js/*-dados.js`, reinicie o servidor local.
+
+## Cartas, regras e temporadas
+- Antes de mexer nelas, leia `docs/GUIA-IA-CARTAS.md` (erros que já aconteceram e o checklist). Temporadas: `docs/TEMPORADAS.md`.
+- `node --test test/contrato-cartas.test.js` precisa passar antes de qualquer PR de cartas. `AGENTS.md` e `GEMINI.md` repetem o resumo para outras IAs.

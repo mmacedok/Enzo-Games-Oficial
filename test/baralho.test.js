@@ -62,7 +62,7 @@ test('B1. Sem login: GET /api/baralho, POST comprar, abrir e po dão 401', async
     assert.equal((await visitante('POST', '/api/baralho/po', { todas: true })).status, 401);
 });
 
-test('B2. 1º GET /api/baralho: boasVindas true, 3 pacotes de boas-vindas, carteira zero, colecao vazia, total 24', async (t) => {
+test('B2. 1º GET /api/baralho: boasVindas true, 3 pacotes de boas-vindas, carteira zero, colecao vazia, total = cartas no ar', async (t) => {
     const { db, navegador } = montar();
     t.after(() => db.close());
     const leitor = navegador();
@@ -77,7 +77,7 @@ test('B2. 1º GET /api/baralho: boasVindas true, 3 pacotes de boas-vindas, carte
     assert.deepEqual(res.dados.carteira, { creditos: 0, po: 0 });
     assert.deepEqual(res.dados.colecao, {});
     assert.equal(res.dados.diferentes, 0);
-    assert.equal(res.dados.total, 24);
+    assert.equal(res.dados.total, Baralho.CARTAS.length);
 });
 
 test('B3. 2º e 3º GET: boasVindas false e continuam os 3 pacotes só', async (t) => {

@@ -3,6 +3,19 @@
 Cada entrada é uma versão de regras (`REGRAS_VERSAO` em `js/tcg-regras.js`). Partida online de versão antiga é
 encerrada sem resultado; o jogador recarrega a página.
 
+## Versão 13 — Temporada 1 (18 cartas novas e ajustes)
+
+Primeira temporada (`TEMPORADAS`, id `s1`). Partidas online da versão 12 são encerradas sem resultado.
+
+| Parte | O que mudou |
+|---|---|
+| Cartas novas | Calibra o Smite (e Anuah), Cadê meu Jungle, Dar FF, Hoje é quarta-feira, Itallo de Viego, Pedra Mole, Hanna, Mariana, Júlia, Lavras MG, Clubexx, Douglas, Caiam, Teemo, Tiago Cássio, PMLDM (e Itallo Lendário de Ezreal), Pidão do Vape |
+| Mansão do Inominável | A vida extra dos Goons (+400) é permanente enquanto a carta ficar na mesa (antes sumia se a Mansão saísse) |
+| São João do Butico | Devolver um Degustador ao baralho dá +1 Aura a outro Degustador do banco |
+| Jogada `anexar` | Aceita `descartes` (até 2 cartas da mão, escolhidas pelo jogador) para Hoje é quarta-feira |
+| Jogada `moverAuraSuperkid` | Clubexx: 1 vez por turno, move 1 Aura do Superkid para outra carta do banco |
+| Temporadas | Cartas, pacotes e decks de temporada escondida não saem em pacote nem entram em deck (`docs/TEMPORADAS.md`) |
+
 ## Versão 12 — 2026-10-05 (cartas complementares, sem carta nova ainda)
 
 Preparação do motor, da tela e do robô para as **cartas complementares** (tipo `resenha`, a "Zona de Resenha" do

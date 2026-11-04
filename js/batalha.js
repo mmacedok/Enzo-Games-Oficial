@@ -1,3 +1,6 @@
+// >>> AVISO PARA IAs E DEVS: antes de editar este arquivo leia docs/GUIA-IA-CARTAS.md (erros que já aconteceram + checklist).
+// >>> Toda jogada que o motor aceita (motivoInvalida/aplicar em js/tcg-regras.js) precisa de botão ou gesto aqui, e entrar em jogadasValidas.
+// >>> Antes de dizer que terminou: node --test test/contrato-cartas.test.js && npm test. Não afrouxe teste para passar.
 // ============================================================================
 // Batalha dos Torados: a tela da batalha (batalha.html).
 // Regras: js/tcg-regras.js (o motor). NPC: js/tcg-robo.js. Cartas: EnzoBaralhoUI.carta().
@@ -881,7 +884,14 @@
         m.passar = botao('bt-passar', 'Passar', () => minhaVez() && executar({ tipo: 'passar' }));
         m.cancelar = botao('bt-cancelar', 'Cancelar', () => { modo = null; desenhar(); });
         m.pronto = botao('bt-passar bt-pronto', 'Começar!', confirmarPreparo);
-        m.eu.info.append(m.aura, m.passar, m.cancelar, m.pronto);
+        m.descartar = botao('bt-passar bt-pronto', 'Descartar', () => {
+            if (modo?.tipo !== 'descartar') return;
+            const jogada = { ...modo.jogada, descartes: modo.uids.slice() };
+            modo = null;
+            executar(jogada);
+        });
+        m.descartar.hidden = true;
+        m.eu.info.append(m.aura, m.passar, m.cancelar, m.descartar, m.pronto);
 
         m.maoNpc = el('div', 'bt-mao bt-mao--npc');
         m.maoNpc.addEventListener('click', () => { const e = espiadaVisivel(); if (e) mostrarEspiada(e); });
@@ -1235,6 +1245,13 @@
             for (const c of R.naMesa(estado.jogadores[EU])) if (valida({ tipo: 'aura', alvo: c.uid })) marca(c.uid, 'bt-carta--alvo');
             return;
         }
+        if (modo?.tipo === 'descartar') {
+            for (const c of estado.jogadores[EU].mao) {
+                if (c.uid === modo.jogada.uid) continue;
+                marca(c.uid, modo.uids.includes(c.uid) ? 'bt-carta--descartar' : 'bt-carta--alvo');
+            }
+            return;
+        }
         if (estado.pendentes.some((p) => p.jogador === EU)) {
             for (const c of estado.jogadores[EU].banco) marca(c.uid, 'bt-carta--alvo');
             return;
@@ -1260,6 +1277,8 @@
         mesa.passar.hidden = preparando || !!modo;
         mesa.passar.disabled = !vez;
         mesa.cancelar.hidden = !modo || preparando;
+        mesa.descartar.hidden = modo?.tipo !== 'descartar';
+        if (modo?.tipo === 'descartar') mesa.descartar.textContent = modo.uids.length ? `Descartar ${modo.uids.length}` : 'Não descartar nada';
         mesa.pronto.hidden = !preparando;
         mesa.pronto.disabled = !preparando || !modo.ativo;
         mesa.raiz.classList.toggle('bt-mesa--mirando', modo?.tipo === 'alvo');
@@ -1277,7 +1296,7 @@
         if (estado.fase === 'banimento') dica = '';
         else if (preparando) dica = modo.ativo ? 'Arraste até 3 cartas para o banco (opcional) e toque em Começar!' : 'Arraste um personagem ou goon da mão para o ATIVO. Toque numa carta para ver o que ela faz.';
         else if (estado.fase === 'fim') dica = '';
-        else if (modo?.tipo === 'alvo') dica = modo.texto;
+        else if (modo?.tipo === 'alvo' || modo?.tipo === 'descartar') dica = modo.texto;
         else if (modo?.tipo === 'aura') dica = 'Toque na carta que vai receber a Aura. Ela fica presa ali e acumula.';
         else if (estado.pendentes.some((p) => p.jogador === EU)) dica = 'Seu ativo caiu! Arraste uma carta do banco para o ativo.';
         else if (vez) dica = estado.turno === 1 ? 'Seu 1º turno: arraste cartas para o banco e a Aura para uma carta (ainda não dá para atacar).' : `Sua vez! Arraste as cartas para jogar (o ativo até ${dele()} ataca).`;
@@ -1450,6 +1469,14 @@
             if (valida({ tipo: 'aura', alvo: uid })) { modo = null; executar({ tipo: 'aura', alvo: uid }); }
             return;
         }
+        if (modo?.tipo === 'descartar') {
+            if (uid === modo.jogada.uid || !estado.jogadores[EU].mao.some((c) => c.uid === uid)) return;
+            const i = modo.uids.indexOf(uid);
+            if (i >= 0) modo.uids.splice(i, 1);
+            else if (modo.uids.length < 2) modo.uids.push(uid);
+            desenhar();
+            return;
+        }
         abrirPainel(uid);
     }
 
@@ -1543,6 +1570,9 @@
         } else if (poder?.ativavel) add(`Usar poder: ${poder.nome}`, { tipo: 'poder', uid });
         if (eu.banco.some((c) => c.uid === uid) && eu.ativo) {
             add(`Recuar: esta vira o ativo (gasta ${R.custoRecuo(estado, eu.ativo)} da Aura presa no ativo, que tem ${eu.ativo.aura})`, { tipo: 'recuar', para: uid });
+        }
+        if (eu.banco.some((c) => c.uid === uid) && estado.campo && R.combate(estado.campo.carta.id)?.campo?.tipo === 'moverAuraSuperkid') {
+            add('Mover 1 Aura do Super Kid para esta (Clubexx, 1 vez por turno)', { tipo: 'moverAuraSuperkid', alvo: uid });
         }
         add(`Devolver ao baralho (volta sem a Aura; 1 da mesa por turno)`, { tipo: 'devolverMesa', uid });
         if (eu.ativo?.uid === uid) {
@@ -1962,6 +1992,16 @@
     // ---------------------------------------------------------------- execução
     async function executar(jogada) {
         if (ocupado || !estado) return;
+        // Hoje é quarta-feira: antes de jogar, o jogador escolhe quais cartas da mão descartar (até 2).
+        if (jogada.tipo === 'anexar' && jogada.descartes === undefined) {
+            const carta = estado.jogadores[EU].mao.find((c) => c.uid === jogada.uid);
+            const pede = (R.combate(carta?.id)?.anexo?.aoEntrar || []).some((e) => e.tipo === 'quartaFeira');
+            if (pede && estado.jogadores[EU].mao.length > 1) {
+                modo = { tipo: 'descartar', jogada, uids: [], texto: `${nomeVisivel(carta.id)}: toque nas cartas da mão que vão ser descartadas (até 2) e confirme.` };
+                desenhar();
+                return;
+            }
+        }
         await passo({ jogador: EU, ...jogada });
         await continuar();
     }
@@ -2636,6 +2676,7 @@
             case 'campo': registrar(`${quem(ev.jogador)} jogou o campo ${nomeVisivel(ev.id)}.`); break;
             case 'campoSai': registrar(`O campo ${nomeVisivel(ev.id)} saiu da mesa.`); break;
             case 'anexar': registrar(`${quem(ev.jogador)} deitou ${nomeVisivel(ev.id)} atrás de ${n(ev.alvo)}.`); break;
+            case 'moverAura': registrar(`Clubexx: 1 Aura passou de ${n(ev.de)} para ${n(ev.para)}.`); break;
             case 'anexoSai': registrar(`${nomeVisivel(ev.id)} saiu de trás de ${n(ev.de)}${ev.motivo === 'usada' ? ' (usada)' : ev.motivo === 'prazo' ? ' (acabou o prazo)' : ''}.`); break;
             case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${ev.alvo === R.JOGADOR ? quem(1 - ev.jogador) : n(ev.alvo)}.`); break;
             case 'dano': registrar(`${n(ev.uid)} levou ${num(ev.valor)}${ev.fonte === 'notificado' ? ' (Notificado)' : ''}.`); break;
