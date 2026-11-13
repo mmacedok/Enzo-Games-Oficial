@@ -1330,3 +1330,18 @@ dialog.bt-regras, dialog.bt-cartilha { margin: auto; }
 .bt-banir-item--banida .carta-tcg { filter: grayscale(0.7); }
 .bt-banir-secao { margin-top: 4px; }
 .bt-banir-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+
+/* Mobile (ex.: 375px): barra superior (.bt-voltar, .bt-rodada, .bt-menu-jogo) não cobre .bt-lado--npc .bt-info nem sobrepõe botões. */
+@media (max-width: 639px), (max-aspect-ratio: 1249 / 1000) {
+    .bt-mesa { padding-top: 46px; }
+    .bt-lado--npc .bt-info { padding-right: 8px; }
+}
+@media (max-width: 520px) {
+    .bt-rodada { left: 46px; transform: none; padding: 2px 10px; font-size: 0.95rem; }
+}
+@media (max-width: 480px) {
+    .bt-online-corpo--arte { border-width: 24px; border-image-width: 24px; }
+}
+@media (max-width: 380px) {
+    .bt-mesa { padding-top: 44px; }
+}

@@ -141,7 +141,7 @@
             const c = el('article', `cartao lanc-cartao ${item.estado}`);
             const origem = item.cap.cover || item.comic.cover;
             const img = el('img', 'lanc-capa'); img.alt = ''; img.loading = 'lazy';
-            img.src = window.SiteImages?.[origem]?.variants?.[0]?.src || origem;
+            if (origem) img.src = window.SiteImages?.[origem]?.variants?.[0]?.src || origem;
             const selo = { escondido: '🙈 escondido', agendado: '🕒 agendado', 'no-ar': '🟢 no ar' }[item.estado];
             const quando = item.estado === 'agendado' ? ` · abre ${Lc.formatar(item.em)}` : item.estado === 'no-ar' && item.em ? ` · desde ${Lc.formatar(item.em)}` : '';
             const linhaAcesso = el('span', 'suave', item.estado === 'no-ar' ? '' : resumoAcesso(item));

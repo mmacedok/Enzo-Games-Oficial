@@ -1614,7 +1614,8 @@
                     alvos = ele.banco.map((c) => c.uid);
                 }
                 const jogada = { tipo: 'atacar', ataque: i, ...(alvos ? { alvo: '?' } : {}) };
-                const previsto = ele.ativo ? R.calcularDano(estado, EU, a, ele.ativo, { resultadoMoeda: true }) : 0;
+                const diretoJogador = (a.efeitos || []).some((e) => e.tipo === 'danoDiretoJogador');
+                const previsto = (!diretoJogador && ele.ativo) ? R.calcularDano(estado, EU, a, ele.ativo, { resultadoMoeda: true }) : 0;
                 // No jogador o ativo dele segura 65% do golpe (só entra 35%).
                 const previstoJogador = R.calcularDano(estado, EU, a, R.JOGADOR, { resultadoMoeda: true });
                 add(a.nome, jogada, { ataque: a, alvos, previsto, previstoJogador });
@@ -1683,6 +1684,7 @@
             c.ataques.forEach((a, i) => {
                 const acao = ataquesDasAcoes.get(i);
                 const puxa = (a.efeitos || []).some((e) => e.tipo === 'puxar');
+                const diretoJogador = (a.efeitos || []).some((e) => e.tipo === 'danoDiretoJogador');
                 const base = a.dano ? a.dano * R.ESCALA : 0;
                 const previsto = acao && acao.previsto !== base && acao.previsto > 0 ? ` → ${num(acao.previsto)}` : '';
                 const box = el('div', 'bt-ataque bt-ataque--box');
@@ -1691,7 +1693,7 @@
                 box.append(custo, el('strong', 'bt-ataque-nome', a.nome), el('span', 'bt-ataque-dano', `${base ? num(base) : '—'}${previsto}`),
                     el('span', 'bt-ataque-texto', descricaoAtaque(a)));
                 // Alvos: o ativo do rival, o jogador, e as outras cartas dele (Puxar ou alvo 'qualquer').
-                const jogAtivo = (!puxa && rival.ativo)
+                const jogAtivo = (!puxa && !diretoJogador && rival.ativo)
                     ? (a.alvo === 'qualquer' ? { tipo: 'atacar', ataque: i, alvo: rival.ativo.uid } : { tipo: 'atacar', ataque: i })
                     : null;
                 const jogJogador = { tipo: 'atacar', ataque: i, alvo: R.JOGADOR };
@@ -2011,6 +2013,7 @@
             if (!a.valida) return false;
             if (noJogador) return valida({ tipo: 'atacar', ataque: a.jogada.ataque, alvo: R.JOGADOR });
             if (a.ataque.alvo === 'qualquer') return a.alvos.includes(alvoUid);
+            if ((a.ataque.efeitos || []).some((e) => e.tipo === 'danoDiretoJogador')) return false;
             return noAtivo;
         };
         const servem = ataques.filter(acerta);
@@ -2492,7 +2495,8 @@
         // No PC o painel fica sempre aberto numa coluna ao lado da mesa (ver css); no celular abre e fecha pelo botão 💬.
         const colunaFixa = window.matchMedia('(min-width: 1480px) and (min-aspect-ratio: 5 / 4), (min-width: 1280px) and (max-aspect-ratio: 1249 / 1000)');
         painel.hidden = !colunaFixa.matches;
-        colunaFixa.addEventListener('change', () => { painel.hidden = !colunaFixa.matches; });
+        const aoMudarColuna = () => { painel.hidden = !colunaFixa.matches; };
+        colunaFixa.addEventListener('change', aoMudarColuna);
         const lista = el('ol', 'bt-chat-lista');
         const form = el('form', 'bt-chat-form');
         const campo = el('input', 'bt-chat-campo');
@@ -2569,7 +2573,7 @@
             }
         });
         timer = setTimeout(buscarNovos, 300);
-        online.chatParar = () => { parou = true; if (timer) clearTimeout(timer); };
+        online.chatParar = () => { parou = true; if (timer) clearTimeout(timer); colunaFixa.removeEventListener('change', aoMudarColuna); };
     }
 
     /** Monta a mesa de uma partida online a partir da resposta do servidor. */
@@ -2735,7 +2739,7 @@
             case 'campoSai': registrar(`O campo ${nomeVisivel(ev.id)} saiu da mesa.`); break;
             case 'anexar': registrar(`${quem(ev.jogador)} deitou ${nomeVisivel(ev.id)} atrás de ${n(ev.alvo)}.`); break;
             case 'ataqueEmArea': registrar(`${n(ev.uid)}: o próximo ataque de outro aliado atinge o time inimigo inteiro.`); break;
-            case 'areaAplicada': registrar(`Ataque em área: o banco do rival levou ${ev.metade} de dano em cada carta (metade).`); break;
+            case 'areaAplicada': registrar(`Ataque em área: o banco do rival levou ${num(ev.metade)} de dano em cada carta (metade).`); break;
             case 'moverAura': registrar(`Clubexx: 1 Aura passou de ${n(ev.de)} para ${n(ev.para)}.`); break;
             case 'anexoSai': registrar(`${nomeVisivel(ev.id)} saiu de trás de ${n(ev.de)}${ev.motivo === 'usada' ? ' (usada)' : ev.motivo === 'prazo' ? ' (acabou o prazo)' : ''}.`); break;
             case 'ataque': registrar(`${n(ev.uid)} usou ${ev.nome} em ${ev.alvo === R.JOGADOR ? quem(1 - ev.jogador) : n(ev.alvo)}.`); break;
@@ -2749,13 +2753,19 @@
                 ? `${n(ev.uid)} derrubou a carta e virou (recarga).`
                 : `${n(ev.uid)} virou: recarga até o próximo turno.`); break;
             case 'estado': registrar(`${n(ev.uid)} ficou ${ESTADOS[ev.estado].nome}.`); break;
-            case 'imune': registrar(`${n(ev.uid)} acabou de ser ${ESTADOS[ev.estado].nome.toLowerCase()} e não pode ser de novo agora.`); break;
+            case 'imune': {
+                const nomeEstado = ev.estado && ESTADOS[ev.estado]?.nome;
+                if (nomeEstado) registrar(`${n(ev.uid)} acabou de ser ${nomeEstado.toLowerCase()} e não pode ser de novo agora.`);
+                else registrar(`${n(ev.uid)} ficou imune a ${ev.fonte === 'notificado' ? 'Notificado' : ev.fonte === 'venenoTeemo' ? 'veneno' : 'esse efeito'}.`);
+                break;
+            }
             case 'troca': registrar(`${n(ev.entra)} entrou no lugar de ${n(ev.sai)}.`); break;
             case 'poder': registrar(`${n(ev.uid)} usou o poder ${ev.nome}.`); break;
             case 'moeda': registrar(`Moeda: ${ev.resultado}.`); break;
             case 'ataqueFalhou': registrar(`${n(ev.uid)} estava Iludido e errou!`); break;
             case 'espiar': if (ev.jogador === EU) registrar(`Câmera: a mão de ${dele()} tem ${ev.ids.map(nomeVisivel).join(', ') || 'nada'}.`); break;
             case 'novoAtivo': registrar(`${quem(ev.jogador)} pôs ${n(ev.uid)} no ativo.`); break;
+            case 'descarte':
             case 'descartar': registrar(`${quem(ev.jogador)} descartou ${nomeVisivel(ev.id)}.`); break;
             case 'devolver':
                 registrar(ev.id
@@ -3493,7 +3503,8 @@
             }
             case 'imune': {
                 const alvo = elDe(ev.uid);
-                if (alvo) await balao(alvo, `Já foi ${ESTADOS[ev.estado].nome}!`, 'estado');
+                const nomeEstado = ev.estado && ESTADOS[ev.estado]?.nome;
+                if (alvo) await balao(alvo, nomeEstado ? `Já foi ${nomeEstado}!` : 'IMUNE!', 'estado');
                 break;
             }
             case 'bloqueado': {
@@ -3589,6 +3600,7 @@
             }
             case 'troca':
             case 'novoAtivo':
+            case 'descarte':
             case 'descartar':
             case 'devolver':
                 desenhar();

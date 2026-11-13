@@ -401,6 +401,13 @@
             wrapper.appendChild(image);
             // Páginas deitadas ficam ilegíveis no celular: oferece tela cheia com rolagem.
             if (image.width > image.height) wrapper.appendChild(buildExpandButton(url, index));
+            else if (!image.width && !image.height) {
+                image.addEventListener('load', () => {
+                    if (image.naturalWidth > image.naturalHeight && !wrapper.querySelector('.page-expand-btn')) {
+                        wrapper.appendChild(buildExpandButton(url, index));
+                    }
+                }, { once: true });
+            }
 
             const mask = masks.find((entry) => entry.pageIndex === index);
             if (mask && !state.unlocked) wrapper.appendChild(buildCaboCocoMask(mask.box));
@@ -573,8 +580,10 @@
                 if (event.target !== recordatorio) return;
                 if (['Enter', ' ', 'ArrowDown'].includes(event.key)) { event.preventDefault(); setChapterPanel(true); painel()?.querySelector('.capitulos-item')?.focus(); }
             });
-            recordatorio.querySelector('.capitulos-painel')?.addEventListener('keydown', (event) => {
-                const items = [...event.currentTarget.querySelectorAll('.capitulos-item')];
+            recordatorio.addEventListener('keydown', (event) => {
+                const panel = event.target.closest?.('.capitulos-painel');
+                if (!panel) return;
+                const items = [...panel.querySelectorAll('.capitulos-item')];
                 const i = items.indexOf(document.activeElement);
                 if (event.key === 'ArrowDown') { event.preventDefault(); items[Math.min(i + 1, items.length - 1)]?.focus(); }
                 else if (event.key === 'ArrowUp') { event.preventDefault(); items[Math.max(i - 1, 0)]?.focus(); }
@@ -682,11 +691,12 @@
 
         document.body.classList.toggle('theme-degustador', comic.id === 'degustador');
 
+        const sameComic = comic.id === localStorage.getItem('currentComicId');
         const wanted = chapterId
-            || localStorage.getItem('currentChapterId')
+            || (sameComic ? localStorage.getItem('currentChapterId') : null)
             || comic.chapters?.[0]?.id;
         const index = comic.chapters?.findIndex((chapter) => chapter.id === wanted);
-        state.chapterIndex = index === -1 ? 0 : index;
+        state.chapterIndex = index > -1 ? index : 0;
 
         localStorage.setItem('currentComicId', comic.id);
         const activeChapter = comic.chapters?.[state.chapterIndex];

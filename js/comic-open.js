@@ -107,7 +107,8 @@
         // Espessura do gibi: lombada, verso e cortes das páginas aparecem ao girar.
         const depth = Math.round(width * 0.14);
         book.style.setProperty('--d', `${depth}px`);
-        book.style.setProperty('--cover', `url("${String(coverSrc).replace(/"/g, '%22')}")`);
+        const resolvedCover = coverSrc ? new URL(String(coverSrc), document.baseURI).href : '';
+        if (resolvedCover) book.style.setProperty('--cover', `url("${resolvedCover.replace(/"/g, '%22')}")`);
         const front = element('div', 'comic-fly-front', tilt);
         for (const face of ['back', 'right', 'top', 'bottom']) element('div', `comic-fly-face comic-fly-${face}`, tilt);
         const spine = element('div', 'comic-fly-face comic-fly-spine', tilt);

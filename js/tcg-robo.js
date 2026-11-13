@@ -28,7 +28,7 @@
         const ele = estado.jogadores[1 - j];
         const ataque = R.ficha(estado, eu.ativo).ataques[jogada.ataque];
         const puxa = (ataque.efeitos || []).some((e) => e.tipo === 'puxar');
-        const noJogador = jogada.alvo === R.JOGADOR;
+        const noJogador = jogada.alvo === R.JOGADOR || (ataque.efeitos || []).some((e) => e.tipo === 'danoDiretoJogador');
         const alvo = noJogador ? null : (ataque.alvo === 'qualquer' ? acharNaMesa(ele, jogada.alvo) : ele.ativo);
         const dano = R.calcularDano(estado, j, ataque, noJogador ? R.JOGADOR : alvo, { resultadoMoeda: true })
             * ((ataque.efeitos || []).some((e) => e.tipo === 'moeda') ? 0.5 : 1);

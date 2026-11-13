@@ -52,7 +52,7 @@
             }
             clearTimeout(timer);
             botao.disabled = true;
-            try { await acao(); } finally {
+            try { await acao(); } catch { /* tratado em acao() */ } finally {
                 botao.disabled = false;
                 botao.classList.remove('carta-acao--certeza');
                 botao.replaceChildren(...rotulo);
@@ -253,21 +253,25 @@
         }
 
         // ---------------------------------------------------------- carregar
+        let pedidoId = 0;
         async function carregar(maisAntigas = false) {
+            const id = ++pedidoId;
             mais.disabled = true;
             try {
                 const dados = await pedir(maisAntigas && ultimo ? `${base}&antes=${ultimo}` : base);
+                if (id !== pedidoId) return;
                 admin = dados.admin;
-                if (!maisAntigas) { lista.replaceChildren(); quantos = dados.total; contar(); }
+                if (!maisAntigas) { ultimo = null; lista.replaceChildren(); quantos = dados.total; contar(); }
                 for (const c of dados.comments) lista.appendChild(carta(c));
                 const ultima = dados.comments[dados.comments.length - 1];
                 if (ultima) ultimo = `${ultima.em}:${ultima.id}`;
                 mais.hidden = !dados.maisAntigos;
             } catch {
+                if (id !== pedidoId) return;
                 aviso.hidden = false;
                 aviso.textContent = 'O correio está fechado agora. Tente mais tarde.';
             } finally {
-                mais.disabled = false;
+                if (id === pedidoId) mais.disabled = false;
             }
         }
         mais.addEventListener('click', () => carregar(true));

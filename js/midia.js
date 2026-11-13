@@ -139,9 +139,10 @@
         disco3d.addEventListener('click', tocar);
         barra.addEventListener('input', () => {
             const audio = window.EnzoMusicas.audio;
-            if (!ehAtual(faixa)) tocar();
-            const ir = () => { if (audio.duration) audio.currentTime = (barra.value / 1000) * audio.duration; };
-            if (audio.duration) ir(); else audio.addEventListener('loadedmetadata', ir, { once: true });
+            const eraAtual = ehAtual(faixa);
+            if (!eraAtual) tocar();
+            const ir = () => { if (ehAtual(faixa) && audio.duration) audio.currentTime = (barra.value / 1000) * audio.duration; };
+            if (eraAtual && audio.duration) ir(); else audio.addEventListener('loadedmetadata', ir, { once: true });
         });
         volume.addEventListener('input', () => {
             window.EnzoMusicas.audio.volume = Number(volume.value);
@@ -331,7 +332,9 @@
         const { feixe, cinemaEl, tela, projetor } = cinema;
         const base = cinemaEl.getBoundingClientRect();
         const t = tela.getBoundingClientRect();
-        const l = projetor.querySelector('.projetor-lente').getBoundingClientRect();
+        const lente = projetor?.querySelector('.projetor-lente');
+        if (!base.width || !base.height || !t.width || !t.height || !lente) return;
+        const l = lente.getBoundingClientRect();
         const lx = l.left + l.width * 0.25 - base.left, ly = l.top + l.height * 0.25 - base.top;
         // Com a moldura de cortina, a luz mira só a abertura (x 120→1160, y 90→640 de 1280×720).
         const aberta = cinemaEl.closest('[data-midia]').classList.contains('tem-vtela');

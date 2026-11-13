@@ -655,6 +655,7 @@
             } else {
                 j.carga += dt;
                 if (dir) j.olhando = dir;
+                carregarComPlataforma(mundo, j, t, dt);
                 j.vy = Math.min(j.vy + CONFIG.gravidade * dt, CONFIG.quedaMax);
                 moverY(mundo, j, j.vy * dt, t + dt);
                 return ev;
@@ -779,11 +780,7 @@
         }
         if (podeParede && !j.noChao && j.parede !== 0 && (dir === j.parede || j.grudado === j.parede) && j.vy > CONFIG.quedaParede) j.vy = CONFIG.quedaParede;
 
-        if (j.plataforma >= 0) {
-            const p = mundo.nivel.plataformas[j.plataforma];
-            moverX(mundo, j, posPlataforma(p, t + dt).x - posPlataforma(p, t).x);
-            j.plataforma = -1;
-        }
+        carregarComPlataforma(mundo, j, t, dt);
 
         moverX(mundo, j, j.vx * dt);
         j.noChao = false;
@@ -845,11 +842,23 @@
         return false;
     }
 
+    function carregarComPlataforma(mundo, j, t, dt) {
+        if (j.plataforma < 0) return;
+        const p = mundo.nivel.plataformas[j.plataforma];
+        moverX(mundo, j, posPlataforma(p, t + dt).x - posPlataforma(p, t).x);
+        j.plataforma = -1;
+    }
+
     /** Tem chão (sólido, marquise ou plataforma) logo embaixo dos pés? */
     function apoiado(mundo, j, t) {
-        const ty = Math.floor((j.y + A + 1) / T);
+        const base = j.y + A;
+        const ty = Math.floor((base + 1) / T);
         for (let tx = Math.floor((j.x + 0.5) / T); tx <= Math.floor((j.x + L - 0.5) / T); tx++) {
             if (solido(mundo, tx, ty) || tileEm(mundo.nivel, tx, ty) === '=') return true;
+        }
+        for (const p of mundo.nivel.plataformas) {
+            const q = posPlataforma(p, t);
+            if (base >= q.y - 1 && base <= q.y + 1 && j.x + L > q.x && j.x < q.x + q.w) return true;
         }
         return false;
     }

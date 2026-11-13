@@ -99,7 +99,7 @@ function input(){
   let gesture,lastTap=0;const canvas=renderer.domElement;canvas.tabIndex=0;canvas.setAttribute('aria-label','Pista 3D. Setas ou WASD para jogar; espaço pula; B ativa a prancha.');
   canvas.addEventListener('pointerdown',e=>{if(mode!=='playing')return;canvas.focus({preventScroll:true});gesture={id:e.pointerId,x:e.clientX,y:e.clientY,used:false};canvas.setPointerCapture(e.pointerId);});
   function swipe(e){if(!gesture||gesture.id!==e.pointerId||gesture.used)return;const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;if(Math.hypot(dx,dy)<22)return;gesture.used=true;action(Math.abs(dx)>Math.abs(dy)?dx>0?'right':'left':dy>0?'slide':'jump');}
-  canvas.addEventListener('pointermove',swipe);canvas.addEventListener('pointerup',e=>{swipe(e);if(gesture&&!gesture.used){const now=performance.now();if(now-lastTap<300){action('board');lastTap=0;}else lastTap=now;}gesture=null;});canvas.addEventListener('pointercancel',()=>gesture=null);
+  canvas.addEventListener('pointermove',swipe);canvas.addEventListener('pointerup',e=>{if(!gesture||gesture.id!==e.pointerId)return;if(mode!=='playing'){gesture=null;return;}swipe(e);if(!gesture.used){const now=performance.now();if(now-lastTap<300){action('board');lastTap=0;}else lastTap=now;}gesture=null;});canvas.addEventListener('pointercancel',e=>{if(gesture&&gesture.id===e.pointerId)gesture=null;});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('blur',pause);
 }
 function resize(){if(!renderer)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<650?64:56;camera.updateProjectionMatrix();show(mode);}

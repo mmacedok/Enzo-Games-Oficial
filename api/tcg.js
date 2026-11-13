@@ -511,7 +511,8 @@ const rotas = [
             const dono = exigirUuid(ctx.params[0], 'deck não encontrado');
             const [oficial] = await ctx.db.query('SELECT cartas, nome FROM tcg_decks_postados WHERE id = $1', [dono]);
             if (oficial) {
-                const cartas = JSON.parse(oficial.cartas);
+                let cartas;
+                try { cartas = JSON.parse(oficial.cartas); } catch { throw new HttpError(409, 'esse deck não está mais válido'); }
                 if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) throw new HttpError(409, 'esse deck não está mais válido');
                 await ctx.db.query(
                     `INSERT INTO tcg_deck_custom (user_id, cartas, atualizado_em, nome, descricao, publico, publicado_em) VALUES ($1, $2, $3, $4, '', FALSE, NULL)
@@ -524,7 +525,8 @@ const rotas = [
             const [l] = await ctx.db.query(
                 `SELECT d.cartas, d.nome FROM tcg_deck_custom d JOIN users u ON u.id = d.user_id WHERE d.user_id = $1 AND d.publico AND u.role <> 'banned'`, [dono]);
             if (!l) throw new HttpError(404, 'deck não encontrado (talvez o dono tenha tirado da lista)');
-            const cartas = JSON.parse(l.cartas);
+            let cartas;
+            try { cartas = JSON.parse(l.cartas); } catch { throw new HttpError(409, 'esse deck não está mais válido'); }
             if (R.validarDeck(cartas, { maxLendarias: R.MAX_LENDARIAS_CUSTOM }).length) throw new HttpError(409, 'esse deck não está mais válido');
             const nome = `Cópia: ${l.nome}`.slice(0, NOME_DECK_MAX);
             await ctx.db.query(
@@ -748,7 +750,8 @@ const rotas = [
         async executar(ctx) {
             const l = await lerAoVivo(ctx, ctx.params[0]);
             if (l.status !== 'jogando') return { ativa: false, comentarios: [] };
-            const desde = Number.parseInt(ctx.url.searchParams.get('desde'), 10) || 0;
+            const desdeBruto = Number.parseInt(ctx.url.searchParams.get('desde'), 10);
+            const desde = Number.isSafeInteger(desdeBruto) && desdeBruto >= 0 ? desdeBruto : 0;
             const linhas = await ctx.db.query(
                 'SELECT n, user_id, nome, lado, texto, criado_em FROM tcg_comentarios WHERE partida_id = $1 AND n > $2 ORDER BY n LIMIT 100',
                 [l.id, desde]);

@@ -183,6 +183,13 @@ const rotas = [
             const acessos = await ctx.db.query(
                 'SELECT * FROM acessos WHERE user_id = $1 ORDER BY created_at DESC, id LIMIT 50', [id]);
             const [deckLinha] = await ctx.db.query('SELECT nome, publico, cartas FROM tcg_deck_custom WHERE user_id = $1', [id]);
+            let deckCartas = 0;
+            if (deckLinha) {
+                try {
+                    const parsed = JSON.parse(deckLinha.cartas);
+                    if (Array.isArray(parsed)) deckCartas = parsed.length;
+                } catch { /* deck corrompido */ }
+            }
             // require aqui dentro: api/baralho.js também usa este arquivo.
             const baralho = await require('./baralho.js').estado(ctx.db, id);
             return {
@@ -195,7 +202,7 @@ const rotas = [
                 scores: partidas.map(partida),
                 baralho,
                 acessos: acessos.map(require('./acessos.js').linha),
-                deck: deckLinha ? { nome: deckLinha.nome || '', publico: deckLinha.publico === true, cartas: (JSON.parse(deckLinha.cartas) || []).length } : null,
+                deck: deckLinha ? { nome: deckLinha.nome || '', publico: deckLinha.publico === true, cartas: deckCartas } : null,
                 reading: leitura.map((p) => ({
                     comicId: p.comic_id, chapterId: p.chapter_id, page: Number(p.last_page),
                     completed: Boolean(p.completed), em: Number(p.updated_at),

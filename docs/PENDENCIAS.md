@@ -72,6 +72,8 @@
 
 ## 🟡 Decisões em aberto (🧑)
 - [ ] **Galeria:** revisar as descrições curtas do Claude e decidir se Torado entra (sem lore nos MDs).
+- [ ] **14 suspeitas da caça-bugs** (regra de carta, design, nome completo nas rotas): lista na seção 3
+  de `docs/caca-bugs/RESUMO.md`. Henrique decidiu não mexer agora (2026-11-13).
 
 
 - [ ] **Brilho das capas no celular:** anima o tempo todo (custa um pouco). Manter ou deixar parado?
@@ -88,6 +90,7 @@
 ---
 
 ## ✅ Feito recentemente
+- 2026-11-13: Caça-bugs com 4 agentes Gemini: 28 bugs corrigidos (Batalha, Caçada, Surfer, API, leitor, admin) e 22 testes novos; detalhes em `docs/caca-bugs/`.
 - 2026-11-04: **Temporada 1 no `main`** (18 cartas, estrutura de temporadas em `TEMPORADAS`, guia para IAs, contrato de cartas). Depois, regras v14: 1 Aura por personagem por turno (2 só no turno do 2º jogador), Itallo de Viego virou unidade (vida 1.800 a confirmar), Júlia busca o Superkid também no descarte, e o empate online deixou de dar erro 500. Falta: imagem do patch notes + tela de patch notes, embalagem do Pacote da Pedra Mole, conferir as cartinhas do "Como jogar" (podem citar a regra antiga de Aura).
 - 2026-10-28: Capítulo 10 (Quarta-feira de Cinzas, capa + 37 páginas) no site; a home abre o lançamento na frente uma vez por aba (`?semgibi` desliga); abertura de vídeo diária removida (vídeos só na Videoteca).
 - **2026-10-07 · Arte do Enzo OS (tarefa 16 do Codex) integrada:** 14 ícones, ícone de alerta e de comentários, mascote e 5 papéis de parede em `assets/admin/` (papéis convertidos para webp, ~250 KB cada em vez de ~2,5 MB).

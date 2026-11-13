@@ -1873,13 +1873,19 @@ body.game-dialog-open { overflow: hidden; }
     .cacada-controles--v2 [data-tecla="golpe"], .cacada-controles--v2 [data-tecla="pulo"] { font-size: 1.15rem; min-width: 70px; }
 }
 @media (max-width: 560px) {
-    .cacada-acoes [data-tecla="golpe"], .cacada-acoes [data-tecla="pulo"] { font-size: 1.25rem; }
+    .cacada-acoes { flex: 1; min-width: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+    .cacada-acoes [data-tecla="golpe"], .cacada-acoes [data-tecla="pulo"] { min-width: 0; padding: 0 4px; font-size: 1.15rem; }
     .cacada-direcional { grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 40px); }
-    .cacada-acoes .cacada-botao--menor { min-width: 52px; font-size: 0.8rem; }
-    .cacada-controles { gap: 8px; padding: 0 4px; }
+    .cacada-acoes .cacada-botao--menor { min-width: 0; padding: 0 2px; font-size: 0.72rem; }
+    .cacada-controles { gap: 6px; padding: 0; }
     .cacada-controles__lado { gap: 6px; flex: 1; }
     .cacada-botao, .cacada-botao[data-tecla="pulo"] { flex: 1; min-width: 0; padding: 0 4px; font-size: 1.15rem; }
     .cacada-botao--baixo { flex: 0.7; }
+}
+@media (max-width: 560px) and (orientation: portrait) {
+    .cacada-analogico { width: 132px; height: 132px; }
+    .cacada-analogico__base { width: 96px; height: 96px; }
+    .cacada-analogico__pino { width: 44px; height: 44px; }
 }
 
 /* Estante no tema do Degustador: luz roxa, lombadas pretas e roxas, detalhes MP5K */

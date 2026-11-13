@@ -139,7 +139,9 @@ function validarItem(item) {
     for (const campo of ['titulo', 'descricao', 'tituloCapitulo']) {
         if (item[campo] != null && (typeof item[campo] !== 'string' || item[campo].length > 120)) throw new HttpError(400, `${campo} inválido`);
     }
-    if (item.tipo === 'spin' && !String(item.gibi || '').trim()) throw new HttpError(400, 'informe o gibi do spin-off');
+    if (item.tipo === 'spin' && (typeof item.gibi !== 'string' || !item.gibi.trim() || item.gibi.length > 120)) {
+        throw new HttpError(400, 'informe o gibi do spin-off');
+    }
 }
 
 /** Pasta de `assets/Spin Offs/` que corresponde a um gibi (mesmo nome sem acento/maiúscula) ou null. */
@@ -171,11 +173,12 @@ async function prepararItem(backend, manifesto, item) {
             if (!item.titulo && !item.gibi) throw new HttpError(400, 'informe o nome do gibi novo');
             const titulo = (item.titulo || item.gibi).trim();
             chave = slug(titulo);
+            if (!chave) throw new HttpError(400, 'nome de gibi inválido');
             const ordens = Object.values(comics).filter((c) => c.featured === false).map((c) => c.order || 0);
             comics[chave] = { id: chave, title: titulo, description: (item.descricao || titulo).trim(), order: Math.max(100, ...ordens) + 10, featured: false, chapters: {} };
         }
         nomePasta ||= (item.titulo || item.gibi).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 ._-]+/g, '').trim();
-        if (!nomePasta) throw new HttpError(400, 'nome de gibi inválido');
+        if (!nomePasta || /^\.+$/.test(nomePasta)) throw new HttpError(400, 'nome de gibi inválido');
         pasta = `assets/Spin Offs/${nomePasta}/${nomeCapitulo(n)}`;
         const gibi = comics[chave];
         gibi.chapters ??= {};
@@ -227,7 +230,8 @@ const rotas = [
             const resumos = [];
             const vistos = new Set();
             for (const item of lote) {
-                const chave = item?.tipo === 'serie' ? `s${item.capitulo}` : `${slug(item?.gibi || '')}/${item?.capitulo}`;
+                const cap = /^\d{1,3}$/.test(String(item?.capitulo)) ? String(Number(item.capitulo)) : item?.capitulo;
+                const chave = item?.tipo === 'serie' ? `s${cap}` : `${slug(item?.gibi || '')}/${cap}`;
                 if (vistos.has(chave)) throw new HttpError(400, 'o mesmo capítulo aparece duas vezes no lote');
                 vistos.add(chave);
                 const r = await prepararItem(ctx.upload, manifesto, item);

@@ -3176,7 +3176,8 @@
         opcoes.forEach(([rotulo, id], i) => botaoTela(rotulo, W / 2 - 150, 142 + i * passo, 300, 38, i === 0 ? COR.laranja : '#2a2a3a', id, visual.opcao === i));
         if (save) {
             const habs = (save.habilidades || []).length;
-            texto(`${tempoTexto(save.tempo || 0)} · ${habs}/4 habilidades · ${save.mortes || 0} mortes`, W / 2, 142 + opcoes.length * passo + 4, 12, COR.lilas, 3);
+            const totalHabs = Object.keys(HABILIDADES).length;
+            texto(`${tempoTexto(save.tempo || 0)} · ${habs}/${totalHabs} habilidades · ${save.mortes || 0} mortes`, W / 2, 142 + opcoes.length * passo + 4, 12, COR.lilas, 3);
         }
         const ajuda = toque
             ? 'Botões: ◀▶▲▼ andam · PULAR · GOLPE · DASH · RAJADA · CURA (segure)'
@@ -3398,9 +3399,11 @@
 
     // ------------------------------------------------------------- controles
     const foco = { apertado: false, desde: 0 };   // tecla A: toque = magia, segurar = cura
+    const teclasApertadas = new Set();
     function soltarTudo() {
         for (const k of Object.keys(entrada)) entrada[k] = false;
         foco.apertado = false;
+        teclasApertadas.clear();
     }
 
     // Dois esquemas de teclado. O padrão usa WASD; o opcional copia Hollow Knight no PC
@@ -3474,7 +3477,6 @@
         }
     }
 
-    const teclasApertadas = new Set();
     janela.dialog.addEventListener('keyup', (event) => teclasApertadas.delete(event.code), true);
     janela.dialog.addEventListener('keydown', (event) => {
         const c = event.code;
@@ -3497,12 +3499,13 @@
         }
         if (jogo.fase === 'loja') {
             const n = itensLoja().length;
+            if (c === 'Escape' || c === 'Tab') { acao('sairLoja'); return; }
+            if (!n) { if (nome === 'baixo') acao('sairLoja'); return; }
             if (nome === 'cima') visual.lojaSel = (visual.lojaSel + n - 1) % n;
             else if (nome === 'baixo') {
                 if (visual.lojaSel === n - 1) acao('sairLoja');
                 else visual.lojaSel++;
             } else if (confirma) comprarSelecionado();
-            else if (c === 'Escape' || c === 'Tab') acao('sairLoja');
             return;
         }
         if (jogo.fase === 'album') {
@@ -3599,6 +3602,7 @@
                     if (visual.mapa) { visual.mapa = false; return; }
                     if (jogo.fase === 'loja') {
                         const n = itensLoja().length;
+                        if (!n) return;
                         if (tecla === 'cima') visual.lojaSel = (visual.lojaSel + n - 1) % n;
                         else if (tecla === 'baixo') visual.lojaSel = (visual.lojaSel + 1) % n;
                         else if (tecla === 'pulo' || tecla === 'golpe') comprarSelecionado();
@@ -3726,6 +3730,7 @@
         soltarTudo();
         if (document.hidden && jogo.fase !== 'titulo' && jogo.fase !== 'final') visual.pausado = true;
     });
+    window.addEventListener('blur', soltarTudo);
 
     function abrir() {
         if (janela.aberta) return;

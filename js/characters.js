@@ -171,7 +171,7 @@
         card.classList.add('estatua--fora');
         requestAnimationFrame(() => palco.classList.add('aberto'));
         voando = voar(clone, card.querySelector('.estatua-moldura').getBoundingClientRect(), alvo.getBoundingClientRect(), true);
-        await voando; voando = null;
+        try { await voando; } catch { /* animação interrompida */ } finally { voando = null; }
         palco.querySelector('.galeria-fechar').focus({ preventScroll: true });
     }
     async function fechar() {
@@ -179,8 +179,10 @@
         const card = aberto;
         const clone = alvo.firstElementChild;
         palco.classList.remove('aberto');
-        voando = voar(clone, card.querySelector('.estatua-moldura').getBoundingClientRect(), alvo.getBoundingClientRect(), false);
-        await voando; voando = null;
+        if (clone) {
+            voando = voar(clone, card.querySelector('.estatua-moldura').getBoundingClientRect(), alvo.getBoundingClientRect(), false);
+            try { await voando; } catch { /* animação interrompida */ } finally { voando = null; }
+        }
         palco.hidden = true;
         alvo.replaceChildren();
         card.classList.remove('estatua--fora');

@@ -10,6 +10,7 @@
 
     let imagens = null;   // data/images.json: caminho original -> variantes webp (miniaturas leves)
     const miniUrl = (caminho) => {
+        if (!caminho) return '';
         const v = imagens?.[caminho]?.variants;
         const src = v?.length ? v[0].src : caminho;
         return encodeURI(src);
@@ -50,7 +51,9 @@
                 const total = capsDoGibi.reduce((s, k) => s + (k.pages || []).length, 0);
                 const card = el('button', 'gibi-card');
                 card.type = 'button';
-                const capa = el('div', 'gibi-capa'); capa.style.backgroundImage = `url("${miniUrl(c.cover)}")`;
+                const capa = el('div', 'gibi-capa');
+                const capUrl = miniUrl(c.cover);
+                if (capUrl) capa.style.backgroundImage = `url("${capUrl}")`;
                 card.append(capa, el('b', '', c.title), el('span', 'suave', c.featured ? `série principal · ${total} páginas` : `spin-off · ${capsDoGibi.length} cap. · ${total} pág.`));
                 card.addEventListener('click', () => { if (c.featured || capsDoGibi.length === 1) capitulo(c, capsDoGibi[0]); else capitulos(c); });
                 grade.append(card);
@@ -64,7 +67,9 @@
             c.chapters.forEach((k) => {
                 const card = el('button', 'gibi-card');
                 card.type = 'button';
-                const capa = el('div', 'gibi-capa'); capa.style.backgroundImage = `url("${miniUrl(k.cover || c.cover)}")`;
+                const capa = el('div', 'gibi-capa');
+                const capUrl = miniUrl(k.cover || c.cover);
+                if (capUrl) capa.style.backgroundImage = `url("${capUrl}")`;
                 card.append(capa, el('b', '', `Capítulo ${k.id}`), el('span', 'suave', `${k.title || ''} · ${(k.pages || []).length} pág.`));
                 card.addEventListener('click', () => capitulo(c, k));
                 grade.append(card);

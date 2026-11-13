@@ -72,9 +72,9 @@
         let eu = await (euPedido || pedir('/api/auth/me'));
         if (!eu.dados?.loggedIn) {
             const volta = await restaurarSessao();
-            if (volta) eu = { dados: { loggedIn: true, user: volta.user, admin: volta.admin } };
+            if (volta) eu = { dados: { loggedIn: true, user: volta.user, admin: volta.admin, cargo: volta.cargo } };
         }
-        if (!eu.dados?.loggedIn) { avisarVisita(); estado.usuario = null; estado.admin = false; estado.dados = null; return; }
+        if (!eu.dados?.loggedIn) { avisarVisita(); estado.usuario = null; estado.admin = false; estado.moderador = false; estado.dados = null; return; }
         estado.usuario = eu.dados.user;
         estado.admin = eu.dados.admin === true;
         estado.moderador = eu.dados.cargo === 'moderador';
@@ -127,6 +127,8 @@
         const login = await pedir('/api/auth/google', { credential });
         if (!login.ok) { mostrarErroLogin(login.dados?.error || 'Não deu para entrar agora. Tente de novo.'); return; }
         estado.usuario = login.dados.user;
+        estado.admin = login.dados.admin === true;
+        estado.moderador = login.dados.cargo === 'moderador';
         gravarLocal('enzoJaLogou', '1');
         if (login.dados.lembrar) gravarLocal('enzoLembrar', login.dados.lembrar);
         const sync = await pedir('/api/user/sync-guest', dadosDoConvidado());
@@ -138,7 +140,7 @@
     }
 
     async function sairDaConta() {
-        await pedir('/api/auth/logout', { token: lerLocal('enzoLembrar') || undefined });
+        await pedir('/api/auth/logout', { token: lerLocal('enzoLembrar') || undefined }).catch(() => {});
         gravarLocal('enzoJaLogou', '0');
         gravarLocal('enzoLembrar', '');
         window.google?.accounts.id.disableAutoSelect();
@@ -146,6 +148,8 @@
         estado.admin = false;
         estado.moderador = false;
         estado.dados = null;
+        numeroProprio = null;
+        batalhaProprio = null;
         renderizar();
         avisar();
     }
@@ -476,7 +480,7 @@
                 const fala = el('span', `leitor-fala${leitor.fala ? '' : ' leitor-fala--vazia'}`, leitor.fala || '...');
                 const numeros = el('span', 'leitor-numeros');
                 const conquistas = el('span', '');
-                conquistas.append(icone('trofeu', '🏆'), ` ${leitor.conquistas}/${C.LISTA.length}`);
+                conquistas.append(icone('trofeu', '🏆'), ` ${leitor.conquistas}/${C?.LISTA.length ?? 0}`);
                 const secretos = el('span', '');
                 secretos.append(icone('enzo-secreto', '🐱'), ` ${leitor.secretos}/${C?.SECRETOS ?? 0}`);
                 numeros.append(conquistas, secretos);
@@ -659,11 +663,14 @@
         return linha;
     }
 
+    let rankingPedido = 0;
     async function mostrarRanking(jogo) {
+        const pedido = ++rankingPedido;
         for (const aba of dialogoRanking.querySelectorAll('.ranking-aba')) aba.setAttribute('aria-selected', String(aba.dataset.jogo === jogo));
         const corpo = dialogoRanking.querySelector('.ranking-corpo');
         corpo.replaceChildren(el('p', 'ranking-vazio', 'Carregando...'));
-        const { ok, dados } = await pedir(`/api/games/leaderboard/${jogo}`);
+        const { ok, dados } = await pedir(`/api/games/leaderboard/${jogo}`).catch(() => ({ ok: false, dados: null }));
+        if (pedido !== rankingPedido) return;
         if (!ok) { corpo.replaceChildren(el('p', 'ranking-vazio', 'Ranking indisponível agora.')); return; }
         const partes = [];
         if (!dados.top.length) partes.push(el('p', 'ranking-vazio', 'Ninguém no ranking ainda. Seja o primeiro!'));
@@ -790,6 +797,7 @@
 
     let catalogoPronto = null;
     function carregarCatalogo() {
+        if (typeof window.carregarCatalogo !== 'function') return Promise.reject(new Error('catálogo indisponível'));
         catalogoPronto ??= window.carregarCatalogo().catch((erro) => { catalogoPronto = null; throw erro; });
         return catalogoPronto;
     }

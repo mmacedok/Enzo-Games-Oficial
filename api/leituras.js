@@ -37,7 +37,7 @@ const rotas = [
             const agora = ctx.agora();
             const pagina = Math.max(0, Math.min(1000, Number.parseInt(ctx.url.searchParams.get('pagina'), 10) || 0));
             const busca = String(ctx.url.searchParams.get('q') || '').trim().slice(0, 80);
-            const filtro = busca ? `%${busca.replace(/[\%_]/g, (c) => `\${c}`)}%` : null;
+            const filtro = busca ? `%${busca.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
             const ordem = ctx.url.searchParams.get('ordem') === 'recente' ? 'ultima DESC' : 'total DESC, ultima DESC';
             const leitores = await ctx.db.query(
                 `SELECT u.id, u.display_name, u.avatar_url, u.created_at,

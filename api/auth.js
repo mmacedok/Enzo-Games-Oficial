@@ -134,7 +134,11 @@ const rotas = [
             if (ctx.sessaoId) await ctx.db.query('DELETE FROM sessions WHERE id = $1', [ctx.sessaoId]);
             await criarSessao(ctx, usuario.id);
             ctx.acessoUsuario = usuario.id; // para o registro de acessos (api/acessos.js)
-            return { loggedIn: true, firstLogin: Number(usuario.created_at) === agora, user: usuarioPublico(usuario), lembrar: await criarLembrete(ctx, usuario.id) };
+            return {
+                loggedIn: true, firstLogin: Number(usuario.created_at) === agora, user: usuarioPublico(usuario),
+                lembrar: await criarLembrete(ctx, usuario.id),
+                admin: ehAdmin(ctx.config, usuario), cargo: cargoDe(ctx.config, usuario),
+            };
         },
     },
     {
