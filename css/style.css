@@ -3774,8 +3774,12 @@ dialog.baralho-entrada { width: min(460px, calc(100vw - 24px)); }
     height: calc(var(--book-w) * 0.5);
     top: calc(var(--book-h) - var(--book-w) * 0.5 * 0.5234);
     background: url('../assets/estante/prato.png') center / 100% 100% no-repeat;
-    /* Recuado no eixo Z para os cantos do gibi inclinado não afundarem no prato (escala e deslocamento compensam a perspectiva) */
-    transform: translateY(12px) translateZ(-80px) scale(1.05);
+    /* Plano (sem eixo Z): assim a paralaxe do mouse, que move o ponto de fuga, não arrasta o prato */
+    transform: translateY(6px);
+}
+/* Quem vai para a frente é o gibi, para os cantos inclinados não afundarem no prato */
+.bookcase[data-colecao="serie"].tem-prato .book {
+    transform: translateZ(calc(var(--lift, 0px) + 70px)) rotateX(var(--rx, -5deg)) rotateY(var(--ry, 16deg)) scale(0.96);
 }
 
 /* Fundo do site: rabiscos tom sobre tom (tile 1024×1024 sobre #E65100) por baixo das bolinhas */
