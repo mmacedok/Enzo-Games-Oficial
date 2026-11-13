@@ -35,16 +35,16 @@ test('build preserva curadoria, ordena páginas e spin-offs, e não regrava cat�
 test('variantes web têm dimensões, arquivos e orçamento adequado para capas e fichas', () => {
     const root = path.join(__dirname, '..');
     const images = JSON.parse(fs.readFileSync(path.join(root, 'data/images.json')));
-    let covers = 0, characters = 0;
+    let characters = 0;
     for (const [source, item] of Object.entries(images)) {
         assert.ok(item.width > 0 && item.height > 0);
         for (const variant of item.variants) {
             assert.ok(fs.existsSync(path.join(root, variant.src)));
             assert.ok(variant.width <= item.width);
         }
-        if (source.includes('/Capa/')) covers += item.variants[0].bytes;
+        // Limite por capa: um teto total quebrava a cada capítulo novo publicado
+        if (source.includes('/Capa/')) assert.ok(item.variants[0].bytes < 350_000, `capa pesada: ${source} (${item.variants[0].bytes})`);
         if (source.startsWith('assets/Personagens/')) characters += item.variants[0].bytes;
     }
-    assert.ok(covers < 5_000_000, `capas: ${covers}`);
     assert.ok(characters < 6_000_000, `fichas: ${characters}`);
 });
