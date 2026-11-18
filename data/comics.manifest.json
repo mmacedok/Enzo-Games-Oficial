@@ -134,6 +134,18 @@
           "title": "\"O Suporte Secreto\""
         }
       }
+    },
+    "homem-pao": {
+      "id": "homem-pao",
+      "title": "Homem Pão",
+      "description": "Homem Pão",
+      "order": 170,
+      "featured": false,
+      "chapters": {
+        "1": {
+          "title": "pão e tudo"
+        }
+      }
     }
   },
   "censorship": {
